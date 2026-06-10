@@ -1,0 +1,1166 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'uploadthing/tw/v4';
+
+@variant dark (&:is(.dark *));
+
+@theme {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+    /* Enhanced professional color scheme */
+    --radius: 0.5rem;
+    --background: oklch(0.99 0.002 247.858);
+    --foreground: oklch(0.15 0.01 257.136);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.15 0.01 257.136);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.15 0.01 257.136);
+    --primary: #074695;
+    --primary-foreground: oklch(0.98 0.009 247.858);
+    --secondary: oklch(0.96 0.008 247.858);
+    --secondary-foreground: oklch(0.25 0.015 257.136);
+    --muted: oklch(0.96 0.008 247.858);
+    --muted-foreground: oklch(0.55 0.02 257.136);
+    --accent: oklch(0.96 0.008 247.858);
+    --accent-foreground: oklch(0.25 0.015 257.136);
+    --destructive: #c75454; /* Muted red */
+    --border: oklch(0.91 0.01 247.858);
+    --input: oklch(0.91 0.01 247.858);
+    --ring: oklch(0.395 0.167 255.339);
+
+    /* Status colors - Muted Professional Palette */
+    --success: #3d8a6b; /* Muted green */
+    --success-foreground: oklch(0.98 0.009 247.858);
+    --warning: #c4883a; /* Muted amber */
+    --warning-foreground: oklch(0.15 0.01 257.136);
+    --info: oklch(0.542 0.167 220.15);
+    --info-foreground: oklch(0.98 0.009 247.858);
+    --pending: oklch(0.678 0.12 292.675);
+    --pending-foreground: oklch(0.98 0.009 247.858);
+
+    /* Chart colors for business dashboards - Using brighter colors for consistency */
+    --chart-1: oklch(0.542 0.167 220.15); /* Blue - Primary metrics */
+    --chart-2: #3d8a6b; /* Muted Green - Success/Positive */
+    --chart-3: #c4883a; /* Muted Amber - Warning/Caution */
+    --chart-4: oklch(0.642 0.167 220.15); /* Light Blue - Info/Secondary */
+    --chart-5: oklch(0.778 0.12 292.675); /* Purple - Special/Premium */
+    --chart-6: #c75454; /* Muted Red - Error/Critical */
+    --chart-7: oklch(0.725 0.11 162.345); /* Teal - Neutral/Alternative */
+    --chart-8: oklch(0.815 0.142 45.123); /* Orange - Active/Alert */
+
+    /* Enhanced semantic colors for business applications */
+    --color-revenue: #3d8a6b; /* Muted green for financial gains */
+    --color-expense: #c75454; /* Muted red for costs */
+    --color-neutral: oklch(0.542 0.167 220.15); /* Blue for neutral data */
+    --color-growth: oklch(0.678 0.12 292.675); /* Purple for growth metrics */
+    --color-decline: #c4883a; /* Muted amber for declining metrics */
+
+    /* Quality control specific colors */
+    --color-pass: #3d8a6b; /* Muted green for passed items */
+    --color-fail: #c75454; /* Muted red for failed items */
+    --color-review: #c4883a; /* Muted amber for items under review */
+    --color-pending-qc: oklch(0.678 0.12 292.675); /* Purple for pending QC */
+
+    /* Power/Energy consumption colors */
+    --color-power: #1890ff; /* Bright blue for power */
+    --color-power-bg: #e6f7ff; /* Light blue background */
+
+    /* Sidebar with professional styling */
+    --sidebar: oklch(0.975 0.005 247.858);
+    --sidebar-foreground: oklch(0.25 0.015 257.136);
+    --sidebar-primary: oklch(0.395 0.167 255.339);
+    --sidebar-primary-foreground: oklch(0.98 0.009 247.858);
+    --sidebar-accent: oklch(0.92 0.01 247.858);
+    --sidebar-accent-foreground: oklch(0.25 0.015 257.136);
+    --sidebar-border: oklch(0.88 0.015 247.858);
+    --sidebar-ring: oklch(0.395 0.167 255.339);
+
+    /* Layout and spacing variables */
+    --header-height: 4rem;
+    --sidebar-width: 16rem;
+    --sidebar-width-collapsed: 4rem;
+    --content-max-width: 1400px;
+
+    /* Typography scale */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+
+    /* Shadow system */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+    /* Brand Heading  */
+    --brand-heading: #074695; /* Specific blue color for dark mode */
+    --brand-heading-shadow: rgba(7, 70, 149, 0.4);
+
+    /* Chart-specific colors for light theme */
+    --chart-grid: oklch(0.91 0.01 247.858);
+    --chart-axis: oklch(0.25 0.015 257.136);
+    --chart-text: oklch(0.15 0.01 257.136);
+    --chart-tooltip-bg: oklch(1 0 0);
+    --chart-tooltip-text: oklch(0.15 0.01 257.136);
+    --chart-tooltip-border: oklch(0.88 0.015 247.858);
+    --chart-hover: oklch(0.395 0.167 255.339);
+}
+
+.dark {
+    /* Dark mode optimized for professional use */
+    --background: oklch(0.11 0.01 257.136);
+    --foreground: oklch(0.95 0.005 247.858);
+    --card: oklch(0.15 0.015 257.136);
+    --card-foreground: oklch(0.95 0.005 247.858);
+    --popover: oklch(0.15 0.015 257.136);
+    --popover-foreground: oklch(0.95 0.005 247.858);
+    --primary: oklch(0.542 0.167 220.15);
+    --primary-foreground: oklch(0.11 0.01 257.136);
+    --secondary: oklch(0.2 0.02 257.136);
+    --secondary-foreground: oklch(0.95 0.005 247.858);
+    --muted: oklch(0.2 0.02 257.136);
+    --muted-foreground: oklch(0.65 0.015 257.136);
+    --accent: oklch(0.2 0.02 257.136);
+    --accent-foreground: oklch(0.95 0.005 247.858);
+    --destructive: #d76a6a; /* Muted red for dark */
+    --border: oklch(0.25 0.025 257.136);
+    --input: oklch(0.25 0.025 257.136);
+    --ring: oklch(0.542 0.167 220.15);
+
+    /* Dark mode status colors - Muted Professional Palette */
+    --success: #5ba37e; /* Muted green for dark */
+    --success-foreground: oklch(0.11 0.01 257.136);
+    --warning: #d4a04a; /* Muted amber for dark */
+    --warning-foreground: oklch(0.11 0.01 257.136);
+    --info: oklch(0.642 0.167 220.15);
+    --info-foreground: oklch(0.11 0.01 257.136);
+    --pending: oklch(0.778 0.12 292.675);
+    --pending-foreground: oklch(0.11 0.01 257.136);
+
+    /* Dark mode chart colors - Muted palette for consistency */
+    --chart-1: oklch(0.395 0.167 255.339); /* Blue - Primary metrics */
+    --chart-2: #5ba37e; /* Muted Green - Success/Positive */
+    --chart-3: #d4a04a; /* Muted Amber - Warning/Caution */
+    --chart-4: oklch(0.542 0.167 220.15); /* Light Blue - Info/Secondary */
+    --chart-5: oklch(0.678 0.12 292.675); /* Purple - Special/Premium */
+    --chart-6: #d76a6a; /* Muted Red - Error/Critical */
+    --chart-7: oklch(0.625 0.11 162.345); /* Teal - Neutral/Alternative */
+    --chart-8: oklch(0.715 0.142 45.123); /* Orange - Active/Alert */
+
+    /* Enhanced semantic colors for dark mode business applications */
+    --color-revenue: #5ba37e; /* Muted green for financial gains */
+    --color-expense: #d76a6a; /* Muted red for costs */
+    --color-neutral: oklch(0.642 0.167 220.15); /* Blue for neutral data */
+    --color-growth: oklch(0.778 0.12 292.675); /* Purple for growth metrics */
+    --color-decline: #d4a04a; /* Muted amber for declining metrics */
+
+    /* Quality control specific colors for dark mode */
+    --color-pass: #5ba37e; /* Muted green for passed items */
+    --color-fail: #d76a6a; /* Muted red for failed items */
+    --color-review: #d4a04a; /* Muted amber for items under review */
+    --color-pending-qc: oklch(0.778 0.12 292.675); /* Purple for pending QC */
+
+    /* Power/Energy consumption colors for dark mode */
+    --color-power: #40a9ff; /* Brighter blue for power in dark mode */
+    --color-power-bg: rgba(24, 144, 255, 0.15); /* Semi-transparent blue background */
+
+    /* Dark mode sidebar */
+    --sidebar: oklch(0.15 0.015 257.136);
+    --sidebar-foreground: oklch(0.85 0.01 247.858);
+    --sidebar-primary: oklch(0.542 0.167 220.15);
+    --sidebar-primary-foreground: oklch(0.11 0.01 257.136);
+    --sidebar-accent: oklch(0.2 0.02 257.136);
+    --sidebar-accent-foreground: oklch(0.95 0.005 247.858);
+    --sidebar-border: oklch(0.25 0.025 257.136);
+    --sidebar-ring: oklch(0.542 0.167 220.15);
+
+    /* Brand heading colors - brighter in dark mode */
+    --brand-heading: oklch(0.65 0.18 220.15); /* Bright blue for dark mode */
+    --brand-heading-shadow: oklch(0.65 0.18 220.15 / 0.4);
+
+    /* Chart-specific colors for dark theme */
+    --chart-grid: oklch(0.25 0.025 257.136);
+    --chart-axis: oklch(0.85 0.01 247.858);
+    --chart-text: oklch(0.95 0.005 247.858);
+    --chart-tooltip-bg: oklch(0.15 0.015 257.136);
+    --chart-tooltip-text: oklch(0.95 0.005 247.858);
+    --chart-tooltip-border: oklch(0.35 0.035 257.136);
+    --chart-hover: oklch(0.542 0.167 220.15);
+}
+
+@layer base {
+    * {
+        border-color: var(--border);
+        outline-color: rgb(from var(--ring) r g b / 0.5);
+    }
+
+    html {
+        scroll-behavior: smooth;
+        /* Prevent layout shift when modals/popconfirms open by reserving scrollbar space */
+        scrollbar-gutter: stable;
+    }
+
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings:
+            'rlig' 1,
+            'calt' 1;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Enhanced focus states for accessibility */
+    *:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
+
+    /* Typography improvements */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-weight: 600;
+        letter-spacing: -0.025em;
+    }
+
+    h1 {
+        font-size: 1.875rem;
+        line-height: 2.25rem;
+    }
+    h2 {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+    h3 {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+    h4 {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+    }
+    h5 {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+    h6 {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+
+    /* Professional link styling */
+    a {
+        color: var(--primary);
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    a:hover {
+        color: rgb(from var(--primary) r g b / 0.8);
+    }
+
+    /* Better table styling */
+    table {
+        border-collapse: collapse;
+    }
+
+    /* Improved form elements */
+    input,
+    textarea,
+    select {
+        font-size: 1rem;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 0.5rem;
+    }
+
+    ::-webkit-scrollbar-track {
+        background-color: rgb(from var(--muted) r g b / 0.3);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: rgb(from var(--muted-foreground) r g b / 0.3);
+        border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: rgb(from var(--muted-foreground) r g b / 0.5);
+    }
+}
+
+/* Professional status badge variants */
+.badge-success {
+    background-color: var(--success);
+    color: var(--success-foreground);
+}
+
+.badge-success:hover {
+    background-color: color-mix(in srgb, var(--success) 85%, black);
+}
+
+.badge-warning {
+    background-color: var(--warning);
+    color: var(--warning-foreground);
+}
+
+.badge-warning:hover {
+    background-color: color-mix(in srgb, var(--warning) 85%, black);
+}
+
+.badge-info {
+    background-color: var(--info);
+    color: var(--info-foreground);
+}
+
+.badge-info:hover {
+    background-color: color-mix(in srgb, var(--info) 85%, black);
+}
+
+.badge-pending {
+    background-color: var(--pending);
+    color: var(--pending-foreground);
+}
+
+.badge-pending:hover {
+    background-color: color-mix(in srgb, var(--pending) 85%, black);
+}
+
+/* Task Status Column Utilities - Muted Colors */
+.status-pending {
+    background-color: rgba(196, 136, 58, 0.1);
+    color: #c4883a;
+    border-color: rgba(196, 136, 58, 0.3);
+}
+
+.dark .status-pending {
+    background-color: rgba(212, 160, 74, 0.15);
+    color: #d4a04a;
+    border-color: rgba(212, 160, 74, 0.3);
+}
+
+.status-in_progress {
+    background-color: rgba(28, 81, 106, 0.1);
+    color: #074695;
+    border-color: rgba(28, 81, 106, 0.3);
+}
+
+.dark .status-in_progress {
+    background-color: rgba(79, 156, 245, 0.15);
+    color: #4f9cf5;
+    border-color: rgba(79, 156, 245, 0.3);
+}
+
+.status-waiting_qc {
+    background-color: rgb(250 245 255);
+    color: rgb(107 33 168);
+    border-color: rgb(221 214 254);
+}
+
+.dark .status-waiting_qc {
+    background-color: rgb(88 28 135 / 0.2);
+    color: rgb(196 181 253);
+    border-color: rgb(107 33 168);
+}
+
+.status-checked_qc {
+    background-color: rgba(196, 136, 58, 0.1);
+    color: #c4883a;
+    border-color: rgba(196, 136, 58, 0.3);
+}
+
+.dark .status-checked_qc {
+    background-color: rgba(212, 160, 74, 0.15);
+    color: #d4a04a;
+    border-color: rgba(212, 160, 74, 0.3);
+}
+
+.status-completed {
+    background-color: rgba(61, 138, 107, 0.1);
+    color: #3d8a6b;
+    border-color: rgba(61, 138, 107, 0.3);
+}
+
+.dark .status-completed {
+    background-color: rgba(91, 163, 126, 0.15);
+    color: #5ba37e;
+    border-color: rgba(91, 163, 126, 0.3);
+}
+
+/* Status Column Bodies - Muted Colors */
+.status-body-pending {
+    background-color: rgba(196, 136, 58, 0.05);
+    border-color: rgba(196, 136, 58, 0.2);
+}
+
+.dark .status-body-pending {
+    background-color: rgba(212, 160, 74, 0.08);
+    border-color: rgba(212, 160, 74, 0.2);
+}
+
+.status-body-in_progress {
+    background-color: rgba(28, 81, 106, 0.05);
+    border-color: rgba(28, 81, 106, 0.2);
+}
+
+.dark .status-body-in_progress {
+    background-color: rgba(79, 156, 245, 0.08);
+    border-color: rgba(79, 156, 245, 0.2);
+}
+
+.status-body-waiting_qc {
+    background-color: rgb(250 245 255 / 0.3);
+    border-color: rgb(221 214 254);
+}
+
+.dark .status-body-waiting_qc {
+    background-color: rgb(88 28 135 / 0.1);
+    border-color: rgb(107 33 168);
+}
+
+.status-body-checked_qc {
+    background-color: rgba(196, 136, 58, 0.05);
+    border-color: rgba(196, 136, 58, 0.2);
+}
+
+.dark .status-body-checked_qc {
+    background-color: rgba(212, 160, 74, 0.08);
+    border-color: rgba(212, 160, 74, 0.2);
+}
+
+.status-body-completed {
+    background-color: rgba(61, 138, 107, 0.05);
+    border-color: rgba(61, 138, 107, 0.2);
+}
+
+.dark .status-body-completed {
+    background-color: rgba(91, 163, 126, 0.08);
+    border-color: rgba(91, 163, 126, 0.2);
+}
+
+/* Priority Indicators - Muted Colors */
+.priority-low {
+    background-color: rgb(243 244 246);
+    color: rgb(55 65 81);
+}
+
+.dark .priority-low {
+    background-color: rgb(31 41 55);
+    color: rgb(209 213 219);
+}
+
+.priority-medium {
+    background-color: rgba(28, 81, 106, 0.1);
+    color: #074695;
+}
+
+.dark .priority-medium {
+    background-color: rgba(79, 156, 245, 0.15);
+    color: #4f9cf5;
+}
+
+.priority-high {
+    background-color: rgba(196, 136, 58, 0.1);
+    color: #c4883a;
+}
+
+.dark .priority-high {
+    background-color: rgba(212, 160, 74, 0.15);
+    color: #d4a04a;
+}
+
+.priority-urgent {
+    background-color: rgba(199, 84, 84, 0.1);
+    color: #c75454;
+}
+
+.dark .priority-urgent {
+    background-color: rgba(215, 106, 106, 0.15);
+    color: #d76a6a;
+}
+
+/* Task Stat Card Colors - Muted */
+.stat-total {
+    background-color: rgb(from var(--primary) r g b / 0.1);
+    color: var(--primary);
+}
+
+.stat-pending {
+    background-color: rgba(196, 136, 58, 0.1);
+    color: #c4883a;
+}
+
+.dark .stat-pending {
+    background-color: rgba(212, 160, 74, 0.15);
+    color: #d4a04a;
+}
+
+.stat-in-progress {
+    background-color: rgba(28, 81, 106, 0.1);
+    color: #074695;
+}
+
+.dark .stat-in-progress {
+    background-color: rgba(79, 156, 245, 0.15);
+    color: #4f9cf5;
+}
+
+.stat-qc-review {
+    background-color: rgb(237 233 254);
+    color: rgb(124 58 237);
+}
+
+.dark .stat-qc-review {
+    background-color: rgb(88 28 135 / 0.2);
+    color: rgb(168 85 247);
+}
+
+.stat-completed {
+    background-color: rgba(61, 138, 107, 0.1);
+    color: #3d8a6b;
+}
+
+.dark .stat-completed {
+    background-color: rgba(91, 163, 126, 0.15);
+    color: #5ba37e;
+}
+
+/* Enhanced animations */
+.animate-in {
+    animation-duration: 0.15s;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-out {
+    animation-duration: 0.15s;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+.fade-in-0 {
+    animation-name: fadeIn;
+}
+
+.fade-out-0 {
+    animation-name: fadeOut;
+}
+
+.slide-in-from-bottom-4 {
+    animation-name: slideInFromBottom;
+}
+
+.slide-out-to-bottom-4 {
+    animation-name: slideOutToBottom;
+}
+
+.slide-in-from-top-4 {
+    animation-name: slideInFromTop;
+}
+
+.slide-out-to-top-4 {
+    animation-name: slideOutToTop;
+}
+
+.slide-in-from-left-4 {
+    animation-name: slideInFromLeft;
+}
+
+.slide-out-to-left-4 {
+    animation-name: slideOutToLeft;
+}
+
+.slide-in-from-right-4 {
+    animation-name: slideInFromRight;
+}
+
+.slide-out-to-right-4 {
+    animation-name: slideOutToRight;
+}
+
+.zoom-in-95 {
+    animation-name: zoomIn;
+}
+
+.zoom-out-95 {
+    animation-name: zoomOut;
+}
+
+/* Professional keyframe animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes slideInFromBottom {
+    from {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToBottom {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+}
+
+@keyframes slideInFromTop {
+    from {
+        transform: translateY(-1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToTop {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-1rem);
+        opacity: 0;
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-1rem);
+        opacity: 0;
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(1rem);
+        opacity: 0;
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomOut {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+}
+
+/* Print styles for professional reports */
+@media print {
+    * {
+        print-color-adjust: exact;
+    }
+
+    body {
+        color: black;
+        background-color: white;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .print-break-before {
+        break-before: page;
+    }
+
+    .print-break-after {
+        break-after: page;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border: oklch(0.5 0 0);
+        --input: oklch(0.5 0 0);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Professional layout utilities */
+.container-professional {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: var(--content-max-width);
+}
+
+@media (min-width: 640px) {
+    .container-professional {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .container-professional {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+.header-professional {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--border);
+    background-color: rgb(from var(--background) r g b / 0.95);
+    backdrop-filter: blur(8px);
+    height: var(--header-height);
+}
+
+@supports (backdrop-filter: blur(8px)) {
+    .header-professional {
+        background-color: rgb(from var(--background) r g b / 0.6);
+    }
+}
+
+.sidebar-professional {
+    border-right: 1px solid var(--border);
+    background-color: var(--sidebar);
+    width: var(--sidebar-width);
+}
+
+.sidebar-professional.collapsed {
+    width: var(--sidebar-width-collapsed);
+}
+
+/* Professional data display utilities */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    border-bottom: 1px solid var(--border);
+    background-color: rgb(from var(--muted) r g b / 0.5);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+}
+
+.data-table td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}
+
+.data-table tr:hover {
+    background-color: rgb(from var(--muted) r g b / 0.3);
+}
+
+.metric-card {
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background-color: var(--card);
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.metric-card .metric-value {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+}
+
+.metric-card .metric-label {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.metric-card .metric-change {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.metric-card .metric-change.positive {
+    color: #3d8a6b;
+}
+
+.dark .metric-card .metric-change.positive {
+    color: #5ba37e;
+}
+
+.metric-card .metric-change.negative {
+    color: #c75454;
+}
+
+.dark .metric-card .metric-change.negative {
+    color: #d76a6a;
+}
+
+/* Status indicators - Muted Colors */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-indicator::before {
+    content: '';
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+}
+
+.status-indicator.active {
+    background-color: rgba(61, 138, 107, 0.1);
+    color: #3d8a6b;
+}
+
+.dark .status-indicator.active {
+    background-color: rgba(91, 163, 126, 0.15);
+    color: #5ba37e;
+}
+
+.status-indicator.active::before {
+    background-color: #3d8a6b;
+}
+
+.dark .status-indicator.active::before {
+    background-color: #5ba37e;
+}
+
+.status-indicator.inactive {
+    background-color: rgb(243 244 246);
+    color: rgb(55 65 81);
+}
+
+.dark .status-indicator.inactive {
+    background-color: rgb(31 41 55 / 0.2);
+    color: rgb(156 163 175);
+}
+
+.status-indicator.inactive::before {
+    background-color: rgb(107 114 128);
+}
+
+.status-indicator.pending {
+    background-color: rgba(196, 136, 58, 0.1);
+    color: #c4883a;
+}
+
+.dark .status-indicator.pending {
+    background-color: rgba(212, 160, 74, 0.15);
+    color: #d4a04a;
+}
+
+.status-indicator.pending::before {
+    background-color: #c4883a;
+}
+
+.dark .status-indicator.pending::before {
+    background-color: #d4a04a;
+}
+
+.status-indicator.error {
+    background-color: rgba(199, 84, 84, 0.1);
+    color: #c75454;
+}
+
+.dark .status-indicator.error {
+    background-color: rgba(215, 106, 106, 0.15);
+    color: #d76a6a;
+}
+
+.status-indicator.error::before {
+    background-color: #c75454;
+}
+
+.dark .status-indicator.error::before {
+    background-color: #d76a6a;
+}
+
+/* Modern Chart Enhancement Utilities */
+.chart-revenue {
+    fill: var(--color-revenue);
+    color: var(--color-revenue);
+}
+
+.chart-expense {
+    fill: var(--color-expense);
+    color: var(--color-expense);
+}
+
+.chart-neutral {
+    fill: var(--color-neutral);
+    color: var(--color-neutral);
+}
+
+.chart-growth {
+    fill: var(--color-growth);
+    color: var(--color-growth);
+}
+
+.chart-decline {
+    fill: var(--color-decline);
+    color: var(--color-decline);
+}
+
+.chart-pass {
+    fill: var(--color-pass);
+    color: var(--color-pass);
+}
+
+.chart-fail {
+    fill: var(--color-fail);
+    color: var(--color-fail);
+}
+
+.chart-review {
+    fill: var(--color-review);
+    color: var(--color-review);
+}
+
+.chart-pending-qc {
+    fill: var(--color-pending-qc);
+    color: var(--color-pending-qc);
+}
+
+/* Chart Container Enhancements */
+.chart-container-modern {
+    --chart-background: var(--background);
+    --chart-foreground: var(--foreground);
+    --chart-grid: var(--chart-grid);
+    --chart-tooltip-bg: var(--chart-tooltip-bg);
+    --chart-tooltip-text: var(--chart-tooltip-text);
+    --chart-tooltip-border: var(--chart-tooltip-border);
+}
+
+/* Quality Control Dashboard Colors - Muted */
+.qc-pass-rate-excellent {
+    background-color: rgba(61, 138, 107, 0.1);
+    color: #3d8a6b;
+    border-color: rgba(61, 138, 107, 0.3);
+}
+
+.dark .qc-pass-rate-excellent {
+    background-color: rgba(91, 163, 126, 0.15);
+    color: #5ba37e;
+    border-color: rgba(91, 163, 126, 0.3);
+}
+
+.qc-pass-rate-good {
+    background-color: rgba(196, 136, 58, 0.1);
+    color: #c4883a;
+    border-color: rgba(196, 136, 58, 0.3);
+}
+
+.dark .qc-pass-rate-good {
+    background-color: rgba(212, 160, 74, 0.15);
+    color: #d4a04a;
+    border-color: rgba(212, 160, 74, 0.3);
+}
+
+.qc-pass-rate-poor {
+    background-color: rgba(199, 84, 84, 0.1);
+    color: #c75454;
+    border-color: rgba(199, 84, 84, 0.3);
+}
+
+.dark .qc-pass-rate-poor {
+    background-color: rgba(215, 106, 106, 0.15);
+    color: #d76a6a;
+    border-color: rgba(215, 106, 106, 0.3);
+}
+
+/* Financial Dashboard Specific - Muted */
+.financial-positive {
+    background-color: rgba(61, 138, 107, 0.1);
+    color: #3d8a6b;
+}
+
+.dark .financial-positive {
+    background-color: rgba(91, 163, 126, 0.15);
+    color: #5ba37e;
+}
+
+.financial-negative {
+    background-color: rgba(199, 84, 84, 0.1);
+    color: #c75454;
+}
+
+.dark .financial-negative {
+    background-color: rgba(215, 106, 106, 0.15);
+    color: #d76a6a;
+}
+
+.financial-neutral {
+    background-color: rgb(from var(--color-neutral) r g b / 0.1);
+    color: var(--color-neutral);
+}
+
+/* Performance Metric Colors - Muted */
+.metric-trend-up {
+    color: #3d8a6b;
+}
+
+.dark .metric-trend-up {
+    color: #5ba37e;
+}
+
+.metric-trend-down {
+    color: #c4883a;
+}
+
+.dark .metric-trend-down {
+    color: #d4a04a;
+}
+
+.metric-trend-stable {
+    color: var(--color-neutral);
+}
+
+@media (max-width: 640px) {
+    .ant-layout-header .ant-space > .ant-divider {
+        display: none !important;
+    }
+}
+
+/* Ant Design Message Customization - Enhanced visibility */
+.ant-message-notice-content {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dark .ant-message-notice-content {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+}

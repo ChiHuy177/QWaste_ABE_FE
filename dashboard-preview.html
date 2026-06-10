@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qwaste v2 - Dashboard Preview</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --primary: #4f46e5;
+      --running: #22c55e;
+      --running-bg: #f0fdf4;
+      --idle: #f59e0b;
+      --idle-bg: #fffbeb;
+      --error: #ef4444;
+      --error-bg: #fef2f2;
+      --offline: #6b7280;
+      --offline-bg: #f3f4f6;
+      --blue: #3b82f6;
+      --blue-bg: #eff6ff;
+      --purple: #8b5cf6;
+      --purple-bg: #f5f3ff;
+      --cyan: #06b6d4;
+      --cyan-bg: #ecfeff;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+      --radius: 12px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5;
+    }
+    .dashboard { max-width: 1440px; margin: 0 auto; padding: 24px 32px; }
+
+    /* ── Header ── */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .header h1 { font-size: 24px; font-weight: 700; }
+    .header p  { color: var(--text-secondary); font-size: 14px; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .filter-btn {
+      padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--card); font-size: 13px; color: var(--text); cursor: pointer; transition: .15s;
+    }
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; color: var(--text-secondary);
+    }
+    .live-dot { width: 8px; height: 8px; background: var(--running); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── Stat Cards Row ── */
+    .stat-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 18px 20px; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; transition: box-shadow .2s, transform .2s; text-decoration: none; color: inherit;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .stat-value { font-size: 24px; font-weight: 700; line-height: 1.1; }
+    .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .stat-sub {
+      font-size: 11px; font-weight: 600; margin-top: 4px;
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 6px; border-radius: 99px;
+    }
+    .stat-link {
+      font-size: 11px; color: var(--primary); margin-top: 4px;
+      display: inline-flex; align-items: center; gap: 2px;
+    }
+
+    /* ── Main Grid ── */
+    .main-grid { display: grid; grid-template-columns: 5fr 2fr; gap: 20px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 20px 24px; border: 1px solid var(--border);
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-tabs { display: flex; gap: 4px; }
+    .card-tab {
+      padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+      cursor: pointer; transition: .15s;
+    }
+    .card-tab:hover { border-color: var(--primary); color: var(--primary); }
+    .card-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ── Chart ── */
+    .chart-wrap { position: relative; width: 100%; height: 300px; }
+    .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+    /* ── Alert List ── */
+    .alert-list { display: flex; flex-direction: column; gap: 0; }
+    .alert-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px; transition: background .15s;
+    }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 5px;
+    }
+    .alert-dot.critical { background: var(--error); }
+    .alert-dot.warning  { background: var(--idle); }
+    .alert-dot.info     { background: var(--blue); }
+    .alert-content { flex: 1; min-width: 0; }
+    .alert-content strong { font-weight: 600; font-size: 13px; display: block; }
+    .alert-content span   { font-size: 12px; color: var(--text-secondary); }
+    .alert-time { font-size: 11px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+    .alert-tag {
+      font-size: 10px; padding: 1px 7px; border-radius: 99px;
+      font-weight: 600; margin-top: 3px; display: inline-block;
+    }
+    .view-all-link {
+      display: block; text-align: center; padding: 12px 0 4px;
+      font-size: 13px; color: var(--primary); font-weight: 600;
+      text-decoration: none; cursor: pointer;
+    }
+    .view-all-link:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) {
+      .stat-row { grid-template-columns: repeat(3, 1fr); }
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+      .dashboard { padding: 16px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <div class="header">
+    <div>
+      <h1>Overview Dashboard</h1>
+      <p>Xin chao, Admin &mdash; Tong quan he thong san xuat</p>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><span class="live-dot"></span> Real-time</div>
+      <button class="filter-btn active">Hom nay</button>
+      <button class="filter-btn">Tuan nay</button>
+      <button class="filter-btn">Thang nay</button>
+    </div>
+  </div>
+
+  <!-- ══════════ STAT CARDS ══════════ -->
+  <div class="stat-row">
+    <!-- 1. Machines Running -->
+    <a class="stat-card" href="/admin/machines" title="Xem chi tiet may">
+      <div class="stat-icon" style="background:var(--running-bg);color:var(--running);">&#9654;</div>
+      <div>
+        <div class="stat-value">18<span style="font-size:14px;font-weight:400;color:var(--text-secondary);"> / 30</span></div>
+        <div class="stat-label">May dang chay</div>
+        <div class="stat-sub" style="background:var(--error-bg);color:var(--error);">2 loi</div>
+      </div>
+    </a>
+
+    <!-- 2. Orders -->
+    <a class="stat-card" href="/admin/order" title="Xem don hang">
+      <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue);">&#128230;</div>
+      <div>
+        <div class="stat-value">12</div>
+        <div class="stat-label">Don dang xu ly</div>
+        <div class="stat-sub" style="background:var(--error-bg);color:var(--error);">1 sap tre</div>
+      </div>
+    </a>
+
+    <!-- 3. Tasks -->
+    <a class="stat-card" href="/admin/tasks" title="Xem task board">
+      <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple);">&#9745;</div>
+      <div>
+        <div class="stat-value">14</div>
+        <div class="stat-label">Task dang thuc hien</div>
+        <div class="stat-sub" style="background:var(--idle-bg);color:var(--idle);">7 cho QC</div>
+      </div>
+    </a>
+
+    <!-- 4. Staff -->
+    <a class="stat-card" href="/admin/staff" title="Xem nhan vien">
+      <div class="stat-icon" style="background:var(--cyan-bg);color:var(--cyan);">&#128100;</div>
+      <div>
+        <div class="stat-value">24</div>
+        <div class="stat-label">Nhan vien ca nay</div>
+        <div class="stat-sub" style="background:var(--running-bg);color:var(--running);">18 dang lam</div>
+      </div>
+    </a>
+
+    <!-- 5. Process -->
+    <a class="stat-card" href="/admin/process" title="Xem quy trinh">
+      <div class="stat-icon" style="background:var(--idle-bg);color:var(--idle);">&#9881;</div>
+      <div>
+        <div class="stat-value">62%</div>
+        <div class="stat-label">Tien do san xuat</div>
+        <div class="stat-sub" style="background:var(--running-bg);color:var(--running);">+5% hom nay</div>
+      </div>
+    </a>
+
+    <!-- 6. Energy -->
+    <a class="stat-card" href="/admin/electric" title="Xem nang luong">
+      <div class="stat-icon" style="background:var(--idle-bg);color:var(--idle);">&#9889;</div>
+      <div>
+        <div class="stat-value">1,247</div>
+        <div class="stat-label">kWh hom nay</div>
+        <div class="stat-sub" style="background:var(--running-bg);color:var(--running);">&#8595; 8% vs hom qua</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- ══════════ MAIN: Chart + Alerts ══════════ -->
+  <div class="main-grid">
+
+    <!-- LEFT: Chart with tabs -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Bieu do tong quan</div>
+        <div class="card-tabs">
+          <button class="card-tab active" onclick="showChart('machine')">May moc</button>
+          <button class="card-tab" onclick="showChart('order')">Don hang</button>
+          <button class="card-tab" onclick="showChart('energy')">Nang luong</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT: Alerts -->
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="card-header" style="margin-bottom:8px;">
+        <div class="card-title">Hoat dong gan day</div>
+        <span style="font-size:12px;padding:3px 10px;border-radius:99px;background:var(--error-bg);color:var(--error);font-weight:600;">3 khan cap</span>
+      </div>
+
+      <div class="alert-list" style="flex:1;overflow-y:auto;">
+        <div class="alert-item">
+          <div class="alert-dot critical"></div>
+          <div class="alert-content">
+            <strong>CNC-004 gap loi truc chinh</strong>
+            <span>Zone B / Line 1 - can bao tri</span>
+            <div><span class="alert-tag" style="background:var(--error-bg);color:var(--error);">May moc</span></div>
+          </div>
+          <div class="alert-time">5p</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot critical"></div>
+          <div class="alert-content">
+            <strong>ORD-0042 sap tre deadline</strong>
+            <span>Gia cong tru CNC - con 37%</span>
+            <div><span class="alert-tag" style="background:var(--blue-bg);color:var(--blue);">Don hang</span></div>
+          </div>
+          <div class="alert-time">12p</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot critical"></div>
+          <div class="alert-content">
+            <strong>QC tu choi lot #127</strong>
+            <span>Cat laser inox - can lam lai</span>
+            <div><span class="alert-tag" style="background:var(--purple-bg);color:var(--purple);">Task</span></div>
+          </div>
+          <div class="alert-time">28p</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot warning"></div>
+          <div class="alert-content">
+            <strong>CNC-007 idle qua 45 phut</strong>
+            <span>Chua co operator</span>
+            <div><span class="alert-tag" style="background:var(--error-bg);color:var(--error);">May moc</span></div>
+          </div>
+          <div class="alert-time">35p</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot warning"></div>
+          <div class="alert-content">
+            <strong>Nguyen Van A xong task</strong>
+            <span>Khoan lo M12 - cho viec moi</span>
+            <div><span class="alert-tag" style="background:var(--cyan-bg);color:var(--cyan);">Nhan vien</span></div>
+          </div>
+          <div class="alert-time">42p</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot info"></div>
+          <div class="alert-content">
+            <strong>CNC-003 hoan thanh lot</strong>
+            <span>200/200 san pham</span>
+            <div><span class="alert-tag" style="background:var(--error-bg);color:var(--error);">May moc</span></div>
+          </div>
+          <div class="alert-time">50p</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot info"></div>
+          <div class="alert-content">
+            <strong>ORD-0039 hoan thanh</strong>
+            <span>Da giao cho khach hang</span>
+            <div><span class="alert-tag" style="background:var(--blue-bg);color:var(--blue);">Don hang</span></div>
+          </div>
+          <div class="alert-time">1h</div>
+        </div>
+
+        <div class="alert-item">
+          <div class="alert-dot info"></div>
+          <div class="alert-content">
+            <strong>Ca 2 bat dau</strong>
+            <span>12 operator da check-in</span>
+            <div><span class="alert-tag" style="background:var(--cyan-bg);color:var(--cyan);">Nhan vien</span></div>
+          </div>
+          <div class="alert-time">2h</div>
+        </div>
+      </div>
+
+      <a class="view-all-link">Xem tat ca thong bao &#8594;</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Chart configs ──
+  const chartConfigs = {
+    machine: {
+      type: 'bar',
+      data: {
+        labels: ['6:00','7:00','8:00','9:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'],
+        datasets: [
+          { label: 'Running', data: [14,16,18,20,19,17,12,18,20,19,18,18], backgroundColor: '#22c55e', borderRadius: 2 },
+          { label: 'Idle',    data: [6,5,4,3,4,5,8,5,3,4,5,6],             backgroundColor: '#f59e0b', borderRadius: 2 },
+          { label: 'Error',   data: [2,1,1,2,2,2,2,2,2,2,2,2],             backgroundColor: '#ef4444', borderRadius: 2 },
+          { label: 'Offline', data: [8,8,7,5,5,6,8,5,5,5,5,4],             backgroundColor: '#d1d5db', borderRadius: 2 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 12 } } } },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: { stacked: true, grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } }, title: { display: true, text: 'So may', font: { size: 12 } } }
+        }
+      }
+    },
+    order: {
+      type: 'line',
+      data: {
+        labels: ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16'],
+        datasets: [
+          {
+            label: 'Hoan thanh', data: [1,2,3,2,4,3,5,1,3,4,2,5,4,2,3,1],
+            borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.08)',
+            fill: true, tension: .4, pointRadius: 3, borderWidth: 2,
+          },
+          {
+            label: 'Nhan moi', data: [2,3,2,4,2,3,1,4,3,5,2,3,1,3,2,2],
+            borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.08)',
+            fill: true, tension: .4, pointRadius: 3, borderWidth: 2,
+          },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 12 } } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } }, title: { display: true, text: 'Ngay trong thang', font: { size: 12 } } },
+          y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, stepSize: 1 }, title: { display: true, text: 'So don', font: { size: 12 } } }
+        }
+      }
+    },
+    energy: {
+      type: 'bar',
+      data: {
+        labels: ['Zone A','Zone B','Zone C','Zone D','Zone E'],
+        datasets: [{
+          label: 'kWh',
+          data: [380, 420, 195, 162, 90],
+          backgroundColor: ['#4f46e5','#3b82f6','#06b6d4','#8b5cf6','#a78bfa'],
+          borderRadius: 6,
+          barThickness: 48,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => ` ${c.parsed.x} kWh` } }
+        },
+        scales: {
+          x: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } }, title: { display: true, text: 'kWh', font: { size: 12 } } },
+          y: { grid: { display: false }, ticks: { font: { size: 12, weight: 600 } } }
+        }
+      }
+    }
+  };
+
+  // ── Chart switch logic ──
+  let currentChart = null;
+
+  function showChart(key) {
+    // Update tab styles
+    document.querySelectorAll('.card-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Destroy old chart
+    if (currentChart) currentChart.destroy();
+
+    // Create new chart
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const config = chartConfigs[key];
+    currentChart = new Chart(ctx, {
+      type: config.type,
+      data: JSON.parse(JSON.stringify(config.data)),
+      options: config.options,
+    });
+  }
+
+  // Init with machine chart
+  showChart('machine');
+  document.querySelector('.card-tab').classList.add('active');
+</script>
+
+</body>
+</html>

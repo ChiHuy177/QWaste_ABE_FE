@@ -1,0 +1,21 @@
+{
+    "_comment": "Example branding configuration for a new client deployment",
+    "_instructions": "1. Copy this file to branding.json, 2. Update all values, 3. Add logo files to /public/img/",
+
+    "appName": "Client XYZ Factory System",
+    "companyName": "Client XYZ Corporation",
+    "logo": {
+        "main": "/img/logos/client-xyz-main.svg",
+        "auth": "/img/logos/client-xyz-auth.svg",
+        "favicon": "/favicon-xyz.ico",
+        "poweredBy": "/img/logos/client-xyz-powered.svg"
+    },
+    "colors": {
+        "primary": "#ff5722",
+        "secondary": "#2196f3"
+    },
+    "footer": {
+        "copyright": "2024 Client XYZ Corporation. All rights reserved.",
+        "poweredBy": "/img/logos/powered-by-xyz.png"
+    }
+}

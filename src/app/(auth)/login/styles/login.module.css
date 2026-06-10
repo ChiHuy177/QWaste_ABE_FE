@@ -1,0 +1,625 @@
+/* ================================================================================
+   LOGIN PAGE CSS MODULE
+   Replaces Tailwind CSS classes with pure CSS while maintaining exact appearance
+   ================================================================================ */
+
+/* CSS Variables are defined in globals.css */
+
+/* ================================================================================
+   LAYOUT COMPONENTS
+   ================================================================================ */
+
+/* Main Container - min-h-screen flex flex-col lg:flex-row */
+.loginContainer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+    .loginContainer {
+        flex-direction: row;
+        background-color: transparent;
+    }
+}
+
+/* Desktop SVG Background Layer - hidden lg:block absolute inset-0 z-0 */
+.backgroundLayer {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .backgroundLayer {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+}
+
+/* Spacer for desktop - hidden lg:block lg:w-5/9 */
+.spacer {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .spacer {
+        display: block;
+        width: 55.555556%;
+        /* 5/9 */
+        position: relative;
+        z-index: 10;
+    }
+}
+
+/* Form Container - w-full lg:w-4/9 flex items-center justify-center */
+.formContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    /* p-6 */
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+}
+
+@media (min-width: 640px) {
+    .formContainer {
+        padding: 2rem;
+        /* sm:p-8 */
+    }
+}
+
+@media (min-width: 1024px) {
+    .formContainer {
+        width: 44.444444%;
+        /* 4/9 */
+        padding: 3rem;
+        /* lg:p-12 */
+    }
+}
+
+/* Language Switcher - absolute top-4 right-4 */
+.languageSwitcher {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 20;
+}
+
+@media (min-width: 640px) {
+    .languageSwitcher {
+        top: 1.5rem;
+        /* sm:top-6 */
+        right: 1.5rem;
+        /* sm:right-6 */
+    }
+}
+
+/* Form Card with Glassmorphism */
+.formCard {
+    width: 80%;
+    max-width: 22rem;
+    /* max-w-sm */
+    background-color: white;
+    border-radius: 1rem;
+    /* rounded-2xl */
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    /* shadow-2xl */
+    padding: 1rem;
+    /* p-6 */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    /* space-y-6 */
+    border: 1px solid rgb(0 0 0 / 0.1);
+    /* border-black-100 */
+}
+
+@media (min-width: 640px) {
+    .formCard {
+        padding: 2rem;
+        /* sm:p-8 */
+    }
+}
+
+@media (min-width: 1024px) {
+    .formCard {
+        background-color: rgba(255, 255, 255, 0.95);
+        /* lg:bg-white/95 */
+        backdrop-filter: blur(12px);
+        /* lg:backdrop-blur-md */
+        -webkit-backdrop-filter: blur(12px);
+        border-color: #e5e7eb;
+        /* lg:border-gray-200 */
+    }
+}
+
+
+/* Logo and PoweredBy Wrapper */
+.formWrapper {
+    width: 100%;
+    max-width: 20rem;
+    /* max-w-xs */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Logo Container - Responsive sizing */
+.logoContainer {
+    position: relative;
+    width: 85%;
+    /* Percentage based - adapts to container */
+    max-width: 18rem;
+    /* Prevent too large on desktop */
+    height: 4.5rem;
+    /* Smaller base height */
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .logoContainer {
+        width: 90%;
+        max-width: 20rem;
+        height: 5.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .logoContainer {
+        width: 100%;
+        max-width: 22rem;
+        height: 6rem;
+    }
+}
+
+/* Powered By Container */
+.poweredByContainer {
+    text-align: center;
+    padding-top: 0.5rem;
+    width: 100%;
+}
+
+.poweredByImage {
+    position: relative;
+    width: 7.5rem;
+    /* Fixed smaller size */
+    max-width: 80%;
+    /* But responsive to container */
+    height: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: 640px) {
+    .poweredByImage {
+        width: 8.5rem;
+        height: 2.25rem;
+    }
+}
+
+
+/* ================================================================================
+   FORM COMPONENTS
+   ================================================================================ */
+
+/* Form Container */
+.loginForm {
+    width: 100%;
+    max-width: 28rem;
+    /* max-w-md */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    /* space-y-6 */
+}
+
+/* Form Group (Label + Input) */
+.formGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.label {
+    display: block;
+    font-size: 0.875rem;
+    /* text-sm */
+    font-weight: 500;
+    /* font-medium */
+    color: var(--login-text-gray);
+    /* text-gray-700 */
+    margin-bottom: 0.5rem;
+    /* mb-2 */
+}
+
+/* Input Wrapper (for icon positioning) */
+.inputWrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    /* Prevent icons from overflowing */
+    border-radius: 0.5rem;
+    /* Match input border radius */
+}
+
+/* Input Icon - absolute inset-y-0 left-0 pl-3 */
+.inputIcon {
+    position: absolute;
+    top: 50%;
+    left: 0.6rem;
+    /* Slightly tighter on mobile */
+    transform: translateY(-50%);
+    height: 1.15rem;
+    /* Smaller on mobile */
+    width: 1.15rem;
+    color: #9ca3af;
+    /* text-gray-400 */
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+}
+
+/* Normal size on larger screens */
+@media (min-width: 640px) {
+    .inputIcon {
+        left: 0.75rem;
+        height: 1.25rem;
+        /* h-5 */
+        width: 1.25rem;
+        /* w-5 */
+    }
+}
+
+/* Base Input Styles */
+.input {
+    width: 100%;
+    padding-left: 2.1rem;
+    /* Tighter on mobile */
+    padding-right: 0.75rem;
+    padding-top: 0.65rem;
+    /* Slightly smaller on mobile */
+    padding-bottom: 0.65rem;
+    border: 1px solid var(--login-border-gray);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    /* Slightly smaller on mobile */
+    color: black;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* Normal padding on desktop */
+@media (min-width: 640px) {
+    .input {
+        padding-left: 2.5rem;
+        /* pl-10 */
+        padding-right: 1rem;
+        /* pr-4 */
+        padding-top: 0.75rem;
+        /* py-3 */
+        padding-bottom: 0.75rem;
+        font-size: 1rem;
+    }
+}
+
+.input::placeholder {
+    color: var(--login-placeholder);
+}
+
+.input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--login-focus-blue);
+    /* focus:ring-2 focus:ring-blue-500 */
+    border-color: var(--login-focus-blue);
+    /* focus:border-blue-500 */
+}
+
+.input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Error State Input */
+.inputError {
+    border-color: var(--login-border-red);
+    /* border-red-300 */
+}
+
+.inputError:focus {
+    box-shadow: 0 0 0 2px var(--login-focus-red);
+    /* focus:ring-red-500 */
+    border-color: var(--login-focus-red);
+}
+
+/* Password Input (needs extra padding for toggle) */
+.passwordInput {
+    padding-right: 2.5rem !important;
+    /* Tighter on mobile */
+}
+
+@media (min-width: 640px) {
+    .passwordInput {
+        padding-right: 3rem !important;
+        /* pr-12 on desktop */
+    }
+}
+
+/* Password Toggle Button */
+.passwordToggle {
+    position: absolute;
+    right: 0.5rem;
+    /* Tighter on mobile */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    /* Easier tap target on mobile */
+    transition: color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+@media (min-width: 640px) {
+    .passwordToggle {
+        right: 0.75rem;
+        /* right-3 on desktop */
+        padding: 0;
+    }
+}
+
+.passwordToggle:hover,
+.passwordToggle:focus {
+    color: var(--login-text-gray);
+    /* hover:text-gray-700 focus:text-gray-700 */
+    outline: none;
+}
+
+.passwordToggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Error Message - mt-1 flex items-center text-sm text-red-600 */
+.errorMessage {
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--login-error-text);
+}
+
+.errorMessage svg {
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+}
+
+/* ================================================================================
+   ALERT BANNERS
+   ================================================================================ */
+
+/* Success Banner */
+.successBanner {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem;
+    /* p-3 */
+    font-size: 0.875rem;
+    /* text-sm */
+    color: var(--login-success-text);
+    /* text-green-700 */
+    background-color: var(--login-success-bg);
+    /* bg-green-50 */
+    border: 1px solid var(--login-success-border);
+    /* border-green-200 */
+    border-radius: 0.5rem;
+    /* rounded-lg */
+}
+
+.successBanner svg {
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+/* Error Banner */
+.errorBanner {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem;
+    /* p-3 */
+    font-size: 0.875rem;
+    /* text-sm */
+    color: #b91c1c;
+    /* text-red-700 */
+    background-color: var(--login-error-bg);
+    /* bg-red-50 */
+    border: 1px solid var(--login-error-border);
+    /* border-red-200 */
+    border-radius: 0.5rem;
+    /* rounded-lg */
+}
+
+.errorBanner svg {
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+/* ================================================================================
+   BUTTON STATES
+   ================================================================================ */
+
+/* Base Button - using Ant Design Button but with custom styling */
+.button {
+    width: 100%;
+    background-color: var(--login-primary-blue) !important;
+    color: white !important;
+    padding-top: 0.75rem !important;
+    /* py-3 */
+    padding-bottom: 0.75rem !important;
+    padding-left: 1rem !important;
+    /* px-4 */
+    padding-right: 1rem !important;
+    border-radius: 0.5rem !important;
+    /* rounded-lg */
+    font-weight: 500 !important;
+    /* font-medium */
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: auto !important;
+}
+
+.button:hover:not(:disabled) {
+    background-color: var(--login-primary-blue-hover) !important;
+    transform: scale(1.02) !important;
+}
+
+.button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px var(--login-primary-blue), 0 0 0 4px rgba(7, 70, 149, 0.2) !important;
+}
+
+.button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+/* Button Loading State */
+.buttonLoading {
+    background-color: var(--login-primary-blue) !important;
+}
+
+.buttonLoading:hover {
+    background-color: var(--login-primary-blue) !important;
+}
+
+/* Button Success State */
+.buttonSuccess {
+    background-color: #22c55e !important;
+    /* bg-green-500 */
+}
+
+.buttonSuccess:hover {
+    background-color: #22c55e !important;
+}
+
+/* Button Icon */
+.buttonIcon {
+    margin-right: 0.5rem;
+}
+
+/* Spinner Animation */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================================================================================
+   ANT DESIGN OVERRIDES FOR LOGIN FORM
+   ================================================================================ */
+
+/* Override Ant Design Form.Item margins to match our spacing */
+.loginForm :global(.ant-form-item) {
+    margin-bottom: 0 !important;
+}
+
+/* Override Ant Design Input height to match our design */
+.loginForm :global(.ant-input),
+.loginForm :global(.ant-input-password) {
+    height: auto !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+}
+
+/* Input with prefix icon needs left padding */
+.loginForm :global(.ant-input-affix-wrapper .ant-input) {
+    padding-left: 2.5rem !important;
+}
+
+/* Password input needs right padding for toggle */
+.loginForm :global(.ant-input-password .ant-input) {
+    padding-right: 3rem !important;
+}
+
+/* Override Ant Design validation styles */
+.loginForm :global(.ant-form-item-has-error .ant-input),
+.loginForm :global(.ant-form-item-has-error .ant-input-affix-wrapper) {
+    border-color: var(--login-border-red) !important;
+}
+
+.loginForm :global(.ant-form-item-has-error .ant-input:focus),
+.loginForm :global(.ant-form-item-has-error .ant-input-affix-wrapper:focus),
+.loginForm :global(.ant-form-item-has-error .ant-input-affix-wrapper-focused) {
+    box-shadow: 0 0 0 2px var(--login-focus-red) !important;
+    border-color: transparent !important;
+}
+
+/* Error message styling */
+.loginForm :global(.ant-form-item-explain-error) {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--login-error-text);
+    margin-top: 0.25rem;
+}
+
+/* Remove Ant Design default focus shadows, use our custom one */
+.loginForm :global(.ant-input:focus),
+.loginForm :global(.ant-input-affix-wrapper:focus),
+.loginForm :global(.ant-input-affix-wrapper-focused) {
+    box-shadow: 0 0 0 2px var(--login-focus-blue) !important;
+    border-color: transparent !important;
+    outline: none !important;
+}
+
+/* Placeholder color */
+.loginForm :global(.ant-input::placeholder) {
+    color: var(--login-placeholder) !important;
+}
+
+/* Prefix icon positioning */
+.loginForm :global(.ant-input-prefix) {
+    margin-right: 0.5rem;
+}
+
+/* Password toggle icon */
+.loginForm :global(.ant-input-password-icon) {
+    color: #6b7280 !important;
+    transition: color 0.15s ease;
+}
+
+.loginForm :global(.ant-input-password-icon:hover) {
+    color: var(--login-text-gray) !important;
+}

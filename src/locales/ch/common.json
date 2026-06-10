@@ -1,0 +1,3130 @@
+{
+    "common": {
+        "password": "密码",
+        "save": "保存",
+        "cancel": "取消",
+        "delete": "删除",
+        "edit": "编辑",
+        "loading": "加载中...",
+        "success": "成功",
+        "of": "的",
+        "items": "项",
+        "restore": "恢复",
+        "overview_view": "概览视图",
+        "store": "存储",
+        "update_sensitive": "更新敏感信息",
+        "update_info": "更新信息",
+        "update_plan": "更新计划",
+        "operator_view": "操作员视图",
+        "manager_review_view": "经理审核视图",
+        "decline": "拒绝",
+        "manage": "管理",
+        "discription": "描述",
+        "error": "错误",
+        "warning": "警告",
+        "confirm": "确认",
+        "close": "关闭",
+        "back": "返回",
+        "next": "下一步",
+        "previous": "上一步",
+        "continue": "继续",
+        "retry": "重试",
+        "refresh": "刷新",
+        "search": "搜索",
+        "filter": "筛选",
+        "clear": "清空",
+        "apply": "应用",
+        "reset": "重置",
+        "submit": "提交",
+        "upload": "上传",
+        "download": "下载",
+        "view": "查看",
+        "details": "详情",
+        "settings": "设置",
+        "preferences": "偏好设置",
+        "profile": "个人资料",
+        "account": "账户",
+        "logout": "退出登录",
+        "login": "登录",
+        "register": "注册",
+        "welcome": "欢迎",
+        "goodbye": "再见",
+        "thankyou": "感谢",
+        "yes": "是",
+        "no": "否",
+        "ok": "确定",
+        "optional": "选填",
+        "required": "必填",
+        "recommended": "推荐",
+        "advanced": "高级",
+        "basic": "基础",
+        "help": "帮助",
+        "documentation": "文档",
+        "support": "技术支持",
+        "contact": "联系我们",
+        "about": "关于",
+        "version": "版本",
+        "updated": "已更新",
+        "created": "已创建",
+        "modified": "已修改",
+        "status": "状态",
+        "active": "启用",
+        "inactive": "停用",
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "public": "公开",
+        "private": "私有",
+        "draft": "草稿",
+        "published": "已发布",
+        "pending": "待处理",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "notAvailable": "不可用",
+        "days": "天",
+        "minutes": "分钟",
+        "hours": "小时",
+        "unassignable": "不可分配",
+        "noDataAvailable": "无可用数据",
+        "table": {
+            "pagination": {
+                "resultsInfo": "显示第 {{start}} 至 {{end}} 条，共 {{total}} 条记录",
+                "pageInfo": "第 {{current}} 页/共 {{total}} 页",
+                "firstPage": "首页",
+                "previousPage": "上一页",
+                "nextPage": "下一页",
+                "lastPage": "末页"
+            },
+            "actions": {
+                "view": "查看详情",
+                "edit": "编辑",
+                "create": "创建",
+                "update": "更新",
+                "read": "查看",
+                "restore": "恢复",
+                "batch_create": "批量创建",
+                "loading": "加载中...",
+                "success": "成功",
+                "discription": "描述",
+                "error": "错误",
+                "warning": "警告",
+                "confirm": "确认",
+                "close": "关闭",
+                "back": "返回",
+                "next": "下一步",
+                "previous": "上一步",
+                "continue": "继续",
+                "retry": "重试",
+                "refresh": "刷新",
+                "search": "搜索",
+                "filter": "筛选",
+                "clear": "清空",
+                "apply": "应用",
+                "reset": "重置",
+                "submit": "提交",
+                "upload": "上传",
+                "download": "下载",
+                "details": "详情",
+                "settings": "设置",
+                "preferences": "偏好设置",
+                "profile": "个人资料",
+                "account": "账户",
+                "logout": "退出登录",
+                "login": "登录",
+                "register": "注册",
+                "welcome": "欢迎",
+                "goodbye": "再见",
+                "thankyou": "感谢",
+                "yes": "是",
+                "no": "否",
+                "ok": "确定",
+                "optional": "选填",
+                "required": "必填",
+                "recommended": "推荐",
+                "advanced": "高级",
+                "basic": "基础",
+                "help": "帮助",
+                "documentation": "文档",
+                "support": "技术支持",
+                "contact": "联系我们",
+                "about": "关于",
+                "version": "版本",
+                "updated": "已更新",
+                "created": "已创建",
+                "modified": "已修改",
+                "status": "状态",
+                "active": "启用",
+                "inactive": "停用",
+                "enabled": "已启用",
+                "disabled": "已禁用",
+                "public": "公开",
+                "private": "私有",
+                "draft": "草稿",
+                "published": "已发布",
+                "pending": "待处理",
+                "approved": "已批准",
+                "rejected": "已拒绝",
+                "notAvailable": "不可用",
+                "days": "天",
+                "minutes": "分钟",
+                "hours": "小时",
+                "unassignable": "不可分配",
+                "noDataAvailable": "无可用数据",
+                "noData": "无数据",
+                "table": {
+                    "pagination": {
+                        "resultsInfo": "显示第 {{start}} 至 {{end}} 条，共 {{total}} 条记录",
+                        "pageInfo": "第 {{current}} 页/共 {{total}} 页",
+                        "firstPage": "首页",
+                        "previousPage": "上一页",
+                        "nextPage": "下一页",
+                        "lastPage": "末页"
+                    },
+                    "actions": {
+                        "view": "查看详情",
+                        "edit": "编辑",
+                        "delete": "删除"
+                    },
+                    "clickToView": "点击查看详情",
+                    "noResults": "未找到结果"
+                },
+                "auditInfo": {
+                    "title": "审计信息",
+                    "createdAt": "创建时间",
+                    "createdBy": "创建人",
+                    "updatedAt": "更新时间",
+                    "updatedBy": "更新人"
+                }
+            },
+            "auth": {
+                "errors": {
+                    "invalid": "邮箱或密码无效",
+                    "inactive": "账户已停用，请联系管理员",
+                    "serverError": "服务器错误，请稍后重试",
+                    "networkError": "网络连接异常，请检查网络",
+                    "maintenance": "系统维护中，请稍后重试",
+                    "timeout": "请求超时，请重试",
+                    "unauthorized": "凭证无效",
+                    "unexpectedError": "发生未知错误",
+                    "authCheckFailed": "认证校验失败",
+                    "networkErrorDuringLogin": "登录过程中网络异常",
+                    "badRequest": "无效请求",
+                    "accessDenied": "访问被拒绝",
+                    "loginFailed": "登录失败，请重试"
+                },
+                "messages": {
+                    "noTokenFound": "登录响应中未找到令牌",
+                    "invalidResponseFormat": "响应格式无效 - 缺少必要字段",
+                    "attemptingLogin": "正在尝试登录：",
+                    "loginSuccessful": "登录成功",
+                    "restoringSession": "正在从存储凭据恢复会话",
+                    "accountRestored": "账户已恢复",
+                    "loginCompleted": "登录成功完成",
+                    "logoutCompleted": "登出完成",
+                    "authDataCleared": "认证数据已清除",
+                    "authDataStored": "认证数据已存储",
+                    "accountSettingsUpdated": "账户设置已更新",
+                    "themeApplied": "已立即应用主题：",
+                    "languageSyncCompleted": "语言同步完成",
+                    "authProviderInitialized": "认证提供器已初始化 - 正在检查认证状态",
+                    "noStoredAuth": "未找到存储的认证凭据",
+                    "syncingTheme": "挂载时从Cookie同步主题"
+                },
+                "hooks": {
+                    "mustUseWithinProvider": "useAuth必须在AuthProvider组件内使用"
+                }
+            },
+            "header": {
+                "title": {
+                    "short": "IIC",
+                    "medium": "IIC Mgmt",
+                    "long": "IIC Management",
+                    "full": "IIC Management System"
+                },
+                "greeting": {
+                    "morning": "早上好",
+                    "afternoon": "下午好",
+                    "evening": "晚上好",
+                    "morningShort": "早",
+                    "afternoonShort": "午",
+                    "eveningShort": "晚"
+                },
+                "user": {
+                    "defaultName": "用户"
+                },
+                "navigation": {
+                    "toggleSidebar": "切换侧边栏"
+                },
+                "notifications": {
+                    "label": "通知",
+                    "tooltip": "查看通知"
+                }
+            },
+            "sidebar": {
+                "navigation": {
+                    "overview": "概览",
+                    "taskBoard": "任务看板",
+                    "machine": "设备管理",
+                    "machineStatus": "设备状态",
+                    "machineDashboard": "设备仪表盘",
+                    "staff": "人员管理",
+                    "drawingCode": "图纸编号",
+                    "process": "工序管理",
+                    "order": "生产订单",
+                    "history": "历史记录",
+                    "reports": "报表统计",
+                    "settings": "系统设置",
+                    "machineManagement": "设备管理",
+                    "spaceConfiguration": "区域配置",
+                    "staffOthers": "人员及其他",
+                    "factoryOperations": "工厂运营",
+                    "errorGroup": "错误组列表",
+                    "errorDetail": "错误详情列表",
+                    "productionPlan": "生产计划列表",
+                    "moldCode": "模具代码列表"
+                },
+                "tooltip": {
+                    "subItems": "子菜单项"
+                },
+                "logo": {
+                    "alt": "系统标识"
+                }
+            },
+            "navUser": {
+                "avatar": {
+                    "alt": "{name}的头像"
+                },
+                "roles": {
+                    "admin": "管理员",
+                    "qc": "质量控制",
+                    "op": "操作员"
+                },
+                "menu": {
+                    "openUserMenu": "打开用户菜单",
+                    "account": "账户设置",
+                    "settings": "系统设置",
+                    "billing": "账单管理",
+                    "notifications": "通知中心",
+                    "logout": "退出登录"
+                },
+                "roleTooltip": "用户角色：{role}",
+                "logoutModal": {
+                    "title": "确认退出登录",
+                    "message": "确定要退出系统吗？重新访问仪表盘需要重新登录",
+                    "confirmText": "确认退出",
+                    "cancelText": "取消"
+                }
+            },
+            "notFound": {
+                "title": "页面不存在",
+                "description": "您查找的页面不存在或已被移至其他位置。",
+                "buttons": {
+                    "goToLogin": "前往登录",
+                    "goToAdminDashboard": "前往管理员仪表盘",
+                    "goToOperatorDashboard": "前往操作员仪表盘",
+                    "goToQcDashboard": "前往质检仪表盘",
+                    "goToDashboard": "前往仪表盘"
+                }
+            },
+            "unauthorized": {
+                "title": "访问被拒绝",
+                "description": "您无权访问此页面。",
+                "currentRole": "当前角色：",
+                "attemptedAccess": "尝试访问：",
+                "autoRedirect": {
+                    "title": "自动重定向中",
+                    "secondsRemaining": "秒后跳转"
+                },
+                "buttons": {
+                    "goBackNow": "立即返回",
+                    "goToLogin": "前往登录",
+                    "goToAdminDashboard": "前往管理员仪表盘",
+                    "goToOperatorDashboard": "前往操作员仪表盘",
+                    "goToQcDashboard": "前往质检仪表盘",
+                    "logout": "退出登录"
+                },
+                "logoutModal": {
+                    "title": "确认退出",
+                    "message": "确定要退出登录吗？需要重新登录才能访问仪表盘。",
+                    "confirmText": "退出登录",
+                    "cancelText": "取消"
+                },
+                "loading": "加载中..."
+            },
+            "adminPage": {
+                "title": "总览仪表盘",
+                "actions": {
+                    "export": "导出",
+                    "exportData": "导出数据"
+                }
+            },
+            "oeeCards": {
+                "oee": {
+                    "title": "设备综合效率",
+                    "comparison": "对比上一{{period}}"
+                },
+                "availability": {
+                    "title": "可用率",
+                    "descriptionFull": "运行时间占计划生产时间的比例",
+                    "descriptionShort": "设备运行时间"
+                },
+                "performance": {
+                    "title": "性能率",
+                    "descriptionFull": "实际周期时间与理想周期时间的比率",
+                    "descriptionShort": "速度效率"
+                },
+                "quality": {
+                    "title": "良品率",
+                    "descriptionFull": "合格品数量占总产量的比例",
+                    "descriptionShort": "生产质量"
+                },
+                "periods": {
+                    "day": "天",
+                    "week": "周",
+                    "month": "月"
+                }
+            },
+            "oeeChart": {
+                "title": "设备综合效率趋势",
+                "description": "设备综合效率随时间变化趋势",
+                "chartTypes": {
+                    "line": "折线图",
+                    "area": "面积图",
+                    "bar": "柱状图"
+                },
+                "timeRange": {
+                    "placeholder": "选择时间范围",
+                    "daily": "日维度",
+                    "weekly": "周维度",
+                    "monthly": "月维度"
+                },
+                "metrics": {
+                    "availability": {
+                        "full": "可用率",
+                        "short": "可用率"
+                    },
+                    "performance": {
+                        "full": "性能率",
+                        "short": "性能率"
+                    },
+                    "quality": "良品率",
+                    "oee": "综合效率"
+                }
+            },
+            "oeePieChart": {
+                "title": "设备效率分布",
+                "factorsTitle": "效率要素",
+                "overallEquipmentEffectiveness": "设备综合效率",
+                "description": {
+                    "mobile": "设备效率排名",
+                    "desktop": "按设备分解的综合效率分析"
+                },
+                "select": {
+                    "placeholder": "选择设备",
+                    "ariaLabel": "选择设备",
+                    "allMachines": "全部设备"
+                },
+                "labels": {
+                    "oee": "综合效率",
+                    "production": "生产",
+                    "value": "数值"
+                }
+            },
+            "oeeBarChart": {
+                "title": "效率要素对比",
+                "gap": "差距",
+                "description": {
+                    "mobile": "可用率 vs 性能率 vs 良品率",
+                    "desktop": "可用率与性能率及良品率对比"
+                },
+                "dataLabel": "整体指标",
+                "periods": {
+                    "previous": "上期",
+                    "current": "本期",
+                    "target": "目标"
+                },
+                "metrics": {
+                    "availability": {
+                        "full": "可用率",
+                        "short": "可用率"
+                    },
+                    "performance": {
+                        "full": "性能率",
+                        "short": "性能率"
+                    },
+                    "quality": "良品率",
+                    "oee": "综合效率"
+                }
+            },
+            "machineManagement": {
+                "header": {
+                    "title": "机器管理",
+                    "subtitle": "监控和管理您的工业设备"
+                },
+                "overview": {
+                    "title": "机器概览",
+                    "machineCount": "{{count}} 台设备",
+                    "totalResults": "找到 {{count}} 台设备",
+                    "currentPage": "第 {{current}}/{{total}} 页",
+                    "noMachines": "未找到机器",
+                    "noMachinesWithFilters": "当前筛选条件下无匹配机器"
+                },
+                "buttons": {
+                    "refresh": "刷新",
+                    "addMachine": "添加设备",
+                    "edit": "编辑设备",
+                    "delete": "删除设备",
+                    "viewDetails": "查看详情",
+                    "clear": "清除",
+                    "clearFilters": "清除筛选",
+                    "showFilters": "显示筛选器",
+                    "hideFilters": "隐藏筛选器"
+                },
+                "filters": {
+                    "title": "搜索与筛选",
+                    "subtitle": "按条件查找和筛选设备",
+                    "searchPlaceholder": "按名称搜索设备...",
+                    "statusLabel": "状态",
+                    "allStatus": "所有状态",
+                    "itemsPerPage": "每页数量",
+                    "activeFilters": "已激活筛选器:",
+                    "searchFilter": "搜索: {{term}}",
+                    "statusFilter": "状态: {{status}}",
+                    "resultsFound": "找到 {{count}} 台设备",
+                    "resultsFoundWithPages": "在 {{pages}} 页中找到 {{count}} 台设备",
+                    "currentPage": "第 {{current}}/{{total}} 页"
+                },
+                "statuses": {
+                    "running": "运行中",
+                    "idle": "待机",
+                    "error": "故障",
+                    "offline": "离线",
+                    "maintenance": "维护中"
+                },
+                "emptyStates": {
+                    "noMachines": {
+                        "title": "未找到设备",
+                        "description": "请添加第一台设备至系统",
+                        "actionButton": "添加设备"
+                    },
+                    "noResults": {
+                        "title": "无匹配设备",
+                        "description": "请调整搜索条件或筛选器",
+                        "actionButton": "清除筛选"
+                    }
+                },
+                "errorStates": {
+                    "loadError": {
+                        "title": "加载失败",
+                        "description": "加载设备数据时出错，请重试",
+                        "actionButton": "重试"
+                    }
+                },
+                "loading": {
+                    "machines": "加载设备中...",
+                    "creating": "创建设备中...",
+                    "updating": "更新设备中...",
+                    "deleting": "删除设备中..."
+                },
+                "messages": {
+                    "success": {
+                        "created": "设备创建成功!",
+                        "updated": "设备更新成功!",
+                        "deleted": "设备删除成功!"
+                    },
+                    "errors": {
+                        "createFailed": "创建设备失败",
+                        "updateFailed": "更新设备失败",
+                        "deleteFailed": "删除设备失败",
+                        "loadFailed": "加载设备失败"
+                    }
+                },
+                "deleteModal": {
+                    "title": "删除设备",
+                    "description": "确定要删除设备 \"{{name}}\"?",
+                    "warning": "此操作不可撤销",
+                    "labels": {
+                        "id": "设备ID:",
+                        "name": "名称:"
+                    },
+                    "buttons": {
+                        "cancel": "取消",
+                        "delete": "删除设备",
+                        "deleting": "删除中..."
+                    }
+                },
+                "addModal": {
+                    "title": "添加新设备",
+                    "sections": {
+                        "basicInfo": "基本信息",
+                        "machineImage": "设备图片",
+                        "initialStatus": "初始状态"
+                    },
+                    "fields": {
+                        "machineName": "设备名称",
+                        "machineNameRequired": "设备名称必填",
+                        "machineStatus": "设备状态"
+                    },
+                    "placeholders": {
+                        "enterMachineName": "输入设备名称",
+                        "selectStatus": "选择状态"
+                    },
+                    "statuses": {
+                        "running": "运行中",
+                        "idle": "待机",
+                        "error": "故障"
+                    },
+                    "note": {
+                        "title": "注意:",
+                        "description": "详细参数(型号、制造商、功率等)将在设备连接后自动从实时数据获取"
+                    },
+                    "buttons": {
+                        "cancel": "取消",
+                        "create": "创建设备",
+                        "creating": "创建中..."
+                    }
+                },
+                "detailsDialog": {
+                    "title": "设备详情",
+                    "liveData": "实时数据",
+                    "connectionError": "连接错误",
+                    "sections": {
+                        "basicInfo": "基本信息",
+                        "positionCoordinates": "坐标位置",
+                        "performanceMetrics": "性能指标",
+                        "machineImage": "设备图片",
+                        "statusIndicators": "状态指示器"
+                    },
+                    "fields": {
+                        "status": "状态",
+                        "model": "型号",
+                        "manufacturer": "制造商",
+                        "xPosition": "X轴位置",
+                        "yPosition": "Y轴位置",
+                        "zPosition": "Z轴位置",
+                        "partsCount": "零件计数",
+                        "feedrate": "进给速率",
+                        "spindleSpeed": "主轴转速",
+                        "runtime": "运行时间",
+                        "cycleTime": "循环时间",
+                        "spindleLoad": "主轴负载"
+                    },
+                    "units": {
+                        "mm": "毫米",
+                        "mmPerMin": "毫米/分钟",
+                        "rpm": "转/分钟",
+                        "watts": "瓦特"
+                    },
+                    "statusLabels": {
+                        "automatic": "自动模式",
+                        "running": "运行中",
+                        "motion": "运动中",
+                        "mstb": "MSTB",
+                        "emergency": "紧急状态",
+                        "alarm": "报警",
+                        "editMode": "编辑模式"
+                    },
+                    "imageAlt": "{{name}}设备图片",
+                    "buttons": {
+                        "disconnect": "断开{{controller}}连接",
+                        "connect": "连接{{controller}}",
+                        "close": "关闭"
+                    }
+                },
+                "search": {
+                    "label": "搜索",
+                    "placeholder": "搜索设备..."
+                },
+                "editMachineModal": {
+                    "title": "编辑设备: {{name}}",
+                    "sections": {
+                        "basicInfo": "基本信息",
+                        "machineImage": "设备图片",
+                        "status": "状态",
+                        "systemInfo": "系统信息"
+                    },
+                    "fields": {
+                        "machineName": "设备名称",
+                        "machineStatus": "设备状态",
+                        "machineId": "设备ID",
+                        "createdTime": "创建时间"
+                    },
+                    "placeholders": {
+                        "machineName": "输入设备名称",
+                        "selectStatus": "选择状态"
+                    },
+                    "statusOptions": {
+                        "running": "运行中",
+                        "idle": "待机",
+                        "error": "故障"
+                    },
+                    "validation": {
+                        "nameRequired": "设备名称必填"
+                    },
+                    "note": {
+                        "title": "注意:",
+                        "description": "详细参数(型号、制造商等)通过实时数据管理，无法在此编辑"
+                    },
+                    "buttons": {
+                        "cancel": "取消",
+                        "saveChanges": "保存更改",
+                        "saving": "保存中..."
+                    }
+                },
+                "machineImageUploader": {
+                    "title": "设备图片",
+                    "uploading": "上传中...",
+                    "preview": "预览",
+                    "remove": "移除",
+                    "uploadSuccess": "图片上传成功",
+                    "dragDropLabel": "拖放图片至此处",
+                    "sizeLimit": "最大4MB",
+                    "acceptedFormats": "支持格式: JPEG, PNG, WebP"
+                },
+                "machineStates": {
+                    "emptyState": {
+                        "title": "未找到设备",
+                        "noMatchingFilters": "无匹配设备，请调整筛选条件",
+                        "getStarted": "请添加第一台设备",
+                        "clearFilters": "清除筛选",
+                        "addMachine": "添加设备"
+                    },
+                    "errorState": {
+                        "title": "加载错误",
+                        "details": "加载设备数据时出错:",
+                        "retry": "重试"
+                    }
+                },
+                "machineCard": {
+                    "actions": {
+                        "edit": "编辑设备",
+                        "delete": "删除设备"
+                    },
+                    "imageOverlay": {
+                        "clickToView": "点击查看详情"
+                    },
+                    "noImage": {
+                        "title": "无图片",
+                        "subtitle": "上传图片"
+                    },
+                    "status": {
+                        "clickForDetails": "点击查看详情",
+                        "label": "状态"
+                    },
+                    "created": "创建于"
+                },
+                "timeline": {
+                    "title": "今日活动时间线",
+                    "noActivityData": "暂无活动数据",
+                    "noMachineData": "无设备数据",
+                    "machineDetails": "设备详情",
+                    "current": "当前",
+                    "duration": "时长",
+                    "activeNow": "运行中",
+                    "shortLog": "短日志",
+                    "unknown": "未知",
+                    "activityDetails": "活动详情（{{count}}个阶段）",
+                    "operator": "操作员",
+                    "task": "任务",
+                    "energy": "能耗",
+                    "production": "产量"
+                }
+            },
+            "staffManagement": {
+                "title": "员工管理",
+                "description": "管理团队成员及其账户信息",
+                "addStaffMember": "添加员工",
+                "editStaffMember": "编辑员工信息",
+                "noStaffFound": "未找到员工记录",
+                "noStaffFoundDescription": "请调整搜索条件，或添加新员工开始管理",
+                "refresh": "刷新",
+                "refreshData": "刷新数据",
+                "refreshing": "刷新中...",
+                "addFirstStaff": "添加首位员工",
+                "searchPlaceholder": "按姓名或员工代码搜索...",
+                "stats": {
+                    "totalStaff": "员工总数",
+                    "activeMembers": "激活成员",
+                    "inactiveMembers": "停用成员",
+                    "rolesBreakdown": "角色分布",
+                    "admins": "管理员",
+                    "qualityControl": "质检员",
+                    "operators": "操作员"
+                },
+                "search": {
+                    "title": "搜索与筛选",
+                    "description": "按姓名、角色或部门查找筛选员工",
+                    "placeholder": "按姓名或邮箱搜索...",
+                    "filterByRole": "按角色筛选",
+                    "allRoles": "全部角色"
+                },
+                "table": {
+                    "title": "员工总览",
+                    "description": "查看并管理所有团队成员及其权限",
+                    "headers": {
+                        "name": "姓名",
+                        "email": "邮箱",
+                        "phone": "电话",
+                        "role": "角色",
+                        "status": "状态",
+                        "actions": "操作"
+                    }
+                },
+                "form": {
+                    "createTitle": "添加新员工",
+                    "createDescription": "创建新员工账户并分配角色。所有字段均为必填项以确保系统访问权限",
+                    "editTitle": "编辑员工信息",
+                    "editDescription": "更新员工信息及凭证，更改将在保存后立即生效",
+                    "fields": {
+                        "fullName": "姓名",
+                        "email": "邮箱地址",
+                        "phoneNumber": "手机号码",
+                        "role": "角色",
+                        "status": "状态",
+                        "kpi": "绩效评分"
+                    },
+                    "placeholders": {
+                        "fullName": "请输入姓名",
+                        "email": "请输入邮箱",
+                        "phoneNumber": "请输入手机号",
+                        "selectRole": "选择角色",
+                        "kpiScore": "输入绩效评分（选填）"
+                    },
+                    "buttons": {
+                        "create": "创建员工",
+                        "update": "更新信息",
+                        "cancel": "取消",
+                        "saving": "保存中..."
+                    },
+                    "validation": {
+                        "required": "该字段为必填项",
+                        "invalidEmail": "请输入有效邮箱地址",
+                        "invalidPhone": "请输入有效手机号码"
+                    }
+                },
+                "roles": {
+                    "admin": "管理员",
+                    "qc": "质检员",
+                    "op": "操作员"
+                },
+                "status": {
+                    "active": "激活",
+                    "inactive": "停用",
+                    "working": "在岗",
+                    "notWorking": "离岗"
+                },
+                "actions": {
+                    "edit": "编辑",
+                    "delete": "删除",
+                    "showPassword": "显示密码",
+                    "hidePassword": "隐藏密码"
+                },
+                "dialogs": {
+                    "deleteConfirmation": {
+                        "title": "确认删除",
+                        "description": "此操作不可撤销。将永久删除员工：{name}",
+                        "cancel": "取消",
+                        "confirm": "确认删除"
+                    },
+                    "editConfirmation": {
+                        "title": "确认更改",
+                        "message": "确定更新该员工信息？更改将立即生效",
+                        "confirmText": "更新员工信息",
+                        "cancelText": "取消"
+                    },
+                    "registrationSuccess": {
+                        "title": "员工创建成功",
+                        "message": "新员工{name}已成功注册。请通知其查收邮箱获取登录凭证",
+                        "additionalInfo": "包含登录详情和密码重置链接的邮件已发送至：{email}",
+                        "confirmText": "确认",
+                        "reminderText": "请提醒新员工查收邮件！"
+                    }
+                },
+                "messages": {
+                    "success": {
+                        "created": "员工创建成功",
+                        "updated": "员工信息更新成功",
+                        "deleted": "员工删除成功",
+                        "refreshed": "数据刷新成功"
+                    },
+                    "errors": {
+                        "loadFailed": "员工数据加载失败",
+                        "createFailed": "员工创建失败",
+                        "updateFailed": "员工信息更新失败",
+                        "deleteFailed": "员工删除失败",
+                        "refreshFailed": "数据刷新失败",
+                        "invalidToken": "会话已过期，请重新登录",
+                        "insufficientPermissions": "权限不足，无法执行此操作",
+                        "networkError": "网络连接异常，请检查网络",
+                        "timeoutError": "请求超时，请重试",
+                        "serverError": "服务器内部错误，请稍后再试",
+                        "validationFailed": "请填写所有必填字段",
+                        "invalidEmail": "请输入有效邮箱地址",
+                        "invalidPhone": "请输入有效手机号码",
+                        "emailExists": "该邮箱已在系统注册",
+                        "invalidRole": "无效角色，请选择管理员/质检/操作员",
+                        "notAdmin": "需要管理员权限执行此操作",
+                        "accountNotFound": "未找到员工账户",
+                        "badRequest": "无效请求，请检查输入",
+                        "unauthorized": "未获授权执行此操作"
+                    }
+                }
+            },
+            "drawingCodeManagement": {
+                "title": "图纸代码管理",
+                "description": "管理与组织技术图纸代码及相关文档",
+                "addDrawingCode": "添加图纸代码",
+                "editDrawingCode": "编辑图纸代码",
+                "noDrawingCodesFound": "未找到图纸代码",
+                "noDrawingCodesFoundDescription": "请添加首个图纸代码以开始管理技术文档",
+                "addFirstDrawingCode": "添加首个图纸代码",
+                "loadingMessage": "正在加载图纸代码...",
+                "search": {
+                    "placeholder": "按图纸代码名称搜索..."
+                },
+                "table": {
+                    "title": "图纸代码总览",
+                    "clickToView": "点击查看详情",
+                    "description": "查看并管理所有技术图纸代码",
+                    "totalCount": "共{count}个图纸代码",
+                    "noResults": "未找到匹配结果",
+                    "noPdf": "无PDF文档",
+                    "headers": {
+                        "drawingCodeId": "图纸代码ID",
+                        "description": "描述",
+                        "name": "图纸名称",
+                        "pdf": "PDF文档",
+                        "actions": "操作"
+                    },
+                    "pagination": {
+                        "showing": "显示",
+                        "to": "至",
+                        "of": "/",
+                        "results": "条记录",
+                        "page": "第"
+                    },
+                    "actions": {
+                        "view": "查看详情",
+                        "edit": "编辑图纸编号",
+                        "delete": "删除图纸编号"
+                    }
+                },
+                "form": {
+                    "createTitle": "添加新图纸代码",
+                    "editTitle": "编辑图纸代码",
+                    "fields": {
+                        "drawingCodeId": "图纸代码ID",
+                        "name": "图纸名称",
+                        "description": "技术说明",
+                        "pdfUrl": "PDF文档链接",
+                        "pdfUpload": "上传PDF文档"
+                    },
+                    "placeholders": {
+                        "drawingCodeId": "输入图纸代码ID（如：DC-001）",
+                        "name": "输入图纸名称",
+                        "description": "输入技术说明（选填）",
+                        "pdfUrl": "输入PDF文档URL链接"
+                    },
+                    "buttons": {
+                        "create": "创建图纸代码",
+                        "update": "更新图纸代码",
+                        "creating": "创建中...",
+                        "updating": "更新中..."
+                    },
+                    "validation": {
+                        "drawingCodeIdRequired": "图纸代码ID为必填项",
+                        "nameRequired": "图纸名称为必填项"
+                    }
+                },
+                "details": {
+                    "title": "图纸代码详情",
+                    "description": "技术说明",
+                    "metadata": "元数据",
+                    "createdAt": "创建时间",
+                    "updatedAt": "最后更新时间",
+                    "pdfUrl": "PDF文档链接",
+                    "downloadPdf": "下载PDF"
+                },
+                "dialogs": {
+                    "deleteConfirmation": {
+                        "title": "删除图纸代码",
+                        "description": "确认删除图纸代码 {drawingCodeId} {name}？此操作不可撤销",
+                        "confirm": "确认删除",
+                        "deleting": "删除中..."
+                    }
+                },
+                "messages": {
+                    "success": {
+                        "created": "图纸代码创建成功",
+                        "updated": "图纸代码更新成功",
+                        "deleted": "图纸代码删除成功",
+                        "downloaded": "PDF下载成功"
+                    },
+                    "errors": {
+                        "fetchFailed": "图纸代码加载失败",
+                        "createFailed": "图纸代码创建失败",
+                        "updateFailed": "图纸代码更新失败",
+                        "deleteFailed": "图纸代码删除失败",
+                        "downloadFailed": "PDF下载失败",
+                        "sessionExpired": "会话已过期，请重新登录",
+                        "unauthorized": "权限不足，无法执行此操作",
+                        "adminRoleRequired": "需要管理员权限访问此页面",
+                        "connectionError": "网络连接异常，请检查网络",
+                        "timeoutError": "请求超时，请重试",
+                        "networkError": "网络错误，请重试",
+                        "notFound": "未找到图纸代码",
+                        "alreadyExists": "该图纸代码ID已存在",
+                        "noPdfUrl": "此图纸代码无可用PDF链接",
+                        "unexpectedError": "发生未知错误"
+                    },
+                    "downloadStarted": "开始下载PDF文档..."
+                }
+            },
+            "processManagement": {
+                "title": "工序管理",
+                "description": "管理和跟踪制造工序",
+                "form": {
+                    "fields": {
+                        "name": "工序名称",
+                        "drawingCode": "图号",
+                        "machine": "设备",
+                        "predictedDuration": "预计工时",
+                        "taskStatus": "任务状态",
+                        "approved": "质检审批",
+                        "qcRemarks": "质检备注"
+                    },
+                    "placeholders": {
+                        "name": "输入工序名称...",
+                        "selectDrawingCode": "选择图号",
+                        "selectMachine": "选择设备",
+                        "searchPlaceholder": "按工序名称搜索...",
+                        "predictedDuration": "输入工时（小时）",
+                        "qcRemarks": "输入质检备注..."
+                    },
+                    "validation": {
+                        "nameRequired": "工序名称必填",
+                        "drawingCodeRequired": "图号必选",
+                        "machineRequired": "设备必选",
+                        "predictedDurationRequired": "预计工时必填"
+                    },
+                    "help": {
+                        "durationInHours": "输入预计工时（小时），例如：2.5 表示2小时30分钟"
+                    },
+                    "buttons": {
+                        "create": "创建工序",
+                        "update": "更新工序",
+                        "creating": "创建中...",
+                        "updating": "更新中..."
+                    },
+                    "options": {
+                        "selectApproval": "选择审批状态",
+                        "pending": "待审批",
+                        "approved": "已批准",
+                        "rejected": "已拒绝"
+                    },
+                    "createTitle": "创建新工序",
+                    "editTitle": "编辑工序"
+                },
+                "dialogs": {
+                    "deleteConfirmation": {
+                        "title": "删除工序",
+                        "description": "确定删除此工序？此操作不可撤销。",
+                        "confirm": "删除工序",
+                        "deleting": "删除中..."
+                    }
+                },
+                "table": {
+                    "headers": {
+                        "processName": "工序名称",
+                        "drawingCode": "图号",
+                        "machine": "设备",
+                        "taskStatus": "状态",
+                        "approved": "质检状态",
+                        "predictedDuration": "工时",
+                        "startTime": "开始时间",
+                        "endTime": "结束时间",
+                        "expectedEndTime": "预计结束",
+                        "actions": "操作"
+                    },
+                    "noResults": "未找到工序",
+                    "totalCount": "显示 {{count}} 个工序",
+                    "clickToView": "点击查看详情"
+                },
+                "taskStatus": {
+                    "all": "全部状态",
+                    "to_do": "待处理",
+                    "in_progress": "进行中",
+                    "wait_qc": "待质检",
+                    "checked": "已检验"
+                },
+                "qcStatus": {
+                    "pending": "待审批",
+                    "approved": "已批准",
+                    "rejected": "已拒绝"
+                },
+                "filters": {
+                    "filters": "筛选器",
+                    "advancedFilters": "高级筛选",
+                    "clearAll": "清除全部",
+                    "searchPlaceholder": "搜索工序...",
+                    "taskStatus": "任务状态",
+                    "drawingCode": "图号",
+                    "machine": "设备",
+                    "durationRange": "工时范围",
+                    "showOverdue": "仅显示逾期",
+                    "allStatuses": "全部状态",
+                    "allDrawingCodes": "全部图号",
+                    "allMachines": "全部设备",
+                    "selectDrawingCode": "选择图号",
+                    "selectMachine": "选择设备",
+                    "minHours": "最小工时",
+                    "maxHours": "最大工时",
+                    "durationRangeHelp": "按预计工时（小时）筛选",
+                    "search": "搜索",
+                    "status": "状态",
+                    "duration": "工时",
+                    "overdue": "逾期"
+                },
+                "messages": {
+                    "errors": {
+                        "drawingCodeLoadFailed": "图号加载失败",
+                        "machineLoadFailed": "设备加载失败",
+                        "processLoadFailed": "工序加载失败",
+                        "createFailed": "创建工序失败",
+                        "updateFailed": "更新工序失败",
+                        "deleteFailed": "删除工序失败",
+                        "connectionError": "连接错误，请检查网络连接",
+                        "sessionExpired": "会话已过期，请重新登录",
+                        "unauthorized": "无操作权限",
+                        "timeoutError": "请求超时，请重试",
+                        "networkError": "网络错误，请检查连接",
+                        "serverError": "服务器错误，请稍后重试",
+                        "notFound": "未找到请求项",
+                        "alreadyExists": "项目已存在",
+                        "unexpectedError": "发生意外错误，请重试",
+                        "fetchFailed": "数据获取失败",
+                        "updateError": "数据更新失败",
+                        "createError": "创建项目失败",
+                        "deleteError": "删除项目失败"
+                    },
+                    "success": {
+                        "processCreated": "工序创建成功",
+                        "processUpdated": "工序更新成功",
+                        "processDeleted": "工序删除成功",
+                        "created": "创建成功",
+                        "updated": "更新成功",
+                        "deleted": "删除成功"
+                    }
+                },
+                "overdue": "逾期",
+                "loadingMessage": "加载工序中...",
+                "noProcessesFound": "未找到工序",
+                "noProcessesFoundDescription": "请创建第一个工序开始",
+                "noResultsAfterFilter": "没有匹配当前筛选条件的工序，请调整搜索条件",
+                "addFirstProcess": "添加第一个工序",
+                "addProcess": "添加工序",
+                "details": {
+                    "title": "工序详情",
+                    "basicInfo": "基本信息",
+                    "timeline": "时间线",
+                    "qcInfo": "质量控制",
+                    "metadata": "元数据",
+                    "createdAt": "创建时间",
+                    "updatedAt": "最后更新",
+                    "noRemarks": "暂无质检备注"
+                },
+                "display": {
+                    "unknownDrawingCode": "未知图号",
+                    "unknownMachine": "未知设备"
+                }
+            },
+            "taskManagement": {
+                "title": "任务管理",
+                "description": "管理工作流程中的生产任务",
+                "loading": "加载中...",
+                "refreshing": "刷新中...",
+                "refresh": "刷新",
+                "noTasks": "无任务",
+                "overdue": "已逾期",
+                "dueSoon": "即将到期",
+                "autoRefresh": "{{seconds}}秒后自动刷新",
+                "hideCheckedTasks": "隐藏旧完成的任务",
+                "showCheckedTasks": "显示所有完成的任务",
+                "hideOldCompletedTasks": "隐藏旧完成的任务",
+                "showOldCompletedTasks": "显示旧完成的任务",
+                "hideOldTasks": "隐藏超过",
+                "unassignable": "未分配",
+                "days": "天的任务",
+                "checkInstructions": "点击信息图标查看角色特定说明",
+                "stats": {
+                    "totalTasks": "总任务数",
+                    "toDo": "待处理",
+                    "inProgress": "进行中",
+                    "waitingQc": "等待质检",
+                    "checked": "已检查"
+                },
+                "taskStatus": {
+                    "to_do": "待处理",
+                    "in_progress": "进行中",
+                    "wait_qc": "等待质检",
+                    "checked": "已检查",
+                    "predictedDuration": "预计时长",
+                    "predictedEndTime": "预计完成时间",
+                    "durationHours": "小时"
+                },
+                "priority": {
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高",
+                    "urgent": "紧急"
+                },
+                "card": {
+                    "assignedToMe": "分配给我",
+                    "noOperator": "无操作员",
+                    "qcApproved": "质检通过",
+                    "qcRejected": "质检拒绝",
+                    "clickToView": "点击查看详情",
+                    "assignToMe": "分配给我",
+                    "unassign": "取消分配",
+                    "assigning": "分配中...",
+                    "unassigning": "取消分配中...",
+                    "noProcess": "无流程",
+                    "noMachine": "无设备"
+                },
+                "filters": {
+                    "title": "筛选条件",
+                    "status": "状态",
+                    "priority": "优先级",
+                    "machine": "设备",
+                    "allStatuses": "所有状态",
+                    "allPriorities": "所有优先级",
+                    "allMachines": "所有设备",
+                    "activeFilters": "{{count}}个条件"
+                },
+                "permissions": {
+                    "operatorView": "操作员视图：可查看分配给您的任务和未分配任务",
+                    "qcView": "质检视图：可审核待质检任务和已完成任务",
+                    "adminView": "管理员视图：拥有管理所有任务和分配的完整权限"
+                },
+                "roleInstructions": {
+                    "general": "任务只能向前推进工作流程 - 不可后退",
+                    "op": {
+                        "title": "操作员指南",
+                        "instruction1": "点击'分配给我'领取可用任务",
+                        "instruction2": "推进任务：待处理 → 进行中 → 等待质检",
+                        "instruction3": "同时只能处理一个任务",
+                        "instruction4": "将任务移至'等待质检'状态以完成",
+                        "instruction5": "使用拖放或点击任务卡片更新状态"
+                    },
+                    "qc": {
+                        "title": "质检指南",
+                        "instruction1": "审核'等待质检'栏的任务",
+                        "instruction2": "点击任务打开详细审核对话框",
+                        "instruction3": "批准或拒绝任务（可添加备注）",
+                        "instruction4": "批准的任务移至'已检查'状态",
+                        "instruction5": "拒绝的任务可退回返工"
+                    },
+                    "admin": {
+                        "title": "管理员指南",
+                        "instruction1": "拥有查看和管理所有任务的完整权限",
+                        "instruction2": "使用分配按钮为任务分配操作员",
+                        "instruction3": "可在任意状态列间移动任务",
+                        "instruction4": "监控整体工作流程并解决瓶颈",
+                        "instruction5": "使用筛选器聚焦特定设备或状态"
+                    }
+                },
+                "dialogs": {
+                    "assignOperator": {
+                        "title": "分配操作员",
+                        "description": "选择要分配给此任务的操作员",
+                        "noOperators": "未找到可用操作员",
+                        "cancel": "取消",
+                        "searchPlaceholder": "搜索操作员...",
+                        "noOperatorsFound": "未找到匹配的操作员"
+                    },
+                    "moveConfirmation": {
+                        "title": "确认状态变更",
+                        "message": "将'{{taskName}}'从{{fromStatus}}移至{{toStatus}}？",
+                        "confirmText": "移动任务",
+                        "cancelText": "取消"
+                    },
+                    "assignConfirmation": {
+                        "title": "确认分配",
+                        "message": "将此任务分配给自己？",
+                        "confirmText": "分配",
+                        "cancelText": "取消"
+                    },
+                    "unassignConfirmation": {
+                        "title": "确认取消分配",
+                        "message": "取消您在此任务的分配？",
+                        "confirmText": "取消分配",
+                        "cancelText": "取消"
+                    },
+                    "taskDetails": {
+                        "basicInfo": "基本信息",
+                        "assignment": "任务分配",
+                        "timeline": "时间线",
+                        "qcInfo": "质量控制",
+                        "process": "工艺流程",
+                        "drawingCode": "图纸代码",
+                        "machine": "设备",
+                        "operator": "操作员",
+                        "created": "创建时间",
+                        "updated": "更新时间",
+                        "predictedEnd": "预计完成",
+                        "startTime": "开始时间",
+                        "endTime": "结束时间",
+                        "predictedDuration": "预计时长",
+                        "minutes": "分钟",
+                        "hours": "小时",
+                        "assignOperator": "分配操作员"
+                    },
+                    "qcReview": {
+                        "title": "质量审核",
+                        "description": "审核此任务并提供评估",
+                        "approved": "任务批准 (OK)",
+                        "rejected": "任务拒绝 (NG)",
+                        "notes": "质检备注",
+                        "notesPlaceholder": "输入质量审核备注和观察结果...",
+                        "submit": "提交审核",
+                        "cancel": "取消"
+                    }
+                },
+                "actions": {
+                    "reviewTask": "审核任务",
+                    "assign": "分配",
+                    "unassign": "取消分配",
+                    "updatingTaskStatus": "正在更新任务状态..."
+                },
+                "error": {
+                    "title": "加载任务错误",
+                    "loadingFailed": "加载任务数据失败",
+                    "tryAgain": "请检查网络连接后重试",
+                    "cannotAssignToCompletedTasks": "无法为质检中或已完成的任务分配操作员",
+                    "taskReadyForQC": "此任务已准备好进行质量审核"
+                },
+                "debug": {
+                    "loadedTasks": "已加载任务：",
+                    "loadedAssignments": "已加载分配：",
+                    "enrichingTaskData": "正在完善任务数据...",
+                    "fullAnalysis": "400 错误请求 - 完整分析：",
+                    "whatWeSent": "发送内容：",
+                    "whatServerReturned": "服务器返回：",
+                    "errorIsString": "错误信息：",
+                    "validationErrorsFound": "发现验证错误：",
+                    "errorMessageFound": "发现错误消息：",
+                    "unknownErrorFormat": "未知错误格式：",
+                    "backendErrorMessage": "后端错误消息：",
+                    "badRequestInvalidData": "错误请求(400) - 发送了无效数据",
+                    "unauthorizedAuthFailed": "未授权(401) - 认证失败",
+                    "forbiddenNotEnoughPermissions": "禁止访问(403) - 权限不足",
+                    "notFoundStaffNotFound": "未找到(404) - 员工不存在",
+                    "serverErrorBackendCrashed": "服务器错误(500) - 后端崩溃",
+                    "connectionRefusedOrNotFound": "连接被拒绝或未找到",
+                    "requestTimeout": "请求超时",
+                    "unknownErrorType": "未知错误类型"
+                },
+                "messages": {
+                    "success": {
+                        "taskAssigned": "任务分配成功",
+                        "taskUnassigned": "任务取消分配成功",
+                        "statusUpdated": "任务状态更新成功",
+                        "dataRefreshed": "数据已刷新"
+                    },
+                    "errors": {
+                        "loadFailed": "加载任务失败",
+                        "sessionExpired": "会话已过期，请重新登录",
+                        "notOperator": "您没有操作此动作的操作员权限",
+                        "processNotFound": "任务不存在或不可用",
+                        "alreadyAssigned": "此任务已分配给其他操作员",
+                        "unauthorized": "您没有执行此操作的权限",
+                        "networkError": "发生网络错误，请检查连接",
+                        "serverError": "服务器错误，请稍后重试",
+                        "cannotMoveBack": "任务不能后退或跳过工作流程阶段！",
+                        "machineLoadFailed": "加载设备数据失败"
+                    }
+                }
+            },
+            "taskBoard": {
+                "error": {
+                    "initializeFailed": "任务看板初始化失败",
+                    "loadTasksFailed": "加载任务失败",
+                    "loadOperatorsFailed": "加载操作员失败",
+                    "refreshFailed": "刷新数据失败",
+                    "assignFailed": "操作执行失败，请重试",
+                    "networkError": "网络错误，请检查连接",
+                    "serverError": "服务器错误，请稍后重试",
+                    "sessionExpired": "会话已过期，请重新登录",
+                    "notOperator": "您没有操作员权限",
+                    "processNotFound": "任务不存在或不可用",
+                    "alreadyAssigned": "此任务已分配给其他操作员",
+                    "unauthorized": "无操作权限",
+                    "unexpectedError": "发生意外错误",
+                    "cannotAssignQcTasks": "无法分配质检阶段的任务"
+                },
+                "success": {
+                    "taskAssigned": "任务分配成功",
+                    "taskUnassigned": "任务取消分配成功",
+                    "statusUpdated": "任务状态更新成功",
+                    "dataRefreshed": "数据刷新成功",
+                    "taskCreated": "任务创建成功"
+                },
+                "loading": {
+                    "assigning": "正在分配任务...",
+                    "unassigning": "正在取消分配...",
+                    "updatingStatus": "正在更新任务状态..."
+                },
+                "errorDisplay": {
+                    "title": "任务管理错误",
+                    "retryButton": "重试加载"
+                },
+                "operatorDialog": {
+                    "title": "分配操作员",
+                    "description": "选择要分配给此任务的操作员",
+                    "searchPlaceholder": "搜索操作员...",
+                    "noOperatorsFound": "未找到匹配的操作员",
+                    "noAvailableOperators": "无可用操作员",
+                    "cancel": "取消"
+                },
+                "filters": {
+                    "priority": "优先级",
+                    "operatorStatus": "操作员状态",
+                    "all": "全部",
+                    "assigned": "已分配",
+                    "unassigned": "未分配",
+                    "clearFilters": "清除筛选"
+                }
+            },
+            "orderManagement": {
+                "title": "订单管理",
+                "description": "管理客户订单并跟踪生产进度",
+                "loading": "正在加载订单...",
+                "refreshing": "正在刷新...",
+                "refresh": "刷新",
+                "noOrders": "无订单",
+                "noOrdersFound": "未找到订单",
+                "noOrdersFoundDescription": "请创建您的第一个客户订单",
+                "noResultsAfterFilter": "当前筛选条件下无匹配订单。请调整搜索条件",
+                "addFirstOrder": "添加第一个订单",
+                "addOrder": "添加订单",
+                "overdue": "逾期",
+                "dueSoon": "即将到期",
+                "stats": {
+                    "totalOrders": "总订单数",
+                    "pendingOrders": "待处理",
+                    "inProgressOrders": "进行中",
+                    "completedOrders": "已完成",
+                    "overdueOrders": "逾期订单",
+                    "todayOrders": "今日订单",
+                    "thisWeekOrders": "本周",
+                    "thisMonthOrders": "本月"
+                },
+                "status": {
+                    "all": "所有状态",
+                    "pending": "待处理",
+                    "confirmed": "已确认",
+                    "inProgress": "进行中",
+                    "manufacturing": "生产中",
+                    "qualityCheck": "质检中",
+                    "packaging": "包装中",
+                    "shipping": "运输中",
+                    "delivered": "已交付",
+                    "completed": "已完成",
+                    "cancelled": "已取消",
+                    "onHold": "已暂停"
+                },
+                "productionStatus": {
+                    "notStarted": "未开始",
+                    "planning": "计划中",
+                    "manufacturing": "生产中",
+                    "qualityCheck": "质检中",
+                    "packaging": "包装中",
+                    "shipping": "运输中",
+                    "delivered": "已交付"
+                },
+                "priority": {
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高",
+                    "urgent": "紧急"
+                },
+                "form": {
+                    "createTitle": "创建新订单",
+                    "editTitle": "编辑订单",
+                    "createDescription": "创建包含生产跟踪所需全部信息的新客户订单",
+                    "editDescription": "更新订单信息，变更将同步到生产流程",
+                    "sections": {
+                        "basicInfo": "基本信息",
+                        "customerSection": "客户选择",
+                        "drawingCodeSection": "图纸代码选择",
+                        "production": "生产详情",
+                        "timeline": "时间线",
+                        "additionalInfo": "附加信息"
+                    },
+                    "fields": {
+                        "orderNumber": "订单编号",
+                        "customer": "客户",
+                        "drawingCodes": "图纸代码",
+                        "orderDate": "订单日期",
+                        "deliveryDate": "交付日期",
+                        "updatedDeliveryDate": "更新交付日期",
+                        "drawingOfNumber": "图纸编号",
+                        "drawingPartCount": "零件数量",
+                        "productionStatus": "生产状态",
+                        "estimatedTime": "预计时间(小时)",
+                        "completionDate": "完成日期",
+                        "shippingMethod": "运输方式",
+                        "overdueDeliveryDate": "逾期交付日期",
+                        "manufacturingOrder": "生产订单",
+                        "remarks": "备注",
+                        "status": "订单状态"
+                    },
+                    "placeholders": {
+                        "orderNumber": "输入订单编号(如 PO-2025-001)",
+                        "selectCustomer": "选择客户",
+                        "selectDrawingCodes": "选择图纸代码",
+                        "searchCustomers": "搜索客户...",
+                        "searchDrawingCodes": "搜索图纸代码...",
+                        "orderDate": "选择订单日期",
+                        "deliveryDate": "选择交付日期",
+                        "updatedDeliveryDate": "选择更新交付日期",
+                        "completionDate": "选择完成日期",
+                        "overdueDeliveryDate": "选择逾期交付日期",
+                        "drawingOfNumber": "输入图纸编号",
+                        "drawingPartCount": "输入零件数量",
+                        "estimateTime": "输入预计时间(小时)",
+                        "shippingMethod": "输入运输方式或地址",
+                        "manufacturingOrder": "输入生产订单参考号",
+                        "remarks": "输入附加备注",
+                        "selectProductionStatus": "选择生产状态",
+                        "selectStatus": "选择订单状态"
+                    },
+                    "validation": {
+                        "orderNumberRequired": "订单编号必填",
+                        "customerRequired": "客户必选",
+                        "drawingCodesRequired": "至少需选择一个图纸代码",
+                        "orderDateRequired": "订单日期必填",
+                        "deliveryDateRequired": "交付日期必填",
+                        "deliveryDateInvalid": "交付日期必须在订单日期之后",
+                        "orderDateFuture": "订单日期不能为未来日期",
+                        "drawingPartCountInvalid": "零件数量必须为正数",
+                        "estimateTimeInvalid": "预计时间必须为正数",
+                        "customerNameRequired": "客户名称必填",
+                        "customerEmailInvalid": "请输入有效邮箱",
+                        "customerPhoneInvalid": "请输入有效电话号码",
+                        "drawingCodeNameRequired": "图纸代码名称必填",
+                        "customerContactRequired": "新客户必须提供邮箱或电话",
+                        "customerEmailOrPhoneRequired": "需提供邮箱或电话",
+                        "atLeastOneDrawingCodeRequired": "至少需一个有效图纸代码",
+                        "drawingCodeNameInvalid": "图纸代码名称不能为空",
+                        "newCustomerContactInfo": "新客户必须提供联系方式",
+                        "drawingCodesMinimumRequired": "至少需选择或创建一个图纸代码"
+                    },
+                    "buttons": {
+                        "create": "创建订单",
+                        "update": "更新订单",
+                        "creating": "创建中...",
+                        "updating": "更新中...",
+                        "cancel": "取消"
+                    },
+                    "help": {
+                        "orderNumber": "唯一标识符(如 PO-2025-001)",
+                        "drawingCodes": "选择一个或多个图纸代码",
+                        "estimateTime": "预计总生产时间(小时)",
+                        "shippingMethod": "运输方式或送货地址",
+                        "manufacturingOrder": "内部生产订单参考号",
+                        "customerContactInfo": "需提供邮箱或电话",
+                        "requiredField": "必填",
+                        "optionalField": "可选",
+                        "durationInHours": "输入以小时为单位的预计时长(如 2.5 表示2小时30分钟)"
+                    },
+                    "messages": {
+                        "fixErrors": "提交前请修复以下错误：",
+                        "contactRequirement": "联系要求",
+                        "requiredFieldsInfo": "带 * 的字段为必填项"
+                    },
+                    "customerSection": {
+                        "title": "客户选择",
+                        "description": "选择现有客户或创建新客户",
+                        "useExisting": "使用现有客户",
+                        "createNew": "创建新客户",
+                        "newCustomerName": "客户名称",
+                        "newCustomerEmail": "邮箱地址",
+                        "newCustomerPhone": "电话号码",
+                        "newCustomerAddress": "地址",
+                        "newCustomerNamePlaceholder": "输入客户名称",
+                        "newCustomerEmailPlaceholder": "输入邮箱",
+                        "newCustomerPhonePlaceholder": "输入电话号码",
+                        "newCustomerAddressPlaceholder": "输入地址"
+                    },
+                    "drawingCodeSection": {
+                        "title": "图纸代码选择",
+                        "description": "从库中选择现有图纸代码和/或为此订单创建新代码",
+                        "useExisting": "使用现有代码",
+                        "createNew": "创建新代码",
+                        "addNewDrawingCode": "添加图纸代码",
+                        "newDrawingCodeName": "图纸代码名称",
+                        "newDrawingCodeDescription": "描述",
+                        "newDrawingCodePdfUrl": "PDF链接",
+                        "newDrawingCodeNamePlaceholder": "输入图纸代码名称",
+                        "newDrawingCodeDescriptionPlaceholder": "输入描述(可选)",
+                        "newDrawingCodePdfUrlPlaceholder": "输入PDF链接(可选)",
+                        "noExistingCodes": "无现有图纸代码",
+                        "clickToCreateNew": "点击“添加图纸代码”为此订单创建新图纸代码",
+                        "selectedSummaryTitle": "已选图纸代码摘要",
+                        "existingCodesSelected": "已选择 {{count}} 个现有图纸代码",
+                        "newCodesToCreate": "将创建 {{count}} 个新图纸代码",
+                        "totalCodes": "总计:",
+                        "drawingCodes": "个图纸代码",
+                        "currentlySelected": "当前已选",
+                        "availableInLibrary": "库中可用",
+                        "currentLabel": "当前",
+                        "selectedDrawingCodes": "已选图纸代码",
+                        "clickToRemove": "点击移除",
+                        "unknownId": "未知ID:"
+                    },
+                    "newDrawingCode": {
+                        "section": {
+                            "drawingCodeName": "图纸代码名称",
+                            "description": "描述",
+                            "pdfUrl": "PDF链接",
+                            "namePlaceholder": "输入图纸代码名称",
+                            "descriptionPlaceholder": "输入描述(可选)",
+                            "pdfUrlPlaceholder": "输入PDF链接(可选)",
+                            "removeNewDrawingCode": "移除图纸代码"
+                        }
+                    },
+                    "summary": {
+                        "title": "已选图纸代码摘要",
+                        "existingCodesSelected": "已选择 {{count}} 个现有图纸代码",
+                        "newCodesToCreate": "将创建 {{count}} 个新图纸代码",
+                        "total": "总计:",
+                        "drawingCodes": "个图纸代码"
+                    }
+                },
+                "table": {
+                    "title": "订单概览",
+                    "description": "查看并管理所有客户订单",
+                    "totalCount": "显示 {{count}} 个订单",
+                    "clickToView": "点击查看详情",
+                    "noResults": "未找到订单",
+                    "headers": {
+                        "orderNumber": "订单编号",
+                        "customer": "客户",
+                        "drawingCodes": "图纸代码",
+                        "orderDate": "订单日期",
+                        "deliveryDate": "交付日期",
+                        "productionStatus": "生产状态",
+                        "status": "状态",
+                        "priority": "优先级",
+                        "estimatedTime": "预计时间",
+                        "completionDate": "完成日期",
+                        "actions": "操作"
+                    },
+                    "actions": {
+                        "view": "查看详情",
+                        "edit": "编辑订单",
+                        "delete": "删除订单",
+                        "duplicate": "复制订单",
+                        "markCompleted": "标记完成",
+                        "markShipped": "标记已发货"
+                    }
+                },
+                "filters": {
+                    "searchPlaceholder": "按订单号/客户/图纸代码搜索...",
+                    "advancedFilters": "高级筛选",
+                    "clearAll": "清除全部",
+                    "allStatuses": "所有状态",
+                    "customer": "客户",
+                    "status": "状态",
+                    "productionStatus": "生产状态",
+                    "priority": "优先级",
+                    "dateRange": "日期范围",
+                    "deliveryRange": "交付范围",
+                    "overdueOnly": "仅逾期订单",
+                    "completedOnly": "仅完成订单",
+                    "applyFilters": "应用筛选",
+                    "allCustomers": "所有客户",
+                    "selectCustomer": "选择客户",
+                    "from": "从",
+                    "to": "至",
+                    "activeFilters": "{{count}} 个活动筛选器",
+                    "filterDialog": {
+                        "title": "筛选订单",
+                        "description": "根据条件筛选订单"
+                    }
+                },
+                "details": {
+                    "title": "订单详情",
+                    "sections": {
+                        "basicInfo": "基本信息",
+                        "customerInfo": "客户信息",
+                        "drawingCodes": "图纸代码",
+                        "timeline": "时间线",
+                        "production": "生产详情",
+                        "shipping": "运输信息",
+                        "metadata": "元数据"
+                    },
+                    "labels": {
+                        "orderNumber": "订单编号",
+                        "customer": "客户",
+                        "customerEmail": "客户邮箱",
+                        "customerPhone": "客户电话",
+                        "customerAddress": "客户地址",
+                        "drawingCodesCount": "图纸代码数量",
+                        "orderDate": "订单日期",
+                        "deliveryDate": "原始交付日期",
+                        "updatedDeliveryDate": "更新交付日期",
+                        "completionDate": "完成日期",
+                        "overdueDate": "逾期交付日期",
+                        "daysUntilDelivery": "距离交付天数",
+                        "daysOverdue": "逾期天数",
+                        "estimatedTime": "预计时间",
+                        "actualTime": "实际时间",
+                        "drawingOfNumber": "图纸编号",
+                        "drawingPartCount": "零件数量",
+                        "productionStatus": "生产状态",
+                        "shippingMethod": "运输方式",
+                        "manufacturingOrder": "生产订单",
+                        "remarks": "备注",
+                        "status": "订单状态",
+                        "priority": "优先级",
+                        "createdAt": "创建时间",
+                        "updatedAt": "最后更新",
+                        "createdBy": "创建人",
+                        "updatedBy": "更新人"
+                    },
+                    "values": {
+                        "noValue": "未指定",
+                        "noRemarks": "无备注",
+                        "noShippingMethod": "未指定运输方式",
+                        "noManufacturingOrder": "无生产订单参考",
+                        "calculating": "计算中...",
+                        "delivered": "已交付",
+                        "onTime": "按时",
+                        "overdue": "逾期 {{days}} 天",
+                        "dueSoon": "{{days}} 天后到期",
+                        "copyOf": "复制于"
+                    }
+                },
+                "dialogs": {
+                    "deleteConfirmation": {
+                        "title": "删除订单",
+                        "description": "确定删除订单 '{{orderNumber}}'? 此操作不可撤销",
+                        "confirm": "删除订单",
+                        "deleting": "删除中..."
+                    },
+                    "duplicateConfirmation": {
+                        "title": "复制订单",
+                        "description": "为订单 '{{orderNumber}}' 创建带新编号的副本?",
+                        "confirm": "复制订单",
+                        "duplicating": "复制中..."
+                    },
+                    "statusChange": {
+                        "title": "更改订单状态",
+                        "description": "将订单 '{{orderNumber}}' 状态从 {{fromStatus}} 更改为 {{toStatus}}?",
+                        "confirm": "更改状态",
+                        "changing": "更改中..."
+                    },
+                    "completionConfirmation": {
+                        "title": "标记为已完成",
+                        "description": "将订单 '{{orderNumber}}' 标记为已完成? 完成日期将设为今日",
+                        "confirm": "标记完成",
+                        "completing": "处理中..."
+                    }
+                },
+                "messages": {
+                    "success": {
+                        "created": "订单创建成功",
+                        "updated": "订单更新成功",
+                        "deleted": "订单删除成功",
+                        "duplicated": "订单复制成功",
+                        "statusChanged": "订单状态更新成功",
+                        "completed": "订单标记为已完成",
+                        "shipped": "订单标记为已发货",
+                        "refreshed": "数据刷新成功"
+                    },
+                    "errors": {
+                        "loadFailed": "加载订单失败",
+                        "customerLoadFailed": "加载客户失败",
+                        "drawingCodeLoadFailed": "加载图纸代码失败",
+                        "createFailed": "创建订单失败",
+                        "updateFailed": "更新订单失败",
+                        "deleteFailed": "删除订单失败",
+                        "duplicateFailed": "复制订单失败",
+                        "statusChangeFailed": "更改订单状态失败",
+                        "completionFailed": "标记订单为完成失败",
+                        "refreshFailed": "刷新数据失败",
+                        "orderNotFound": "未找到订单",
+                        "customerNotFound": "未找到所选客户",
+                        "drawingCodeNotFound": "一个或多个所选图纸代码未找到",
+                        "invalidOrderData": "提供的订单数据无效",
+                        "orderNumberExists": "订单号已存在",
+                        "connectionError": "连接错误，请检查您的网络连接",
+                        "sessionExpired": "会话已过期，请重新登录",
+                        "unauthorized": "您无权执行此操作",
+                        "timeoutError": "请求超时，请重试",
+                        "networkError": "网络错误，请检查您的连接",
+                        "serverError": "服务器错误，请稍后再试",
+                        "notFound": "未找到请求的项目",
+                        "alreadyExists": "此项目已存在",
+                        "unexpectedError": "发生意外错误，请重试",
+                        "fetchFailed": "获取数据失败",
+                        "updateError": "更新数据失败",
+                        "createError": "创建项目失败",
+                        "deleteError": "删除项目失败"
+                    },
+                    "warnings": {
+                        "unsavedChanges": "您有未保存的更改，确定要离开吗？",
+                        "orderOverdue": "此订单已逾期 {{days}} 天",
+                        "deliveryDatePassed": "交付日期已过",
+                        "noDrawingCodes": "未选择图纸代码",
+                        "estimatedTimeExceeded": "实际时间已超过预计时间"
+                    },
+                    "info": {
+                        "autoSave": "更改将自动保存",
+                        "orderCreated": "订单已创建并显示在订单列表中",
+                        "statusChanged": "订单状态已更新",
+                        "deliveryDateUpdated": "交付日期已更新"
+                    }
+                },
+                "bulk": {
+                    "title": "批量操作",
+                    "selectAll": "全选",
+                    "selectNone": "取消全选",
+                    "selectedCount": "已选 {{count}} 个订单",
+                    "actions": {
+                        "delete": "删除所选",
+                        "changeStatus": "更改状态",
+                        "updateDelivery": "更新交付日期",
+                        "export": "导出所选",
+                        "markCompleted": "标记完成",
+                        "markShipped": "标记已发货"
+                    },
+                    "confirmations": {
+                        "deleteMultiple": "删除 {{count}} 个所选订单? 此操作不可撤销",
+                        "statusChangeMultiple": "将 {{count}} 个订单状态更改为 {{status}}?",
+                        "completionMultiple": "标记 {{count}} 个订单为已完成?"
+                    }
+                },
+                "export": {
+                    "title": "导出订单",
+                    "formats": {
+                        "csv": "CSV文件",
+                        "excel": "Excel文件",
+                        "pdf": "PDF报告"
+                    },
+                    "options": {
+                        "allOrders": "所有订单",
+                        "selectedOrders": "所选订单",
+                        "filteredOrders": "筛选后订单",
+                        "dateRange": "日期范围"
+                    },
+                    "fields": {
+                        "basic": "基本信息",
+                        "customer": "客户详情",
+                        "production": "生产详情",
+                        "timeline": "时间线信息",
+                        "all": "所有字段"
+                    },
+                    "buttons": {
+                        "export": "导出",
+                        "exporting": "导出中...",
+                        "cancel": "取消"
+                    }
+                },
+                "dashboard": {
+                    "recentOrders": "近期订单",
+                    "overdueOrders": "逾期订单",
+                    "upcomingDeliveries": "即将交付",
+                    "productionSummary": "生产摘要",
+                    "quickStats": {
+                        "totalRevenue": "总收入",
+                        "averageOrderValue": "平均订单值",
+                        "onTimeDelivery": "准时交付率",
+                        "customerSatisfaction": "客户满意度"
+                    }
+                },
+                "help": {
+                    "orderNumber": "贯穿生产流程的唯一跟踪标识",
+                    "drawingCodes": "生产所需的图纸和技术规格",
+                    "estimatedTime": "完成所有生产流程的总预计时间",
+                    "productionStatus": "当前生产阶段",
+                    "shippingMethod": "成品交付给客户的方式",
+                    "priority": "基于交付日期和客户要求的优先级"
+                },
+                "display": {
+                    "unknownCustomer": "未知客户"
+                }
+            },
+            "settingsPage": {
+                "title": "设置",
+                "description": "管理您的账户设置、安全偏好及应用行为",
+                "tabs": {
+                    "account": {
+                        "label": "账户",
+                        "description": "个人信息与资料设置"
+                    },
+                    "security": {
+                        "label": "安全",
+                        "description": "密码与安全偏好设置"
+                    },
+                    "preferences": {
+                        "label": "偏好",
+                        "description": "主题与语言设置"
+                    }
+                },
+                "sections": {
+                    "accountInformation": {
+                        "title": "账户信息",
+                        "description": "更新您的个人信息与资料设置"
+                    },
+                    "loginSecurity": {
+                        "title": "登录与安全",
+                        "description": "管理密码及安全偏好设置"
+                    },
+                    "preference": {
+                        "title": "应用偏好设置",
+                        "description": "自定义应用主题与语言设置"
+                    }
+                },
+                "status": {
+                    "syncing": "正在同步...",
+                    "lastSynced": "上次同步时间"
+                },
+                "errors": {
+                    "noAccount": "无可用账户信息",
+                    "loadFailed": "加载设置失败，请检查网络连接后重试",
+                    "settingsError": "设置错误",
+                    "updateFailed": "更新失败，请重试",
+                    "settingsUpdateFailed": "设置更新失败，请重试",
+                    "passwordChangeFailed": "密码修改失败，请重试",
+                    "noToken": "无可用身份验证令牌",
+                    "noSettings": "无可用设置信息"
+                },
+                "actions": {
+                    "retryLoading": "重新加载"
+                }
+            },
+            "accountSettings": {
+                "loading": "正在加载账户信息...",
+                "profilePicture": {
+                    "title": "个人头像",
+                    "optional": "选填",
+                    "description": "上传个人头像。最大尺寸：{maxSize}MB。支持格式：{formats}。",
+                    "uploadButton": "上传图片",
+                    "alt": "个人头像",
+                    "changeButton": "更换头像"
+                },
+                "personalInformation": {
+                    "fullName": {
+                        "label": "姓名",
+                        "placeholder": "请输入您的姓名"
+                    },
+                    "email": {
+                        "label": "电子邮箱",
+                        "placeholder": "请输入您的邮箱"
+                    },
+                    "phoneNumber": {
+                        "label": "手机号码",
+                        "placeholder": "12345678",
+                        "hint": "请输入不带空格或特殊字符的手机号",
+                        "preview": "完整号码"
+                    }
+                },
+                "accountInfo": {
+                    "role": "用户角色",
+                    "accountId": "账户ID",
+                    "unknown": "未知"
+                },
+                "actions": {
+                    "saveChanges": "保存更改",
+                    "updating": "更新中..."
+                },
+                "validation": {
+                    "nameRequired": "姓名为必填项",
+                    "nameMinLength": "姓名至少需要2个字符",
+                    "emailRequired": "电子邮箱为必填项",
+                    "emailInvalid": "请输入有效的电子邮箱地址",
+                    "phoneRequired": "手机号码为必填项",
+                    "phoneInvalid": "请输入有效手机号码（6-15位数字，无空格）"
+                },
+                "upload": {
+                    "fileSizeError": "图片大小不能超过{maxSize}MB",
+                    "fileTypeError": "仅支持JPG、PNG和WebP格式的图片",
+                    "uploadSuccess": "图片上传成功"
+                },
+                "messages": {
+                    "fixErrors": "请修正错误后重新提交",
+                    "updateSuccess": "账户更新成功！",
+                    "noChanges": "无更改可保存",
+                    "updateError": "账户更新失败",
+                    "unexpectedError": "发生未知错误"
+                }
+            },
+            "securitySettings": {
+                "verification": {
+                    "title": ""
+                },
+                "passwordManagement": {
+                    "title": "密码管理",
+                    "description": "修改密码以保障账户安全，请使用高强度且唯一的密码"
+                },
+                "errors": {
+                    "passwordIncorrect": "当前密码输入错误，请重新输入。",
+                    "mismatch": "新密码与确认密码不一致，请核对后重试。",
+                    "changeFailed": "密码更新失败，请重试或联系技术支持。"
+                },
+                "labels": {
+                    "currentPassword": "当前密码",
+                    "newPassword": "新密码",
+                    "confirmPassword": "确认新密码"
+                },
+                "actions": {
+                    "changePassword": "修改密码",
+                    "changingPassword": "密码修改中...",
+                    "showPassword": "显示密码",
+                    "hidePassword": "隐藏密码"
+                },
+                "validation": {
+                    "currentRequired": "当前密码不能为空",
+                    "newRequired": "新密码不能为空",
+                    "confirmRequired": "请确认新密码",
+                    "passwordsNoMatch": "两次输入密码不一致",
+                    "passwordTooShort": "密码长度至少{{minLength}}个字符",
+                    "passwordWeak": "密码强度不足，请设置更强密码",
+                    "currentIncorrect": "当前密码错误",
+                    "samePassword": "新密码不能与当前密码相同"
+                },
+                "passwordStrength": {
+                    "title": "密码强度检测",
+                    "levels": {
+                        "veryWeak": "极弱",
+                        "weak": "弱",
+                        "fair": "一般",
+                        "good": "良好",
+                        "strong": "强"
+                    },
+                    "feedback": {
+                        "enterPassword": "输入密码进行强度评估",
+                        "excellent": "优秀！密码强度很高",
+                        "goodStrength": "密码强度良好",
+                        "useCharacters": "至少包含{{minLength}}个字符",
+                        "addUppercase": "添加大写字母(A-Z)",
+                        "addLowercase": "添加小写字母(a-z)",
+                        "addNumbers": "添加数字(0-9)",
+                        "addSpecialChars": "添加特殊字符(!@#$%^&*)",
+                        "avoidCommon": "避免使用常见密码"
+                    },
+                    "criteria": {
+                        "length": "长度",
+                        "uppercase": "大写字母",
+                        "lowercase": "小写字母",
+                        "numbers": "数字",
+                        "specialChars": "特殊字符",
+                        "noCommon": "非常见密码"
+                    }
+                },
+                "securityTips": {
+                    "title": "密码安全准则",
+                    "tip1": "使用唯一密码，不在其他平台重复使用",
+                    "tip2": "混合使用字母、数字和特殊字符",
+                    "tip3": "避免包含姓名、生日等个人信息",
+                    "tip4": "建议使用密码管理器增强安全性",
+                    "tip5": "切勿向任何人透露您的密码"
+                },
+                "requirements": {
+                    "title": "密码强度要求：",
+                    "description": "为确保最佳安全性，密码长度至少{{minLength}}字符，需包含大小写字母、数字及特殊字符"
+                },
+                "messages": {
+                    "fixErrors": "请修正错误后重新提交",
+                    "changeSuccess": "密码修改成功！",
+                    "changeFailed": "密码修改失败",
+                    "changeError": "密码修改失败，请重试"
+                }
+            },
+            "preferenceSettings": {
+                "appearance": {
+                    "title": "外观设置",
+                    "description": "自定义应用程序视觉风格，更改将立即生效",
+                    "theme": "主题方案",
+                    "currentlyDisplaying": "当前主题：{theme}",
+                    "themes": {
+                        "light": "浅色模式",
+                        "dark": "深色模式",
+                        "system": "跟随系统"
+                    }
+                },
+                "language": {
+                    "title": "语言设置",
+                    "description": "设置应用程序界面语言，更改将自动保存",
+                    "displayLanguage": "显示语言",
+                    "currentlySelected": "当前选择：{language}"
+                },
+                "settingsInfo": {
+                    "title": "设置信息",
+                    "lastUpdated": "最后更新时间：",
+                    "autoSave": "自动保存：",
+                    "autoSaveDescription": "更改将自动保存",
+                    "never": "从未更新",
+                    "note": "注意：",
+                    "noteDescription": "偏好设置更改时自动保存。主题更改即时生效，语言更改将在下次页面加载时应用"
+                },
+                "messages": {
+                    "themeChanged": "主题已切换为：{theme}",
+                    "languageChanged": "语言已切换为：{language}",
+                    "themeError": "主题偏好保存失败",
+                    "languageError": "语言偏好保存失败"
+                }
+            },
+            "avatarUpload": {
+                "profilePicture": "个人资料照片",
+                "uploadButton": "上传图片",
+                "uploadingMessage": "正在上传图片...",
+                "uploadError": "上传错误: {error}",
+                "updateSuccess": "个人资料照片更新成功",
+                "updateFailedGeneric": "更新个人资料照片失败",
+                "updateFailedBackend": "后端更新个人资料照片失败",
+                "updateError": "更新个人资料照片时发生错误"
+            },
+            "errors": {
+                "general": "发生了意外错误",
+                "network": "网络连接错误",
+                "server": "服务器错误",
+                "notFound": "未找到请求的资源",
+                "unauthorized": "您无权执行此操作",
+                "forbidden": "禁止访问此资源",
+                "timeout": "请求超时。请重试。",
+                "validation": "请检查您的输入并重试",
+                "upload": "文件上传失败",
+                "download": "文件下载失败",
+                "save": "保存更改失败",
+                "load": "加载数据失败",
+                "delete": "删除项目失败",
+                "update": "更新信息失败",
+                "create": "创建新项目失败",
+                "connection": "连接丢失。请检查您的网络连接。",
+                "maintenance": "系统当前正在维护中"
+            },
+            "time": {
+                "now": "刚刚",
+                "minutesAgo": "分钟前",
+                "hoursAgo": "小时前",
+                "daysAgo": "天前",
+                "weeksAgo": "周前",
+                "monthsAgo": "月前",
+                "yearsAgo": "年前",
+                "yesterday": "昨天",
+                "today": "今天",
+                "tomorrow": "明天",
+                "thisWeek": "本周",
+                "lastWeek": "上周",
+                "thisMonth": "本月",
+                "lastMonth": "上月",
+                "thisYear": "今年",
+                "lastYear": "去年"
+            },
+            "passwordReset": {
+                "title": "重置密码",
+                "description": "输入新密码以重新获取账户访问权限",
+                "subtitle": "为您的账户创建一个新的安全密码",
+                "form": {
+                    "fields": {
+                        "newPassword": "新密码",
+                        "confirmPassword": "确认新密码"
+                    },
+                    "placeholders": {
+                        "newPassword": "输入新密码",
+                        "confirmPassword": "确认新密码"
+                    },
+                    "buttons": {
+                        "resetPassword": "重置密码",
+                        "resetting": "正在重置...",
+                        "backToLogin": "返回登录"
+                    }
+                },
+                "messages": {
+                    "success": {
+                        "passwordReset": "密码重置成功！您现在可以使用新密码登录。",
+                        "redirecting": "正在跳转到登录页面..."
+                    },
+                    "errors": {
+                        "invalidToken": "重置令牌无效或已过期，请重新申请密码重置",
+                        "tokenMissing": "缺少重置令牌，请使用有效的重置链接",
+                        "resetFailed": "密码重置失败，请重试",
+                        "networkError": "网络错误，请检查您的连接",
+                        "serverError": "服务器错误，请稍后再试",
+                        "unexpectedError": "发生意外错误，请重试"
+                    }
+                }
+            },
+            "forgotPassword": {
+                "title": "忘记密码？",
+                "subtitle": "无需担心，我们将协助您重置",
+                "form": {
+                    "fields": {
+                        "email": "电子邮箱"
+                    },
+                    "placeholders": {
+                        "email": "请输入您的电子邮箱"
+                    },
+                    "buttons": {
+                        "sendResetLink": "发送重置链接",
+                        "sending": "发送中...",
+                        "emailSent": "邮件已发送！",
+                        "cancel": "取消",
+                        "close": "关闭",
+                        "backToLogin": "返回登录"
+                    }
+                },
+                "validation": {
+                    "emailRequired": "电子邮箱为必填项",
+                    "emailInvalid": "请输入有效的电子邮箱地址"
+                },
+                "messages": {
+                    "success": {
+                        "emailSent": "密码重置说明已发送至您的邮箱，请检查收件箱和垃圾邮件文件夹"
+                    },
+                    "errors": {
+                        "networkError": "网络错误，请检查您的连接",
+                        "timeoutError": "请求超时，请重试",
+                        "serverError": "服务器错误，请稍后再试",
+                        "unexpectedError": "发生意外错误，请重试",
+                        "invalidRequest": "无效请求，请检查邮箱后重试",
+                        "rateLimited": "请求过于频繁，请等待几分钟后重试"
+                    },
+                    "instructions": {
+                        "checkInbox": "请检查收件箱和垃圾邮件文件夹，此窗口将自动关闭",
+                        "contactSupport": "如果问题持续存在，请重试或联系客服支持"
+                    }
+                }
+            },
+            "pageTitle": {
+                "staffList": "员工列表",
+                "groupList": "组列表",
+                "zoneList": "区域管理",
+                "machineTypeList": "机器类型管理",
+                "drawingCodeList": "图纸代码列表",
+                "errorGroupList": "错误组管理",
+                "errorDetailList": "错误详情管理",
+                "productionPlanList": "生产计划管理",
+                "moldCodeList": "模具代码管理"
+            },
+            "landing": {
+                "nav": {
+                    "features": "功能",
+                    "howItWorks": "工作原理",
+                    "pricing": "定价",
+                    "faq": "常见问题",
+                    "login": "登录",
+                    "getStarted": "开始使用",
+                    "watchDemo": "观看演示"
+                },
+                "hero": {
+                    "title": "智能工厂管理，由智慧驱动",
+                    "subtitle": "实时监控CNC机器，管理生产订单，确保质量控制，优化能源消耗——一个平台搞定一切。",
+                    "cta": "免费开始",
+                    "ctaSecondary": "观看演示"
+                },
+                "trustedBy": {
+                    "title": "深受行业领导者信赖"
+                },
+                "features": {
+                    "title": "运营工厂所需的一切",
+                    "subtitle": "现代制造管理的全面工具",
+                    "machineMonitoring": {
+                        "title": "实时机器监控",
+                        "description": "通过实时仪表板跟踪CNC机器状态、性能和利用率。"
+                    },
+                    "productionManagement": {
+                        "title": "生产订单管理",
+                        "description": "使用看板管理生产订单，分配任务，无缝跟踪进度。"
+                    },
+                    "qualityControl": {
+                        "title": "质量控制",
+                        "description": "全面的QC工作流程，包含检查点和通过/不通过跟踪。"
+                    },
+                    "energyMonitoring": {
+                        "title": "能源监控",
+                        "description": "监控每台机器的用电量，优化整个设施的能源成本。"
+                    },
+                    "staffManagement": {
+                        "title": "人员与操作员分配",
+                        "description": "将操作员分配到机器和任务，跟踪班次和工作量平衡。"
+                    },
+                    "accessControl": {
+                        "title": "基于角色的访问控制",
+                        "description": "为管理员、操作员、QC检查员和经理提供细粒度权限。"
+                    },
+                    "aiOptimization": {
+                        "title": "AI智能分析",
+                        "description": "利用AI识别瓶颈，预测维护需求，减少浪费。"
+                    },
+                    "analytics": {
+                        "title": "全面数据分析",
+                        "description": "丰富的仪表板，包含图表、KPI和可导出报告，助力数据驱动决策。"
+                    }
+                },
+                "howItWorks": {
+                    "title": "工作原理",
+                    "subtitle": "四个简单步骤即可开始",
+                    "connect": {
+                        "title": "连接",
+                        "description": "将您的CNC机器和生产线连接到Qwaste平台。"
+                    },
+                    "monitor": {
+                        "title": "监控",
+                        "description": "查看机器、生产任务和质量指标的实时状态。"
+                    },
+                    "optimize": {
+                        "title": "优化",
+                        "description": "使用AI驱动的分析来减少浪费和提高效率。"
+                    },
+                    "scale": {
+                        "title": "扩展",
+                        "description": "在多个车间和生产线上扩展您的运营。"
+                    }
+                },
+                "comparison": {
+                    "badge": "传统 vs 智能",
+                    "title": "看到差异",
+                    "subtitle": "了解Qwaste如何将传统工厂管理转变为智能、数据驱动的运营",
+                    "traditional": {
+                        "title": "传统管理",
+                        "description": "手动流程、被动决策、有限可视性",
+                        "items": {
+                            "paperBased": {
+                                "title": "纸质记录",
+                                "description": "剪贴板、电子表格、手动数据输入"
+                            },
+                            "manualTracking": {
+                                "title": "手动跟踪",
+                                "description": "巡查检查、延迟报告"
+                            },
+                            "spreadsheets": {
+                                "title": "分散的电子表格",
+                                "description": "数据孤岛、版本冲突、无实时同步"
+                            },
+                            "reactive": {
+                                "title": "被动解决问题",
+                                "description": "在问题发生后修复，停机成本高"
+                            }
+                        }
+                    },
+                    "qwaste": {
+                        "badge": "推荐",
+                        "title": "Qwaste智能管理",
+                        "description": "自动化工作流程、预测性洞察、完全可视性",
+                        "items": {
+                            "realTimeData": {
+                                "title": "实时数据收集",
+                                "description": "自动从所有机器和传感器捕获数据"
+                            },
+                            "automated": {
+                                "title": "自动化工作流程",
+                                "description": "智能任务分配、即时通知、无缝协调"
+                            },
+                            "aiPowered": {
+                                "title": "AI驱动的分析",
+                                "description": "集中式仪表板、实时KPI、可操作的洞察"
+                            },
+                            "predictive": {
+                                "title": "预测性维护",
+                                "description": "在问题发生之前预防，最小化停机时间"
+                            }
+                        }
+                    }
+                },
+                "integrations": {
+                    "badge": "无缝集成",
+                    "title": "与您现有系统协同工作",
+                    "subtitle": "将Qwaste与您当前的机器、软件和基础设施连接，实现统一的工厂管理体验",
+                    "categories": {
+                        "cncMachines": {
+                            "title": "CNC机器",
+                            "description": "与主要CNC机器品牌和控制器直接集成",
+                            "items": {
+                                "fanuc": "Fanuc",
+                                "siemens": "Siemens",
+                                "haas": "Haas",
+                                "mazak": "Mazak"
+                            }
+                        },
+                        "erpSystems": {
+                            "title": "ERP系统",
+                            "description": "将生产数据与企业资源规划软件同步",
+                            "items": {
+                                "sap": "SAP",
+                                "oracle": "Oracle",
+                                "microsoft": "Microsoft Dynamics",
+                                "odoo": "Odoo"
+                            }
+                        },
+                        "iotDevices": {
+                            "title": "IoT与传感器",
+                            "description": "连接工业IoT设备和自动化系统",
+                            "items": {
+                                "sensors": "智能传感器",
+                                "plc": "PLCs",
+                                "scada": "SCADA",
+                                "actuators": "执行器"
+                            }
+                        },
+                        "cloudPlatforms": {
+                            "title": "云平台",
+                            "description": "在您首选的云基础设施上部署",
+                            "items": {
+                                "aws": "AWS",
+                                "azure": "Azure",
+                                "gcp": "Google Cloud",
+                                "alibaba": "阿里云"
+                            }
+                        }
+                    },
+                    "apiAccess": {
+                        "title": "完整API访问",
+                        "description": "使用我们全面的REST API、webhook和实时数据协议构建自定义集成",
+                        "protocols": {
+                            "restApi": "REST API",
+                            "webhooks": "Webhooks",
+                            "graphql": "GraphQL",
+                            "mqtt": "MQTT"
+                        }
+                    }
+                },
+                "preview": {
+                    "title": "体验Qwaste",
+                    "subtitle": "为工厂管理者打造的强大仪表板"
+                },
+                "metrics": {
+                    "title": "受全球制造商信赖",
+                    "factories": "工厂",
+                    "tasks": "已管理任务",
+                    "uptime": "正常运行时间",
+                    "wasteReduction": "减少浪费"
+                },
+                "testimonials": {
+                    "title": "客户评价",
+                    "items": {
+                        "0": {
+                            "quote": "Qwaste彻底改变了我们的生产车间。第一个月停机时间就减少了40%。",
+                            "name": "阮文A",
+                            "role": "生产经理",
+                            "company": "Woodsland家具"
+                        },
+                        "1": {
+                            "quote": "实时监控让我们对CNC运营有了全面的可视性。这是一个改变游戏规则的工具。",
+                            "name": "陈氏B",
+                            "role": "工厂总监",
+                            "company": "IIC制造"
+                        },
+                        "2": {
+                            "quote": "在全厂部署Qwaste的监控模块后，能源成本降低了25%。",
+                            "name": "黎文C",
+                            "role": "运营经理",
+                            "company": "EIU工业"
+                        }
+                    }
+                },
+                "pricing": {
+                    "title": "简单透明的定价",
+                    "subtitle": "选择适合您工厂的方案",
+                    "monthly": "/月",
+                    "perMachine": "/台机器",
+                    "popular": "最受欢迎",
+                    "basic": {
+                        "name": "基础版",
+                        "price": "联系我们",
+                        "description": "适合刚起步的小型车间",
+                        "features": {
+                            "0": "最多5台机器",
+                            "1": "基础监控仪表板",
+                            "2": "邮件支持",
+                            "3": "1个管理员账户"
+                        },
+                        "cta": "联系我们"
+                    },
+                    "pro": {
+                        "name": "专业版",
+                        "price": "联系我们",
+                        "description": "适合成长中的工厂",
+                        "features": {
+                            "0": "无限机器",
+                            "1": "AI智能分析",
+                            "2": "质量控制模块",
+                            "3": "能源监控",
+                            "4": "最多25个用户",
+                            "5": "优先支持"
+                        },
+                        "cta": "联系我们"
+                    },
+                    "enterprise": {
+                        "name": "企业版",
+                        "price": "联系我们",
+                        "description": "适合大规模运营",
+                        "features": {
+                            "0": "Pro版所有功能",
+                            "1": "本地部署",
+                            "2": "专属客户经理",
+                            "3": "自定义集成",
+                            "4": "SLA保障",
+                            "5": "无限用户"
+                        },
+                        "cta": "联系我们"
+                    }
+                },
+                "faq": {
+                    "title": "常见问题",
+                    "items": {
+                        "0": {
+                            "question": "Qwaste支持哪些类型的机器？",
+                            "answer": "Qwaste支持所有可以输出数字信号的CNC机器和生产设备。我们提供常见CNC控制器的集成指南。"
+                        },
+                        "1": {
+                            "question": "安装需要多长时间？",
+                            "answer": "大多数工厂可以在1-2天内投入使用。我们的团队提供现场安装协助。"
+                        },
+                        "2": {
+                            "question": "我的数据安全吗？",
+                            "answer": "是的。所有数据在传输和存储时都经过加密。我们支持为有严格数据政策的企业进行本地部署。"
+                        },
+                        "3": {
+                            "question": "可以先试用再购买吗？",
+                            "answer": "当然可以。基础版永久免费，专业版提供14天免费试用。"
+                        },
+                        "4": {
+                            "question": "支持多语言吗？",
+                            "answer": "是的。Qwaste目前支持越南语、英语和中文界面。"
+                        },
+                        "5": {
+                            "question": "提供哪些支持？",
+                            "answer": "基础版包含邮件支持。专业版和企业版包含优先支持，有承诺的响应时间。"
+                        }
+                    }
+                },
+                "cta": {
+                    "title": "准备好转型您的工厂了吗？",
+                    "subtitle": "加入数百家信赖Qwaste优化生产的制造商。",
+                    "primary": "免费试用",
+                    "secondary": "联系销售"
+                },
+                "footer": {
+                    "description": "现代制造业的智能工厂管理。",
+                    "product": {
+                        "title": "产品",
+                        "features": "功能",
+                        "pricing": "定价",
+                        "demo": "申请演示",
+                        "changelog": "更新日志"
+                    },
+                    "resources": {
+                        "title": "资源",
+                        "docs": "文档",
+                        "api": "API参考",
+                        "guides": "集成指南",
+                        "blog": "博客"
+                    },
+                    "company": {
+                        "title": "公司",
+                        "about": "关于我们",
+                        "careers": "招聘",
+                        "contact": "联系方式",
+                        "partners": "合作伙伴"
+                    },
+                    "legal": {
+                        "title": "法律",
+                        "privacy": "隐私政策",
+                        "terms": "服务条款",
+                        "cookies": "Cookie政策"
+                    },
+                    "copyright": "Qwaste。保留所有权利。",
+                    "poweredBy": "由IIC 4.0提供支持"
+                },
+                "roleManagement": {
+                    "title": "角色管理",
+                    "searchPlaceholder": "搜索角色...",
+                    "addRole": "添加角色",
+                    "pagination": {
+                        "total": "总计 {{total}} 个角色"
+                    },
+                    "messages": {
+                        "fetchError": "加载角色列表失败",
+                        "deleteSuccess": "角色删除成功",
+                        "deleteError": "删除角色失败",
+                        "createSuccess": "角色创建成功",
+                        "updateSuccess": "角色更新成功",
+                        "saveError": "保存角色失败"
+                    },
+                    "columns": {
+                        "name": "角色名称",
+                        "description": "描述",
+                        "permissions": "权限",
+                        "permissionsCount": "{{count}} 个权限",
+                        "actions": "操作"
+                    },
+                    "actions": {
+                        "edit": "编辑",
+                        "delete": "删除",
+                        "confirmDeleteTitle": "确认删除角色",
+                        "confirmDeleteMessage": "您确定要删除此角色吗？此操作无法撤销。",
+                        "confirmYes": "确认",
+                        "confirmNo": "取消"
+                    },
+                    "form": {
+                        "createTitle": "创建新角色",
+                        "editTitle": "编辑角色",
+                        "roleName": {
+                            "label": "角色名称",
+                            "placeholder": "请输入角色名称",
+                            "required": "角色名称不能为空",
+                            "lengthError": "角色名称长度必须在 2 到 50 个字符之间"
+                        },
+                        "description": {
+                            "label": "描述",
+                            "placeholder": "请输入角色描述"
+                        },
+                        "permissions": {
+                            "label": "权限列表",
+                            "required": "请至少选择一个权限",
+                            "selectAll": "全选",
+                            "deselectAll": "取消全选",
+                            "selectedCount": "已选择 {{selected}}/{{total}} 个权限"
+                        }
+                    }
+                },
+                "userManagement": {
+                    "title": "用户管理",
+                    "searchPlaceholder": "搜索用户...",
+                    "fetchUserError": "获取用户信息失败",
+                    "noUserData": "无用户数据",
+                    "userId": "用户 ID",
+                    "detailInfo": "详细信息",
+                    "pagination": {
+                        "total": "总计 {{total}} 个用户"
+                    },
+                    "messages": {
+                        "fetchError": "获取用户列表失败",
+                        "deleteSuccess": "用户删除成功",
+                        "deleteError": "删除用户失败",
+                        "updateSuccess": "信息更新成功",
+                        "updateError": "更新信息失败"
+                    },
+                    "tabs": {
+                        "basicInfo": "基本信息",
+                        "roleAssignment": "分配角色",
+                        "customPermissions": "自定义权限"
+                    },
+                    "loading": {
+                        "userInfo": "正在加载用户信息...",
+                        "roleInfo": "正在加载角色信息...",
+                        "permissionInfo": "正在加载权限信息..."
+                    },
+                    "validation": {
+                        "roleRequired": "请至少分配一个角色"
+                    },
+                    "columns": {
+                        "username": "用户名",
+                        "fullName": "姓名",
+                        "email": "电子邮件",
+                        "roles": "角色",
+                        "noRoles": "未分配角色",
+                        "accessibleFactories": "可访问工厂",
+                        "actions": "操作"
+                    },
+                    "actions": {
+                        "edit": "编辑",
+                        "delete": "删除",
+                        "confirmDeleteTitle": "确认删除用户",
+                        "confirmDeleteMessage": "您确定要删除此用户吗？此操作无法撤销。",
+                        "confirmYes": "确认",
+                        "confirmNo": "取消"
+                    },
+                    "roleAssignment": {
+                        "roles": "角色"
+                    },
+                    "form": {
+                        "userCode": {
+                            "label": "员工编号"
+                        },
+                        "email": {
+                            "label": "电子邮箱"
+                        },
+                        "phoneNumber": {
+                            "label": "电话号码"
+                        },
+                        "username": {
+                            "label": "用户名"
+                        },
+                        "address": {
+                            "label": "地址"
+                        },
+                        "editTitle": "编辑用户权限"
+                    },
+                    "customPermissions": {
+                        "rolePermissionsTitle": "角色权限",
+                        "availablePermissionsTitle": "可用权限",
+                        "finalPermissionsTitle": "最终权限汇总",
+                        "searchPlaceholder": "搜索权限...",
+                        "columns": {
+                            "permissionName": "权限名称",
+                            "subject": "对象",
+                            "action": "操作",
+                            "source": "来源",
+                            "status": "状态",
+                            "actions": "操作"
+                        },
+                        "tags": {
+                            "role": "来自角色",
+                            "customGrant": "自定义授权",
+                            "denied": "已拒绝",
+                            "granted": "已授权",
+                            "roleAndGranted": "角色与授权",
+                            "explicitlyGranted": "显式授权",
+                            "fromRole": "来自角色"
+                        },
+                        "actions": {
+                            "grant": "授权",
+                            "deny": "拒绝",
+                            "remove": "移除自定义"
+                        }
+                    }
+                }
+            },
+            "permissionManagement": {
+                "title": "权限管理",
+                "searchPlaceholder": "搜索权限...",
+                "addPermission": "添加权限",
+                "pagination": {
+                    "total": "总共 {{total}} 个权限"
+                },
+                "messages": {
+                    "fetchError": "获取权限列表失败",
+                    "deleteSuccess": "删除权限成功",
+                    "deleteError": "删除权限失败",
+                    "createSuccess": "创建权限成功",
+                    "updateSuccess": "更新权限成功",
+                    "saveError": "保存权限失败",
+                    "duplicateError": "权限标识 '{{slug}}' 已存在",
+                    "batchCreateSuccess": "成功创建了 {{count}} 个权限",
+                    "duplicateErrorBatch": "以下权限标识已存在：{{slugs}}"
+                },
+                "columns": {
+                    "name": "权限名称",
+                    "slug": "权限标识",
+                    "description": "描述",
+                    "actions": "操作"
+                },
+                "actions": {
+                    "edit": "编辑",
+                    "delete": "删除",
+                    "confirmDeleteTitle": "确认删除权限",
+                    "confirmDeleteMessage": "您确定要删除此权限吗？此操作无法撤销。",
+                    "confirmYes": "确认",
+                    "confirmNo": "取消"
+                },
+                "form": {
+                    "createTitle": "创建新权限",
+                    "editTitle": "编辑权限",
+                    "permissionName": {
+                        "label": "权限名称",
+                        "placeholder": "输入权限名称 (例如: 创建用户)",
+                        "required": "请输入权限名称",
+                        "minLength": "权限名称至少需要3个字符",
+                        "maxLength": "权限名称不能超过255个字符"
+                    },
+                    "subject": {
+                        "label": "对象 (Subject)",
+                        "placeholder": "选择对象",
+                        "required": "请选择对象"
+                    },
+                    "action": {
+                        "label": "操作 (Action)",
+                        "placeholder": "选择操作",
+                        "required": "请选择或输入操作"
+                    },
+                    "customAction": {
+                        "label": "自定义操作",
+                        "placeholder": "或输入其他操作 (例如: approve)",
+                        "extra": "如果您输入了自定义操作，上面的选择将被忽略。"
+                    },
+                    "description": {
+                        "label": "描述",
+                        "placeholder": "输入权限详细描述",
+                        "required": "请输入描述"
+                    }
+                }
+            },
+            "permissionSubjects": {
+                "user": "用户",
+                "role": "角色",
+                "permission": "权限",
+                "factory_overview": "工厂概览",
+                "machine": "设备",
+                "machine_type": "设备类型",
+                "staffing": "人员配置",
+                "factory": "工厂",
+                "zone": "区域",
+                "line": "生产线",
+                "space": "空间",
+                "space_level": "空间级别",
+                "step": "生产步骤",
+                "industry_filter": "行业筛选",
+                "profile": "个人资料",
+                "drawing_code": "图纸代码",
+                "other": "其他"
+            }
+        },
+        "permissionSubjects": {
+            "overview": "概览",
+            "machine_type": "机器类型",
+            "machine": "机器",
+            "staffing": "人员配置",
+            "factory": "工厂",
+            "space": "空间",
+            "space_level": "空间级别",
+            "step": "步骤",
+            "standard_step": "标准步骤",
+            "zone": "区域",
+            "line": "生产线",
+            "staff": "员工",
+            "group": "班组",
+            "industry_filter": "行业过滤器",
+            "industry_config": "行业配置",
+            "drawing_code": "图纸代码",
+            "factory_overview": "工厂概览",
+            "energy": "能源",
+            "machine_overview": "机器概览",
+            "machine_monitoring": "机器监控",
+            "machine_operator_history": "操作员历史记录",
+            "profile": "个人资料",
+            "operator_dashboard": "操作员仪表板",
+            "operator_reviews": "操作员审核",
+            "qc_dashboard": "QC仪表板",
+            "manager_reviews": "经理审核",
+            "user": "用户",
+            "role": "角色",
+            "permission": "权限",
+            "order": "订单",
+            "process": "流程",
+            "tasks": "任务",
+            "task_review": "任务审核",
+            "space_monitoring": "空间监控",
+            "all": "全部"
+        }
+    },
+    "stepManagement": {
+        "title": "工序管理",
+        "addStep": "添加工序",
+        "deleteSuccess": "工序删除成功",
+        "deleteError": "工序删除失败",
+        "updateSuccess": "工序更新成功",
+        "fetchError": "工序加载失败",
+        "searchPlaceholder": "按名称搜索工序...",
+        "table": {
+            "headers": {
+                "stepName": "工序名称",
+                "description": "描述",
+                "requiresQc": "需要质检",
+                "materialName": "材料名称",
+                "defaultTime": "预计时长",
+                "actions": "操作"
+            }
+        },
+        "form": {
+            "createTitle": "添加新工序",
+            "editTitle": "编辑工序",
+            "createDescription": "填写以下信息以创建新工序。",
+            "editDescription": "更新工序信息。",
+            "fields": {
+                "stepName": "工序名称",
+                "description": "描述",
+                "requiresQc": "需要质检",
+                "defaultTime": "默认完成时间",
+                "materialName": "材料名称"
+            },
+            "placeholders": {
+                "stepName": "请输入工序名称",
+                "description": "请输入描述",
+                "defaultTime": "请输入完成时间（秒）",
+                "materialName": "请输入材料名称"
+            },
+            "validation": {
+                "stepNameRequired": "工序名称必填",
+                "maxLength": "最大长度 {{max}} 个字符",
+                "completionTimeMin": "完成时间必须大于 0",
+                "defaultTimeRequired": "完成时间必填"
+            },
+            "buttons": {
+                "cancel": "取消",
+                "create": "创建",
+                "save": "保存",
+                "saving": "保存中..."
+            },
+            "createSuccess": "工序创建成功",
+            "updateSuccess": "工序更新成功",
+            "createError": "创建工序失败",
+            "updateError": "更新工序失败"
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "删除工序",
+                "description": "您确定要删除此工序吗？此操作无法撤销。"
+            }
+        }
+    },
+    "pageTitle": {
+        "errorGroupList": "错误组管理",
+        "errorDetailList": "错误详情管理",
+        "productionPlanList": "生产计划管理",
+        "moldCodeList": "模具代码管理"
+    },
+    "errorGroupManagement": {
+        "title": "错误组管理",
+        "addErrorGroup": "添加错误组",
+        "searchPlaceholder": "按组名搜索...",
+        "fetchError": "获取错误组失败",
+        "deleteSuccess": "错误组删除成功",
+        "deleteError": "错误组删除失败",
+        "updateSuccess": "错误组更新成功",
+        "updateError": "错误组更新失败",
+        "table": {
+            "headers": {
+                "id": "编号",
+                "errorGroupName": "组名称",
+                "description": "描述",
+                "status": "状态",
+                "createdAt": "创建时间",
+                "updatedAt": "更新时间",
+                "actions": "操作"
+            }
+        },
+        "actions": {
+            "viewDetails": "查看详情",
+            "edit": "编辑",
+            "delete": "删除"
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "删除错误组",
+                "description": "您确定要删除此错误组吗？"
+            }
+        },
+        "form": {
+            "createTitle": "创建新错误组",
+            "editTitle": "编辑错误组",
+            "createSuccess": "错误组创建成功",
+            "createError": "错误组创建失败",
+            "fields": {
+                "errorGroupName": "组名称",
+                "description": "描述",
+                "status": "状态"
+            },
+            "placeholders": {
+                "errorGroupName": "输入组名称",
+                "description": "输入组描述",
+                "status": "选择状态"
+            },
+            "validation": {
+                "required": "此字段为必填项",
+                "minLength": "最小长度为{{min}}个字符",
+                "maxLength": "最大长度为{{max}}个字符"
+            },
+            "buttons": {
+                "cancel": "取消",
+                "create": "创建",
+                "save": "保存",
+                "saving": "保存中...",
+                "close": "关闭",
+                "update": "更新"
+            }
+        }
+    },
+    "errorDetailManagement": {
+        "title": "错误详情管理",
+        "addErrorDetail": "添加错误详情",
+        "searchPlaceholder": "按错误名称搜索...",
+        "fetchError": "获取错误详情失败",
+        "deleteSuccess": "错误详情删除成功",
+        "deleteError": "错误详情删除失败",
+        "updateSuccess": "错误详情更新成功",
+        "updateError": "错误详情更新失败",
+        "table": {
+            "headers": {
+                "id": "编号",
+                "errorName": "错误名称",
+                "description": "描述",
+                "status": "状态",
+                "createdAt": "创建时间",
+                "updatedAt": "更新时间",
+                "actions": "操作"
+            }
+        },
+        "actions": {
+            "viewDetails": "查看详情",
+            "edit": "编辑",
+            "delete": "删除"
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "删除错误详情",
+                "description": "您确定要删除此错误详情吗？"
+            }
+        },
+        "form": {
+            "createTitle": "创建新错误详情",
+            "editTitle": "编辑错误详情",
+            "createSuccess": "错误详情创建成功",
+            "createError": "错误详情创建失败",
+            "fields": {
+                "errorName": "错误名称",
+                "description": "描述",
+                "status": "状态"
+            },
+            "placeholders": {
+                "errorName": "输入错误名称",
+                "description": "输入错误描述",
+                "status": "选择状态"
+            },
+            "validation": {
+                "required": "此字段为必填项",
+                "minLength": "最小长度为{{min}}个字符",
+                "maxLength": "最大长度为{{max}}个字符"
+            },
+            "buttons": {
+                "cancel": "取消",
+                "create": "创建",
+                "save": "保存",
+                "saving": "保存中...",
+                "close": "关闭",
+                "update": "更新"
+            }
+        }
+    },
+    "productionPlanManagement": {
+        "title": "生产计划管理",
+        "addProductionPlan": "添加生产计划",
+        "searchPlaceholder": "按机器编号搜索...",
+        "fetchError": "获取生产计划失败",
+        "deleteSuccess": "生产计划删除成功",
+        "deleteError": "生产计划删除失败",
+        "updateSuccess": "生产计划更新成功",
+        "updateError": "生产计划更新失败",
+        "table": {
+            "headers": {
+                "id": "计划编号",
+                "filterId": "周期",
+                "machineId": "机器编号",
+                "plannedQuantity": "计划数量",
+                "status": "状态",
+                "createdAt": "创建时间",
+                "actions": "操作"
+            }
+        },
+        "actions": {
+            "viewDetails": "查看详情",
+            "edit": "编辑",
+            "delete": "删除"
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "删除生产计划",
+                "description": "您确定要删除此生产计划吗？"
+            }
+        },
+        "form": {
+            "createTitle": "创建生产计划",
+            "editTitle": "编辑生产计划",
+            "createSuccess": "生产计划创建成功",
+            "createError": "生产计划创建失败",
+            "filterOptions": {
+                "day": "日",
+                "week": "周"
+            },
+            "fields": {
+                "filterId": "周期",
+                "machineId": "机器编号",
+                "plannedQuantity": "计划数量",
+                "status": "状态"
+            },
+            "placeholders": {
+                "filterId": "选择周期（日/周）",
+                "machineId": "输入机器编号",
+                "plannedQuantity": "输入计划数量",
+                "status": "选择状态"
+            },
+            "validation": {
+                "required": "此字段为必填项",
+                "minValue": "数值必须不小于{{min}}"
+            },
+            "buttons": {
+                "cancel": "取消",
+                "create": "创建",
+                "save": "保存",
+                "saving": "保存中...",
+                "close": "关闭",
+                "update": "更新"
+            }
+        }
+    },
+    "moldCodeManagement": {
+        "title": "模具代码管理",
+        "addMoldCode": "添加模具代码",
+        "searchPlaceholder": "按模具代码名称搜索...",
+        "fetchError": "获取模具代码失败",
+        "deleteSuccess": "模具代码删除成功",
+        "deleteError": "模具代码删除失败",
+        "updateSuccess": "模具代码更新成功",
+        "updateError": "模具代码更新失败",
+        "table": {
+            "headers": {
+                "id": "编号",
+                "moldCodeName": "模具代码",
+                "description": "描述",
+                "status": "状态",
+                "createdAt": "创建时间",
+                "updatedAt": "更新时间",
+                "actions": "操作"
+            }
+        },
+        "actions": {
+            "viewDetails": "查看详情",
+            "edit": "编辑",
+            "delete": "删除"
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "删除模具代码",
+                "description": "您确定要删除此模具代码吗？"
+            }
+        },
+        "form": {
+            "createTitle": "创建新模具代码",
+            "editTitle": "编辑模具代码",
+            "createSuccess": "模具代码创建成功",
+            "createError": "模具代码创建失败",
+            "fields": {
+                "moldCodeName": "模具代码",
+                "description": "描述",
+                "status": "状态"
+            },
+            "placeholders": {
+                "moldCodeName": "输入模具代码（例如：MLD-A001）",
+                "description": "输入模具代码描述",
+                "status": "选择状态"
+            },
+            "validation": {
+                "required": "此字段为必填项",
+                "minLength": "最小长度为{{min}}个字符",
+                "maxLength": "最大长度为{{max}}个字符"
+            },
+            "buttons": {
+                "cancel": "取消",
+                "create": "创建",
+                "save": "保存",
+                "saving": "保存中...",
+                "close": "关闭",
+                "update": "更新"
+            }
+        }
+    }
+}
