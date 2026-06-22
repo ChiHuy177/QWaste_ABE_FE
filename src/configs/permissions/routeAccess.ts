@@ -154,7 +154,7 @@ export function getDefaultRoute(ability: AppAbility): string {
             return route;
         }
     }
-    // Fallback to the primary admin landing route.
+    // Fallback to the primary admin route.
     return '/admin/space-monitoring';
 }
 

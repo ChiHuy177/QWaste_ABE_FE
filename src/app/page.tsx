@@ -1,12 +1,13 @@
-import type { Metadata } from 'next';
-import LandingPage from './_components/landing/LandingPage';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-    title: 'Qwaste - Smart Factory Management System',
-    description:
-        'Monitor CNC machines in real-time, manage production orders, ensure quality control, and optimize energy consumption — all in one platform.',
-};
+const AUTH_COOKIE_NAME = 'bff_access_token';
+const DEFAULT_AUTHENTICATED_ROUTE = '/admin/space-monitoring';
+const LOGIN_ROUTE = '/login';
 
-export default function Home() {
-    return <LandingPage />;
+export default async function Home() {
+    const cookieStore = await cookies();
+    const isAuthenticated = cookieStore.has(AUTH_COOKIE_NAME);
+
+    redirect(isAuthenticated ? DEFAULT_AUTHENTICATED_ROUTE : LOGIN_ROUTE);
 }
