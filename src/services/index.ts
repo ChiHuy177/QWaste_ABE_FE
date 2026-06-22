@@ -11,7 +11,6 @@ export * from './PermissionService';
 export * from './RoleService';
 export * from './MachineOperatorHistoryService';
 export * from './NotificationService';
-export * from './DrawingCodeService';
 export * from './SpaceService';
 export * from './UtilsService';
 export * from './StepService';

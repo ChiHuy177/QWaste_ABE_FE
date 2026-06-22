@@ -261,7 +261,6 @@
                     "machineStatus": "设备状态",
                     "machineDashboard": "设备仪表盘",
                     "staff": "人员管理",
-                    "drawingCode": "图纸编号",
                     "process": "工序管理",
                     "order": "生产订单",
                     "history": "历史记录",
@@ -858,123 +857,12 @@
                     }
                 }
             },
-            "drawingCodeManagement": {
-                "title": "图纸代码管理",
-                "description": "管理与组织技术图纸代码及相关文档",
-                "addDrawingCode": "添加图纸代码",
-                "editDrawingCode": "编辑图纸代码",
-                "noDrawingCodesFound": "未找到图纸代码",
-                "noDrawingCodesFoundDescription": "请添加首个图纸代码以开始管理技术文档",
-                "addFirstDrawingCode": "添加首个图纸代码",
-                "loadingMessage": "正在加载图纸代码...",
-                "search": {
-                    "placeholder": "按图纸代码名称搜索..."
-                },
-                "table": {
-                    "title": "图纸代码总览",
-                    "clickToView": "点击查看详情",
-                    "description": "查看并管理所有技术图纸代码",
-                    "totalCount": "共{count}个图纸代码",
-                    "noResults": "未找到匹配结果",
-                    "noPdf": "无PDF文档",
-                    "headers": {
-                        "drawingCodeId": "图纸代码ID",
-                        "description": "描述",
-                        "name": "图纸名称",
-                        "pdf": "PDF文档",
-                        "actions": "操作"
-                    },
-                    "pagination": {
-                        "showing": "显示",
-                        "to": "至",
-                        "of": "/",
-                        "results": "条记录",
-                        "page": "第"
-                    },
-                    "actions": {
-                        "view": "查看详情",
-                        "edit": "编辑图纸编号",
-                        "delete": "删除图纸编号"
-                    }
-                },
-                "form": {
-                    "createTitle": "添加新图纸代码",
-                    "editTitle": "编辑图纸代码",
-                    "fields": {
-                        "drawingCodeId": "图纸代码ID",
-                        "name": "图纸名称",
-                        "description": "技术说明",
-                        "pdfUrl": "PDF文档链接",
-                        "pdfUpload": "上传PDF文档"
-                    },
-                    "placeholders": {
-                        "drawingCodeId": "输入图纸代码ID（如：DC-001）",
-                        "name": "输入图纸名称",
-                        "description": "输入技术说明（选填）",
-                        "pdfUrl": "输入PDF文档URL链接"
-                    },
-                    "buttons": {
-                        "create": "创建图纸代码",
-                        "update": "更新图纸代码",
-                        "creating": "创建中...",
-                        "updating": "更新中..."
-                    },
-                    "validation": {
-                        "drawingCodeIdRequired": "图纸代码ID为必填项",
-                        "nameRequired": "图纸名称为必填项"
-                    }
-                },
-                "details": {
-                    "title": "图纸代码详情",
-                    "description": "技术说明",
-                    "metadata": "元数据",
-                    "createdAt": "创建时间",
-                    "updatedAt": "最后更新时间",
-                    "pdfUrl": "PDF文档链接",
-                    "downloadPdf": "下载PDF"
-                },
-                "dialogs": {
-                    "deleteConfirmation": {
-                        "title": "删除图纸代码",
-                        "description": "确认删除图纸代码 {drawingCodeId} {name}？此操作不可撤销",
-                        "confirm": "确认删除",
-                        "deleting": "删除中..."
-                    }
-                },
-                "messages": {
-                    "success": {
-                        "created": "图纸代码创建成功",
-                        "updated": "图纸代码更新成功",
-                        "deleted": "图纸代码删除成功",
-                        "downloaded": "PDF下载成功"
-                    },
-                    "errors": {
-                        "fetchFailed": "图纸代码加载失败",
-                        "createFailed": "图纸代码创建失败",
-                        "updateFailed": "图纸代码更新失败",
-                        "deleteFailed": "图纸代码删除失败",
-                        "downloadFailed": "PDF下载失败",
-                        "sessionExpired": "会话已过期，请重新登录",
-                        "unauthorized": "权限不足，无法执行此操作",
-                        "adminRoleRequired": "需要管理员权限访问此页面",
-                        "connectionError": "网络连接异常，请检查网络",
-                        "timeoutError": "请求超时，请重试",
-                        "networkError": "网络错误，请重试",
-                        "notFound": "未找到图纸代码",
-                        "alreadyExists": "该图纸代码ID已存在",
-                        "noPdfUrl": "此图纸代码无可用PDF链接",
-                        "unexpectedError": "发生未知错误"
-                    },
-                    "downloadStarted": "开始下载PDF文档..."
-                }
-            },
             "processManagement": {
                 "title": "工序管理",
                 "description": "管理和跟踪制造工序",
                 "form": {
                     "fields": {
                         "name": "工序名称",
-                        "drawingCode": "图号",
                         "machine": "设备",
                         "predictedDuration": "预计工时",
                         "taskStatus": "任务状态",
@@ -983,7 +871,6 @@
                     },
                     "placeholders": {
                         "name": "输入工序名称...",
-                        "selectDrawingCode": "选择图号",
                         "selectMachine": "选择设备",
                         "searchPlaceholder": "按工序名称搜索...",
                         "predictedDuration": "输入工时（小时）",
@@ -991,7 +878,6 @@
                     },
                     "validation": {
                         "nameRequired": "工序名称必填",
-                        "drawingCodeRequired": "图号必选",
                         "machineRequired": "设备必选",
                         "predictedDurationRequired": "预计工时必填"
                     },
@@ -1024,7 +910,6 @@
                 "table": {
                     "headers": {
                         "processName": "工序名称",
-                        "drawingCode": "图号",
                         "machine": "设备",
                         "taskStatus": "状态",
                         "approved": "质检状态",
@@ -1056,14 +941,11 @@
                     "clearAll": "清除全部",
                     "searchPlaceholder": "搜索工序...",
                     "taskStatus": "任务状态",
-                    "drawingCode": "图号",
                     "machine": "设备",
                     "durationRange": "工时范围",
                     "showOverdue": "仅显示逾期",
                     "allStatuses": "全部状态",
-                    "allDrawingCodes": "全部图号",
                     "allMachines": "全部设备",
-                    "selectDrawingCode": "选择图号",
                     "selectMachine": "选择设备",
                     "minHours": "最小工时",
                     "maxHours": "最大工时",
@@ -1075,7 +957,6 @@
                 },
                 "messages": {
                     "errors": {
-                        "drawingCodeLoadFailed": "图号加载失败",
                         "machineLoadFailed": "设备加载失败",
                         "processLoadFailed": "工序加载失败",
                         "createFailed": "创建工序失败",
@@ -1122,7 +1003,6 @@
                     "noRemarks": "暂无质检备注"
                 },
                 "display": {
-                    "unknownDrawingCode": "未知图号",
                     "unknownMachine": "未知设备"
                 }
             },
@@ -1254,7 +1134,6 @@
                         "timeline": "时间线",
                         "qcInfo": "质量控制",
                         "process": "工艺流程",
-                        "drawingCode": "图纸代码",
                         "machine": "设备",
                         "operator": "操作员",
                         "created": "创建时间",
@@ -1730,8 +1609,7 @@
                 "staffList": "员工列表",
                 "groupList": "组列表",
                 "zoneList": "区域管理",
-                "machineTypeList": "机器类型管理",
-                "drawingCodeList": "图纸代码列表"
+                "machineTypeList": "机器类型管理"
             },
             "permissionManagement": {
                 "title": "权限管理",
@@ -1813,7 +1691,6 @@
                 "step": "生产步骤",
                 "industry_filter": "行业筛选",
                 "profile": "个人资料",
-                "drawing_code": "图纸代码",
                 "other": "其他"
             }
         },
@@ -1833,7 +1710,6 @@
             "group": "班组",
             "industry_filter": "行业过滤器",
             "industry_config": "行业配置",
-            "drawing_code": "图纸代码",
             "factory_overview": "工厂概览",
             "energy": "能源",
             "machine_overview": "机器概览",

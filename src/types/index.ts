@@ -9,6 +9,5 @@ export * from './Factory';
 export * from './Register';
 export * from './Space';
 export * from './Task';
-export * from './DrawingCode';
 export * from './Step';
 export * from './FloorMap';

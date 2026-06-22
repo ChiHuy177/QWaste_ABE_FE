@@ -312,7 +312,6 @@
             "machineStatus": "Trạng thái máy",
             "machineDashboard": "Bảng điều khiển máy",
             "staff": "Nhân viên",
-            "drawingCode": "Danh sách mã bản vẽ",
             "process": "Quy trình sản xuất",
             "order": "Đơn hàng",
             "tasks": "Nhiệm vụ",
@@ -1848,9 +1847,6 @@
             "status": "Trạng thái",
             "taskStatus": "Trạng thái Công việc",
             "allStatuses": "Tất cả Trạng thái",
-            "drawingCode": "Mã Bản vẽ",
-            "selectDrawingCode": "Chọn Mã Bản vẽ",
-            "allDrawingCodes": "Tất cả Mã Bản vẽ",
             "machine": "Máy gia công",
             "selectMachine": "Chọn Máy gia công",
             "allMachines": "Tất cả Máy",
@@ -1867,7 +1863,6 @@
             "headers": {
                 "processName": "Tên Quy trình",
                 "processId": "ID Quy trình",
-                "drawingCode": "Mã Bản vẽ",
                 "machine": "Máy gia công",
                 "taskStatus": "Trạng thái",
                 "approved": "Tình trạng QC",
@@ -1894,7 +1889,6 @@
             "editTitle": "Chỉnh sửa Quy trình",
             "fields": {
                 "name": "Tên Quy trình",
-                "drawingCode": "Mã Bản vẽ",
                 "machine": "Máy gia công",
                 "predictedEndTime": "Ngày Giờ Kết thúc Dự kiến",
                 "time": "Thời gian",
@@ -1904,7 +1898,6 @@
             },
             "placeholders": {
                 "name": "Nhập tên quy trình...",
-                "selectDrawingCode": "Chọn mã bản vẽ",
                 "selectMachine": "Chọn máy gia công",
                 "predictedEndTime": "Chọn ngày giờ hoàn thành dự kiến",
                 "qcRemarks": "Nhập nhận xét QC"
@@ -1917,13 +1910,11 @@
             },
             "validation": {
                 "nameRequired": "Yêu cầu tên quy trình",
-                "drawingCodeRequired": "Yêu cầu mã bản vẽ",
                 "machineRequired": "Yêu cầu chọn máy gia công",
                 "predictedEndTimeRequired": "Yêu cầu thời gian kết thúc dự kiến",
                 "predictedEndTimeInvalid": "Vui lòng chọn ngày giờ hợp lệ"
             },
             "options": {
-                "selectDrawingCode": "Chọn Mã Bản vẽ",
                 "selectMachine": "Chọn Máy gia công",
                 "selectTaskStatus": "Chọn Trạng thái",
                 "selectApproval": "Chọn Tình trạng QC",
@@ -1976,14 +1967,11 @@
                 "notFound": "Không tìm thấy quy trình",
                 "alreadyExists": "Quy trình đã tồn tại",
                 "unexpectedError": "Đã xảy ra lỗi không xác định",
-                "drawingCodeLoadFailed": "Tải mã bản vẽ thất bại",
                 "machineLoadFailed": "Tải danh sách máy thất bại",
-                "invalidDrawingCode": "Vui lòng chọn mã bản vẽ hợp lệ",
                 "invalidMachine": "Vui lòng chọn máy gia công hợp lệ"
             }
         },
         "display": {
-            "unknownDrawingCode": "Mã Bản vẽ Không xác định",
             "unknownMachine": "Máy Không xác định",
             "loadingDetails": "Đang tải...",
             "errorLoadingDetails": "Lỗi tải chi tiết"
@@ -2117,7 +2105,6 @@
                 "timeline": "Dòng thời gian",
                 "qcInfo": "Kiểm soát Chất lượng",
                 "process": "Quy trình",
-                "drawingCode": "Mã Bản vẽ",
                 "machine": "Máy",
                 "operator": "Người vận hành",
                 "created": "Tạo lúc",
@@ -3078,7 +3065,6 @@
         "unitPrice": "Đơn giá",
         "totalPrice": "Tổng tiền",
         "quantity": "Số lượng",
-        "drawingCode": "Mã bản vẽ",
         "machine": "Máy móc",
         "operator": "Người vận hành",
         "notAssigned": "Chưa phân công",
@@ -3104,7 +3090,6 @@
         "groupList": "Danh sách nhóm",
         "zoneList": "Quản Lý Khu Vực",
         "machineTypeList": "Quản Lý Loại Máy",
-        "drawingCodeList": "Quản lý Mã Bản Vẽ",
         "operator": "Nhân viên",
         "machineList": "Danh sách máy",
         "processManagement": "Quản lý quy trình",
@@ -3119,12 +3104,8 @@
     },
     "addTaskForm": {
         "title": "Thêm Công việc Mới",
-        "selectDrawingCode": "Chọn Mã Bản vẽ",
         "taskDetails": "Chi tiết Công việc",
         "costEstimation": "Ước tính Chi phí",
-        "selectedDrawingCode": "Mã Bản vẽ Đã chọn",
-        "noDrawingCodesFound": "Không tìm thấy mã bản vẽ",
-        "searchDrawingCodes": "Tìm kiếm mã bản vẽ...",
         "fields": {
             "title": "Tiêu đề Công việc",
             "description": "Mô tả",
@@ -3166,11 +3147,6 @@
             "create": "Tạo Công việc",
             "creating": "Đang tạo...",
             "cancel": "Hủy"
-        },
-        "drawingCodeInfo": {
-            "category": "Danh mục",
-            "unitPrice": "Đơn giá",
-            "estimatedTime": "Thời gian ước tính"
         }
     },
     "orderForm": {
@@ -4113,132 +4089,6 @@
             }
         }
     },
-    "drawingCodeManagement": {
-        "title": "Quản lý Mã Bản Vẽ",
-        "addDrawingCode": "Thêm Mã Bản Vẽ",
-        "searchPlaceholder": "Tìm theo mã hoặc tên...",
-        "fetchError": "Tải danh sách mã bản vẽ thất bại",
-        "deleteSuccess": "Xóa mã bản vẽ thành công",
-        "deleteError": "Xóa mã bản vẽ thất bại",
-        "updateSuccess": "Cập nhật mã bản vẽ thành công",
-        "updateError": "Cập nhật mã bản vẽ thất bại",
-        "restoreSuccess": "Khôi phục mã bản vẽ thành công",
-        "restoreError": "Khôi phục mã bản vẽ thất bại",
-        "fetchDetailsError": "Tải chi tiết mã bản vẽ thất bại",
-        "table": {
-            "headers": {
-                "drawingCode": "Mã bản vẽ",
-                "drawingCodeName": "Tên bản vẽ",
-                "description": "Mô tả",
-                "pdfLink": "PDF",
-                "stepsCount": "Bước",
-                "completionTime": "Thời gian",
-                "createdBy": "Người tạo",
-                "createdAt": "Ngày tạo",
-                "status": "Trạng thái",
-                "actions": "Thao tác",
-                "ofCustomer": "Khách hàng"
-            },
-            "steps": "bước",
-            "active": "Hoạt động",
-            "deleted": "Đã xóa",
-            "actions": {
-                "viewPdf": "Xem PDF"
-            }
-        },
-        "form": {
-            "createTitle": "Thêm Mã Bản Vẽ Mới",
-            "editTitle": "Chỉnh Sửa Mã Bản Vẽ",
-            "viewTitle": "Chi Tiết Mã Bản Vẽ",
-            "createDescription": "Điền đầy đủ thông tin bên dưới. Cần ít nhất một bước sản xuất.",
-            "editDescription": "Cập nhật thông tin mã bản vẽ.",
-            "editNote": "Lưu ý: Để cập nhật các bước sản xuất, hãy sử dụng modal Xem Chi Tiết.",
-            "fields": {
-                "drawingCode": "Mã bản vẽ",
-                "drawingCodeName": "Tên bản vẽ",
-                "description": "Mô tả",
-                "pdfLink": "Bản vẽ kỹ thuật (PDF)",
-                "defaultCompletionTime": "Tổng thời gian hoàn thành dự kiến",
-                "defaultCompletionTimeHint": "Tổng thời gian tất cả các bước tính bằng giây (ví dụ: 7200 = 2 giờ)",
-                "ofCustomer": "Khách hàng"
-            },
-            "placeholders": {
-                "drawingCode": "Ví dụ: DC-001",
-                "drawingCodeName": "Ví dụ: Gia công Khung chính",
-                "description": "Nhập mô tả (không bắt buộc)...",
-                "defaultCompletionTime": "Ví dụ: 7200",
-                "ofCustomer": "Ví dụ: AMC"
-            },
-            "validation": {
-                "drawingCodeRequired": "Mã bản vẽ là bắt buộc",
-                "nameRequired": "Tên bản vẽ là bắt buộc",
-                "maxLength": "Tối đa {{max}} ký tự",
-                "noWhitespaceOnly": "Không được chỉ chứa khoảng trắng",
-                "completionTimeMin": "Thời gian hoàn thành phải lớn hơn 0",
-                "pdfRequired": "Bản vẽ kỹ thuật (PDF) là bắt buộc",
-                "pdfLink": "Bản vẽ kỹ thuật (PDF) là bắt buộc",
-                "customerRequired": "Vui lòng chọn khách hàng"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo mới",
-                "update": "Cập nhật",
-                "saving": "Đang lưu...",
-                "close": "Đóng",
-                "viewDetails": "Xem chi tiết",
-                "edit": "Chỉnh sửa",
-                "delete": "Xóa",
-                "restore": "Khôi phục"
-            },
-            "createSuccess": "Tạo mã bản vẽ thành công",
-            "createError": "Tạo mã bản vẽ thất bại"
-        },
-        "steps": {
-            "title": "Các bước sản xuất",
-            "stepLabel": "Bước {{number}}",
-            "minRequired": "tối thiểu 1 bước",
-            "addStep": "Thêm bước",
-            "emptyHint": "Chưa có bước nào. Cần ít nhất 1 bước sản xuất.",
-            "continueAddingHint": "Bạn có thể tiếp tục sử dụng dropdown ở trên để thêm các bước tiếp theo.",
-            "searchStep": "Tìm kiếm và thêm một bước tiêu chuẩn...",
-            "searchAnotherStep": "Tìm kiếm và thêm một bước khác...",
-            "createNewStandardStep": "Tạo bước tiêu chuẩn mới",
-            "addedSuccess": "Đã thêm bước \"{{stepName}}\" thành công",
-            "headers": {
-                "stepName": "Tên bước",
-                "description": "Mô tả",
-                "materialName": "Vật liệu",
-                "requiresQc": "Cần QC",
-                "defaultTime": "Thời gian (giây)"
-            },
-            "placeholders": {
-                "stepName": "Ví dụ: Chuẩn bị vật liệu",
-                "description": "Mô tả không bắt buộc...",
-                "defaultTime": "Ví dụ: 1800",
-                "materialName": "Nhập tên vật liệu",
-                "searchStep": "Tìm kiếm và thêm một bước tiêu chuẩn...",
-                "searchAnotherStep": "Tìm kiếm và thêm một bước khác...",
-                "createNewStandardStep": "Tạo bước tiêu chuẩn mới"
-            },
-            "validation": {
-                "minOne": "Cần ít nhất một bước sản xuất",
-                "stepNameRequired": "Tất cả các bước phải có tên",
-                "stepInvalid": "Một số bước có dữ liệu không hợp lệ. Vui lòng kiểm tra các trường màu đỏ.",
-                "stepTimeRequired": "Thời gian hoàn thành là bắt buộc",
-                "materialRequired": "Vật liệu là bắt buộc",
-                "atLeastOneStep": "Cần ít nhất một bước sản xuất"
-            },
-            "createError": "Tạo bước tiêu chuẩn thất bại: {{error}}",
-            "createSuccess": "Tạo bước tiêu chuẩn thành công",
-            "fetchError": "Không thể tải danh sách bước tiêu chuẩn: {{error}}"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Xóa Mã Bản Vẽ",
-                "description": "Bạn có chắc muốn xóa mã bản vẽ này? Hành động này không thể hoàn tác."
-            }
-        }
-    },
     "managerReview": {
         "drawer": {
             "title": "Đánh giá của Quản lý",
@@ -4290,7 +4140,6 @@
         "group": "Tổ/Nhóm",
         "industry_filter": "Bộ lọc ngành",
         "industry_config": "Cấu hình ngành",
-        "drawing_code": "Mã bản vẽ",
         "factory_overview": "Tổng quan nhà máy",
         "energy": "Năng lượng",
         "machine_overview": "Tổng quan máy móc",

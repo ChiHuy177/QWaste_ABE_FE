@@ -34,7 +34,7 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
     can(['view', 'update'], 'profile');
 
     // Grant access to process, staff, and tasks for all authenticated users
-    can('view', ['process', 'staff', 'tasks', 'drawing_code']);
+    can('view', ['process', 'staff', 'tasks']);
 
     normalizedRoles.forEach((normalizedRole) => {
         switch (normalizedRole) {
@@ -51,7 +51,6 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
                     'staff',
                     'group',
                     'space',
-                    'drawing_code',
                     'energy',
                     'machine_monitoring',
                     'machine_operator_history',

@@ -42,10 +42,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'step',
         action: 'view',
     },
-    '/admin/categories/drawingCode': {
-        subject: 'drawing_code',
-        action: 'view',
-    },
     '/admin/setting': {
         subject: 'profile',
         action: 'view',

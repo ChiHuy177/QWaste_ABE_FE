@@ -1,5 +1,4 @@
 export * from './use-mobile';
-export * from './useDrawingCodes';
 export * from './useMediaQuery';
 export * from './usePageTitle';
 export * from './usePermissionCheck';

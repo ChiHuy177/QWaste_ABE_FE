@@ -113,11 +113,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             )
         );
     }
-    if (ability.can('view', 'drawing_code')) {
-        staffAndOthersItems.push(
-            createMenuItem('/admin/categories/drawingCode', t('sidebar.navigation.drawingCode'))
-        );
-    }
     if (staffAndOthersItems.length > 0) {
         categoryItems.push({
             key: 'staff_others',

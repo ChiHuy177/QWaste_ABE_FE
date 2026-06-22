@@ -144,16 +144,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         group: 'categories',
         subGroup: 'staff_others',
     },
-    {
-        key: 'drawing-code',
-        route: '/admin/categories/drawingCode',
-        i18nKey: 'sidebar.navigation.drawingCode',
-        subject: 'drawing_code',
-        action: 'view',
-        group: 'categories',
-        subGroup: 'staff_others',
-    },
-
     // RBAC items
     {
         key: 'rbac-permissions',

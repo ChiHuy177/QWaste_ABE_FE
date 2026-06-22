@@ -29,7 +29,6 @@ export type Subject =
     | 'staff'
     | 'group'
     | 'industry_filter'
-    | 'drawing_code'
     // Factory
     | 'energy'
     | 'industry_config'

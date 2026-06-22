@@ -430,43 +430,6 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Update profile',
     },
 
-    // Drawing Code
-    {
-        slug: 'drawing_code:view',
-        subject: 'drawing_code',
-        action: 'view',
-        routes: ['/admin/categories/drawingCode'],
-        menuKey: 'drawingCode',
-        description: 'View drawing codes',
-    },
-    {
-        slug: 'drawing_code:create',
-        subject: 'drawing_code',
-        action: 'create',
-        routes: [],
-        description: 'Create drawing code',
-    },
-    {
-        slug: 'drawing_code:update',
-        subject: 'drawing_code',
-        action: 'update',
-        routes: [],
-        description: 'Update drawing code',
-    },
-    {
-        slug: 'drawing_code:delete',
-        subject: 'drawing_code',
-        action: 'delete',
-        routes: [],
-        description: 'Delete drawing code',
-    },
-    {
-        slug: 'drawing_code:restore',
-        subject: 'drawing_code',
-        action: 'restore',
-        routes: [],
-        description: 'Restore drawing code',
-    },
     // Energy
     {
         slug: 'energy:overview_view',

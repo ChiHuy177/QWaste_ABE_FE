@@ -13,7 +13,6 @@ const BASE_PATHS = {
     AUTH: `${API}/authentication/${V1}`,
     USERS: `${API}/users/${V1}`,
     USER_SETTINGS: `${API}/users/userSettings/${V1}`,
-    DRAWING_CODES: `${API}/drawingCodes/${V1}`,
     SPACES: `${API}/spaces/${V1}`,
     SPACES_MONITORING: `${API}/spaces/monitoring/${V1}`,
     SPACE_LEVELS: `${API}/spaceLevels/${V1}`,
@@ -42,12 +41,6 @@ export const ENDPOINTS = {
         LOGOUT: `${BASE_PATHS.AUTH}/logout`,
         REGISTER: `${BASE_PATHS.USERS}/register/initiate`,
         REGISTER_VERIFY: `${BASE_PATHS.USERS}/register/verify`,
-    },
-    DRAWING_CODES: {
-        BASE: BASE_PATHS.DRAWING_CODES,
-        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.DRAWING_CODES, id),
-        RESTORE: (id: PathParam) => `${BASE_PATHS.DRAWING_CODES}/${id}/restoring`,
-        PICKING: `${BASE_PATHS.DRAWING_CODES}/picking`,
     },
     SPACES: {
         BASE: BASE_PATHS.SPACES,

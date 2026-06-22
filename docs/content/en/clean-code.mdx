@@ -173,10 +173,9 @@ Services should not:
 Run independent requests in parallel:
 
 ```ts
-const [machines, spaces, drawingCodes] = await Promise.all([
+const [machines, spaces] = await Promise.all([
   MachineService.getMachines(),
-  SpaceService.getSpaces(),
-  DrawingCodeService.getPickingDrawingCodes()
+  SpaceService.getSpaces()
 ])
 ```
 

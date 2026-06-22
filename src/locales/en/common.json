@@ -321,7 +321,6 @@
             "machineStatus": "Machine Status",
             "machineDashboard": "Machine Dashboard",
             "staff": "Staff",
-            "drawingCode": "Drawing Code List",
             "process": "Process",
             "order": "Order",
             "tasks": "Tasks",
@@ -2090,7 +2089,6 @@
         "form": {
             "fields": {
                 "name": "Process Name",
-                "drawingCode": "Drawing Code",
                 "machine": "Machine",
                 "predictedDuration": "Predicted Duration",
                 "taskStatus": "Task Status",
@@ -2099,7 +2097,6 @@
             },
             "placeholders": {
                 "name": "Enter process name...",
-                "selectDrawingCode": "Select drawing code",
                 "selectMachine": "Select machine",
                 "searchPlaceholder": "Search processes by process name..",
                 "predictedDuration": "Enter duration in hours",
@@ -2107,7 +2104,6 @@
             },
             "validation": {
                 "nameRequired": "Process name is required",
-                "drawingCodeRequired": "Drawing code is required",
                 "machineRequired": "Machine is required",
                 "predictedDurationRequired": "Predicted duration is required"
             },
@@ -2140,7 +2136,6 @@
         "table": {
             "headers": {
                 "processName": "Process Name",
-                "drawingCode": "Drawing Code",
                 "machine": "Machine",
                 "taskStatus": "Status",
                 "approved": "QC Status",
@@ -2172,14 +2167,11 @@
             "clearAll": "Clear All",
             "searchPlaceholder": "Search processes...",
             "taskStatus": "Task Status",
-            "drawingCode": "Drawing Code",
             "machine": "Machine",
             "durationRange": "Duration Range",
             "showOverdue": "Show Overdue Only",
             "allStatuses": "All Statuses",
-            "allDrawingCodes": "All Drawing Codes",
             "allMachines": "All Machines",
-            "selectDrawingCode": "Select drawing code",
             "selectMachine": "Select machine",
             "minHours": "Min hours",
             "maxHours": "Max hours",
@@ -2191,7 +2183,6 @@
         },
         "messages": {
             "errors": {
-                "drawingCodeLoadFailed": "Failed to load drawing codes",
                 "machineLoadFailed": "Failed to load machines",
                 "processLoadFailed": "Failed to load processes",
                 "createFailed": "Failed to create process",
@@ -2238,7 +2229,6 @@
             "noRemarks": "No quality control remarks have been added yet."
         },
         "display": {
-            "unknownDrawingCode": "Unknown Drawing Code",
             "unknownMachine": "Unknown Machine"
         }
     },
@@ -2370,7 +2360,6 @@
                 "timeline": "Timeline",
                 "qcInfo": "Quality Control",
                 "process": "Process",
-                "drawingCode": "Drawing Code",
                 "machine": "Machine",
                 "operator": "Operator",
                 "created": "Created",
@@ -2756,12 +2745,8 @@
     },
     "addTaskForm": {
         "title": "Add New Task",
-        "selectDrawingCode": "Select Drawing Code",
         "taskDetails": "Task Details",
         "costEstimation": "Cost Estimation",
-        "selectedDrawingCode": "Selected Drawing Code",
-        "noDrawingCodesFound": "No drawing codes found",
-        "searchDrawingCodes": "Search drawing codes...",
         "fields": {
             "title": "Task Title",
             "description": "Description",
@@ -2803,11 +2788,6 @@
             "create": "Create Task",
             "creating": "Creating...",
             "cancel": "Cancel"
-        },
-        "drawingCodeInfo": {
-            "category": "Category",
-            "unitPrice": "Unit Price",
-            "estimatedTime": "Estimated Time"
         }
     },
     "orderForm": {
@@ -3332,7 +3312,6 @@
         "groupList": "Group List",
         "zoneList": "Zone Management",
         "machineTypeList": "Machine Type Management",
-        "drawingCodeList": "Drawing Code Management",
         "operator": "Staff Management",
         "machineList": "Machine List",
         "processManagement": "Process Management",
@@ -4065,130 +4044,6 @@
         "markAllAsRead": "Mark as read",
         "noMore": "All notifications displayed"
     },
-    "drawingCodeManagement": {
-        "title": "Drawing Code Management",
-        "addDrawingCode": "Add Drawing Code",
-        "searchPlaceholder": "Search by code or name...",
-        "fetchError": "Failed to fetch drawing codes",
-        "deleteSuccess": "Drawing code deleted successfully",
-        "deleteError": "Failed to delete drawing code",
-        "updateSuccess": "Drawing code updated successfully",
-        "updateError": "Failed to update drawing code",
-        "restoreSuccess": "Drawing code restored successfully",
-        "restoreError": "Failed to restore drawing code",
-        "fetchDetailsError": "Failed to fetch drawing code details",
-        "table": {
-            "headers": {
-                "drawingCode": "Code",
-                "drawingCodeName": "Name",
-                "description": "Description",
-                "pdfLink": "PDF",
-                "stepsCount": "Steps",
-                "completionTime": "Est. Time",
-                "ofCustomer": "Customer",
-                "status": "Status",
-                "actions": "Actions"
-            },
-            "steps": "steps",
-            "active": "Active",
-            "deleted": "Deleted",
-            "actions": {
-                "viewPdf": "View PDF"
-            }
-        },
-        "form": {
-            "createTitle": "Add New Drawing Code",
-            "editTitle": "Edit Drawing Code",
-            "viewTitle": "Drawing Code Details",
-            "createDescription": "Fill in the details below. At least one step template is required.",
-            "editDescription": "Update the drawing code information.",
-            "editNote": "Note: To update step templates, use the View Details modal.",
-            "fields": {
-                "drawingCode": "Drawing Code",
-                "drawingCodeName": "Drawing Code Name",
-                "description": "Description",
-                "pdfLink": "Technical Drawing (PDF)",
-                "defaultCompletionTime": "Estimated total completion time",
-                "defaultCompletionTimeHint": "Estimated total time in seconds (e.g., 7200 = 2 hours)",
-                "ofCustomer": "Customer"
-            },
-            "placeholders": {
-                "drawingCode": "e.g. DC-001",
-                "drawingCodeName": "e.g. Main Frame Assembly",
-                "description": "Enter description (optional)...",
-                "defaultCompletionTime": "e.g. 7200",
-                "ofCustomer": "e.g. AMC"
-            },
-            "validation": {
-                "drawingCodeRequired": "Drawing code is required",
-                "nameRequired": "Drawing code name is required",
-                "maxLength": "Maximum {{max}} characters",
-                "noWhitespaceOnly": "Cannot contain only whitespace",
-                "completionTimeMin": "Completion time must be greater than 0",
-                "pdfRequired": "Technical Drawing (PDF) is required",
-                "pdfLink": "Technical Drawing (PDF) is required",
-                "customerRequired": "Please select a customer"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create",
-                "update": "Update",
-                "saving": "Saving...",
-                "close": "Close",
-                "viewDetails": "View Details",
-                "edit": "Edit",
-                "delete": "Delete",
-                "restore": "Restore"
-            },
-            "createSuccess": "Drawing code created successfully",
-            "createError": "Failed to create drawing code"
-        },
-        "steps": {
-            "title": "Step Templates",
-            "stepLabel": "Step {{number}}",
-            "minRequired": "min. 1 required",
-            "addStep": "Add Step",
-            "emptyHint": "No steps added. At least 1 step is required.",
-            "continueAddingHint": "You can continue using the dropdown above to add more steps.",
-            "searchStep": "Search and add a standard step...",
-            "searchAnotherStep": "Search and add another step...",
-            "createNewStandardStep": "Create new standard step",
-            "addedSuccess": "Added step \"{{stepName}}\" successfully",
-            "headers": {
-                "stepName": "Step Name",
-                "description": "Description",
-                "requiresQc": "Requires QC",
-                "defaultTime": "Est. Time (s)",
-                "materialName": "Material Name"
-            },
-            "placeholders": {
-                "stepName": "e.g. Raw Material Prep",
-                "description": "Optional description...",
-                "defaultTime": "e.g. 1800",
-                "materialName": "Enter material name",
-                "searchStep": "Search and add a standard step...",
-                "searchAnotherStep": "Search and add another step...",
-                "createNewStandardStep": "Create new standard step"
-            },
-            "validation": {
-                "minOne": "At least one step template is required",
-                "stepNameRequired": "All steps must have a name",
-                "stepInvalid": "Some steps have invalid data. Please check the fields in red.",
-                "stepTimeRequired": "Step time is required",
-                "materialRequired": "Material is required",
-                "atLeastOneStep": "Please add at least one step template to the drawing code"
-            },
-            "createError": "Failed to create standard step: {{error}}",
-            "createSuccess": "Standard step created successfully",
-            "fetchError": "Failed to load standard steps: {{error}}"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Delete Drawing Code",
-                "description": "Are you sure you want to delete this drawing code? This action cannot be undone."
-            }
-        }
-    },
     "managerReview": {
         "drawer": {
             "title": "Manager Review",
@@ -4240,7 +4095,6 @@
         "group": "Group",
         "industry_filter": "Industry Filter",
         "industry_config": "Industry Config",
-        "drawing_code": "Drawing Code",
         "factory_overview": "Space Monitoring",
         "energy": "Energy",
         "machine_overview": "Machine Overview",
