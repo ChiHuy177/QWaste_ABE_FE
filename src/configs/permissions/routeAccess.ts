@@ -113,12 +113,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Order Management
-    '/admin/order': {
-        subject: 'order',
-        action: 'view',
-    },
-
     // Process Management
     '/admin/process': {
         subject: 'process',

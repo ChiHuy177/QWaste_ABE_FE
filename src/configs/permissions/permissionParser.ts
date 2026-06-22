@@ -26,12 +26,7 @@ export function parsePermissionString(permission: string): PermissionRule | null
         'overview_view',
         'store',
         'update_sensitive',
-        'update_info',
-        'update_plan',
         'confirm',
-        'cancel',
-        'operator_view',
-        'manager_review_view',
         'decline',
     ];
     if (!validActions.includes(action as Action)) return null;

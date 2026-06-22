@@ -149,7 +149,9 @@ const MyReviewsPage = () => {
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 {[
                     {
-                        label: t('orderManagement.stats.total'),
+                        label: t('operatorReview.page.totalOrders', {
+                            defaultValue: 'Total Orders',
+                        }),
                         value: stats.totalOrders,
                         icon: FileTextOutlined,
                         color: token.colorPrimary,

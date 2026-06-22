@@ -1,92 +1,92 @@
-# Architecture
-
-Qwaste v2 uses Next.js App Router. Route UI lives in `src/app`, while shared services, stores, contexts, config, and types are kept outside route folders for reuse.
-
-## High-level flow
-
-```txt
-Page / Component
-  -> Hook or Context
-  -> Service class
-  -> NetworkService / apiClient
-  -> /api/bff/*
-  -> Backend API
-```
-
-The client does not call the backend URL directly. Most requests go through the `/api/bff` route so the server-side proxy can attach the token from an httpOnly cookie.
-
-## App Router
-
-Main route groups:
-
-| Folder | Role |
-| --- | --- |
-| `src/app/page.tsx` | Landing page |
-| `src/app/(auth)` | Login and register |
-| `src/app/(dashboard)` | Authenticated dashboard area |
-| `src/app/api/bff` | Backend API proxy |
-| `src/app/api/uploadthing` | UploadThing file upload |
-
-Route groups such as `(auth)` and `(dashboard)` organize code without appearing in the URL.
-
-## Provider stack
-
-Important providers:
-
-| File | Role |
-| --- | --- |
-| `src/provider/ReduxProvider.tsx` | Redux store provider |
-| `src/provider/ReactQueryProvider.tsx` | React Query client provider |
-| `src/contexts/AuthContext.tsx` | Session and current user |
-| `src/contexts/AbilityContext.tsx` | CASL ability from roles/permissions |
-| `src/contexts/ErrorContext.tsx` | Global error handling |
-| `src/contexts/WebSocketContext.tsx` | STOMP WebSocket connection after login |
-
-Add new providers as close as possible to the code that needs them. Move a provider to the root only when many screens truly depend on it.
-
-## Service layer
-
-Services live in `src/services`. Each domain has a dedicated class.
-
-| Service | Domain |
-| --- | --- |
-| `AuthService` | Login, logout, register, refresh |
-| `UserService` | User profile and user management |
-| `OrderService` | Orders, drawings, reviews, export |
-| `MachineService` | Machines and machine status |
-| `FactoryService` | Factories, overview, picking |
-| `EnergyService` | Energy consumption |
-| `NotificationService` | Notifications |
-
-Endpoints are centralized in `src/services/endpoints.ts`. When the backend URL changes, update that file first, then update services if the response contract changed.
-
-## State management
-
-Qwaste combines Redux Toolkit and Context:
-
-| Location | Use when |
-| --- | --- |
-| Redux store | Data is shared across screens or benefits from actions/reducers |
-| React Context | Session, ability, websocket, error scopes |
-| Local state | Form state, modals, filters, page-local UI state |
-
-Do not put temporary form state in Redux when only one component tree uses it.
-
-## Shared components
-
-`src/components/shared` contains reusable UI:
-
-- `FormModal`: config-driven form modal.
-- `ConfirmModal`: confirmation dialogs.
-- `SearchInput`: standard search field.
-- `filters`: space filters and advanced filters.
-- `notification`: notification dropdown/list.
-- `AnalyticsCharts`: runtime and monitoring charts.
-
-Shared components should expose clear props and avoid hidden dependency on one page.
-
-## Next
-
-- [Project structure](/en/structure): file placement, module splitting, and import direction.
-- [Clean code](/en/clean-code): component, hook, service, state, and review guidelines.
-- [Endpoint → UI](/en/data-flow): an end-to-end example from backend endpoint to UI page.
+# Architecture
+
+Qwaste v2 uses Next.js App Router. Route UI lives in `src/app`, while shared services, stores, contexts, config, and types are kept outside route folders for reuse.
+
+## High-level flow
+
+```txt
+Page / Component
+  -> Hook or Context
+  -> Service class
+  -> NetworkService / apiClient
+  -> /api/bff/*
+  -> Backend API
+```
+
+The client does not call the backend URL directly. Most requests go through the `/api/bff` route so the server-side proxy can attach the token from an httpOnly cookie.
+
+## App Router
+
+Main route groups:
+
+| Folder | Role |
+| --- | --- |
+| `src/app/page.tsx` | Landing page |
+| `src/app/(auth)` | Login and register |
+| `src/app/(dashboard)` | Authenticated dashboard area |
+| `src/app/api/bff` | Backend API proxy |
+| `src/app/api/uploadthing` | UploadThing file upload |
+
+Route groups such as `(auth)` and `(dashboard)` organize code without appearing in the URL.
+
+## Provider stack
+
+Important providers:
+
+| File | Role |
+| --- | --- |
+| `src/provider/ReduxProvider.tsx` | Redux store provider |
+| `src/provider/ReactQueryProvider.tsx` | React Query client provider |
+| `src/contexts/AuthContext.tsx` | Session and current user |
+| `src/contexts/AbilityContext.tsx` | CASL ability from roles/permissions |
+| `src/contexts/ErrorContext.tsx` | Global error handling |
+| `src/contexts/WebSocketContext.tsx` | STOMP WebSocket connection after login |
+
+Add new providers as close as possible to the code that needs them. Move a provider to the root only when many screens truly depend on it.
+
+## Service layer
+
+Services live in `src/services`. Each domain has a dedicated class.
+
+| Service | Domain |
+| --- | --- |
+| `AuthService` | Login, logout, register, refresh |
+| `UserService` | User profile and user management |
+| `OrderService` | Operator review APIs |
+| `MachineService` | Machines and machine status |
+| `FactoryService` | Factories, overview, picking |
+| `EnergyService` | Energy consumption |
+| `NotificationService` | Notifications |
+
+Endpoints are centralized in `src/services/endpoints.ts`. When the backend URL changes, update that file first, then update services if the response contract changed.
+
+## State management
+
+Qwaste combines Redux Toolkit and Context:
+
+| Location | Use when |
+| --- | --- |
+| Redux store | Data is shared across screens or benefits from actions/reducers |
+| React Context | Session, ability, websocket, error scopes |
+| Local state | Form state, modals, filters, page-local UI state |
+
+Do not put temporary form state in Redux when only one component tree uses it.
+
+## Shared components
+
+`src/components/shared` contains reusable UI:
+
+- `FormModal`: config-driven form modal.
+- `ConfirmModal`: confirmation dialogs.
+- `SearchInput`: standard search field.
+- `filters`: space filters and advanced filters.
+- `notification`: notification dropdown/list.
+- `AnalyticsCharts`: runtime and monitoring charts.
+
+Shared components should expose clear props and avoid hidden dependency on one page.
+
+## Next
+
+- [Project structure](/en/structure): file placement, module splitting, and import direction.
+- [Clean code](/en/clean-code): component, hook, service, state, and review guidelines.
+- [Endpoint → UI](/en/data-flow): an end-to-end example from backend endpoint to UI page.

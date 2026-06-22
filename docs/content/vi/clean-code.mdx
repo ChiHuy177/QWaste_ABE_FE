@@ -1,321 +1,320 @@
-# Clean code
-
-Trang này là guideline viết code cho Qwaste v2. Mục tiêu không phải tạo nhiều rule hình thức, mà là giúp code dễ đọc, dễ test, ít lỗi khi mở rộng nghiệp vụ.
-
-## Nguyên tắc nền
-
-| Nguyên tắc | Áp dụng trong dự án |
-| --- | --- |
-| Một file có một vai trò chính | Page compose UI, service gọi API, hook điều phối state, util xử lý logic thuần |
-| Đặt code gần nơi dùng | Chỉ đưa ra shared khi có nhu cầu dùng lại thật |
-| Boundary rõ | UI không biết chi tiết token/API, service không biết modal/toast |
-| Type trước khi tối ưu | Response, request, props và state quan trọng phải có type rõ |
-| Tối ưu theo vấn đề thật | Tránh `useMemo`/`useCallback` tràn lan cho logic rẻ |
-
-## Component
-
-Component nên đọc được theo thứ tự:
-
-1. Props type.
-2. Hook/state.
-3. Derived values.
-4. Event handlers.
-5. Render.
-
-Ví dụ:
-
-```tsx
-interface OrderStatusBadgeProps {
-  status: OrderStatus
-}
-
-export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const color = getOrderStatusColor(status)
-  const label = getOrderStatusLabel(status)
-
-  return <Tag color={color}>{label}</Tag>
-}
-```
-
-Tránh:
-
-- Component vừa gọi API vừa transform data vừa render modal lớn.
-- Component nhận props quá rộng như toàn bộ `order` nếu chỉ cần `order.status`.
-- Định nghĩa component con bên trong component cha.
-- Inline object/array/function lớn truyền xuống component memoized.
-- Render điều kiện bằng `condition && <Component />` khi `condition` có thể là số hoặc chuỗi rỗng.
-
-Nên:
-
-- Tách component theo khối UI có ý nghĩa nghiệp vụ.
-- Đặt tên component theo domain: `OrderDetailDrawer`, `MachineTimelineModal`.
-- Dùng early return cho loading/empty/error state.
-- Giữ component shared không phụ thuộc ngầm vào một page.
-
-## Props
-
-Props nên nhỏ và có chủ đích.
-
-```tsx
-interface TaskCardProps {
-  task: TaskResponse
-  onOpenDetail: (taskId: string) => void
-}
-```
-
-Nếu component chỉ cần 3 field, cân nhắc truyền 3 field thay vì cả object lớn:
-
-```tsx
-interface UserNameProps {
-  fullname: string
-  roleNames: string[]
-}
-```
-
-Không truyền callback kiểu `onClick={() => doManyThings(a, b, c)}` qua nhiều tầng nếu tầng giữa không dùng. Khi prop drilling dài, cân nhắc composition hoặc context ở phạm vi hẹp.
-
-## Hooks
-
-Hook nên che giấu orchestration phức tạp nhưng không biến thành "god hook".
-
-Tốt:
-
-```ts
-function useOrderFilters() {
-  const [keyword, setKeyword] = useState('')
-  const [status, setStatus] = useState<OrderStatus | null>(null)
-
-  const query = useMemo(
-    () => ({ keyword: keyword.trim(), status }),
-    [keyword, status]
-  )
-
-  return { keyword, setKeyword, status, setStatus, query }
-}
-```
-
-Tránh:
-
-- Hook vừa quản lý filter, modal, selected row, submit form, permission và export file.
-- `useEffect` dùng để tính derived state đơn giản.
-- Dependency array chứa object/function thay đổi mỗi render.
-- Subscribe global event nhưng không cleanup.
-
-Rule thực tế:
-
-| Tình huống | Cách làm |
-| --- | --- |
-| State tính được từ state khác | Tính trực tiếp trong render hoặc `useMemo` nếu đắt |
-| Logic chỉ chạy khi click/submit | Đặt trong event handler, không đưa vào `useEffect` |
-| Callback cập nhật dựa trên state cũ | Dùng functional setState |
-| Giá trị thay đổi liên tục nhưng không cần render | Dùng `useRef` |
-| UI search/filter nặng | Dùng debounce hoặc `useDeferredValue` |
-
-## useEffect
-
-`useEffect` chỉ nên dùng cho side effect thật:
-
-- Subscribe/unsubscribe WebSocket hoặc event listener.
-- Đồng bộ với API browser.
-- Trigger fetch khi dependency thay đổi nếu không dùng data library.
-- Cleanup timer, subscription, abort controller.
-
-Không dùng `useEffect` để set state derived:
-
-```tsx
-// Không nên
-useEffect(() => {
-  setFullName(`${firstName} ${lastName}`)
-}, [firstName, lastName])
-
-// Nên
-const fullName = `${firstName} ${lastName}`
-```
-
-Nếu effect dài hơn khoảng 20-30 dòng, tách function hoặc hook riêng.
-
-## Service và API
-
-Component không gọi `apiClient` trực tiếp. Luồng chuẩn:
-
-```txt
-Component/Hook -> DomainService -> NetworkService -> apiClient -> /api/bff
-```
-
-Service tốt:
-
-```ts
-static async cancelOrder(orderId: string, reason: string): Promise<string> {
-  const response = await NetworkService.requestJson<void>({
-    method: 'PUT',
-    url: ENDPOINTS.ORDERS.CANCEL(orderId),
-    data: { cancellationReason: reason }
+# Clean code
+
+Trang này là guideline viết code cho Qwaste v2. Mục tiêu không phải tạo nhiều rule hình thức, mà là giúp code dễ đọc, dễ test, ít lỗi khi mở rộng nghiệp vụ.
+
+## Nguyên tắc nền
+
+| Nguyên tắc | Áp dụng trong dự án |
+| --- | --- |
+| Một file có một vai trò chính | Page compose UI, service gọi API, hook điều phối state, util xử lý logic thuần |
+| Đặt code gần nơi dùng | Chỉ đưa ra shared khi có nhu cầu dùng lại thật |
+| Boundary rõ | UI không biết chi tiết token/API, service không biết modal/toast |
+| Type trước khi tối ưu | Response, request, props và state quan trọng phải có type rõ |
+| Tối ưu theo vấn đề thật | Tránh `useMemo`/`useCallback` tràn lan cho logic rẻ |
+
+## Component
+
+Component nên đọc được theo thứ tự:
+
+1. Props type.
+2. Hook/state.
+3. Derived values.
+4. Event handlers.
+5. Render.
+
+Ví dụ:
+
+```tsx
+interface OrderStatusBadgeProps {
+  status: OrderStatus
+}
+
+export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
+  const color = getOrderStatusColor(status)
+  const label = getOrderStatusLabel(status)
+
+  return <Tag color={color}>{label}</Tag>
+}
+```
+
+Tránh:
+
+- Component vừa gọi API vừa transform data vừa render modal lớn.
+- Component nhận props quá rộng như toàn bộ `order` nếu chỉ cần `order.status`.
+- Định nghĩa component con bên trong component cha.
+- Inline object/array/function lớn truyền xuống component memoized.
+- Render điều kiện bằng `condition && <Component />` khi `condition` có thể là số hoặc chuỗi rỗng.
+
+Nên:
+
+- Tách component theo khối UI có ý nghĩa nghiệp vụ.
+- Đặt tên component theo domain: `OrderDetailDrawer`, `MachineTimelineModal`.
+- Dùng early return cho loading/empty/error state.
+- Giữ component shared không phụ thuộc ngầm vào một page.
+
+## Props
+
+Props nên nhỏ và có chủ đích.
+
+```tsx
+interface TaskCardProps {
+  task: TaskResponse
+  onOpenDetail: (taskId: string) => void
+}
+```
+
+Nếu component chỉ cần 3 field, cân nhắc truyền 3 field thay vì cả object lớn:
+
+```tsx
+interface UserNameProps {
+  fullname: string
+  roleNames: string[]
+}
+```
+
+Không truyền callback kiểu `onClick={() => doManyThings(a, b, c)}` qua nhiều tầng nếu tầng giữa không dùng. Khi prop drilling dài, cân nhắc composition hoặc context ở phạm vi hẹp.
+
+## Hooks
+
+Hook nên che giấu orchestration phức tạp nhưng không biến thành "god hook".
+
+Tốt:
+
+```ts
+function useOrderFilters() {
+  const [keyword, setKeyword] = useState('')
+  const [status, setStatus] = useState<OrderStatus | null>(null)
+
+  const query = useMemo(
+    () => ({ keyword: keyword.trim(), status }),
+    [keyword, status]
+  )
+
+  return { keyword, setKeyword, status, setStatus, query }
+}
+```
+
+Tránh:
+
+- Hook vừa quản lý filter, modal, selected row, submit form, permission và export file.
+- `useEffect` dùng để tính derived state đơn giản.
+- Dependency array chứa object/function thay đổi mỗi render.
+- Subscribe global event nhưng không cleanup.
+
+Rule thực tế:
+
+| Tình huống | Cách làm |
+| --- | --- |
+| State tính được từ state khác | Tính trực tiếp trong render hoặc `useMemo` nếu đắt |
+| Logic chỉ chạy khi click/submit | Đặt trong event handler, không đưa vào `useEffect` |
+| Callback cập nhật dựa trên state cũ | Dùng functional setState |
+| Giá trị thay đổi liên tục nhưng không cần render | Dùng `useRef` |
+| UI search/filter nặng | Dùng debounce hoặc `useDeferredValue` |
+
+## useEffect
+
+`useEffect` chỉ nên dùng cho side effect thật:
+
+- Subscribe/unsubscribe WebSocket hoặc event listener.
+- Đồng bộ với API browser.
+- Trigger fetch khi dependency thay đổi nếu không dùng data library.
+- Cleanup timer, subscription, abort controller.
+
+Không dùng `useEffect` để set state derived:
+
+```tsx
+// Không nên
+useEffect(() => {
+  setFullName(`${firstName} ${lastName}`)
+}, [firstName, lastName])
+
+// Nên
+const fullName = `${firstName} ${lastName}`
+```
+
+Nếu effect dài hơn khoảng 20-30 dòng, tách function hoặc hook riêng.
+
+## Service và API
+
+Component không gọi `apiClient` trực tiếp. Luồng chuẩn:
+
+```txt
+Component/Hook -> DomainService -> NetworkService -> apiClient -> /api/bff
+```
+
+Service tốt:
+
+```ts
+static async getMachineById(machineId: string): Promise<MachineResponse> {
+  const response = await NetworkService.requestJson<MachineResponse>({
+    method: 'GET',
+    url: ENDPOINTS.MACHINE.DETAIL(machineId)
   })
 
-  return response.message as string
-}
-```
-
-Service không nên:
-
-- Gọi toast/modal.
-- Điều hướng route.
-- Đọc state React/Redux trực tiếp.
-- Hard-code URL ngoài `endpoints.ts`.
-- Swallow error mà UI cần biết.
-
-## Async và performance
-
-Khi có nhiều request độc lập, chạy song song:
-
-```ts
-const [orders, operators, drawingCodes] = await Promise.all([
-  OrderService.getAllOrders(),
-  OperatorService.getAllOperators(),
+  return response.result as MachineResponse
+}
+```
+
+Service không nên:
+
+- Gọi toast/modal.
+- Điều hướng route.
+- Đọc state React/Redux trực tiếp.
+- Hard-code URL ngoài `endpoints.ts`.
+- Swallow error mà UI cần biết.
+
+## Async và performance
+
+Khi có nhiều request độc lập, chạy song song:
+
+```ts
+const [machines, spaces, drawingCodes] = await Promise.all([
+  MachineService.getMachines(),
+  SpaceService.getSpaces(),
   DrawingCodeService.getPickingDrawingCodes()
-])
-```
-
-Tránh waterfall không cần thiết:
-
-```ts
-// Chậm nếu hai request không phụ thuộc nhau
-const orders = await OrderService.getAllOrders()
-const operators = await OperatorService.getAllOperators()
-```
-
-Các rule hiệu năng nên ưu tiên:
-
-| Vấn đề | Cách xử lý |
-| --- | --- |
-| Component/chart nặng | Dynamic import hoặc tách component |
-| List lớn | Pagination, virtualize hoặc content visibility |
-| Lookup lặp lại | Dùng `Map`/`Set` thay vì `find` nhiều lần |
-| Computation đắt | `useMemo` với dependency primitive |
-| Input bị lag | `useDeferredValue` hoặc debounce |
-| Bundle phình | Import trực tiếp, tránh barrel import rộng |
-
-## State
-
-Chọn nơi đặt state theo phạm vi:
-
-| Phạm vi | Nơi đặt |
-| --- | --- |
-| Một input/modal | Local state |
-| Một page phức tạp | Hook cạnh route |
-| Nhiều component trong một module | Context/hook module-local |
-| Nhiều màn hình | Redux store |
-| Server/API data | Service + query/cache layer nếu có |
-
-Không đưa state lên cao chỉ để "dễ lấy". State càng global thì chi phí hiểu và debug càng cao.
-
-## Form
-
-Form nên tách rõ:
-
-- UI field.
-- Validation.
-- Mapping từ form value sang request.
-- Submit action.
-
-Mapper nên nằm trong util/hook riêng nếu form phức tạp:
-
-```ts
-function mapOrderFormToRequest(values: OrderFormValues): OrderCreationRequest {
-  return {
-    orderCode: values.orderCode.trim(),
-    drawings: values.drawings.map(mapDrawingFormValue)
-  }
-}
-```
-
-Không đặt mapping request lớn trực tiếp trong JSX submit handler.
-
-## Error handling
-
-Error handling nên nhất quán:
-
-| Layer | Trách nhiệm |
-| --- | --- |
-| `apiClient` | Refresh token, session expired, forbidden event |
-| Service | Ném lỗi hoặc trả contract rõ |
-| Hook/page | Hiển thị toast, modal, empty/error state |
-| Global handler | Lỗi xác thực/phân quyền toàn cục |
-
-Không `catch` rồi chỉ `console.error` nếu UI cần biết thao tác thất bại.
-
-## Naming
-
-| Loại | Quy ước |
-| --- | --- |
-| Component | `PascalCase`: `OrderDetailDrawer` |
-| Hook | `useSomething`: `useOrderFormData` |
-| Service | `{Domain}Service`: `OrderService` |
-| Type response | `{Domain}Response`, `{Domain}SummaryResponse` |
-| Type request | `{Domain}CreationRequest`, `{Domain}UpdationRequest` |
-| Boolean | `is`, `has`, `can`, `should`: `isLoading`, `canEdit` |
-| Handler | `handleSomething`: `handleSubmit`, `handleCancel` |
-
-Tên nên nói theo nghiệp vụ, không chỉ theo UI. `OrderDetailDrawer` tốt hơn `DetailDrawer` nếu drawer thuộc order.
-
-## Comments
-
-Comment nên giải thích "vì sao", không lặp lại "code làm gì".
-
-```ts
-// BFF giữ token trong httpOnly cookie nên WebSocket phải lấy token qua endpoint server.
-const tokenResponse = await fetch('/api/bff/ws-token')
-```
-
-Không nên:
-
-```ts
-// Set loading to true
-setLoading(true)
-```
-
-## Testable code
-
-Code dễ test thường có đặc điểm:
-
-- Mapper là pure function.
-- API call nằm trong service.
-- Component nhận props rõ.
-- Hook tách orchestration khỏi render.
-- Không phụ thuộc module-level mutable state trừ cache có chủ đích.
-
-Ưu tiên test:
-
-| Nên test | Ví dụ |
-| --- | --- |
-| Mapper request/response | Order form mapper |
-| Permission parser | `permissionParser.test.ts` |
-| Utility tính toán | `calculateElectricBill.test.ts` |
-| Component logic nhiều state | Filter, tree, kanban column |
-
-## Review checklist
-
-Trước khi merge, tự hỏi:
-
-1. File mới đặt đúng layer chưa.
-2. Component có quá nhiều trách nhiệm không.
-3. API URL có nằm trong `endpoints.ts` không.
-4. Request/response đã có type đủ dùng chưa.
-5. State có bị đưa global quá sớm không.
-6. `useEffect` có side effect thật và cleanup chưa.
-7. Có request độc lập nào đang bị await tuần tự không.
-8. Có hard-code text cần i18n không.
-9. Có permission route/menu cần cập nhật không.
-10. Có mapper/logic nào nên có test không.
-
-## Anti-patterns trong dự án
-
-| Anti-pattern | Cách sửa |
-| --- | --- |
-| Page 700 dòng | Tách `_components`, `_hooks`, mapper |
-| Component gọi `apiClient` | Tạo method trong service |
-| URL API hard-code trong component | Đưa vào `endpoints.ts` |
-| `any` lan từ API tới UI | Tạo type response tối thiểu |
-| Modal state trong Redux | Đưa về local state/hook page |
-| `useEffect` set derived state | Tính trực tiếp hoặc `useMemo` |
-| Shared component chứa rule của một page | Đưa lại vào route hoặc truyền rule qua props rõ |
+])
+```
+
+Tránh waterfall không cần thiết:
+
+```ts
+// Chậm nếu hai request không phụ thuộc nhau
+const machines = await MachineService.getMachines()
+const spaces = await SpaceService.getSpaces()
+```
+
+Các rule hiệu năng nên ưu tiên:
+
+| Vấn đề | Cách xử lý |
+| --- | --- |
+| Component/chart nặng | Dynamic import hoặc tách component |
+| List lớn | Pagination, virtualize hoặc content visibility |
+| Lookup lặp lại | Dùng `Map`/`Set` thay vì `find` nhiều lần |
+| Computation đắt | `useMemo` với dependency primitive |
+| Input bị lag | `useDeferredValue` hoặc debounce |
+| Bundle phình | Import trực tiếp, tránh barrel import rộng |
+
+## State
+
+Chọn nơi đặt state theo phạm vi:
+
+| Phạm vi | Nơi đặt |
+| --- | --- |
+| Một input/modal | Local state |
+| Một page phức tạp | Hook cạnh route |
+| Nhiều component trong một module | Context/hook module-local |
+| Nhiều màn hình | Redux store |
+| Server/API data | Service + query/cache layer nếu có |
+
+Không đưa state lên cao chỉ để "dễ lấy". State càng global thì chi phí hiểu và debug càng cao.
+
+## Form
+
+Form nên tách rõ:
+
+- UI field.
+- Validation.
+- Mapping từ form value sang request.
+- Submit action.
+
+Mapper nên nằm trong util/hook riêng nếu form phức tạp:
+
+```ts
+function mapOrderFormToRequest(values: OrderFormValues): OrderCreationRequest {
+  return {
+    orderCode: values.orderCode.trim(),
+    drawings: values.drawings.map(mapDrawingFormValue)
+  }
+}
+```
+
+Không đặt mapping request lớn trực tiếp trong JSX submit handler.
+
+## Error handling
+
+Error handling nên nhất quán:
+
+| Layer | Trách nhiệm |
+| --- | --- |
+| `apiClient` | Refresh token, session expired, forbidden event |
+| Service | Ném lỗi hoặc trả contract rõ |
+| Hook/page | Hiển thị toast, modal, empty/error state |
+| Global handler | Lỗi xác thực/phân quyền toàn cục |
+
+Không `catch` rồi chỉ `console.error` nếu UI cần biết thao tác thất bại.
+
+## Naming
+
+| Loại | Quy ước |
+| --- | --- |
+| Component | `PascalCase`: `OrderDetailDrawer` |
+| Hook | `useSomething`: `useOrderFormData` |
+| Service | `{Domain}Service`: `OrderService` |
+| Type response | `{Domain}Response`, `{Domain}SummaryResponse` |
+| Type request | `{Domain}CreationRequest`, `{Domain}UpdationRequest` |
+| Boolean | `is`, `has`, `can`, `should`: `isLoading`, `canEdit` |
+| Handler | `handleSomething`: `handleSubmit`, `handleCancel` |
+
+Tên nên nói theo nghiệp vụ, không chỉ theo UI. `OrderDetailDrawer` tốt hơn `DetailDrawer` nếu drawer thuộc order.
+
+## Comments
+
+Comment nên giải thích "vì sao", không lặp lại "code làm gì".
+
+```ts
+// BFF giữ token trong httpOnly cookie nên WebSocket phải lấy token qua endpoint server.
+const tokenResponse = await fetch('/api/bff/ws-token')
+```
+
+Không nên:
+
+```ts
+// Set loading to true
+setLoading(true)
+```
+
+## Testable code
+
+Code dễ test thường có đặc điểm:
+
+- Mapper là pure function.
+- API call nằm trong service.
+- Component nhận props rõ.
+- Hook tách orchestration khỏi render.
+- Không phụ thuộc module-level mutable state trừ cache có chủ đích.
+
+Ưu tiên test:
+
+| Nên test | Ví dụ |
+| --- | --- |
+| Mapper request/response | Order form mapper |
+| Permission parser | `permissionParser.test.ts` |
+| Utility tính toán | `calculateElectricBill.test.ts` |
+| Component logic nhiều state | Filter, tree, kanban column |
+
+## Review checklist
+
+Trước khi merge, tự hỏi:
+
+1. File mới đặt đúng layer chưa.
+2. Component có quá nhiều trách nhiệm không.
+3. API URL có nằm trong `endpoints.ts` không.
+4. Request/response đã có type đủ dùng chưa.
+5. State có bị đưa global quá sớm không.
+6. `useEffect` có side effect thật và cleanup chưa.
+7. Có request độc lập nào đang bị await tuần tự không.
+8. Có hard-code text cần i18n không.
+9. Có permission route/menu cần cập nhật không.
+10. Có mapper/logic nào nên có test không.
+
+## Anti-patterns trong dự án
+
+| Anti-pattern | Cách sửa |
+| --- | --- |
+| Page 700 dòng | Tách `_components`, `_hooks`, mapper |
+| Component gọi `apiClient` | Tạo method trong service |
+| URL API hard-code trong component | Đưa vào `endpoints.ts` |
+| `any` lan từ API tới UI | Tạo type response tối thiểu |
+| Modal state trong Redux | Đưa về local state/hook page |
+| `useEffect` set derived state | Tính trực tiếp hoặc `useMemo` |
+| Shared component chứa rule của một page | Đưa lại vào route hoặc truyền rule qua props rõ |

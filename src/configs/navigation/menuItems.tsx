@@ -3,7 +3,6 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ShoppingOutlined,
     ProjectOutlined,
     TeamOutlined,
     CheckSquareOutlined,
@@ -147,12 +146,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             label: t('sidebar.navigation.catalog'),
             children: categoryItems,
         });
-    }
-
-    if (ability.can('view', 'order')) {
-        items.push(
-            createMenuItem('/admin/order', t('sidebar.navigation.order'), <ShoppingOutlined />)
-        );
     }
 
     if (ability.can('view', 'process')) {

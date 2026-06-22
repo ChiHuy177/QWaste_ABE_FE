@@ -1,103 +1,103 @@
-# API & BFF
-
-Qwaste v2 dùng BFF route trong Next.js để tránh expose access token cho JavaScript. Client gọi `/api/bff/*`, BFF đọc token từ httpOnly cookie rồi forward request tới backend.
-
-## Luồng request
-
-```txt
-React component
-  -> Domain service
-  -> NetworkService
-  -> apiClient baseURL "/api/bff"
-  -> src/app/api/bff/[...path]/route.ts
-  -> NEXT_PUBLIC_API_BASE_URL
-  -> Backend
-```
-
-Ví dụ client gọi:
-
-```txt
-/api/bff/api/users/v1/me
-```
-
-BFF forward tới:
-
-```txt
-${NEXT_PUBLIC_API_BASE_URL}/api/users/v1/me
-```
-
-## apiClient
-
-`src/services/apiClient.ts` tạo Axios instance:
-
-```ts
-const apiClient = axios.create({
-  baseURL: '/api/bff',
-  timeout: 30000,
-  withCredentials: true
-})
-```
-
-Interceptor xử lý:
-
-| Trạng thái | Hành vi |
-| --- | --- |
-| `401` | Gọi refresh endpoint, retry request cũ nếu refresh thành công |
-| `403` | Dispatch event `forbidden_access` để UI hiển thị lỗi quyền |
-| Refresh fail | Dispatch event `sessionExpired` |
-
-## Cookie token
-
-`src/lib/server-auth.ts` định nghĩa cookie:
-
-| Cookie | Vai trò |
-| --- | --- |
-| `bff_access_token` | Access token do BFF set, `HttpOnly`, `SameSite=Lax`, max age 1 giờ |
-
-Refresh token được backend set qua `Set-Cookie` và BFF forward header này về browser.
-
-## Endpoint registry
-
-Tất cả endpoint backend nên được khai báo tại `src/services/endpoints.ts`.
-
-Các nhóm chính:
-
-- `AUTH`
-- `USERS`
-- `ORDERS`
-- `TASKS`
-- `TASK_REVIEWS`
-- `FACTORY`
-- `SPACES`
-- `MACHINE`
-- `ENERGY`
-- `NOTIFICATIONS`
-- `ROLE`
-- `PERMISSION`
-
-Khi thêm endpoint mới, dùng helper dạng function nếu URL có param:
-
-```ts
-DETAIL: (id: string) => `/api/orders/v1/${id}`
-```
-
-## Thêm service method mới
-
-Ví dụ thêm API confirm order:
-
-```ts
-static async confirmOrder(orderId: string): Promise<string> {
-  const response = await NetworkService.requestJson<void>({
-    method: 'PUT',
-    url: ENDPOINTS.ORDERS.CONFIRM(orderId)
+# API & BFF
+
+Qwaste v2 dùng BFF route trong Next.js để tránh expose access token cho JavaScript. Client gọi `/api/bff/*`, BFF đọc token từ httpOnly cookie rồi forward request tới backend.
+
+## Luồng request
+
+```txt
+React component
+  -> Domain service
+  -> NetworkService
+  -> apiClient baseURL "/api/bff"
+  -> src/app/api/bff/[...path]/route.ts
+  -> NEXT_PUBLIC_API_BASE_URL
+  -> Backend
+```
+
+Ví dụ client gọi:
+
+```txt
+/api/bff/api/users/v1/me
+```
+
+BFF forward tới:
+
+```txt
+${NEXT_PUBLIC_API_BASE_URL}/api/users/v1/me
+```
+
+## apiClient
+
+`src/services/apiClient.ts` tạo Axios instance:
+
+```ts
+const apiClient = axios.create({
+  baseURL: '/api/bff',
+  timeout: 30000,
+  withCredentials: true
+})
+```
+
+Interceptor xử lý:
+
+| Trạng thái | Hành vi |
+| --- | --- |
+| `401` | Gọi refresh endpoint, retry request cũ nếu refresh thành công |
+| `403` | Dispatch event `forbidden_access` để UI hiển thị lỗi quyền |
+| Refresh fail | Dispatch event `sessionExpired` |
+
+## Cookie token
+
+`src/lib/server-auth.ts` định nghĩa cookie:
+
+| Cookie | Vai trò |
+| --- | --- |
+| `bff_access_token` | Access token do BFF set, `HttpOnly`, `SameSite=Lax`, max age 1 giờ |
+
+Refresh token được backend set qua `Set-Cookie` và BFF forward header này về browser.
+
+## Endpoint registry
+
+Tất cả endpoint backend nên được khai báo tại `src/services/endpoints.ts`.
+
+Các nhóm chính:
+
+- `AUTH`
+- `USERS`
+- `ORDERS`
+- `TASKS`
+- `TASK_REVIEWS`
+- `FACTORY`
+- `SPACES`
+- `MACHINE`
+- `ENERGY`
+- `NOTIFICATIONS`
+- `ROLE`
+- `PERMISSION`
+
+Khi thêm endpoint mới, dùng helper dạng function nếu URL có param:
+
+```ts
+OPERATOR_REVIEW: (orderId: string) => `/api/orders/v1/${orderId}/operatorReview`
+```
+
+## Thêm service method mới
+
+Ví dụ thêm API confirm order:
+
+```ts
+static async getOperatorReviewForm(orderId: string): Promise<OrderOperatorReviewResponse> {
+  const response = await NetworkService.requestJson<OrderOperatorReviewResponse>({
+    method: 'GET',
+    url: ENDPOINTS.ORDERS.OPERATOR_REVIEW(orderId)
   })
 
-  return response.message as string
-}
-```
-
-Service chỉ nên xử lý contract API. UI state như loading, modal, toast, filter nên nằm trong hook hoặc component.
-
-## Upload
-
-Upload route nằm tại `src/app/api/uploadthing`. Các component upload dùng helper trong `src/utils/uploadthing.ts` và config UploadThing tương ứng.
+  return response.result as OrderOperatorReviewResponse
+}
+```
+
+Service chỉ nên xử lý contract API. UI state như loading, modal, toast, filter nên nằm trong hook hoặc component.
+
+## Upload
+
+Upload route nằm tại `src/app/api/uploadthing`. Các component upload dùng helper trong `src/utils/uploadthing.ts` và config UploadThing tương ứng.

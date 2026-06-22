@@ -1,328 +1,327 @@
-# Page Blueprint
-
-This page defines the standard direction for building a new page in Qwaste v2. The goal is consistency: clear route ownership, clear data flow, clear permissions, complete UI states, and maintainable code.
-
-## Before coding
-
-Clarify these points first:
-
-| Question | What to clarify |
-| --- | --- |
-| Which role owns the page? | Admin, operator, manager, QC, public, or auth. |
-| What is the route? | Example: `src/app/(dashboard)/admin/machines/page.tsx`. |
-| What is the main data? | Entity, endpoint, response DTO, pagination, filter, sort. |
-| What can users do? | View, create, edit, delete, approve, export, import, realtime update. |
-| Which permissions apply? | Route access, menu visibility, button/action permission. |
-| Which UI states are required? | Loading, empty, error, no permission, disabled, optimistic/reload. |
-| Does it depend on realtime? | WebSocket topic and how to merge incoming data into current state. |
-| Does it need i18n? | Product UI text should live in `src/locales/*/common.json`. |
-
-If a business rule is unclear, clarify it before guessing the workflow.
-
-## Recommended flow
-
-1. Create the route and module boundary.
-2. Create or update the service/API contract.
-3. Build the page shell and main layout.
-4. Split UI by screen area.
-5. Choose the right Ant Design components for the problem.
-6. Keep data/state logic out of heavy UI components.
-7. Add permission and action guards.
-8. Complete empty/loading/error states.
-9. Check responsive behavior, i18n, lint/type/test.
-
-## How to prompt a task
-
-When asking AI or handing work to another developer, a good prompt should include business intent, code location, data, and completion criteria. A prompt like “build the machine management page” leaves too many decisions unspecified.
-
-Use this structure:
-
-| Part | Include |
-| --- | --- |
-| Goal | What the page does and who uses it. |
-| Code location | Route, page file, and related component folder. |
-| API/data | Endpoint, existing service, or expected data shape. |
-| UI expectation | Table/grid/form/drawer/modal/filter/chart and preferred Ant Design components. |
-| Permission | Who can view, who can act, and which actions need guards. |
-| States | Loading, empty, error, disabled, submitting, no permission. |
-| Constraints | Follow existing patterns, use i18n, avoid hard-coded text, avoid unrelated refactors. |
-| Verification | Commands to run or flows to test. |
-
-List page prompt example:
-
-```txt
-Build the admin machine type management page at src/app/(dashboard)/admin/categories/machineType/page.tsx.
-Use Ant Design Table + SearchInput + Button + Modal/Form for CRUD.
-Use MachineTypeService if it exists; if missing, add a thin service wrapper around NetworkService.
-Support name search, pagination, loading/empty/error state, and delete confirmation.
-Wire route/action permissions using the existing RBAC pattern.
-Move UI text to src/locales/vi|en|ch/common.json, do not hard-code product text.
-Run relevant typecheck/lint and report anything not tested.
-```
-
-Form workflow prompt example:
-
-```txt
-Create an edit order info drawer in the admin/order module.
-The form should only manage validation and payload; the parent page/drawer calls OrderService and reloads data.
-Disable submit while saving and keep initialValues stable when selectedOrderId changes.
-Allow edit only while the order is Draft; all other statuses should be view-only.
-```
-
-Refactor prompt example:
-
-```txt
-Refactor this page by splitting components without changing behavior.
-Keep current API calls, permissions, query params, and text.
-Extract filters, table, and form drawer into child components with clear props.
-Do not change styling except where required to avoid regression.
-```
-
-If the API is unclear, explicitly ask the implementer to inspect existing services/endpoints first and propose the smallest contract instead of inventing endpoints.
-
-## 1. Route and module boundary
-
-Place the page in the right route group:
-
-| Page type | Common location |
-| --- | --- |
-| Admin dashboard | `src/app/(dashboard)/admin/<module>/page.tsx` |
-| Operator | `src/app/(dashboard)/operator/<module>/page.tsx` |
-| Auth | `src/app/(auth)/<module>/page.tsx` |
-| API route/BFF | `src/app/api/<module>/route.ts` or `src/app/api/bff/[...path]/route.ts` |
-
-For pages with several UI areas, create a local `_components` folder:
-
-```txt
-src/app/(dashboard)/admin/example/
-├── page.tsx
-└── _components/
-    ├── ExampleHeader.tsx
-    ├── ExampleFilters.tsx
-    ├── ExampleTable.tsx
-    └── ExampleFormDrawer.tsx
-```
-
-Rule of thumb: `page.tsx` coordinates page-level data and workflows; child components receive clear props and should not own the whole page workflow.
-
-## 2. Service and API contract
-
-When a page needs a new endpoint, update:
-
-| Need | Location |
-| --- | --- |
-| Endpoint constants | `src/services/endpoints.ts` |
-| API functions | `src/services/<Entity>Service.ts` |
-| Shared types | `src/types` or a nearby module type file if internal only |
-
-Services should be thin wrappers around `NetworkService`, accept meaningful params, and return explicit types. Components should not build URLs, parse API responses, or know too much about backend response shape.
-
-Example direction:
-
-```ts
-export class ExampleService {
-  static async getExamples(params: ExampleListParams): Promise<PaginatedResult<Example>> {
-    return NetworkService.requestJson({
-      method: 'GET',
-      url: ENDPOINTS.EXAMPLE.GET,
-      params
-    });
-  }
-}
-```
-
-## 3. Page shell
-
-Most admin pages follow this frame:
-
-| Area | Purpose |
-| --- | --- |
-| Header | Title, short context if needed, primary action. |
-| Filters | Search, select, date range, status, reset. |
-| Summary | Stat cards or quick indicators when useful. |
-| Content | Main table, grid, board, tree, map, or chart. |
-| Detail/action | Drawer, modal, form, confirm dialog. |
-
-Avoid placing everything in `page.tsx`. Split a section when it has its own state/handlers or long JSX.
-
-## 4. Using Ant Design
-
-Qwaste uses Ant Design as the primary UI system, so prefer documented Ant Design components before building custom UI. The goal is consistent UX, less page-specific CSS, and built-in accessibility/loading/empty behavior where possible.
-
-## Choose components
-
-| Need | Preferred component |
-| --- | --- |
-| Multi-column list | `Table` |
-| Quick CRUD | `Table` + `Modal`/`Drawer` + `Form` |
-| Multi-field form | `Form`, `Input`, `Select`, `DatePicker`, `InputNumber`, `Switch`, `Checkbox` |
-| Filters | `Space`/`Flex`, `SearchInput`, `Select`, `DatePicker.RangePicker`, `Button` |
-| Dangerous action confirmation | `Popconfirm` or `Modal.confirm` |
-| Operation feedback | `message`, `notification`, `Alert` |
-| Short metadata | `Tag`, `Badge`, `Tooltip`, `Typography.Text` |
-| Content sections | `Tabs`, `Segmented`, `Collapse` |
-| Tree structure | `Tree`, `TreeSelect` |
-| File upload | `Upload` with explicit controlled/uncontrolled mode |
-
-Create custom components only when Ant Design does not fit the workflow, or when wrapping a repeated pattern such as `SearchInput`.
-
-## Table rules
-
-- Always provide a stable `rowKey`, preferably a real backend id.
-- Pagination, sort, and filter should have one clear state source.
-- Do not apply local filtering when the table is server-paginated unless the page intentionally filters only the loaded data.
-- Group action buttons by permission: view/edit/delete/export.
-- Use `ellipsis`, `Tooltip`, or compact rendering for long text.
-- Use the `loading` prop and define empty behavior through `locale.emptyText` or a dedicated empty state.
-
-## Form rules
-
-- Forms receive `initialValues` from the parent and reset at the correct time when opened or when the record changes.
-- Validate inside the form and normalize the payload before submitting.
-- Submit buttons must show loading/disabled state while saving.
-- Dependent fields should use `Form.useWatch` or explicit handlers, not hard-to-follow effects.
-- For edit/view-only modes, pass one consistent `disabled` state instead of disabling each field ad hoc.
-
-## Modal, Drawer, and feedback
-
-| Pattern | Use when |
-| --- | --- |
-| `Modal` | Short form, confirmation, action that does not need much space. |
-| `Drawer` | Long form, detail view, workflow that should keep list context visible. |
-| `Popconfirm` | Simple delete or dangerous row-level action. |
-| `message` | Fast success/failure feedback. |
-| `notification`/`Alert` | Errors or states users need to read more carefully. |
-
-Close modal/drawer only after mutation success. If mutation fails, keep the form open so users can fix or retry.
-
-## Select, DatePicker, and remote data
-
-- Remote search in `Select` should disable local filtering with `filterOption={false}`.
-- Debounce search when each input change calls an API.
-- Options need loading and empty states.
-- Date values should use a consistent UI/API format.
-- Reset filters should reset UI state and related query params/pagination.
-
-## Theme and styling
-
-Prefer this order:
-
-1. Global tokens in `ConfigProvider`.
-2. Component tokens for a specific component group.
-3. `className`, `classNames`, or `styles` when supported.
-4. CSS module/local style for page-specific layout.
-
-Avoid broad global `.ant-*` overrides because they can affect unrelated pages. Scope custom styles to the page/component.
-
-Before using an unfamiliar prop or component, check official Ant Design docs or metadata. Do not guess prop names and do not rely on internal `.ant-*` DOM structure.
-
-## 5. Data fetching and state
-
-Classify state first:
-
-| State type | Handling |
-| --- | --- |
-| Server state | Use services plus the query/mutation pattern already used in the module. |
-| Filter/search/sort/page | Use clear names and debounce search if it triggers API calls. |
-| Form state | Let the form component own it; the page receives submit/cancel/success. |
-| UI state | Modal open, selected row, active tab, expanded keys. |
-| Derived state | Compute with `useMemo` when useful; avoid storing duplicate state. |
-
-For list pages, standardize at least:
-
-- `search`
-- `filters`
-- `pagination`
-- `sort`
-- `selectedItem`
-- `isCreateOpen` or `isEditOpen`
-- `isSubmitting`
-
-After create/update/delete, reload the affected data. If React Query is used, invalidate specific query keys instead of refreshing the whole page.
-
-## 6. Permission and route access
-
-Every dashboard page should check three layers:
-
-| Layer | Check |
-| --- | --- |
-| Route | `src/configs/permissions/routeAccess.ts` |
-| Menu | Permission registry/sidebar if the route appears in navigation |
-| Action | Create/edit/delete/export/approve buttons must be disabled or hidden by ability |
-
-Do not rely only on UI hiding. If the backend enforces permissions, service calls still need clear `403` handling so users do not get stuck silently.
-
-## 7. Required UI states
-
-A page is not complete until it handles:
-
-| State | Expected behavior |
-| --- | --- |
-| Initial loading | Skeleton, spinner, or Ant Design component loading state. |
-| Empty | Message/action that fits the current filters. |
-| Error | Clear message and retry when core data cannot load. |
-| Submitting | Disable submit and prevent double submit. |
-| No permission | Hide the action or show a disabled state with reason when needed. |
-| Long text | Wrap/truncate/tooltip so layout does not break. |
-
-## 8. Forms and validation
-
-Forms should move in one direction:
-
-1. Page opens the form with `mode`, `initialValues`, and `disabled` if needed.
-2. Form validates input.
-3. Form submits a normalized payload to the page.
-4. Page calls service/mutation.
-5. On success, close the form, reload list/detail, and show feedback.
-
-Avoid making a form call the API, close its drawer, and reload the list when the page still needs to coordinate a larger workflow. Let forms call APIs directly only when they are standalone screens and do not affect outer state.
-
-## 9. Realtime
-
-For WebSocket pages:
-
-- Subscribe only when prerequisites exist: user, selected entity, socket connected.
-- Cleanup subscriptions on unmount or dependency changes.
-- Decide whether realtime messages update an item, append an item, or invalidate a query.
-- Prevent older messages from overwriting newer request data.
-
-If realtime is only a UX improvement, keep a fallback through refetch, polling, or manual refresh.
-
-## 10. i18n and text
-
-Product UI text should come from `src/locales/*/common.json`. For a new page:
-
-| Task | File |
-| --- | --- |
-| Vietnamese text | `src/locales/vi/common.json` |
-| English text | `src/locales/en/common.json` |
-| Chinese text if the module supports it | `src/locales/ch/common.json` |
-
-Keys should follow the page domain, such as `machineList.filters.searchPlaceholder`, instead of vague keys like `title2` or `buttonText`.
-
-## 11. Completion checklist
-
-Before handing off a page, check:
-
-- Route and sidebar/menu behavior are correct.
-- API calls use the right endpoint, params, pagination, sort, and filters.
-- Loading, empty, error, and submitting states are handled.
-- Ant Design components match their intended role, without custom UI where an existing component is enough.
-- Create/update/delete does not leave stale list/detail data.
-- Route and action permissions are wired.
-- Product UI text is not hard-coded.
-- Layout holds on narrow desktop and mobile/tablet if supported.
-- There is no duplicated state or infinite effect loop.
-- `npm run lint:check`, `npx tsc --noEmit`, or relevant tests pass when the change scope warrants it.
-
-## Quick decision guide
-
-| If the page is... | Build direction |
-| --- | --- |
-| CRUD list | Table + filters + drawer/modal form + delete confirm + pagination. |
-| Monitoring dashboard | Cards/charts + date/filter controls + clear loading/empty states. |
-| Realtime board | Columns/cards + WebSocket merge strategy + manual refresh fallback. |
-| Detail workflow | Status header + tabs/sections + action drawer/modal + audit/history if applicable. |
-| Configuration page | Grouped form fields + save/reset + dirty state + validation. |
-
-When a page grows beyond one long screen of code, split by workflow first instead of mechanically splitting by component type.
+# Page Blueprint
+
+This page defines the standard direction for building a new page in Qwaste v2. The goal is consistency: clear route ownership, clear data flow, clear permissions, complete UI states, and maintainable code.
+
+## Before coding
+
+Clarify these points first:
+
+| Question | What to clarify |
+| --- | --- |
+| Which role owns the page? | Admin, operator, manager, QC, public, or auth. |
+| What is the route? | Example: `src/app/(dashboard)/admin/machines/page.tsx`. |
+| What is the main data? | Entity, endpoint, response DTO, pagination, filter, sort. |
+| What can users do? | View, create, edit, delete, approve, export, import, realtime update. |
+| Which permissions apply? | Route access, menu visibility, button/action permission. |
+| Which UI states are required? | Loading, empty, error, no permission, disabled, optimistic/reload. |
+| Does it depend on realtime? | WebSocket topic and how to merge incoming data into current state. |
+| Does it need i18n? | Product UI text should live in `src/locales/*/common.json`. |
+
+If a business rule is unclear, clarify it before guessing the workflow.
+
+## Recommended flow
+
+1. Create the route and module boundary.
+2. Create or update the service/API contract.
+3. Build the page shell and main layout.
+4. Split UI by screen area.
+5. Choose the right Ant Design components for the problem.
+6. Keep data/state logic out of heavy UI components.
+7. Add permission and action guards.
+8. Complete empty/loading/error states.
+9. Check responsive behavior, i18n, lint/type/test.
+
+## How to prompt a task
+
+When asking AI or handing work to another developer, a good prompt should include business intent, code location, data, and completion criteria. A prompt like “build the machine management page” leaves too many decisions unspecified.
+
+Use this structure:
+
+| Part | Include |
+| --- | --- |
+| Goal | What the page does and who uses it. |
+| Code location | Route, page file, and related component folder. |
+| API/data | Endpoint, existing service, or expected data shape. |
+| UI expectation | Table/grid/form/drawer/modal/filter/chart and preferred Ant Design components. |
+| Permission | Who can view, who can act, and which actions need guards. |
+| States | Loading, empty, error, disabled, submitting, no permission. |
+| Constraints | Follow existing patterns, use i18n, avoid hard-coded text, avoid unrelated refactors. |
+| Verification | Commands to run or flows to test. |
+
+List page prompt example:
+
+```txt
+Build the admin machine type management page at src/app/(dashboard)/admin/categories/machineType/page.tsx.
+Use Ant Design Table + SearchInput + Button + Modal/Form for CRUD.
+Use MachineTypeService if it exists; if missing, add a thin service wrapper around NetworkService.
+Support name search, pagination, loading/empty/error state, and delete confirmation.
+Wire route/action permissions using the existing RBAC pattern.
+Move UI text to src/locales/vi|en|ch/common.json, do not hard-code product text.
+Run relevant typecheck/lint and report anything not tested.
+```
+
+Form workflow prompt example:
+
+```txt
+Create an edit machine detail drawer in the admin machines module.
+The form should only manage validation and payload; the parent page/drawer calls MachineService and reloads data.
+Disable submit while saving and keep initialValues stable when selectedMachineId changes.
+```
+
+Refactor prompt example:
+
+```txt
+Refactor this page by splitting components without changing behavior.
+Keep current API calls, permissions, query params, and text.
+Extract filters, table, and form drawer into child components with clear props.
+Do not change styling except where required to avoid regression.
+```
+
+If the API is unclear, explicitly ask the implementer to inspect existing services/endpoints first and propose the smallest contract instead of inventing endpoints.
+
+## 1. Route and module boundary
+
+Place the page in the right route group:
+
+| Page type | Common location |
+| --- | --- |
+| Admin dashboard | `src/app/(dashboard)/admin/<module>/page.tsx` |
+| Operator | `src/app/(dashboard)/operator/<module>/page.tsx` |
+| Auth | `src/app/(auth)/<module>/page.tsx` |
+| API route/BFF | `src/app/api/<module>/route.ts` or `src/app/api/bff/[...path]/route.ts` |
+
+For pages with several UI areas, create a local `_components` folder:
+
+```txt
+src/app/(dashboard)/admin/example/
+├── page.tsx
+└── _components/
+    ├── ExampleHeader.tsx
+    ├── ExampleFilters.tsx
+    ├── ExampleTable.tsx
+    └── ExampleFormDrawer.tsx
+```
+
+Rule of thumb: `page.tsx` coordinates page-level data and workflows; child components receive clear props and should not own the whole page workflow.
+
+## 2. Service and API contract
+
+When a page needs a new endpoint, update:
+
+| Need | Location |
+| --- | --- |
+| Endpoint constants | `src/services/endpoints.ts` |
+| API functions | `src/services/<Entity>Service.ts` |
+| Shared types | `src/types` or a nearby module type file if internal only |
+
+Services should be thin wrappers around `NetworkService`, accept meaningful params, and return explicit types. Components should not build URLs, parse API responses, or know too much about backend response shape.
+
+Example direction:
+
+```ts
+export class ExampleService {
+  static async getExamples(params: ExampleListParams): Promise<PaginatedResult<Example>> {
+    return NetworkService.requestJson({
+      method: 'GET',
+      url: ENDPOINTS.EXAMPLE.GET,
+      params
+    });
+  }
+}
+```
+
+## 3. Page shell
+
+Most admin pages follow this frame:
+
+| Area | Purpose |
+| --- | --- |
+| Header | Title, short context if needed, primary action. |
+| Filters | Search, select, date range, status, reset. |
+| Summary | Stat cards or quick indicators when useful. |
+| Content | Main table, grid, board, tree, map, or chart. |
+| Detail/action | Drawer, modal, form, confirm dialog. |
+
+Avoid placing everything in `page.tsx`. Split a section when it has its own state/handlers or long JSX.
+
+## 4. Using Ant Design
+
+Qwaste uses Ant Design as the primary UI system, so prefer documented Ant Design components before building custom UI. The goal is consistent UX, less page-specific CSS, and built-in accessibility/loading/empty behavior where possible.
+
+## Choose components
+
+| Need | Preferred component |
+| --- | --- |
+| Multi-column list | `Table` |
+| Quick CRUD | `Table` + `Modal`/`Drawer` + `Form` |
+| Multi-field form | `Form`, `Input`, `Select`, `DatePicker`, `InputNumber`, `Switch`, `Checkbox` |
+| Filters | `Space`/`Flex`, `SearchInput`, `Select`, `DatePicker.RangePicker`, `Button` |
+| Dangerous action confirmation | `Popconfirm` or `Modal.confirm` |
+| Operation feedback | `message`, `notification`, `Alert` |
+| Short metadata | `Tag`, `Badge`, `Tooltip`, `Typography.Text` |
+| Content sections | `Tabs`, `Segmented`, `Collapse` |
+| Tree structure | `Tree`, `TreeSelect` |
+| File upload | `Upload` with explicit controlled/uncontrolled mode |
+
+Create custom components only when Ant Design does not fit the workflow, or when wrapping a repeated pattern such as `SearchInput`.
+
+## Table rules
+
+- Always provide a stable `rowKey`, preferably a real backend id.
+- Pagination, sort, and filter should have one clear state source.
+- Do not apply local filtering when the table is server-paginated unless the page intentionally filters only the loaded data.
+- Group action buttons by permission: view/edit/delete/export.
+- Use `ellipsis`, `Tooltip`, or compact rendering for long text.
+- Use the `loading` prop and define empty behavior through `locale.emptyText` or a dedicated empty state.
+
+## Form rules
+
+- Forms receive `initialValues` from the parent and reset at the correct time when opened or when the record changes.
+- Validate inside the form and normalize the payload before submitting.
+- Submit buttons must show loading/disabled state while saving.
+- Dependent fields should use `Form.useWatch` or explicit handlers, not hard-to-follow effects.
+- For edit/view-only modes, pass one consistent `disabled` state instead of disabling each field ad hoc.
+
+## Modal, Drawer, and feedback
+
+| Pattern | Use when |
+| --- | --- |
+| `Modal` | Short form, confirmation, action that does not need much space. |
+| `Drawer` | Long form, detail view, workflow that should keep list context visible. |
+| `Popconfirm` | Simple delete or dangerous row-level action. |
+| `message` | Fast success/failure feedback. |
+| `notification`/`Alert` | Errors or states users need to read more carefully. |
+
+Close modal/drawer only after mutation success. If mutation fails, keep the form open so users can fix or retry.
+
+## Select, DatePicker, and remote data
+
+- Remote search in `Select` should disable local filtering with `filterOption={false}`.
+- Debounce search when each input change calls an API.
+- Options need loading and empty states.
+- Date values should use a consistent UI/API format.
+- Reset filters should reset UI state and related query params/pagination.
+
+## Theme and styling
+
+Prefer this order:
+
+1. Global tokens in `ConfigProvider`.
+2. Component tokens for a specific component group.
+3. `className`, `classNames`, or `styles` when supported.
+4. CSS module/local style for page-specific layout.
+
+Avoid broad global `.ant-*` overrides because they can affect unrelated pages. Scope custom styles to the page/component.
+
+Before using an unfamiliar prop or component, check official Ant Design docs or metadata. Do not guess prop names and do not rely on internal `.ant-*` DOM structure.
+
+## 5. Data fetching and state
+
+Classify state first:
+
+| State type | Handling |
+| --- | --- |
+| Server state | Use services plus the query/mutation pattern already used in the module. |
+| Filter/search/sort/page | Use clear names and debounce search if it triggers API calls. |
+| Form state | Let the form component own it; the page receives submit/cancel/success. |
+| UI state | Modal open, selected row, active tab, expanded keys. |
+| Derived state | Compute with `useMemo` when useful; avoid storing duplicate state. |
+
+For list pages, standardize at least:
+
+- `search`
+- `filters`
+- `pagination`
+- `sort`
+- `selectedItem`
+- `isCreateOpen` or `isEditOpen`
+- `isSubmitting`
+
+After create/update/delete, reload the affected data. If React Query is used, invalidate specific query keys instead of refreshing the whole page.
+
+## 6. Permission and route access
+
+Every dashboard page should check three layers:
+
+| Layer | Check |
+| --- | --- |
+| Route | `src/configs/permissions/routeAccess.ts` |
+| Menu | Permission registry/sidebar if the route appears in navigation |
+| Action | Create/edit/delete/export/approve buttons must be disabled or hidden by ability |
+
+Do not rely only on UI hiding. If the backend enforces permissions, service calls still need clear `403` handling so users do not get stuck silently.
+
+## 7. Required UI states
+
+A page is not complete until it handles:
+
+| State | Expected behavior |
+| --- | --- |
+| Initial loading | Skeleton, spinner, or Ant Design component loading state. |
+| Empty | Message/action that fits the current filters. |
+| Error | Clear message and retry when core data cannot load. |
+| Submitting | Disable submit and prevent double submit. |
+| No permission | Hide the action or show a disabled state with reason when needed. |
+| Long text | Wrap/truncate/tooltip so layout does not break. |
+
+## 8. Forms and validation
+
+Forms should move in one direction:
+
+1. Page opens the form with `mode`, `initialValues`, and `disabled` if needed.
+2. Form validates input.
+3. Form submits a normalized payload to the page.
+4. Page calls service/mutation.
+5. On success, close the form, reload list/detail, and show feedback.
+
+Avoid making a form call the API, close its drawer, and reload the list when the page still needs to coordinate a larger workflow. Let forms call APIs directly only when they are standalone screens and do not affect outer state.
+
+## 9. Realtime
+
+For WebSocket pages:
+
+- Subscribe only when prerequisites exist: user, selected entity, socket connected.
+- Cleanup subscriptions on unmount or dependency changes.
+- Decide whether realtime messages update an item, append an item, or invalidate a query.
+- Prevent older messages from overwriting newer request data.
+
+If realtime is only a UX improvement, keep a fallback through refetch, polling, or manual refresh.
+
+## 10. i18n and text
+
+Product UI text should come from `src/locales/*/common.json`. For a new page:
+
+| Task | File |
+| --- | --- |
+| Vietnamese text | `src/locales/vi/common.json` |
+| English text | `src/locales/en/common.json` |
+| Chinese text if the module supports it | `src/locales/ch/common.json` |
+
+Keys should follow the page domain, such as `machineList.filters.searchPlaceholder`, instead of vague keys like `title2` or `buttonText`.
+
+## 11. Completion checklist
+
+Before handing off a page, check:
+
+- Route and sidebar/menu behavior are correct.
+- API calls use the right endpoint, params, pagination, sort, and filters.
+- Loading, empty, error, and submitting states are handled.
+- Ant Design components match their intended role, without custom UI where an existing component is enough.
+- Create/update/delete does not leave stale list/detail data.
+- Route and action permissions are wired.
+- Product UI text is not hard-coded.
+- Layout holds on narrow desktop and mobile/tablet if supported.
+- There is no duplicated state or infinite effect loop.
+- `npm run lint:check`, `npx tsc --noEmit`, or relevant tests pass when the change scope warrants it.
+
+## Quick decision guide
+
+| If the page is... | Build direction |
+| --- | --- |
+| CRUD list | Table + filters + drawer/modal form + delete confirm + pagination. |
+| Monitoring dashboard | Cards/charts + date/filter controls + clear loading/empty states. |
+| Realtime board | Columns/cards + WebSocket merge strategy + manual refresh fallback. |
+| Detail workflow | Status header + tabs/sections + action drawer/modal + audit/history if applicable. |
+| Configuration page | Grouped form fields + save/reset + dirty state + validation. |
+
+When a page grows beyond one long screen of code, split by workflow first instead of mechanically splitting by component type.

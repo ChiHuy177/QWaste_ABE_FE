@@ -1,4 +1,4 @@
-import { OrderStatus, OrderDrawingStatus, TaskReviewStatus } from '@/types/Order';
+import { OrderStatus, TaskReviewStatus } from '@/types/Order';
 
 export const getOrderStatusLabel = (status: OrderStatus): string => {
     const labels: Record<OrderStatus, string> = {
@@ -18,24 +18,6 @@ export const getOrderStatusColor = (status: OrderStatus): string => {
         COMPLETED: 'success',
         CANCELLED: 'error',
         IN_PROGRESS: 'green',
-    };
-    return colors[status];
-};
-
-export const getDrawingStatusLabel = (status: OrderDrawingStatus): string => {
-    const labels: Record<OrderDrawingStatus, string> = {
-        PENDING: 'Pending',
-        IN_PROGRESS: 'In Progress',
-        COMPLETED: 'Completed',
-    };
-    return labels[status];
-};
-
-export const getDrawingStatusColor = (status: OrderDrawingStatus): string => {
-    const colors: Record<OrderDrawingStatus, string> = {
-        PENDING: 'default',
-        IN_PROGRESS: 'green',
-        COMPLETED: 'success',
     };
     return colors[status];
 };

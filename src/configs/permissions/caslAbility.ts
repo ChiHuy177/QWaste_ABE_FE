@@ -10,12 +10,7 @@ export type Action =
     | 'overview_view'
     | 'store'
     | 'update_sensitive'
-    | 'update_info'
-    | 'update_plan'
     | 'confirm'
-    | 'cancel'
-    | 'operator_view'
-    | 'manager_review_view'
     | 'decline';
 
 export type Subject =
@@ -55,8 +50,6 @@ export type Subject =
     | 'user'
     | 'role'
     | 'permission'
-    // Order Management
-    | 'order'
     // Process Management
     | 'process'
     | 'standard_step'

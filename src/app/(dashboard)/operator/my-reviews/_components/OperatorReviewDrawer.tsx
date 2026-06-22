@@ -434,7 +434,12 @@ export const OperatorReviewDrawer = () => {
                             onChange={(value) => setReviewFilter(value as ReviewFilter)}
                             options={[
                                 { label: t('operatorReview.page.pendingReviews'), value: 'PENDING' },
-                                { label: t('orderManagement.stats.total'), value: 'ALL' },
+                                {
+                                    label: t('operatorReview.page.totalOrders', {
+                                        defaultValue: 'Total Orders',
+                                    }),
+                                    value: 'ALL',
+                                },
                                 { label: t('operatorReview.drawer.confirm'), value: 'CONFIRMED' },
                                 { label: t('operatorReview.drawer.decline'), value: 'DECLINED' },
                             ]}

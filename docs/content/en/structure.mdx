@@ -1,243 +1,243 @@
-# Project structure
-
-This page explains where code should live, how modules should be split, and how to choose the right layer in Qwaste v2. The goal is to make new code predictable for the next developer.
-
-## Overview
-
-```txt
-src/
-├── app/                  # Next.js App Router routes, pages, layouts, API routes
-├── components/           # Components reused across modules
-├── configs/              # Theme, branding, navigation, permissions
-├── contexts/             # Global/runtime contexts
-├── hooks/                # Reusable hooks
-├── lib/                  # Framework-adjacent helpers
-├── provider/             # Root providers
-├── services/             # API service layer
-├── stores/               # Redux Toolkit stores
-├── styles/               # Shared CSS
-├── types/                # TypeScript domain types
-└── utils/                # Pure utility functions
-```
-
-Default to placing code close to where it is used. Move code to `components/shared`, `hooks`, `utils`, or `services` only when reuse or a clear system boundary exists.
-
-## App Router
-
-`src/app` should contain routes, layouts, pages, and components tightly coupled to a route.
-
-```txt
-src/app/
-├── (auth)/
-│   ├── login/
-│   └── register/
-├── (dashboard)/
-│   ├── admin/
-│   └── operator/
-├── api/
-│   ├── bff/
-│   └── uploadthing/
-├── layout.tsx
-└── page.tsx
-```
-
-Conventions:
-
-| Location | What belongs there |
-| --- | --- |
-| `page.tsx` | Compose the page, read params/searchParams, call screen-level components |
-| `layout.tsx` | Providers or shell UI for a route group |
-| `_components` | Components used only by that route |
-| `_tests` | Tests for that route/module |
-| `api/*/route.ts` | Server API routes |
-
-`page.tsx` should not contain large form logic, data transformations, or complex local state. Move that logic into route-local components or hooks.
-
-## Standard route module
-
-When adding a new dashboard screen, prefer:
-
-```txt
-src/app/(dashboard)/admin/example/
-├── page.tsx
-├── _components/
-│   ├── ExampleTable.tsx
-│   ├── ExampleFilters.tsx
-│   └── ExampleFormModal.tsx
-├── _hooks/
-│   └── useExamplePage.ts
-└── _tests/
-    └── ExampleTable.test.tsx
-```
-
-Keep code route-local until another module actually uses it. Then move it to `src/components/shared` or `src/hooks`.
-
-## Shared components
-
-`src/components/shared` is for components with a general API, such as:
-
-- `FormModal`
-- `ConfirmModal`
-- `SearchInput`
-- `filters`
-- `notification`
-- `AnalyticsCharts`
-
-A good shared component should:
-
-| Criterion | Requirement |
-| --- | --- |
-| Clear props | No hidden dependency on a specific page |
-| Few side effects | No API calls unless that is its explicit job |
-| Clear boundary | UI components should not deeply embed business rules |
-| Testable | Can be rendered and tested independently |
-
-Do not move a component to shared only because it might be reused someday.
-
-## Services
-
-`src/services` is the backend boundary. Components should not call `apiClient` directly.
-
-```txt
-Component/Hook
-  -> OrderService.createOrder()
-  -> NetworkService.requestJson()
-  -> apiClient
-  -> /api/bff
-```
-
-Service conventions:
-
-| Convention | Reason |
-| --- | --- |
-| One service per domain | Easy to find APIs by business area |
-| Endpoints live in `endpoints.ts` | Avoid scattered hard-coded URLs |
-| Services return domain data | Components do not need to know deep API wrapper details |
-| No UI state | Loading, modals, and toasts belong to hooks/components |
-
-Example:
-
-```ts
-static async getOrderById(orderId: string): Promise<OrderResponse> {
-  const response = await NetworkService.requestJson<OrderResponse>({
-    method: 'GET',
-    url: ENDPOINTS.ORDERS.DETAIL(orderId)
-  })
-
-  return response.result as OrderResponse
-}
-```
-
-## Types
-
-`src/types` contains domain contracts such as `Order`, `Task`, `Machine`, `User`, `Permission`, and `ApiResponse`.
-
-Conventions:
-
-- Request types: `SomethingCreationRequest`, `SomethingUpdationRequest`, `SomethingFilterRequest`.
-- Response types: `SomethingResponse`, `SomethingSummaryResponse`, `SomethingDetailResponse`.
-- UI-only types can live next to the component.
-- Types used by several modules belong in `src/types`.
-
-Avoid `any` for new API responses. If the backend contract is still changing, type only the fields the UI actually uses.
-
-## Hooks
-
-Reusable hooks live in `src/hooks`. Route-specific hooks should live next to the route.
-
-Hook categories:
-
-| Hook type | Examples |
-| --- | --- |
-| Data orchestration | `useKanbanTasks`, `useDrawingCodes` |
-| Browser/runtime | `useMediaQuery`, `useTheme` |
-| Permission | `useRouteAccess`, `usePermissionCheck` |
-| Realtime | `useWebSocketNotification`, `useEnergyWebSocket` |
-
-A hook should not manage filters, modals, selected rows, form submit, permissions, and export behavior all at once. Split by concern when it grows.
-
-## Stores
-
-Redux is for broad state or state shared by multiple screens:
-
-- Auth/user state.
-- Notifications.
-- Space monitoring.
-- Orders.
-- Machines.
-- User settings.
-
-Do not use Redux for:
-
-- A single page modal open state.
-- Form input values.
-- A filter used only by one screen.
-- Derived data that can be computed from existing props/state.
-
-## Configs
-
-`src/configs` contains wide-impact configuration:
-
-| Folder/file | Role |
-| --- | --- |
-| `antdTheme.ts` | Ant Design theme tokens |
-| `brandingConfig.ts` | Branding |
-| `navigation/*` | Sidebar/menu |
-| `permissions/*` | CASL ability, route access, permission parser |
-| `mockData/*` | Mock permission/role data |
-
-When adding a permission-protected route, update both `routeAccess.ts` and `menuItems.tsx`.
-
-## Utils and lib
-
-`utils` should contain pure functions independent of React lifecycle:
-
-```ts
-calculateElectricBill(...)
-formatMachineStatus(...)
-mapEnumToLabel(...)
-```
-
-`lib` is for framework-adjacent helpers such as cookies, server auth, and className utilities.
-
-Do not put API calls in `utils`. API calls belong in `services`.
-
-## Import direction
-
-Keep dependencies flowing from UI down to domain/shared layers:
-
-```txt
-app -> components/hooks/services/stores/types
-components -> hooks/types/utils
-hooks -> services/stores/types/utils
-services -> endpoints/apiClient/types
-types -> no runtime imports
-```
-
-Avoid imports from `services` back into `components`, or from `types` into runtime component code. Circular imports usually mean a boundary is wrong.
-
-## When to split files
-
-Split a file when:
-
-- A component exceeds roughly 250-300 lines and mixes concerns.
-- A logic block needs multiple reads to understand.
-- The same logic appears in at least two places.
-- Testing part of the logic is hard because it is buried in UI.
-- A component has several unrelated state groups.
-
-Do not split just to have one function per file. Too many tiny files without clear boundaries also make code harder to follow.
-
-## New module template
-
-Checklist for a new business module:
-
-1. Create the route under `src/app/(dashboard)/...`.
-2. Add `_components` and `_hooks` beside the route when needed.
-3. Add types to `src/types/{Domain}.ts`.
-4. Add endpoints to `src/services/endpoints.ts`.
-5. Add a service in `src/services/{Domain}Service.ts`.
-6. Add a Redux store only if state is truly shared.
-7. If permissions are needed, update `caslAbility.ts`, `defineAbility.ts`, `routeAccess.ts`, and `menuItems.tsx`.
-8. Add tests for mappers, hooks, or components with logic.
-9. Update module/route/API docs.
+# Project structure
+
+This page explains where code should live, how modules should be split, and how to choose the right layer in Qwaste v2. The goal is to make new code predictable for the next developer.
+
+## Overview
+
+```txt
+src/
+├── app/                  # Next.js App Router routes, pages, layouts, API routes
+├── components/           # Components reused across modules
+├── configs/              # Theme, branding, navigation, permissions
+├── contexts/             # Global/runtime contexts
+├── hooks/                # Reusable hooks
+├── lib/                  # Framework-adjacent helpers
+├── provider/             # Root providers
+├── services/             # API service layer
+├── stores/               # Redux Toolkit stores
+├── styles/               # Shared CSS
+├── types/                # TypeScript domain types
+└── utils/                # Pure utility functions
+```
+
+Default to placing code close to where it is used. Move code to `components/shared`, `hooks`, `utils`, or `services` only when reuse or a clear system boundary exists.
+
+## App Router
+
+`src/app` should contain routes, layouts, pages, and components tightly coupled to a route.
+
+```txt
+src/app/
+├── (auth)/
+│   ├── login/
+│   └── register/
+├── (dashboard)/
+│   ├── admin/
+│   └── operator/
+├── api/
+│   ├── bff/
+│   └── uploadthing/
+├── layout.tsx
+└── page.tsx
+```
+
+Conventions:
+
+| Location | What belongs there |
+| --- | --- |
+| `page.tsx` | Compose the page, read params/searchParams, call screen-level components |
+| `layout.tsx` | Providers or shell UI for a route group |
+| `_components` | Components used only by that route |
+| `_tests` | Tests for that route/module |
+| `api/*/route.ts` | Server API routes |
+
+`page.tsx` should not contain large form logic, data transformations, or complex local state. Move that logic into route-local components or hooks.
+
+## Standard route module
+
+When adding a new dashboard screen, prefer:
+
+```txt
+src/app/(dashboard)/admin/example/
+├── page.tsx
+├── _components/
+│   ├── ExampleTable.tsx
+│   ├── ExampleFilters.tsx
+│   └── ExampleFormModal.tsx
+├── _hooks/
+│   └── useExamplePage.ts
+└── _tests/
+    └── ExampleTable.test.tsx
+```
+
+Keep code route-local until another module actually uses it. Then move it to `src/components/shared` or `src/hooks`.
+
+## Shared components
+
+`src/components/shared` is for components with a general API, such as:
+
+- `FormModal`
+- `ConfirmModal`
+- `SearchInput`
+- `filters`
+- `notification`
+- `AnalyticsCharts`
+
+A good shared component should:
+
+| Criterion | Requirement |
+| --- | --- |
+| Clear props | No hidden dependency on a specific page |
+| Few side effects | No API calls unless that is its explicit job |
+| Clear boundary | UI components should not deeply embed business rules |
+| Testable | Can be rendered and tested independently |
+
+Do not move a component to shared only because it might be reused someday.
+
+## Services
+
+`src/services` is the backend boundary. Components should not call `apiClient` directly.
+
+```txt
+Component/Hook
+  -> MachineService.getMachines()
+  -> NetworkService.requestJson()
+  -> apiClient
+  -> /api/bff
+```
+
+Service conventions:
+
+| Convention | Reason |
+| --- | --- |
+| One service per domain | Easy to find APIs by business area |
+| Endpoints live in `endpoints.ts` | Avoid scattered hard-coded URLs |
+| Services return domain data | Components do not need to know deep API wrapper details |
+| No UI state | Loading, modals, and toasts belong to hooks/components |
+
+Example:
+
+```ts
+static async getOrderById(orderId: string): Promise<OrderResponse> {
+  const response = await NetworkService.requestJson<OrderResponse>({
+    method: 'GET',
+    url: ENDPOINTS.ORDERS.DETAIL(orderId)
+  })
+
+  return response.result as OrderResponse
+}
+```
+
+## Types
+
+`src/types` contains domain contracts such as `Order`, `Task`, `Machine`, `User`, `Permission`, and `ApiResponse`.
+
+Conventions:
+
+- Request types: `SomethingCreationRequest`, `SomethingUpdationRequest`, `SomethingFilterRequest`.
+- Response types: `SomethingResponse`, `SomethingSummaryResponse`, `SomethingDetailResponse`.
+- UI-only types can live next to the component.
+- Types used by several modules belong in `src/types`.
+
+Avoid `any` for new API responses. If the backend contract is still changing, type only the fields the UI actually uses.
+
+## Hooks
+
+Reusable hooks live in `src/hooks`. Route-specific hooks should live next to the route.
+
+Hook categories:
+
+| Hook type | Examples |
+| --- | --- |
+| Data orchestration | `useKanbanTasks`, `useDrawingCodes` |
+| Browser/runtime | `useMediaQuery`, `useTheme` |
+| Permission | `useRouteAccess`, `usePermissionCheck` |
+| Realtime | `useWebSocketNotification`, `useEnergyWebSocket` |
+
+A hook should not manage filters, modals, selected rows, form submit, permissions, and export behavior all at once. Split by concern when it grows.
+
+## Stores
+
+Redux is for broad state or state shared by multiple screens:
+
+- Auth/user state.
+- Notifications.
+- Space monitoring.
+- Orders.
+- Machines.
+- User settings.
+
+Do not use Redux for:
+
+- A single page modal open state.
+- Form input values.
+- A filter used only by one screen.
+- Derived data that can be computed from existing props/state.
+
+## Configs
+
+`src/configs` contains wide-impact configuration:
+
+| Folder/file | Role |
+| --- | --- |
+| `antdTheme.ts` | Ant Design theme tokens |
+| `brandingConfig.ts` | Branding |
+| `navigation/*` | Sidebar/menu |
+| `permissions/*` | CASL ability, route access, permission parser |
+| `mockData/*` | Mock permission/role data |
+
+When adding a permission-protected route, update both `routeAccess.ts` and `menuItems.tsx`.
+
+## Utils and lib
+
+`utils` should contain pure functions independent of React lifecycle:
+
+```ts
+calculateElectricBill(...)
+formatMachineStatus(...)
+mapEnumToLabel(...)
+```
+
+`lib` is for framework-adjacent helpers such as cookies, server auth, and className utilities.
+
+Do not put API calls in `utils`. API calls belong in `services`.
+
+## Import direction
+
+Keep dependencies flowing from UI down to domain/shared layers:
+
+```txt
+app -> components/hooks/services/stores/types
+components -> hooks/types/utils
+hooks -> services/stores/types/utils
+services -> endpoints/apiClient/types
+types -> no runtime imports
+```
+
+Avoid imports from `services` back into `components`, or from `types` into runtime component code. Circular imports usually mean a boundary is wrong.
+
+## When to split files
+
+Split a file when:
+
+- A component exceeds roughly 250-300 lines and mixes concerns.
+- A logic block needs multiple reads to understand.
+- The same logic appears in at least two places.
+- Testing part of the logic is hard because it is buried in UI.
+- A component has several unrelated state groups.
+
+Do not split just to have one function per file. Too many tiny files without clear boundaries also make code harder to follow.
+
+## New module template
+
+Checklist for a new business module:
+
+1. Create the route under `src/app/(dashboard)/...`.
+2. Add `_components` and `_hooks` beside the route when needed.
+3. Add types to `src/types/{Domain}.ts`.
+4. Add endpoints to `src/services/endpoints.ts`.
+5. Add a service in `src/services/{Domain}Service.ts`.
+6. Add a Redux store only if state is truly shared.
+7. If permissions are needed, update `caslAbility.ts`, `defineAbility.ts`, `routeAccess.ts`, and `menuItems.tsx`.
+8. Add tests for mappers, hooks, or components with logic.
+9. Update module/route/API docs.

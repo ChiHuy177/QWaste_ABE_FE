@@ -14,7 +14,6 @@ export * from './NotificationService';
 export * from './DrawingCodeService';
 export * from './SpaceService';
 export * from './OrderService';
-export * from './TaskService';
 export * from './UtilsService';
 export * from './StepService';
 export * from './ExcelExportService';

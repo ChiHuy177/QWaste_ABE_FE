@@ -1,241 +1,241 @@
-# Cấu trúc dự án
-
-Trang này mô tả cách đặt file, chia module và chọn vị trí code trong Qwaste v2. Mục tiêu là để người mới vào dự án biết nên thêm code ở đâu và khi nào cần tách abstraction.
-
-## Sơ đồ tổng quan
-
-```txt
-src/
-├── app/                  # Route, page, layout, API route theo Next.js App Router
-├── components/           # Component dùng lại nhiều module
-├── configs/              # Theme, branding, navigation, permissions
-├── contexts/             # Global/runtime contexts
-├── hooks/                # Hook dùng lại
-├── lib/                  # Helper nền tảng, server/client utility nhỏ
-├── provider/             # Root providers
-├── services/             # API service layer
-├── stores/               # Redux Toolkit stores
-├── styles/               # CSS dùng chung
-├── types/                # Domain TypeScript types
-└── utils/                # Pure utility functions
-```
-
-Nguyên tắc chung: đặt code gần nơi sử dụng nhất trước. Chỉ đưa ra `components/shared`, `hooks`, `utils` hoặc `services` khi có nhu cầu dùng lại rõ ràng hoặc code đại diện cho một boundary chung của hệ thống.
-
-## App Router
-
-`src/app` chỉ nên chứa route, layout, page và component gắn chặt với route.
-
-```txt
-src/app/
-├── (auth)/
-│   ├── login/
-│   └── register/
-├── (dashboard)/
-│   ├── admin/
-│   └── operator/
-├── api/
-│   ├── bff/
-│   └── uploadthing/
-├── layout.tsx
-└── page.tsx
-```
-
-Quy ước:
-
-| Vị trí | Nên đặt gì |
-| --- | --- |
-| `page.tsx` | Compose page, đọc params/searchParams, gọi component cấp màn hình |
-| `layout.tsx` | Provider hoặc shell UI cho một nhóm route |
-| `_components` | Component chỉ dùng trong route đó |
-| `_tests` | Test riêng cho route/module đó |
-| `api/*/route.ts` | API route chạy trên server |
-
-`page.tsx` không nên chứa quá nhiều logic form, transform data hoặc state phức tạp. Nếu page dài, tách sang component/hook nằm trong `_components` hoặc `hooks` cạnh route.
-
-## Module route chuẩn
-
-Khi thêm một màn hình dashboard mới, ưu tiên cấu trúc:
-
-```txt
-src/app/(dashboard)/admin/example/
-├── page.tsx
-├── _components/
-│   ├── ExampleTable.tsx
-│   ├── ExampleFilters.tsx
-│   └── ExampleFormModal.tsx
-├── _hooks/
-│   └── useExamplePage.ts
-└── _tests/
-    └── ExampleTable.test.tsx
-```
-
-Nếu hook/component chỉ phục vụ màn hình này, giữ nó trong route. Nếu sau này module khác thật sự dùng lại, lúc đó mới đưa ra `src/components/shared` hoặc `src/hooks`.
-
-## Shared components
-
-`src/components/shared` dành cho component có API đủ tổng quát, ví dụ:
-
-- `FormModal`
-- `ConfirmModal`
-- `SearchInput`
-- `filters`
-- `notification`
-- `AnalyticsCharts`
-
-Không đưa component vào shared chỉ vì "có thể sau này dùng". Một shared component tốt cần:
-
-| Tiêu chí | Yêu cầu |
-| --- | --- |
-| Props rõ | Không phụ thuộc data ngầm từ một page |
-| Ít side effect | Không tự gọi API nếu không phải trách nhiệm chính |
-| Có boundary rõ | UI component thì xử lý UI, không nhúng rule nghiệp vụ sâu |
-| Test được | Có thể render/test độc lập |
-
-## Services
-
-`src/services` là boundary gọi backend. Component không nên gọi `apiClient` trực tiếp.
-
-```txt
-Component/Hook
-  -> OrderService.createOrder()
-  -> NetworkService.requestJson()
-  -> apiClient
-  -> /api/bff
-```
-
-Quy ước service:
-
-| Quy ước | Lý do |
-| --- | --- |
-| Mỗi domain một service | Dễ tìm API theo nghiệp vụ |
-| Endpoint nằm trong `endpoints.ts` | Tránh hard-code URL rải rác |
-| Service trả domain data | Component không phải biết cấu trúc wrapper API quá sâu |
-| Không chứa UI state | Loading, modal, toast thuộc hook/component |
-
-Ví dụ:
-
-```ts
-static async getOrderById(orderId: string): Promise<OrderResponse> {
-  const response = await NetworkService.requestJson<OrderResponse>({
-    method: 'GET',
-    url: ENDPOINTS.ORDERS.DETAIL(orderId)
-  })
-
-  return response.result as OrderResponse
-}
-```
-
-## Types
-
-`src/types` chứa contract theo domain: `Order`, `Task`, `Machine`, `User`, `Permission`, `ApiResponse`.
-
-Quy ước:
-
-- Request type đặt tên `SomethingCreationRequest`, `SomethingUpdationRequest`, `SomethingFilterRequest`.
-- Response type đặt tên `SomethingResponse`, `SomethingSummaryResponse`, `SomethingDetailResponse`.
-- UI-only type có thể đặt cạnh component nếu chỉ dùng nội bộ.
-- Type dùng qua nhiều module mới đưa vào `src/types`.
-
-Không dùng `any` cho response API mới. Nếu backend chưa ổn định, tạo type tối thiểu cho phần UI thật sự dùng.
-
-## Hooks
-
-Hook dùng lại nhiều module đặt trong `src/hooks`. Hook riêng của một route đặt cạnh route.
-
-Hook nên có trách nhiệm rõ:
-
-| Loại hook | Ví dụ |
-| --- | --- |
-| Data orchestration | `useKanbanTasks`, `useDrawingCodes` |
-| Browser/runtime | `useMediaQuery`, `useTheme` |
-| Permission | `useRouteAccess`, `usePermissionCheck` |
-| Realtime | `useWebSocketNotification`, `useEnergyWebSocket` |
-
-Một hook không nên vừa fetch API, vừa build columns, vừa điều khiển modal, vừa xử lý submit form. Nếu hook quá lớn, tách theo concern.
-
-## Stores
-
-Redux store dùng cho state có phạm vi rộng hoặc cần đồng bộ nhiều màn hình:
-
-- Auth/user state.
-- Notification.
-- Space monitoring.
-- Order state.
-- Machine state.
-- User settings.
-
-Không dùng Redux cho:
-
-- Trạng thái mở/đóng modal của một page.
-- Giá trị input form.
-- Filter chỉ dùng trong một màn hình.
-- Derived data có thể tính từ props/state hiện có.
-
-## Configs
-
-`src/configs` chứa cấu hình có ảnh hưởng rộng:
-
-| Folder/file | Vai trò |
-| --- | --- |
-| `antdTheme.ts` | Token theme Ant Design |
-| `brandingConfig.ts` | Branding |
-| `navigation/*` | Sidebar/menu |
-| `permissions/*` | CASL ability, route access, permission parser |
-| `mockData/*` | Mock permission/role data |
-
-Khi thêm route có phân quyền, cần sửa cả `routeAccess.ts` và `menuItems.tsx`.
-
-## Utils và lib
-
-`utils` nên là hàm thuần, không phụ thuộc React lifecycle:
-
-```ts
-calculateElectricBill(...)
-formatMachineStatus(...)
-mapEnumToLabel(...)
-```
-
-`lib` dành cho helper nền tảng gần framework hơn, ví dụ cookie, server auth, className utility.
-
-Không đặt API call trong `utils`. API call thuộc `services`.
-
-## Import direction
-
-Giữ dependency đi từ UI xuống domain/shared layer:
-
-```txt
-app -> components/hooks/services/stores/types
-components -> hooks/types/utils
-hooks -> services/stores/types/utils
-services -> endpoints/apiClient/types
-types -> không import runtime code
-```
-
-Tránh import ngược từ `services` vào `components` hoặc từ `types` vào component runtime. Khi bị circular import, thường là dấu hiệu boundary chưa đúng.
-
-## Khi nào tách file
-
-Tách file khi có một trong các dấu hiệu:
-
-- Component vượt khoảng 250-300 dòng và có nhiều concern khác nhau.
-- Có block logic phải đọc hơn một lần mới hiểu.
-- Cùng logic xuất hiện ở ít nhất hai nơi.
-- Test một phần logic khó vì nó bị nhúng sâu trong UI.
-- Component có nhiều state không liên quan nhau.
-
-Không tách file chỉ để đạt "mỗi function một file". Quá nhiều file nhỏ nhưng thiếu boundary rõ cũng làm code khó đọc.
-
-## Template thêm module mới
-
-Checklist khi thêm module nghiệp vụ:
-
-1. Tạo route trong `src/app/(dashboard)/...`.
-2. Tạo `_components` và `_hooks` cạnh route nếu module đủ lớn.
-3. Thêm type vào `src/types/{Domain}.ts`.
-4. Thêm endpoint vào `src/services/endpoints.ts`.
-5. Thêm service vào `src/services/{Domain}Service.ts`.
-6. Nếu cần global state, thêm store trong `src/stores`.
-7. Nếu cần quyền, cập nhật `caslAbility.ts`, `defineAbility.ts`, `routeAccess.ts`, `menuItems.tsx`.
-8. Thêm test cho mapper, hook hoặc component có logic.
-9. Cập nhật docs module/route/API.
+# Cấu trúc dự án
+
+Trang này mô tả cách đặt file, chia module và chọn vị trí code trong Qwaste v2. Mục tiêu là để người mới vào dự án biết nên thêm code ở đâu và khi nào cần tách abstraction.
+
+## Sơ đồ tổng quan
+
+```txt
+src/
+├── app/                  # Route, page, layout, API route theo Next.js App Router
+├── components/           # Component dùng lại nhiều module
+├── configs/              # Theme, branding, navigation, permissions
+├── contexts/             # Global/runtime contexts
+├── hooks/                # Hook dùng lại
+├── lib/                  # Helper nền tảng, server/client utility nhỏ
+├── provider/             # Root providers
+├── services/             # API service layer
+├── stores/               # Redux Toolkit stores
+├── styles/               # CSS dùng chung
+├── types/                # Domain TypeScript types
+└── utils/                # Pure utility functions
+```
+
+Nguyên tắc chung: đặt code gần nơi sử dụng nhất trước. Chỉ đưa ra `components/shared`, `hooks`, `utils` hoặc `services` khi có nhu cầu dùng lại rõ ràng hoặc code đại diện cho một boundary chung của hệ thống.
+
+## App Router
+
+`src/app` chỉ nên chứa route, layout, page và component gắn chặt với route.
+
+```txt
+src/app/
+├── (auth)/
+│   ├── login/
+│   └── register/
+├── (dashboard)/
+│   ├── admin/
+│   └── operator/
+├── api/
+│   ├── bff/
+│   └── uploadthing/
+├── layout.tsx
+└── page.tsx
+```
+
+Quy ước:
+
+| Vị trí | Nên đặt gì |
+| --- | --- |
+| `page.tsx` | Compose page, đọc params/searchParams, gọi component cấp màn hình |
+| `layout.tsx` | Provider hoặc shell UI cho một nhóm route |
+| `_components` | Component chỉ dùng trong route đó |
+| `_tests` | Test riêng cho route/module đó |
+| `api/*/route.ts` | API route chạy trên server |
+
+`page.tsx` không nên chứa quá nhiều logic form, transform data hoặc state phức tạp. Nếu page dài, tách sang component/hook nằm trong `_components` hoặc `hooks` cạnh route.
+
+## Module route chuẩn
+
+Khi thêm một màn hình dashboard mới, ưu tiên cấu trúc:
+
+```txt
+src/app/(dashboard)/admin/example/
+├── page.tsx
+├── _components/
+│   ├── ExampleTable.tsx
+│   ├── ExampleFilters.tsx
+│   └── ExampleFormModal.tsx
+├── _hooks/
+│   └── useExamplePage.ts
+└── _tests/
+    └── ExampleTable.test.tsx
+```
+
+Nếu hook/component chỉ phục vụ màn hình này, giữ nó trong route. Nếu sau này module khác thật sự dùng lại, lúc đó mới đưa ra `src/components/shared` hoặc `src/hooks`.
+
+## Shared components
+
+`src/components/shared` dành cho component có API đủ tổng quát, ví dụ:
+
+- `FormModal`
+- `ConfirmModal`
+- `SearchInput`
+- `filters`
+- `notification`
+- `AnalyticsCharts`
+
+Không đưa component vào shared chỉ vì "có thể sau này dùng". Một shared component tốt cần:
+
+| Tiêu chí | Yêu cầu |
+| --- | --- |
+| Props rõ | Không phụ thuộc data ngầm từ một page |
+| Ít side effect | Không tự gọi API nếu không phải trách nhiệm chính |
+| Có boundary rõ | UI component thì xử lý UI, không nhúng rule nghiệp vụ sâu |
+| Test được | Có thể render/test độc lập |
+
+## Services
+
+`src/services` là boundary gọi backend. Component không nên gọi `apiClient` trực tiếp.
+
+```txt
+Component/Hook
+  -> MachineService.getMachines()
+  -> NetworkService.requestJson()
+  -> apiClient
+  -> /api/bff
+```
+
+Quy ước service:
+
+| Quy ước | Lý do |
+| --- | --- |
+| Mỗi domain một service | Dễ tìm API theo nghiệp vụ |
+| Endpoint nằm trong `endpoints.ts` | Tránh hard-code URL rải rác |
+| Service trả domain data | Component không phải biết cấu trúc wrapper API quá sâu |
+| Không chứa UI state | Loading, modal, toast thuộc hook/component |
+
+Ví dụ:
+
+```ts
+static async getOrderById(orderId: string): Promise<OrderResponse> {
+  const response = await NetworkService.requestJson<OrderResponse>({
+    method: 'GET',
+    url: ENDPOINTS.ORDERS.DETAIL(orderId)
+  })
+
+  return response.result as OrderResponse
+}
+```
+
+## Types
+
+`src/types` chứa contract theo domain: `Order`, `Task`, `Machine`, `User`, `Permission`, `ApiResponse`.
+
+Quy ước:
+
+- Request type đặt tên `SomethingCreationRequest`, `SomethingUpdationRequest`, `SomethingFilterRequest`.
+- Response type đặt tên `SomethingResponse`, `SomethingSummaryResponse`, `SomethingDetailResponse`.
+- UI-only type có thể đặt cạnh component nếu chỉ dùng nội bộ.
+- Type dùng qua nhiều module mới đưa vào `src/types`.
+
+Không dùng `any` cho response API mới. Nếu backend chưa ổn định, tạo type tối thiểu cho phần UI thật sự dùng.
+
+## Hooks
+
+Hook dùng lại nhiều module đặt trong `src/hooks`. Hook riêng của một route đặt cạnh route.
+
+Hook nên có trách nhiệm rõ:
+
+| Loại hook | Ví dụ |
+| --- | --- |
+| Data orchestration | `useKanbanTasks`, `useDrawingCodes` |
+| Browser/runtime | `useMediaQuery`, `useTheme` |
+| Permission | `useRouteAccess`, `usePermissionCheck` |
+| Realtime | `useWebSocketNotification`, `useEnergyWebSocket` |
+
+Một hook không nên vừa fetch API, vừa build columns, vừa điều khiển modal, vừa xử lý submit form. Nếu hook quá lớn, tách theo concern.
+
+## Stores
+
+Redux store dùng cho state có phạm vi rộng hoặc cần đồng bộ nhiều màn hình:
+
+- Auth/user state.
+- Notification.
+- Space monitoring.
+- Order state.
+- Machine state.
+- User settings.
+
+Không dùng Redux cho:
+
+- Trạng thái mở/đóng modal của một page.
+- Giá trị input form.
+- Filter chỉ dùng trong một màn hình.
+- Derived data có thể tính từ props/state hiện có.
+
+## Configs
+
+`src/configs` chứa cấu hình có ảnh hưởng rộng:
+
+| Folder/file | Vai trò |
+| --- | --- |
+| `antdTheme.ts` | Token theme Ant Design |
+| `brandingConfig.ts` | Branding |
+| `navigation/*` | Sidebar/menu |
+| `permissions/*` | CASL ability, route access, permission parser |
+| `mockData/*` | Mock permission/role data |
+
+Khi thêm route có phân quyền, cần sửa cả `routeAccess.ts` và `menuItems.tsx`.
+
+## Utils và lib
+
+`utils` nên là hàm thuần, không phụ thuộc React lifecycle:
+
+```ts
+calculateElectricBill(...)
+formatMachineStatus(...)
+mapEnumToLabel(...)
+```
+
+`lib` dành cho helper nền tảng gần framework hơn, ví dụ cookie, server auth, className utility.
+
+Không đặt API call trong `utils`. API call thuộc `services`.
+
+## Import direction
+
+Giữ dependency đi từ UI xuống domain/shared layer:
+
+```txt
+app -> components/hooks/services/stores/types
+components -> hooks/types/utils
+hooks -> services/stores/types/utils
+services -> endpoints/apiClient/types
+types -> không import runtime code
+```
+
+Tránh import ngược từ `services` vào `components` hoặc từ `types` vào component runtime. Khi bị circular import, thường là dấu hiệu boundary chưa đúng.
+
+## Khi nào tách file
+
+Tách file khi có một trong các dấu hiệu:
+
+- Component vượt khoảng 250-300 dòng và có nhiều concern khác nhau.
+- Có block logic phải đọc hơn một lần mới hiểu.
+- Cùng logic xuất hiện ở ít nhất hai nơi.
+- Test một phần logic khó vì nó bị nhúng sâu trong UI.
+- Component có nhiều state không liên quan nhau.
+
+Không tách file chỉ để đạt "mỗi function một file". Quá nhiều file nhỏ nhưng thiếu boundary rõ cũng làm code khó đọc.
+
+## Template thêm module mới
+
+Checklist khi thêm module nghiệp vụ:
+
+1. Tạo route trong `src/app/(dashboard)/...`.
+2. Tạo `_components` và `_hooks` cạnh route nếu module đủ lớn.
+3. Thêm type vào `src/types/{Domain}.ts`.
+4. Thêm endpoint vào `src/services/endpoints.ts`.
+5. Thêm service vào `src/services/{Domain}Service.ts`.
+6. Nếu cần global state, thêm store trong `src/stores`.
+7. Nếu cần quyền, cập nhật `caslAbility.ts`, `defineAbility.ts`, `routeAccess.ts`, `menuItems.tsx`.
+8. Thêm test cho mapper, hook hoặc component có logic.
+9. Cập nhật docs module/route/API.

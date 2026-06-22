@@ -32,7 +32,6 @@ const BASE_PATHS = {
     INDUSTRY_FILTERS: `${API}/industryFilters/${V1}`,
     ORDERS: `${API}/orders/${V1}`,
     SHIFT_BREAK_PERIODS: `${API}/shiftBreakPeriods/${V1}`,
-    TASKS: `${API}/tasks/${V1}`,
     TASK_REVIEWS: `${API}/taskReviews/${V1}`,
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
@@ -167,29 +166,13 @@ export const ENDPOINTS = {
         SHIFTS: `${BASE_PATHS.INDUSTRY_FILTERS}/shifts`,
     },
     ORDERS: {
-        BASE: BASE_PATHS.ORDERS,
-        DETAIL: (id: string) => `${BASE_PATHS.ORDERS}/${id}`,
-        CONFIRM: (id: string) => `${BASE_PATHS.ORDERS}/${id}/confirm`,
-        DRAWINGS: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/drawings`,
-        DRAWING_DETAIL: (orderId: string, drawingId: string) =>
-            `${BASE_PATHS.ORDERS}/${orderId}/drawings/${drawingId}`,
-        PLAN_FOR_EDIT: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/planForEdit`,
         MY_REVIEWING_ORDERS: `${BASE_PATHS.ORDERS}/myReviewingOrders`,
-        MANAGER_REVIEW: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/managerReview`,
         OPERATOR_REVIEW: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/operatorReview`,
-        CANCEL: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/cancel`,
-        RESTORE: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/restore`,
-        EXPORT: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/export`,
-        UPDATE_INFO: `${BASE_PATHS.ORDERS}/info`,
-        UPDATE_PLAN: `${BASE_PATHS.ORDERS}/plan`,
     },
     SHIFT_BREAK_PERIOD: {
         BASE: BASE_PATHS.SHIFT_BREAK_PERIODS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SHIFT_BREAK_PERIODS, id),
         FORSHIFT: (id: PathParam) => `${BASE_PATHS.SHIFT_BREAK_PERIODS}/forShift/${id}`,
-    },
-    TASKS: {
-        BY_ORDER: (id: string) => `${BASE_PATHS.TASKS}/by-order/${id}`,
     },
     TASK_REVIEWS: {
         CONFIRM: (id: PathParam) => `${BASE_PATHS.TASK_REVIEWS}/${id}/confirm`,

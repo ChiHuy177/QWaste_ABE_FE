@@ -3,7 +3,6 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ShoppingOutlined,
     ProjectOutlined,
     TeamOutlined,
     CheckSquareOutlined,
@@ -51,14 +50,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         subject: 'machine_overview',
         action: 'view',
         alternativeAction: 'update', // Show if can view OR update
-    },
-    {
-        key: 'order',
-        route: '/admin/order',
-        i18nKey: 'sidebar.navigation.order',
-        icon: <ShoppingOutlined />,
-        subject: 'order',
-        action: 'view',
     },
     {
         key: 'process',

@@ -1,63 +1,62 @@
-# Routes & màn hình
-
-Các route chính của ứng dụng nằm trong `src/app`. Sidebar dashboard được tạo từ `src/configs/navigation/menuItems.tsx` và phụ thuộc vào CASL ability của user.
-
-## Public routes
-
-| URL | Màn hình |
-| --- | --- |
-| `/` | Landing page |
-| `/login` | Đăng nhập |
-| `/register` | Đăng ký |
-
-Các route này được `AuthContext` xem là public và không gọi `/api/users/v1/me` khi khởi tạo.
-
-## Dashboard routes
-
-| URL | Vai trò |
-| --- | --- |
-| `/admin` | Tổng quan vận hành |
-| `/admin/space-monitoring` | Giám sát không gian nhà máy, zone, line, machine |
-| `/admin/machines` | Danh sách và trạng thái máy |
-| `/admin/order` | Quản lý lệnh sản xuất |
-| `/admin/staff` | Quản lý công việc nhân sự |
-| `/admin/setting` | Cài đặt tài khoản |
-| `/operator/tasks` | Bảng tác vụ của operator |
-| `/operator/my-reviews` | Danh sách review của operator |
-
-## Catalog routes
-
-| URL | Domain |
-| --- | --- |
-| `/admin/categories/machineList` | Máy |
-| `/admin/categories/spaceLevel` | Cấp không gian |
-| `/admin/categories/space` | Cây không gian |
-| `/admin/categories/staffList` | Nhân sự |
-| `/admin/categories/step` | Bước chuẩn |
-| `/admin/categories/industryFilter` | Ca/khoảng thời gian sản xuất |
-| `/admin/categories/drawingCode` | Drawing code và step builder |
-
-Một số route có trong `routeAccess.ts` nhưng đang chưa hiển thị trong menu vì item bị comment hoặc chưa có page hoàn chỉnh.
-
-## RBAC routes
-
-| URL | Chức năng |
-| --- | --- |
-| `/admin/rbac/permissions` | Quản lý permission |
-| `/admin/rbac/roles` | Quản lý role |
-| `/admin/rbac/users` | Gán role và permission cho user |
-
-## Cách thêm màn hình mới
-
-1. Tạo `page.tsx` trong `src/app/(dashboard)/...`.
-2. Tạo component con trong `_components` nếu màn hình đủ lớn.
-3. Thêm endpoint vào `src/services/endpoints.ts` nếu cần API mới.
-4. Thêm service method trong `src/services`.
-5. Thêm permission subject/action nếu route cần kiểm soát truy cập.
-6. Cập nhật `ROUTE_ACCESS` trong `src/configs/permissions/routeAccess.ts`.
-7. Thêm item vào `src/configs/navigation/menuItems.tsx` nếu cần xuất hiện ở sidebar.
-8. Cập nhật docs route này.
-
-## Quy ước component trong route
-
-Các component chỉ phục vụ một page nên đặt trong thư mục `_components` cạnh page đó. Component dùng lại nhiều module mới đưa vào `src/components/shared`.
+# Routes & màn hình
+
+Các route chính của ứng dụng nằm trong `src/app`. Sidebar dashboard được tạo từ `src/configs/navigation/menuItems.tsx` và phụ thuộc vào CASL ability của user.
+
+## Public routes
+
+| URL | Màn hình |
+| --- | --- |
+| `/` | Landing page |
+| `/login` | Đăng nhập |
+| `/register` | Đăng ký |
+
+Các route này được `AuthContext` xem là public và không gọi `/api/users/v1/me` khi khởi tạo.
+
+## Dashboard routes
+
+| URL | Vai trò |
+| --- | --- |
+| `/admin` | Tổng quan vận hành |
+| `/admin/space-monitoring` | Giám sát không gian nhà máy, zone, line, machine |
+| `/admin/machines` | Danh sách và trạng thái máy |
+| `/admin/staff` | Quản lý công việc nhân sự |
+| `/admin/setting` | Cài đặt tài khoản |
+| `/operator/tasks` | Bảng tác vụ của operator |
+| `/operator/my-reviews` | Danh sách review của operator |
+
+## Catalog routes
+
+| URL | Domain |
+| --- | --- |
+| `/admin/categories/machineList` | Máy |
+| `/admin/categories/spaceLevel` | Cấp không gian |
+| `/admin/categories/space` | Cây không gian |
+| `/admin/categories/staffList` | Nhân sự |
+| `/admin/categories/step` | Bước chuẩn |
+| `/admin/categories/industryFilter` | Ca/khoảng thời gian sản xuất |
+| `/admin/categories/drawingCode` | Drawing code và step builder |
+
+Một số route có trong `routeAccess.ts` nhưng đang chưa hiển thị trong menu vì item bị comment hoặc chưa có page hoàn chỉnh.
+
+## RBAC routes
+
+| URL | Chức năng |
+| --- | --- |
+| `/admin/rbac/permissions` | Quản lý permission |
+| `/admin/rbac/roles` | Quản lý role |
+| `/admin/rbac/users` | Gán role và permission cho user |
+
+## Cách thêm màn hình mới
+
+1. Tạo `page.tsx` trong `src/app/(dashboard)/...`.
+2. Tạo component con trong `_components` nếu màn hình đủ lớn.
+3. Thêm endpoint vào `src/services/endpoints.ts` nếu cần API mới.
+4. Thêm service method trong `src/services`.
+5. Thêm permission subject/action nếu route cần kiểm soát truy cập.
+6. Cập nhật `ROUTE_ACCESS` trong `src/configs/permissions/routeAccess.ts`.
+7. Thêm item vào `src/configs/navigation/menuItems.tsx` nếu cần xuất hiện ở sidebar.
+8. Cập nhật docs route này.
+
+## Quy ước component trong route
+
+Các component chỉ phục vụ một page nên đặt trong thư mục `_components` cạnh page đó. Component dùng lại nhiều module mới đưa vào `src/components/shared`.
