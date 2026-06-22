@@ -329,7 +329,6 @@
             "factory": "Danh sách nhà máy",
             "factoryOverview": "Tổng quan nhà máy",
             "floorMap": "Sơ đồ mặt bằng",
-            "floorMapStatus": "Trạng thái sơ đồ mặt bằng",
             "floorMapConfig": "Cấu hình sơ đồ mặt bằng",
             "machineStaffing": "Danh sách nhân sự máy",
             "line": "Danh sách chuyền",
@@ -431,7 +430,6 @@
     },
     "floorMap": {
         "title": "Sơ đồ mặt bằng",
-        "viewTitle": "Trạng thái sơ đồ mặt bằng",
         "filters": {
             "selectSpace": "Chọn khu vực"
         },
@@ -464,13 +462,6 @@
             "OPEN_DOOR": "Mở cửa",
             "WARNING": "Cảnh báo",
             "UNKNOWN": "Không xác định"
-        },
-        "statusSummary": {
-            "totalMachines": "Tổng số máy",
-            "placedMachines": "Máy đã đặt",
-            "liveConnected": "Đang kết nối trực tiếp",
-            "liveDisconnected": "Mất kết nối trực tiếp",
-            "viewDetails": "Xem chi tiết"
         },
         "machines": {
             "title": "Máy trong khu vực",

@@ -57,11 +57,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Floor map
-    '/admin/floor-map/status': {
-        subject: 'floor_map',
-        action: 'view',
-    },
     '/admin/floor-map': {
         subject: 'floor_map',
         action: 'update',

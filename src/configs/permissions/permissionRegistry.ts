@@ -530,14 +530,6 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
     },
     // Floor Map
     {
-        slug: 'floor_map:view',
-        subject: 'floor_map',
-        action: 'view',
-        routes: ['/admin/floor-map/status'],
-        menuKey: 'floor-map-status',
-        description: 'View floor map',
-    },
-    {
         slug: 'floor_map:update',
         subject: 'floor_map',
         action: 'update',

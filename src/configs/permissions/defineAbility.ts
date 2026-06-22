@@ -56,7 +56,6 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
                     'machine_monitoring',
                     'machine_operator_history',
                     'space_monitoring',
-                    'floor_map',
                     'standard_step',
                 ]);
                 can('view', 'space_monitoring');

@@ -5,7 +5,6 @@ import {
     SafetyOutlined,
     ProjectOutlined,
     AppstoreOutlined,
-    PartitionOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -29,16 +28,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
                 '/admin/space-monitoring',
                 t('permissionSubjects.space_monitoring'),
                 <ApartmentOutlined />
-            )
-        );
-    }
-
-    if (ability.can('view', 'floor_map')) {
-        items.push(
-            createMenuItem(
-                '/admin/floor-map/status',
-                t('sidebar.navigation.floorMapStatus'),
-                <PartitionOutlined />
             )
         );
     }
@@ -91,7 +80,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             createMenuItem('/admin/categories/space', t('sidebar.navigation.space'))
         );
     }
-    if (ability.can('update', 'floor_map') && ability.can('view', 'floor_map')) {
+    if (ability.can('update', 'floor_map')) {
         spaceConfigurationItems.push(
             createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
         );

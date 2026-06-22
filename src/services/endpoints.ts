@@ -128,7 +128,6 @@ export const ENDPOINTS = {
     },
     FLOOR_MAP: {
         DETAIL: (spaceId: PathParam) => WITH_PARAM(BASE_PATHS.FLOOR_MAP, spaceId),
-        STATUS: (spaceId: PathParam) => `${BASE_PATHS.FLOOR_MAP}/${spaceId}/status`,
         MACHINE_POSITION: (spaceId: PathParam, machineId: PathParam) =>
             `${BASE_PATHS.FLOOR_MAP}/${spaceId}/machines/${machineId}`,
     },

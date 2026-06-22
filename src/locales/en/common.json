@@ -338,7 +338,6 @@
             "factory": "Factory List",
             "factoryOverview": "Space Monitoring",
             "floorMap": "Floor Map",
-            "floorMapStatus": "Floor Map Status",
             "floorMapConfig": "Floor Map Config",
             "machineStaffing": "Machine Staffing",
             "line": "Line List",
@@ -440,7 +439,6 @@
     },
     "floorMap": {
         "title": "Floor Map",
-        "viewTitle": "Floor Map Status",
         "filters": {
             "selectSpace": "Select space"
         },
@@ -473,13 +471,6 @@
             "OPEN_DOOR": "Open door",
             "WARNING": "Warning",
             "UNKNOWN": "Unknown"
-        },
-        "statusSummary": {
-            "totalMachines": "Total machines",
-            "placedMachines": "Placed machines",
-            "liveConnected": "Live connected",
-            "liveDisconnected": "Live disconnected",
-            "viewDetails": "View details"
         },
         "machines": {
             "title": "Machines in Space",

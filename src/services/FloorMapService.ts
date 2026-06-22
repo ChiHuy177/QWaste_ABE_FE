@@ -1,4 +1,4 @@
-import { FloorMapResponse, FloorMapStatusResponse, MachineFloorPositionRequest } from '@/types/FloorMap';
+import { FloorMapResponse, MachineFloorPositionRequest } from '@/types/FloorMap';
 import { ENDPOINTS } from './endpoints';
 import { NetworkService } from './NetworkService';
 
@@ -10,15 +10,6 @@ export class FloorMapService {
         });
 
         return response.result as FloorMapResponse;
-    }
-
-    static async getFloorMapStatus(spaceId: number | string): Promise<FloorMapStatusResponse> {
-        const response = await NetworkService.requestJson<FloorMapStatusResponse>({
-            method: 'GET',
-            url: ENDPOINTS.FLOOR_MAP.STATUS(spaceId),
-        });
-
-        return response.result as FloorMapStatusResponse;
     }
 
     static async upsertMachinePosition(
