@@ -24,10 +24,6 @@
         "overview_view": "Overview View",
         "store": "Store",
         "update_sensitive": "Update Sensitive",
-        "update_info": "Update Info",
-        "update_plan": "Update Plan",
-        "operator_view": "Operator View",
-        "manager_review_view": "Manager Review View",
         "decline": "Decline",
         "manage": "Manage",
         "discription": "Description",
@@ -325,7 +321,6 @@
             "machineStatus": "Machine Status",
             "machineDashboard": "Machine Dashboard",
             "staff": "Staff",
-            "drawingCode": "Drawing Code List",
             "process": "Process",
             "order": "Order",
             "tasks": "Tasks",
@@ -342,11 +337,10 @@
             "factory": "Factory List",
             "factoryOverview": "Space Monitoring",
             "floorMap": "Floor Map",
-            "floorMapStatus": "Floor Map Status",
             "floorMapConfig": "Floor Map Config",
             "machineStaffing": "Machine Staffing",
             "line": "Line List",
-            "rbac": "RBAC Management",
+            "rbac": "Access Control Management",
             "rbacPermissions": "Permissions",
             "rbacRoles": "Roles",
             "rbacUsers": "Users",
@@ -444,7 +438,6 @@
     },
     "floorMap": {
         "title": "Floor Map",
-        "viewTitle": "Floor Map Status",
         "filters": {
             "selectSpace": "Select space"
         },
@@ -477,13 +470,6 @@
             "OPEN_DOOR": "Open door",
             "WARNING": "Warning",
             "UNKNOWN": "Unknown"
-        },
-        "statusSummary": {
-            "totalMachines": "Total machines",
-            "placedMachines": "Placed machines",
-            "liveConnected": "Live connected",
-            "liveDisconnected": "Live disconnected",
-            "viewDetails": "View details"
         },
         "machines": {
             "title": "Machines in Space",
@@ -2103,7 +2089,6 @@
         "form": {
             "fields": {
                 "name": "Process Name",
-                "drawingCode": "Drawing Code",
                 "machine": "Machine",
                 "predictedDuration": "Predicted Duration",
                 "taskStatus": "Task Status",
@@ -2112,7 +2097,6 @@
             },
             "placeholders": {
                 "name": "Enter process name...",
-                "selectDrawingCode": "Select drawing code",
                 "selectMachine": "Select machine",
                 "searchPlaceholder": "Search processes by process name..",
                 "predictedDuration": "Enter duration in hours",
@@ -2120,7 +2104,6 @@
             },
             "validation": {
                 "nameRequired": "Process name is required",
-                "drawingCodeRequired": "Drawing code is required",
                 "machineRequired": "Machine is required",
                 "predictedDurationRequired": "Predicted duration is required"
             },
@@ -2153,7 +2136,6 @@
         "table": {
             "headers": {
                 "processName": "Process Name",
-                "drawingCode": "Drawing Code",
                 "machine": "Machine",
                 "taskStatus": "Status",
                 "approved": "QC Status",
@@ -2185,14 +2167,11 @@
             "clearAll": "Clear All",
             "searchPlaceholder": "Search processes...",
             "taskStatus": "Task Status",
-            "drawingCode": "Drawing Code",
             "machine": "Machine",
             "durationRange": "Duration Range",
             "showOverdue": "Show Overdue Only",
             "allStatuses": "All Statuses",
-            "allDrawingCodes": "All Drawing Codes",
             "allMachines": "All Machines",
-            "selectDrawingCode": "Select drawing code",
             "selectMachine": "Select machine",
             "minHours": "Min hours",
             "maxHours": "Max hours",
@@ -2204,7 +2183,6 @@
         },
         "messages": {
             "errors": {
-                "drawingCodeLoadFailed": "Failed to load drawing codes",
                 "machineLoadFailed": "Failed to load machines",
                 "processLoadFailed": "Failed to load processes",
                 "createFailed": "Failed to create process",
@@ -2251,7 +2229,6 @@
             "noRemarks": "No quality control remarks have been added yet."
         },
         "display": {
-            "unknownDrawingCode": "Unknown Drawing Code",
             "unknownMachine": "Unknown Machine"
         }
     },
@@ -2383,7 +2360,6 @@
                 "timeline": "Timeline",
                 "qcInfo": "Quality Control",
                 "process": "Process",
-                "drawingCode": "Drawing Code",
                 "machine": "Machine",
                 "operator": "Operator",
                 "created": "Created",
@@ -2769,12 +2745,8 @@
     },
     "addTaskForm": {
         "title": "Add New Task",
-        "selectDrawingCode": "Select Drawing Code",
         "taskDetails": "Task Details",
         "costEstimation": "Cost Estimation",
-        "selectedDrawingCode": "Selected Drawing Code",
-        "noDrawingCodesFound": "No drawing codes found",
-        "searchDrawingCodes": "Search drawing codes...",
         "fields": {
             "title": "Task Title",
             "description": "Description",
@@ -2816,11 +2788,6 @@
             "create": "Create Task",
             "creating": "Creating...",
             "cancel": "Cancel"
-        },
-        "drawingCodeInfo": {
-            "category": "Category",
-            "unitPrice": "Unit Price",
-            "estimatedTime": "Estimated Time"
         }
     },
     "orderForm": {
@@ -3345,11 +3312,9 @@
         "groupList": "Group List",
         "zoneList": "Zone Management",
         "machineTypeList": "Machine Type Management",
-        "drawingCodeList": "Drawing Code Management",
         "operator": "Staff Management",
         "machineList": "Machine List",
         "processManagement": "Process Management",
-        "orderManagement": "Order Management",
         "history": "History",
         "settings": "Settings",
         "factoryList": "Factory Management",
@@ -4079,917 +4044,6 @@
         "markAllAsRead": "Mark as read",
         "noMore": "All notifications displayed"
     },
-    "landing": {
-        "nav": {
-            "features": "Features",
-            "howItWorks": "How It Works",
-            "pricing": "Pricing",
-            "faq": "FAQ",
-            "login": "Login",
-            "getStarted": "Get Started",
-            "watchDemo": "Watch Demo"
-        },
-        "hero": {
-            "title": "Smart Factory Management, Powered by Intelligence",
-            "subtitle": "Monitor CNC machines in real-time, manage production orders, ensure quality control, and optimize energy consumption — all in one platform.",
-            "cta": "Get Started Free",
-            "ctaSecondary": "Watch Demo"
-        },
-        "trustedBy": {
-            "title": "Trusted by Industry Leaders"
-        },
-        "features": {
-            "title": "Everything You Need to Run Your Factory",
-            "subtitle": "Comprehensive tools for modern manufacturing management",
-            "machineMonitoring": {
-                "title": "Real-time Machine Monitoring",
-                "description": "Track CNC machine status, performance, and utilization in real-time with live dashboards."
-            },
-            "productionManagement": {
-                "title": "Production Order Management",
-                "description": "Manage production orders with Kanban boards, assign tasks, and track progress seamlessly."
-            },
-            "qualityControl": {
-                "title": "Quality Control",
-                "description": "Comprehensive QC workflows with inspection checkpoints and pass/fail tracking."
-            },
-            "energyMonitoring": {
-                "title": "Energy Monitoring",
-                "description": "Monitor power consumption per machine and optimize energy costs across your facility."
-            },
-            "staffManagement": {
-                "title": "Staff & Operator Assignment",
-                "description": "Assign operators to machines and tasks, track shifts and workload balance."
-            },
-            "accessControl": {
-                "title": "Role-based Access Control",
-                "description": "Fine-grained permissions with roles for admins, operators, QC inspectors, and managers."
-            },
-            "aiOptimization": {
-                "title": "AI-Powered Insights",
-                "description": "Leverage AI to identify bottlenecks, predict maintenance needs, and reduce waste."
-            },
-            "analytics": {
-                "title": "Comprehensive Analytics",
-                "description": "Rich dashboards with charts, KPIs, and exportable reports for data-driven decisions."
-            }
-        },
-        "howItWorks": {
-            "title": "How It Works",
-            "subtitle": "Get started in four simple steps",
-            "connect": {
-                "title": "Connect",
-                "description": "Connect your CNC machines and production lines to the Qwaste platform."
-            },
-            "monitor": {
-                "title": "Monitor",
-                "description": "View real-time status of machines, production tasks, and quality metrics."
-            },
-            "optimize": {
-                "title": "Optimize",
-                "description": "Use AI-powered insights to reduce waste and improve efficiency."
-            },
-            "scale": {
-                "title": "Scale",
-                "description": "Scale your operations across multiple factory floors and production lines."
-            }
-        },
-        "comparison": {
-            "badge": "Traditional vs Smart",
-            "title": "See the Difference",
-            "subtitle": "Discover how Qwaste transforms traditional factory management into intelligent, data-driven operations",
-            "traditional": {
-                "title": "Traditional Management",
-                "description": "Manual processes, reactive decisions, limited visibility",
-                "items": {
-                    "paperBased": {
-                        "title": "Paper-Based Records",
-                        "description": "Clipboards, spreadsheets, manual data entry"
-                    },
-                    "manualTracking": {
-                        "title": "Manual Tracking",
-                        "description": "Walk-around inspections, delayed reporting"
-                    },
-                    "spreadsheets": {
-                        "title": "Disconnected Spreadsheets",
-                        "description": "Siloed data, version conflicts, no real-time sync"
-                    },
-                    "reactive": {
-                        "title": "Reactive Problem Solving",
-                        "description": "Fix issues after they happen, high downtime costs"
-                    }
-                }
-            },
-            "qwaste": {
-                "badge": "Recommended",
-                "title": "Qwaste Smart Management",
-                "description": "Automated workflows, predictive insights, complete visibility",
-                "items": {
-                    "realTimeData": {
-                        "title": "Real-Time Data Collection",
-                        "description": "Automatic data capture from all machines and sensors"
-                    },
-                    "automated": {
-                        "title": "Automated Workflows",
-                        "description": "Smart task assignment, instant notifications, seamless coordination"
-                    },
-                    "aiPowered": {
-                        "title": "AI-Powered Analytics",
-                        "description": "Centralized dashboard, live KPIs, actionable insights"
-                    },
-                    "predictive": {
-                        "title": "Predictive Maintenance",
-                        "description": "Prevent problems before they occur, minimize downtime"
-                    }
-                }
-            }
-        },
-        "integrations": {
-            "badge": "Seamless Integration",
-            "title": "Works With Your Existing Systems",
-            "subtitle": "Connect Qwaste with your current machines, software, and infrastructure for a unified factory management experience",
-            "categories": {
-                "cncMachines": {
-                    "title": "CNC Machines",
-                    "description": "Direct integration with major CNC machine brands and controllers",
-                    "items": {
-                        "fanuc": "Fanuc",
-                        "siemens": "Siemens",
-                        "haas": "Haas",
-                        "mazak": "Mazak"
-                    }
-                },
-                "erpSystems": {
-                    "title": "ERP Systems",
-                    "description": "Sync production data with your enterprise resource planning software",
-                    "items": {
-                        "sap": "SAP",
-                        "oracle": "Oracle",
-                        "microsoft": "Microsoft Dynamics",
-                        "odoo": "Odoo"
-                    }
-                },
-                "iotDevices": {
-                    "title": "IoT & Sensors",
-                    "description": "Connect industrial IoT devices and automation systems",
-                    "items": {
-                        "sensors": "Smart Sensors",
-                        "plc": "PLCs",
-                        "scada": "SCADA",
-                        "actuators": "Actuators"
-                    }
-                },
-                "cloudPlatforms": {
-                    "title": "Cloud Platforms",
-                    "description": "Deploy on your preferred cloud infrastructure",
-                    "items": {
-                        "aws": "AWS",
-                        "azure": "Azure",
-                        "gcp": "Google Cloud",
-                        "alibaba": "Alibaba Cloud"
-                    }
-                }
-            },
-            "apiAccess": {
-                "title": "Full API Access",
-                "description": "Build custom integrations with our comprehensive REST API, webhooks, and real-time data protocols",
-                "protocols": {
-                    "restApi": "REST API",
-                    "webhooks": "Webhooks",
-                    "graphql": "GraphQL",
-                    "mqtt": "MQTT"
-                }
-            }
-        },
-        "preview": {
-            "title": "See Qwaste in Action",
-            "subtitle": "A powerful dashboard built for factory managers"
-        },
-        "metrics": {
-            "title": "Trusted by Manufacturers Worldwide",
-            "factories": "Factories",
-            "tasks": "Tasks Managed",
-            "uptime": "Uptime",
-            "wasteReduction": "Waste Reduction"
-        },
-        "testimonials": {
-            "title": "What Our Customers Say",
-            "items": {
-                "0": {
-                    "quote": "Qwaste transformed our production floor. We reduced downtime by 40% in the first month.",
-                    "name": "Nguyen Van A",
-                    "role": "Production Manager",
-                    "company": "Woodsland Furniture"
-                },
-                "1": {
-                    "quote": "The real-time monitoring gives us complete visibility into our CNC operations. A game-changer.",
-                    "name": "Tran Thi B",
-                    "role": "Factory Director",
-                    "company": "IIC Manufacturing"
-                },
-                "2": {
-                    "quote": "Energy costs dropped 25% after implementing Qwaste's monitoring module across our facility.",
-                    "name": "Le Van C",
-                    "role": "Operations Manager",
-                    "company": "EIU Industrial"
-                }
-            }
-        },
-        "pricing": {
-            "title": "Simple, Transparent Pricing",
-            "subtitle": "Choose the plan that fits your factory",
-            "monthly": "/month",
-            "perMachine": "/machine",
-            "popular": "Most Popular",
-            "basic": {
-                "name": "Basic",
-                "price": "Contact",
-                "description": "For small workshops getting started",
-                "features": {
-                    "0": "Up to 5 machines",
-                    "1": "Basic monitoring dashboard",
-                    "2": "Email support",
-                    "3": "1 admin user"
-                },
-                "cta": "Contact Us"
-            },
-            "pro": {
-                "name": "Pro",
-                "price": "Contact",
-                "description": "For growing factories",
-                "features": {
-                    "0": "Unlimited machines",
-                    "1": "AI-powered insights",
-                    "2": "Quality control module",
-                    "3": "Energy monitoring",
-                    "4": "Up to 25 users",
-                    "5": "Priority support"
-                },
-                "cta": "Contact Us"
-            },
-            "enterprise": {
-                "name": "Enterprise",
-                "price": "Contact",
-                "description": "For large-scale operations",
-                "features": {
-                    "0": "Everything in Pro",
-                    "1": "On-premise deployment",
-                    "2": "Dedicated account manager",
-                    "3": "Custom integrations",
-                    "4": "SLA guarantee",
-                    "5": "Unlimited users"
-                },
-                "cta": "Contact Us"
-            }
-        },
-        "faq": {
-            "title": "Frequently Asked Questions",
-            "items": {
-                "0": {
-                    "question": "What types of machines does Qwaste support?",
-                    "answer": "Qwaste supports all CNC machines and production equipment that can output digital signals. We provide integration guides for common CNC controllers."
-                },
-                "1": {
-                    "question": "How long does setup take?",
-                    "answer": "Most factories are up and running within 1-2 days. Our team provides hands-on setup assistance."
-                },
-                "2": {
-                    "question": "Is my data secure?",
-                    "answer": "Yes. All data is encrypted in transit and at rest. We support on-premise deployment for enterprises with strict data policies."
-                },
-                "3": {
-                    "question": "Can I try before I buy?",
-                    "answer": "Absolutely. Our Basic plan is free forever, and Pro comes with a 14-day free trial."
-                },
-                "4": {
-                    "question": "Do you support multiple languages?",
-                    "answer": "Yes. Qwaste currently supports Vietnamese, English, and Chinese interfaces."
-                },
-                "5": {
-                    "question": "What kind of support do you offer?",
-                    "answer": "Basic plans include email support. Pro and Enterprise plans include priority support with dedicated response times."
-                }
-            }
-        },
-        "cta": {
-            "title": "Ready to Transform Your Factory?",
-            "subtitle": "Join hundreds of manufacturers who trust Qwaste to optimize their production.",
-            "primary": "Start Free Trial",
-            "secondary": "Contact Sales"
-        },
-        "footer": {
-            "description": "Smart factory management for modern manufacturing.",
-            "product": {
-                "title": "Product",
-                "features": "Features",
-                "pricing": "Pricing",
-                "demo": "Request Demo",
-                "changelog": "Changelog"
-            },
-            "resources": {
-                "title": "Resources",
-                "docs": "Documentation",
-                "api": "API Reference",
-                "guides": "Integration Guides",
-                "blog": "Blog"
-            },
-            "company": {
-                "title": "Company",
-                "about": "About Us",
-                "careers": "Careers",
-                "contact": "Contact",
-                "partners": "Partners"
-            },
-            "legal": {
-                "title": "Legal",
-                "privacy": "Privacy Policy",
-                "terms": "Terms of Service",
-                "cookies": "Cookie Policy"
-            },
-            "copyright": "Qwaste. All rights reserved.",
-            "poweredBy": "Powered by IIC 4.0"
-        }
-    },
-    "drawingCodeManagement": {
-        "title": "Drawing Code Management",
-        "addDrawingCode": "Add Drawing Code",
-        "searchPlaceholder": "Search by code or name...",
-        "fetchError": "Failed to fetch drawing codes",
-        "deleteSuccess": "Drawing code deleted successfully",
-        "deleteError": "Failed to delete drawing code",
-        "updateSuccess": "Drawing code updated successfully",
-        "updateError": "Failed to update drawing code",
-        "restoreSuccess": "Drawing code restored successfully",
-        "restoreError": "Failed to restore drawing code",
-        "fetchDetailsError": "Failed to fetch drawing code details",
-        "table": {
-            "headers": {
-                "drawingCode": "Code",
-                "drawingCodeName": "Name",
-                "description": "Description",
-                "pdfLink": "PDF",
-                "stepsCount": "Steps",
-                "completionTime": "Est. Time",
-                "ofCustomer": "Customer",
-                "status": "Status",
-                "actions": "Actions"
-            },
-            "steps": "steps",
-            "active": "Active",
-            "deleted": "Deleted",
-            "actions": {
-                "viewPdf": "View PDF"
-            }
-        },
-        "form": {
-            "createTitle": "Add New Drawing Code",
-            "editTitle": "Edit Drawing Code",
-            "viewTitle": "Drawing Code Details",
-            "createDescription": "Fill in the details below. At least one step template is required.",
-            "editDescription": "Update the drawing code information.",
-            "editNote": "Note: To update step templates, use the View Details modal.",
-            "fields": {
-                "drawingCode": "Drawing Code",
-                "drawingCodeName": "Drawing Code Name",
-                "description": "Description",
-                "pdfLink": "Technical Drawing (PDF)",
-                "defaultCompletionTime": "Estimated total completion time",
-                "defaultCompletionTimeHint": "Estimated total time in seconds (e.g., 7200 = 2 hours)",
-                "ofCustomer": "Customer"
-            },
-            "placeholders": {
-                "drawingCode": "e.g. DC-001",
-                "drawingCodeName": "e.g. Main Frame Assembly",
-                "description": "Enter description (optional)...",
-                "defaultCompletionTime": "e.g. 7200",
-                "ofCustomer": "e.g. AMC"
-            },
-            "validation": {
-                "drawingCodeRequired": "Drawing code is required",
-                "nameRequired": "Drawing code name is required",
-                "maxLength": "Maximum {{max}} characters",
-                "noWhitespaceOnly": "Cannot contain only whitespace",
-                "completionTimeMin": "Completion time must be greater than 0",
-                "pdfRequired": "Technical Drawing (PDF) is required",
-                "pdfLink": "Technical Drawing (PDF) is required",
-                "customerRequired": "Please select a customer"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create",
-                "update": "Update",
-                "saving": "Saving...",
-                "close": "Close",
-                "viewDetails": "View Details",
-                "edit": "Edit",
-                "delete": "Delete",
-                "restore": "Restore"
-            },
-            "createSuccess": "Drawing code created successfully",
-            "createError": "Failed to create drawing code"
-        },
-        "steps": {
-            "title": "Step Templates",
-            "stepLabel": "Step {{number}}",
-            "minRequired": "min. 1 required",
-            "addStep": "Add Step",
-            "emptyHint": "No steps added. At least 1 step is required.",
-            "continueAddingHint": "You can continue using the dropdown above to add more steps.",
-            "searchStep": "Search and add a standard step...",
-            "searchAnotherStep": "Search and add another step...",
-            "createNewStandardStep": "Create new standard step",
-            "addedSuccess": "Added step \"{{stepName}}\" successfully",
-            "headers": {
-                "stepName": "Step Name",
-                "description": "Description",
-                "requiresQc": "Requires QC",
-                "defaultTime": "Est. Time (s)",
-                "materialName": "Material Name"
-            },
-            "placeholders": {
-                "stepName": "e.g. Raw Material Prep",
-                "description": "Optional description...",
-                "defaultTime": "e.g. 1800",
-                "materialName": "Enter material name",
-                "searchStep": "Search and add a standard step...",
-                "searchAnotherStep": "Search and add another step...",
-                "createNewStandardStep": "Create new standard step"
-            },
-            "validation": {
-                "minOne": "At least one step template is required",
-                "stepNameRequired": "All steps must have a name",
-                "stepInvalid": "Some steps have invalid data. Please check the fields in red.",
-                "stepTimeRequired": "Step time is required",
-                "materialRequired": "Material is required",
-                "atLeastOneStep": "Please add at least one step template to the drawing code"
-            },
-            "createError": "Failed to create standard step: {{error}}",
-            "createSuccess": "Standard step created successfully",
-            "fetchError": "Failed to load standard steps: {{error}}"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Delete Drawing Code",
-                "description": "Are you sure you want to delete this drawing code? This action cannot be undone."
-            }
-        }
-    },
-    "orderManagement": {
-        "page": {
-            "title": "Order Management"
-        },
-        "stats": {
-            "total": "Total Orders",
-            "draft": "Draft",
-            "inProduction": "In Production",
-            "inProgress": "In Progress",
-            "completed": "Completed",
-            "reviewing": "Reviewing",
-            "cancelled": "Cancelled"
-        },
-        "list": {
-            "title": "Order List",
-            "subtitle": "Manage and track production status",
-            "refresh": "Refresh",
-            "create": "Create New Order",
-            "searchPlaceholder": "Search code, name, customer...",
-            "filters": {
-                "allStatus": "All Statuses",
-                "allPriority": "All Priorities"
-            },
-            "table": {
-                "orderCode": "Order Code",
-                "orderName": "Order Name",
-                "productionType": "Prod. Type",
-                "batch": "Batch",
-                "single": "Single Piece",
-                "quantity": "Qty",
-                "customer": "Customer",
-                "status": "Status",
-                "priority": "Priority",
-                "deliveryDate": "Deadline",
-                "actions": "Actions"
-            },
-            "tooltips": {
-                "view": "View details",
-                "edit": "Edit",
-                "onlyDraftEdit": "Only REVIEWING orders can have their plan edited",
-                "completedCancelledEdit": "Cannot edit cancelled or completed orders",
-                "delete": "Delete order",
-                "cancel": "Cancel order",
-                "restore": "Restore order"
-            },
-            "messages": {
-                "deleteConfirm": "Are you sure you want to delete order {{code}}?",
-                "restoreConfirm": "Are you sure you want to restore order {{code}}?",
-                "cancelTitle": "Cancellation Reason",
-                "cancelReasonPlaceholder": "Enter cancellation reason..."
-            }
-        },
-        "form": {
-            "createTitle": "Create New Order",
-            "editTitle": "Edit Order",
-            "sections": {
-                "orderInfo": "Order Information",
-                "productionConfig": "Production Configuration",
-                "customerInfo": "Customer Information",
-                "drawingConfig": "Drawing & Production Steps Configuration",
-                "productionPlan": "Expected Production Process",
-                "productionPlanDesc": "Configure drawings, work steps, and task assignments",
-                "orderOverview": "ORDER OVERVIEW",
-                "additionalInfo": "Additional information (optional)"
-            },
-            "fields": {
-                "orderCode": "Order Code",
-                "orderName": "Order Name",
-                "productionType": "Production Type",
-                "priority": "Priority",
-                "orderQuantity": "Quantity",
-                "customerName": "Customer Name",
-                "customerPhone": "Phone Number",
-                "deadline": "Delivery Date",
-                "expectedStartDate": "Expected Start Date",
-                "expectedEndDate": "Expected End Date",
-                "customerNote": "Order Note",
-                "attachments": "Attachment",
-                "status": "Status",
-                "totalEstimatedLeadtime": "Total Estimated Time",
-                "requestedQuantity": "Requested Qty",
-                "plannedQuantity": "Planned Qty",
-                "actualQuantity": "Actual Qty",
-                "cancellationReason": "Cancellation Reason",
-                "penaltyAmount": "Late penalty (VND)"
-            },
-            "placeholders": {
-                "orderCode": "e.g., ORD-2026-001",
-                "orderName": "e.g., Main Frame Batch April",
-                "productionType": "Select production type",
-                "customerName": "Enter customer name",
-                "customerPhone": "e.g., 0901234567",
-                "customerNote": "Enter special notes for this order...",
-                "penaltyAmount": "Enter penalty amount"
-            },
-            "validation": {
-                "orderCodeRequired": "Please enter order code",
-                "orderCodeMin": "Order code must be at least 3 characters",
-                "orderCodeMax": "Order code must not exceed 50 characters",
-                "orderNameRequired": "Please enter order name",
-                "orderNameMin": "Order name must be at least 3 characters",
-                "orderNameMax": "Order name must not exceed 200 characters",
-                "customerNameRequired": "Please enter customer name",
-                "customerNameMin": "Customer name must be at least 2 characters",
-                "customerNameMax": "Customer name must not exceed 200 characters",
-                "customerPhoneRequired": "Please enter phone number",
-                "phonePattern": "Only numbers are allowed",
-                "phoneMaxLength": "Phone number must not exceed 20 characters",
-                "customerNoteRequired": "Please enter order note",
-                "customerNoteMax": "Note must not exceed 2000 characters",
-                "orderPriorityRequired": "Please select priority",
-                "orderDrawingsRequired": "Please configure at least 1 drawing",
-                "minOneDrawing": "Please configure at least 1 drawing for the order",
-                "endDateBeforeStart": "End date must be after start date",
-                "formErrors": "Please check {{count}} errors in the form",
-                "requiredFields": "Please fill in all required fields",
-                "stepNameRequired": "Please enter step name",
-                "stepNameMax": "Step name must not exceed 100 characters",
-                "stepDescriptionRequired": "Please enter step description",
-                "stepDescriptionMax": "Step description must not exceed 2000 characters",
-                "requiresQcRequired": "Please select QC requirement",
-                "defaultCompletionTimeRequired": "Please enter completion time",
-                "defaultCompletionTimePositive": "Time must be greater than 0",
-                "materialNameRequired": "Please enter material name",
-                "materialNameMax": "Material name must not exceed 2000 characters",
-                "stepTasksRequired": "Please add at least 1 task",
-                "taskNameRequired": "Please enter task name",
-                "taskNameMax": "Task name must not exceed 100 characters",
-                "taskRequestedQuantityRequired": "Please enter requested quantity",
-                "taskRequestedQuantityPositive": "Quantity must be greater than 0",
-                "taskPlannedQuantityRequired": "Please enter planned quantity",
-                "taskPlannedQuantityPositive": "Planned quantity must be greater than 0",
-                "maxCharacters": "Max {{count}} characters"
-            },
-            "productionTypes": {
-                "batch": "Mass Production (BATCH)",
-                "single": "Single Piece (SINGLE_PIECE)"
-            },
-            "priorities": {
-                "low": "Low",
-                "medium": "Medium",
-                "high": "High",
-                "urgent": "Urgent"
-            },
-            "buttons": {
-                "submitCreate": "Create Order",
-                "submitUpdate": "Save Changes"
-            },
-            "messages": {
-                "fetchTemplatesError": "Error fetching drawing templates",
-                "onlyDraftEditWarning": "Only orders in REVIEWING status can have their plan edited",
-                "infoEditNotAllowed": "Cannot update order information when the order is cancelled or completed.",
-                "createSuccess": "Order created successfully!",
-                "updateSuccess": "Update successful!",
-                "validationError": "Please check the information you entered",
-                "fixDrawingPlanErrors": "Please fix drawing plan errors before submitting.",
-                "uploadError": "Failed to upload attachments",
-                "fetchDrawingDetailsError": "Failed to load drawing details"
-            },
-            "attachments": {
-                "uploadButton": "Upload Attachments"
-            },
-            "plan": {
-                "planConfiguration": "Plan Configuration",
-                "drawingDetails": "Drawing Details",
-                "stepDetails": "Step Details",
-                "taskDetails": "Task Details",
-                "drawingCodeRequired": "Drawing Code",
-                "selectDrawingCode": "Select drawing code",
-                "totalRequestedQuantity": "Total Requested Quantity",
-                "totalRequestedQuantityRequired": "Total Requested Quantity",
-                "requestedQuantityRequired": "Requested Quantity",
-                "plannedQuantityRequired": "Planned Quantity",
-                "estimatedTimeRequired": "Est. Time",
-                "drawingWorkload": "Drawing Workload",
-                "drawingsCount": "{{count}} Drawings",
-                "stepsCount": "{{count}} Steps",
-                "tasksCount": "{{count}} Tasks",
-                "requestedCount": "{{allocated}}/{{total}} requested",
-                "quantityBalanceDescription": "Task requested quantities must add up to Total Requested Quantity for this drawing.",
-                "stepBalanceCount": "{{balanced}}/{{total}} steps balanced",
-                "stepQuantityBalanceDescription": "Within each step, task requested quantities must add up to the drawing total requested quantity.",
-                "quickActions": "Quick Actions",
-                "addStepToDrawing": "Add Step to this Drawing",
-                "addTaskToStep": "Add Task to this Step",
-                "selectNodeHint": "Select a drawing, step, or task to view details",
-                "expandAll": "Expand All",
-                "collapse": "Collapse",
-                "noDrawingsConfigured": "No drawings configured yet.",
-                "addDrawingHint": "Add a drawing to get started.",
-                "addStep": "Add step",
-                "deleteDrawing": "Delete drawing",
-                "addTask": "Add task",
-                "deleteStep": "Delete step",
-                "incompleteTooltip": "Missing required information or has errors",
-                "completeTooltip": "All information complete",
-                "newTag": "NEW",
-                "unnamedDrawing": "Unnamed Drawing",
-                "unnamedStep": "Unnamed Step",
-                "unnamedTask": "Unnamed Task",
-                "plannedQuantityHint": "Must be >= requested quantity",
-                "taskSummary": "Task Summary",
-                "requestedUnits": "Requested: {{quantity}} units",
-                "noRequestedQuantity": "No requested quantity set",
-                "assignedCount": "{{count}} assigned",
-                "tasksInStep": "Tasks in this Step"
-            },
-            "planValidation": {
-                "addDrawing": "Please add at least one drawing.",
-                "selectDrawingCode": "Please select drawing code.",
-                "totalRequestedQuantityRequired": "Please enter total requested quantity.",
-                "quantityMismatch": "Task requested quantity total ({{taskTotal}}) must equal drawing total requested quantity ({{drawingTotal}}).",
-                "stepQuantityMismatch": "The total task quantity in this step is {{stepTotal}}, which does not match the drawing requested quantity of {{drawingTotal}}.",
-                "singlePieceTaskCountMismatch": "Single-piece production requires {{drawingTotal}} tasks in each step. This step currently has {{taskCount}} tasks.",
-                "singlePieceRequestedQuantity": "Task requested quantity is always 1 for single-piece production.",
-                "singlePieceLargeTaskWarningTitle": "Large task count",
-                "singlePieceLargeTaskWarningContent": "This action will create {{taskCount}} tasks ({{quantity}} items × {{steps}} steps), which exceeds the {{threshold}} task warning threshold. Do you want to continue?",
-                "changeDrawingWarningTitle": "Change drawing code?",
-                "changeDrawingWarningContent": "Changing the drawing code will replace all current steps and tasks for this drawing. Any information entered in those steps or tasks will be lost.",
-                "productionTypeRequired": "Please select production type.",
-                "addStep": "Please add at least one step.",
-                "stepNameRequired": "Please enter step name.",
-                "stepDescriptionRequired": "Please enter step description.",
-                "materialRequired": "Please enter material.",
-                "estimatedTimeRequired": "Please enter estimated time.",
-                "qcRequired": "Please choose QC requirement.",
-                "addTask": "Please add at least one task.",
-                "taskNameRequired": "Please enter task name.",
-                "requestedQuantityRequired": "Please enter requested quantity.",
-                "plannedQuantityRequired": "Please enter planned quantity.",
-                "plannedQuantityMinRequested": "Planned quantity must be >= requested quantity.",
-                "minOne": "Must be at least 1",
-                "timeGreaterThanZero": "Time must be greater than 0",
-                "quantityAllocatedMissing": "This step is short by {{missing}} items. Increase the requested quantities of tasks in this step.",
-                "quantityAllocatedOver": "This step exceeds the drawing request by {{over}} items. Reduce the requested quantities of tasks in this step."
-            },
-            "tabs": {
-                "basicInfo": "Basic Information",
-                "planInfo": "Production Plan & Tasks"
-            },
-            "unsavedChanges": {
-                "title": "Unsaved Changes",
-                "message": "You have unsaved changes in the current tab. Do you want to save them before switching?",
-                "save": "Save & Switch",
-                "discard": "Discard Changes"
-            },
-            "steps": {
-                "info": "Order Information",
-                "drawing": "Drawing Config",
-                "confirm": "Confirm"
-            },
-            "confirm": {
-                "title": "Confirm Order Information",
-                "subtitle": "Please review the information before creating the order",
-                "orderSummary": "Order Summary",
-                "customerSummary": "Customer Information",
-                "drawingSummary": "Drawing List ({{count}})",
-                "editButton": "Edit",
-                "stepLabel": "Step {{order}}",
-                "taskCount": "{{count}} tasks"
-            }
-        },
-        "detail": {
-            "tabs": {
-                "overview": "Overview",
-                "kanban": "Work Board (Kanban)",
-                "orderDetail": "Order Detail",
-                "drawingPlan": "Process & Drawing Plan"
-            },
-            "overview": {
-                "customer": "Customer",
-                "phone": "Cust. Phone",
-                "deadline": "Delivery Date",
-                "productionType": "Production Type",
-                "quantity": "Total Quantity",
-                "noteLabel": "Customer Note:",
-                "drawingList": "Drawing List",
-                "expectedCompletion": "Expected Completion Time (Default):",
-                "minutes": "minutes",
-                "createdAt": "Created At",
-                "createdBy": "Created By",
-                "updatedAt": "Updated At",
-                "updatedBy": "Updated By",
-                "expectedStartDate": "Expected Start Date",
-                "expectedEndDate": "Expected End Date",
-                "totalEstimatedLeadtime": "Total Est. Lead Time",
-                "cancellationReason": "Cancellation Reason",
-                "penaltyAmount": "Penalty Amount",
-                "attachments": "Attachments",
-                "actualQty": "Actual Qty"
-            },
-            "drawing": {
-                "assignments": "Task Assignments",
-                "operatorReviews": "Operator Reviews",
-                "startedAt": "Started At",
-                "endedAt": "Ended At",
-                "operator": "Operator",
-                "machine": "Machine",
-                "empty": "Empty",
-                "noAssignments": "No assignments",
-                "noReviews": "No reviews"
-            },
-            "kanban": {
-                "locked": "Locked",
-                "todo": "To Do",
-                "inProgress": "In Progress",
-                "paused": "Paused",
-                "qcCheck": "QC Pending",
-                "complete": "Complete",
-                "rework": "Rework",
-                "requiresQc": "QC Required",
-                "unassigned": "Unassigned",
-                "empty": "Empty"
-            },
-            "actions": {
-                "confirmProduction": "Confirm Production",
-                "confirmProductionPopTitle": "Confirm production start?",
-                "confirmProductionPopDesc": "This action will unlock Step 1 tasks. You will not be able to modify the order structure after confirmation."
-            },
-            "messages": {
-                "confirmSuccess": "Production confirmed successfully!",
-                "notFound": "Order information not found."
-            },
-            "tasks": {
-                "taskName": "Task Name"
-            }
-        },
-        "drawing": {
-            "item": "Drawing",
-            "drawings": "Drawings",
-            "drawingLabel": "Drawing #{{index}}",
-            "templateLabel": "Drawing Template",
-            "selectTitle": "Select Drawing Template",
-            "selectPlaceholder": "Search and select drawing...",
-            "selectRequired": "Select template",
-            "selectError": "Please select a drawing",
-            "prodTypeLabel": "Production Type",
-            "createNew": "Create New",
-            "productionProgress": "Production Progress",
-            "expectedSteps": "Expected Production Steps",
-            "expectedProcess": "Expected Production Process",
-            "add": "Add Drawing",
-            "empty": "No drawings yet. Click the button above to add.",
-            "noReviews": "No reviews",
-            "code": "Drawing code",
-            "name": "Drawing name",
-            "ofCustomer": "Customer",
-            "version": "Version",
-            "totalExpectedTime": "Total Expected Time",
-            "description": "Description",
-            "document": "Document",
-            "pdfLink": "PDF Link",
-            "viewDocument": "View Document",
-            "viewPdfDocument": "View PDF Document",
-            "clickToExpand": "Click to expand",
-            "errorTag": "Error",
-            "noDescription": "No description provided"
-        },
-        "step": {
-            "stepLabel": "STEP",
-            "steps": "Steps",
-            "nameLabel": "Step Name",
-            "namePlaceholder": "Enter step name...",
-            "nameRequired": "Please enter step name",
-            "errorTag": "Error",
-            "delete": "Delete",
-            "showDetails": "+ Show more details",
-            "hideDetails": "− Hide details",
-            "descriptionLabel": "Description",
-            "descriptionPlaceholder": "Detailed description for this step...",
-            "descriptionRequired": "Please enter step description",
-            "materialLabel": "Material",
-            "materialPlaceholder": "Material name",
-            "materialRequired": "Please enter material",
-            "timeLabel": "Time (seconds)",
-            "timePlaceholder": "Enter time",
-            "timeRequired": "Please enter time",
-            "timeMinError": "Must be > 0",
-            "qcLabel": "QC Required",
-            "qcRequired": "Please select QC requirement",
-            "taskListTitle": "Task List",
-            "minOneStep": "At least 1 production step is required",
-            "addStep": "Add Production Step"
-        },
-        "task": {
-            "taskLabel": "TASK",
-            "tasks": "Tasks",
-            "deleteTooltip": "Delete task",
-            "nameLabel": "Task Name",
-            "nameRequired": "Please enter task name",
-            "namePlaceholder": "Enter task name...",
-            "reqQtyLabel": "Requested Qty (RQ)",
-            "planQtyLabel": "Planned Qty (PQ)",
-            "qtyRequired": "Required",
-            "qtyMinError": "≥ RQ",
-            "assignOperator": "Assign Operators",
-            "selectOperatorPlaceholder": "Select operators...",
-            "noOperatorFound": "No operators found",
-            "operatorsAssigned": "operators",
-            "operators": "operators",
-            "Operators": "Operator",
-            "minOneTask": "At least 1 task is required",
-            "addTask": "Add Task",
-            "errorTag": "Error"
-        }
-    },
-    "operatorReview": {
-        "drawer": {
-            "title": "Task Review",
-            "subtitle": "Review and confirm production tasks assigned to you",
-            "submitAll": "Submit All Reviews",
-            "cancel": "Cancel",
-            "order": "Order",
-            "priority": "Priority",
-            "expectedStart": "Expected Start",
-            "code": "Code",
-            "reviewDecision": "Review Decision",
-            "confirm": "Confirm",
-            "decline": "Decline",
-            "readyForProduction": "Ready for production",
-            "declineReason": "Decline Reason",
-            "required": "Required",
-            "comments": "Comments",
-            "provideDetails": "Provide details...",
-            "pleaseSelectReason": "Please select a decline reason",
-            "tasksNeedReview": "{{count}} tasks need your review decision",
-            "allTasksReviewed": "All tasks reviewed",
-            "loadingData": "Loading review data...",
-            "noData": "No data found",
-            "qty": "Qty",
-            "unassigned": "Unassigned",
-            "reEvaluate": "Re-evaluate",
-            "confirmDecline": "Confirm Decline"
-        },
-        "page": {
-            "title": "My Reviews",
-            "subtitle": "Manage and confirm your assigned production tasks",
-            "pendingReviews": "Pending Reviews",
-            "waitingForConfirmation": "Waiting for your confirmation",
-            "confirmedTasks": "Confirmed Tasks",
-            "readyForProduction": "Ready for production",
-            "declinedTasks": "Declined Tasks",
-            "needReassignment": "Need reassignment",
-            "searchPlaceholder": "Search by order name or code",
-            "columns": {
-                "orderName": "Order Name",
-                "code": "Code",
-                "priority": "Priority",
-                "expectedStart": "Expected Start",
-                "tasks": "Tasks",
-                "action": "Action"
-            },
-            "reviewAction": "Review",
-            "operator": "Operator"
-        }
-    },
     "managerReview": {
         "drawer": {
             "title": "Manager Review",
@@ -5041,15 +4095,12 @@
         "group": "Group",
         "industry_filter": "Industry Filter",
         "industry_config": "Industry Config",
-        "drawing_code": "Drawing Code",
         "factory_overview": "Space Monitoring",
         "energy": "Energy",
         "machine_overview": "Machine Overview",
         "machine_monitoring": "Machine Monitoring",
         "machine_operator_history": "Machine Operator History",
         "profile": "Profile",
-        "operator_dashboard": "Operator Dashboard",
-        "operator_reviews": "Operator Reviews",
         "qc_dashboard": "QC Dashboard",
         "manager_reviews": "Manager Reviews",
         "user": "User",
@@ -5058,76 +4109,10 @@
         "order": "Order",
         "process": "Process",
         "tasks": "Tasks",
-        "task_review": "Task Review",
         "space_monitoring": "Space Monitoring",
         "floor_map": "Floor Map",
         "all": "All",
         "other": "Other"
-    },
-    "operatorTasks": {
-        "page": {
-            "title": "My Tasks"
-        },
-        "columns": {
-            "todo": {
-                "title": "To do",
-                "description": "Assigned tasks waiting to start"
-            },
-            "in_progress": {
-                "title": "In progress",
-                "description": "Tasks currently being handled"
-            },
-            "qc_check": {
-                "title": "QC check",
-                "description": "Tasks ready for quality check"
-            },
-            "complete": {
-                "title": "Complete",
-                "description": "Finished tasks"
-            }
-        },
-        "status": {
-            "todo": "To do",
-            "in_progress": "In progress",
-            "qc_check": "QC check",
-            "complete": "Complete"
-        },
-        "priority": {
-            "high": "High",
-            "medium": "Medium",
-            "low": "Low"
-        },
-        "filters": {
-            "searchPlaceholder": "Search task, order, machine...",
-            "allPriority": "All priority"
-        },
-        "actions": {
-            "drag": "Drag"
-        },
-        "legend": {
-            "cardAccent": "Card accent"
-        },
-        "empty": {
-            "noTasks": "No tasks"
-        },
-        "detail": {
-            "title": "Task detail",
-            "description": "Description",
-            "notes": "Notes",
-            "sections": {
-                "production": "Production details",
-                "context": "Order and schedule"
-            },
-            "fields": {
-                "order": "Order",
-                "customer": "Customer",
-                "machine": "Machine",
-                "drawing": "Drawing",
-                "location": "Location",
-                "dueDate": "Due date",
-                "estimate": "Estimate"
-            }
-        }
     },
     "stepTemplates": "Step templates"
 }

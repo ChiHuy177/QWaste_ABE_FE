@@ -13,7 +13,6 @@ const BASE_PATHS = {
     AUTH: `${API}/authentication/${V1}`,
     USERS: `${API}/users/${V1}`,
     USER_SETTINGS: `${API}/users/userSettings/${V1}`,
-    DRAWING_CODES: `${API}/drawingCodes/${V1}`,
     SPACES: `${API}/spaces/${V1}`,
     SPACES_MONITORING: `${API}/spaces/monitoring/${V1}`,
     SPACE_LEVELS: `${API}/spaceLevels/${V1}`,
@@ -30,10 +29,7 @@ const BASE_PATHS = {
     PERMISSIONS: `${API}/permissions/${V1}`,
     ROLES: `${API}/roles/${V1}`,
     INDUSTRY_FILTERS: `${API}/industryFilters/${V1}`,
-    ORDERS: `${API}/orders/${V1}`,
     SHIFT_BREAK_PERIODS: `${API}/shiftBreakPeriods/${V1}`,
-    TASKS: `${API}/tasks/${V1}`,
-    TASK_REVIEWS: `${API}/taskReviews/${V1}`,
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
 } as const;
@@ -45,12 +41,6 @@ export const ENDPOINTS = {
         LOGOUT: `${BASE_PATHS.AUTH}/logout`,
         REGISTER: `${BASE_PATHS.USERS}/register/initiate`,
         REGISTER_VERIFY: `${BASE_PATHS.USERS}/register/verify`,
-    },
-    DRAWING_CODES: {
-        BASE: BASE_PATHS.DRAWING_CODES,
-        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.DRAWING_CODES, id),
-        RESTORE: (id: PathParam) => `${BASE_PATHS.DRAWING_CODES}/${id}/restoring`,
-        PICKING: `${BASE_PATHS.DRAWING_CODES}/picking`,
     },
     SPACES: {
         BASE: BASE_PATHS.SPACES,
@@ -131,7 +121,6 @@ export const ENDPOINTS = {
     },
     FLOOR_MAP: {
         DETAIL: (spaceId: PathParam) => WITH_PARAM(BASE_PATHS.FLOOR_MAP, spaceId),
-        STATUS: (spaceId: PathParam) => `${BASE_PATHS.FLOOR_MAP}/${spaceId}/status`,
         MACHINE_POSITION: (spaceId: PathParam, machineId: PathParam) =>
             `${BASE_PATHS.FLOOR_MAP}/${spaceId}/machines/${machineId}`,
     },
@@ -166,39 +155,12 @@ export const ENDPOINTS = {
         PRIMARY: `${BASE_PATHS.INDUSTRY_FILTERS}/primary`,
         SHIFTS: `${BASE_PATHS.INDUSTRY_FILTERS}/shifts`,
     },
-    ORDERS: {
-        BASE: BASE_PATHS.ORDERS,
-        DETAIL: (id: string) => `${BASE_PATHS.ORDERS}/${id}`,
-        CONFIRM: (id: string) => `${BASE_PATHS.ORDERS}/${id}/confirm`,
-        DRAWINGS: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/drawings`,
-        DRAWING_DETAIL: (orderId: string, drawingId: string) =>
-            `${BASE_PATHS.ORDERS}/${orderId}/drawings/${drawingId}`,
-        PLAN_FOR_EDIT: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/planForEdit`,
-        MY_REVIEWING_ORDERS: `${BASE_PATHS.ORDERS}/myReviewingOrders`,
-        MANAGER_REVIEW: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/managerReview`,
-        OPERATOR_REVIEW: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/operatorReview`,
-        CANCEL: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/cancel`,
-        RESTORE: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/restore`,
-        EXPORT: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/export`,
-        UPDATE_INFO: `${BASE_PATHS.ORDERS}/info`,
-        UPDATE_PLAN: `${BASE_PATHS.ORDERS}/plan`,
-    },
     SHIFT_BREAK_PERIOD: {
         BASE: BASE_PATHS.SHIFT_BREAK_PERIODS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SHIFT_BREAK_PERIODS, id),
         FORSHIFT: (id: PathParam) => `${BASE_PATHS.SHIFT_BREAK_PERIODS}/forShift/${id}`,
     },
-    TASKS: {
-        BY_ORDER: (id: string) => `${BASE_PATHS.TASKS}/by-order/${id}`,
-    },
-    TASK_REVIEWS: {
-        CONFIRM: (id: PathParam) => `${BASE_PATHS.TASK_REVIEWS}/${id}/confirm`,
-        DECLINE: (id: PathParam) => `${BASE_PATHS.TASK_REVIEWS}/${id}/decline`,
-    },
     UTILS: {
-        ENUMS: {
-            TASK_DECLINE_REASONS: `${BASE_PATHS.UTILS}/enums/taskDeclineReasons`,
-        },
         SPACE_LEVELS: {
             HIGHEST: `${BASE_PATHS.UTILS}/spaceLevels/highest`,
         },

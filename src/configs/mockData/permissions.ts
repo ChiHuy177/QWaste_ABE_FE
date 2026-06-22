@@ -19,12 +19,9 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'machine_overview' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
-        { action: 'view', subject: 'drawing_code' },
         { action: 'view', subject: 'energy' },
         { action: 'view', subject: 'machine_monitoring' },
         { action: 'view', subject: 'machine_operator_history' },
-        { action: 'view', subject: 'order' },
-        { action: 'view', subject: 'task_review' },
         { action: 'view', subject: 'standard_step' },
     ],
 
@@ -49,32 +46,23 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'machine_overview' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
-        { action: 'view', subject: 'drawing_code' },
         { action: 'view', subject: 'energy' },
         { action: 'view', subject: 'machine_monitoring' },
         { action: 'view', subject: 'machine_operator_history' },
-        { action: 'view', subject: 'order' },
-        { action: 'view', subject: 'task_review' },
         { action: 'view', subject: 'standard_step' },
     ],
 
     operator: [
-        { action: 'confirm', subject: 'task_review' },
-        { action: 'decline', subject: 'task_review' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
     ],
 
     qc_staff: [
-        { action: 'confirm', subject: 'task_review' },
-        { action: 'decline', subject: 'task_review' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
     ],
 
     maintenance: [
-        { action: 'confirm', subject: 'task_review' },
-        { action: 'decline', subject: 'task_review' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
     ],

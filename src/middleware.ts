@@ -11,6 +11,18 @@ const COOKIE_NAME = 'NEXT_LOCALE';
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const locale = request.cookies.get(COOKIE_NAME)?.value;
+    const shouldSetDefaultLocale = !locale || !SUPPORTED_LOCALES.includes(locale);
+    const withDefaultLocale = (response: NextResponse) => {
+        if (shouldSetDefaultLocale) {
+            response.cookies.set(COOKIE_NAME, DEFAULT_LOCALE, {
+                path: '/',
+                maxAge: 365 * 24 * 60 * 60,
+            });
+        }
+
+        return response;
+    };
 
     if (
         pathname === LEGACY_FACTORY_OVERVIEW_ROUTE ||
@@ -21,33 +33,26 @@ export function middleware(request: NextRequest) {
             LEGACY_FACTORY_OVERVIEW_ROUTE,
             SPACE_MONITORING_ROUTE
         );
-        return NextResponse.redirect(redirectUrl);
-    }
-
-    const locale = request.cookies.get(COOKIE_NAME)?.value;
-
-    if (!locale || !SUPPORTED_LOCALES.includes(locale)) {
-        const response = NextResponse.next();
-        response.cookies.set(COOKIE_NAME, DEFAULT_LOCALE, {
-            path: '/',
-            maxAge: 365 * 24 * 60 * 60,
-        });
-        return response;
+        return withDefaultLocale(NextResponse.redirect(redirectUrl));
     }
 
     // Home page redirection
     if (pathname === '/') {
         const isAuthCookie = request.cookies.get(AUTH_COOKIE_NAME);
         if (isAuthCookie) {
-            return NextResponse.redirect(new URL(SPACE_MONITORING_ROUTE, request.url));
+            return withDefaultLocale(
+                NextResponse.redirect(new URL(SPACE_MONITORING_ROUTE, request.url))
+            );
         }
-        return NextResponse.next();
+        return withDefaultLocale(NextResponse.redirect(new URL(LOGIN_ROUTE, request.url)));
     }
 
     if (pathname === '/admin') {
         const isAuthCookie = request.cookies.get(AUTH_COOKIE_NAME);
         if (isAuthCookie) {
-            return NextResponse.redirect(new URL(SPACE_MONITORING_ROUTE, request.url));
+            return withDefaultLocale(
+                NextResponse.redirect(new URL(SPACE_MONITORING_ROUTE, request.url))
+            );
         }
     }
 
@@ -63,11 +68,11 @@ export function middleware(request: NextRequest) {
             } else {
                 loginUrl.searchParams.set('logout', 'true');
             }
-            return NextResponse.redirect(loginUrl);
+            return withDefaultLocale(NextResponse.redirect(loginUrl));
         }
     }
 
-    return NextResponse.next();
+    return withDefaultLocale(NextResponse.next());
 }
 
 export const config = {

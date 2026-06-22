@@ -10,12 +10,7 @@ export type Action =
     | 'overview_view'
     | 'store'
     | 'update_sensitive'
-    | 'update_info'
-    | 'update_plan'
     | 'confirm'
-    | 'cancel'
-    | 'operator_view'
-    | 'manager_review_view'
     | 'decline';
 
 export type Subject =
@@ -34,7 +29,6 @@ export type Subject =
     | 'staff'
     | 'group'
     | 'industry_filter'
-    | 'drawing_code'
     // Factory
     | 'energy'
     | 'industry_config'
@@ -44,9 +38,6 @@ export type Subject =
     | 'machine_operator_history'
     // Settings
     | 'profile'
-    // Operator
-    | 'operator_dashboard'
-    | 'operator_reviews'
     // QC
     | 'qc_dashboard'
     // Manager
@@ -55,8 +46,6 @@ export type Subject =
     | 'user'
     | 'role'
     | 'permission'
-    // Order Management
-    | 'order'
     // Process Management
     | 'process'
     | 'standard_step'
@@ -64,7 +53,6 @@ export type Subject =
     | 'staff'
     // Tasks Management
     | 'tasks'
-    | 'task_review'
     // Space
     | 'space_monitoring'
     | 'floor_map'

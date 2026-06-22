@@ -3,9 +3,7 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ShoppingOutlined,
     ProjectOutlined,
-    TeamOutlined,
     CheckSquareOutlined,
     AppstoreOutlined,
 } from '@ant-design/icons';
@@ -53,14 +51,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         alternativeAction: 'update', // Show if can view OR update
     },
     {
-        key: 'order',
-        route: '/admin/order',
-        i18nKey: 'sidebar.navigation.order',
-        icon: <ShoppingOutlined />,
-        subject: 'order',
-        action: 'view',
-    },
-    {
         key: 'process',
         route: '/admin/process',
         i18nKey: 'sidebar.navigation.process',
@@ -69,35 +59,11 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         action: 'view',
     },
     {
-        key: 'staff',
-        route: '/admin/staff',
-        i18nKey: 'sidebar.navigation.staff',
-        icon: <TeamOutlined />,
-        subject: 'staff',
-        action: 'view',
-    },
-    {
         key: 'tasks',
         route: '/admin/tasks',
         i18nKey: 'sidebar.navigation.tasks',
         icon: <CheckSquareOutlined />,
         subject: 'tasks',
-        action: 'view',
-    },
-    {
-        key: 'operator-tasks',
-        route: '/operator/tasks',
-        i18nKey: 'operatorTasks.page.title',
-        icon: <CheckSquareOutlined />,
-        subject: 'operator_dashboard',
-        action: 'view',
-    },
-    {
-        key: 'operator-reviews',
-        route: '/operator/my-reviews',
-        i18nKey: 'operatorReview.page.title',
-        icon: <CheckSquareOutlined />,
-        subject: 'operator_reviews',
         action: 'view',
     },
     {
@@ -178,16 +144,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         group: 'categories',
         subGroup: 'staff_others',
     },
-    {
-        key: 'drawing-code',
-        route: '/admin/categories/drawingCode',
-        i18nKey: 'sidebar.navigation.drawingCode',
-        subject: 'drawing_code',
-        action: 'view',
-        group: 'categories',
-        subGroup: 'staff_others',
-    },
-
     // RBAC items
     {
         key: 'rbac-permissions',

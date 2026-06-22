@@ -3,12 +3,8 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ShoppingOutlined,
     ProjectOutlined,
-    TeamOutlined,
-    CheckSquareOutlined,
     AppstoreOutlined,
-    PartitionOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -32,16 +28,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
                 '/admin/space-monitoring',
                 t('permissionSubjects.space_monitoring'),
                 <ApartmentOutlined />
-            )
-        );
-    }
-
-    if (ability.can('view', 'floor_map')) {
-        items.push(
-            createMenuItem(
-                '/admin/floor-map/status',
-                t('sidebar.navigation.floorMapStatus'),
-                <PartitionOutlined />
             )
         );
     }
@@ -94,7 +80,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             createMenuItem('/admin/categories/space', t('sidebar.navigation.space'))
         );
     }
-    if (ability.can('update', 'floor_map') && ability.can('view', 'floor_map')) {
+    if (ability.can('update', 'floor_map')) {
         spaceConfigurationItems.push(
             createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
         );
@@ -127,11 +113,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             )
         );
     }
-    if (ability.can('view', 'drawing_code')) {
-        staffAndOthersItems.push(
-            createMenuItem('/admin/categories/drawingCode', t('sidebar.navigation.drawingCode'))
-        );
-    }
     if (staffAndOthersItems.length > 0) {
         categoryItems.push({
             key: 'staff_others',
@@ -147,48 +128,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             label: t('sidebar.navigation.catalog'),
             children: categoryItems,
         });
-    }
-
-    if (ability.can('view', 'order')) {
-        items.push(
-            createMenuItem('/admin/order', t('sidebar.navigation.order'), <ShoppingOutlined />)
-        );
-    }
-
-    if (ability.can('view', 'process')) {
-        items.push(
-            createMenuItem('/admin/process', t('sidebar.navigation.process'), <ProjectOutlined />)
-        );
-    }
-
-    if (ability.can('view', 'staff')) {
-        items.push(createMenuItem('/admin/staff', t('sidebar.navigation.staff'), <TeamOutlined />));
-    }
-
-    // if (ability.can('view', 'tasks')) {
-    //     items.push(
-    //         createMenuItem('/admin/tasks', t('sidebar.navigation.tasks'), <CheckSquareOutlined />)
-    //     );
-    // }
-
-    if (ability.can('view', 'operator_dashboard')) {
-        items.push(
-            createMenuItem(
-                '/operator/tasks',
-                t('operatorTasks.page.title', { defaultValue: 'Operator Tasks' }),
-                <CheckSquareOutlined />
-            )
-        );
-    }
-
-    if (ability.can('view', 'operator_reviews')) {
-        items.push(
-            createMenuItem(
-                '/operator/my-reviews',
-                t('operatorReview.page.title'),
-                <CheckSquareOutlined />
-            )
-        );
     }
 
     const rbacItems: MenuItem[] = [];

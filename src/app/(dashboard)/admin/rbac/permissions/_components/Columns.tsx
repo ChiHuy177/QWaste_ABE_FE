@@ -62,8 +62,6 @@ const getActionColor = (action: string): string => {
         case 'view-all':
         case 'dashboard':
         case 'overview_view':
-        case 'operator_view':
-        case 'manager_review_view':
         case 'store':
         case 'confirm':
         case 'restore':
@@ -74,8 +72,6 @@ const getActionColor = (action: string): string => {
         case 'settings':
         case 'assign':
         case 'update_sensitive':
-        case 'update_info':
-        case 'update_plan':
             return 'orange';
         // Delete/Cancel actions
         case 'delete':

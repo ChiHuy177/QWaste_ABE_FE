@@ -36,7 +36,7 @@ export function NotFoundContent() {
             case 'client':
                 return '/admin/space-monitoring';
             default:
-                return '/';
+                return '/admin/space-monitoring';
         }
     };
 

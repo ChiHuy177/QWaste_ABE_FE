@@ -32,7 +32,7 @@ import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { factoryOverviewActions } from '@/stores';
 import { IFactoryOverviewStoreState } from '@/stores/FactoryOverviewStore';
-import { ArrowLeftOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
+import { FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
     collectAllMachines,
     computeStatsFromMachines,
@@ -1199,27 +1199,6 @@ const SpaceMonitoringPage: React.FC = () => {
                 title={t('permissionSubjects.space_monitoring')}
                 rightContent={headerActions}
             />
-
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'flex-start',
-                    marginBottom: 12,
-                    width: '100%',
-                }}
-            >
-                <Button
-                    type="primary"
-                    icon={<ArrowLeftOutlined />}
-                    onClick={() => router.push('/admin/floor-map/status')}
-                    style={{
-                        borderRadius: 8,
-                        width: isMobile ? '100%' : undefined,
-                    }}
-                >
-                    {t('common.back')} {t('floorMap.viewTitle')}
-                </Button>
-            </div>
 
             {/* <Breadcrumb
                 items={breadcrumbItems}

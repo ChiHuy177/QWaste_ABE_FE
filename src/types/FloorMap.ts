@@ -19,10 +19,6 @@ export interface FloorMapMachineResponse {
     heightRatio: number | null;
 }
 
-export interface FloorMapMachineStatusResponse extends FloorMapMachineResponse {
-    currentStatus: currentStatus;
-}
-
 export type FloorMapMachineDisplayResponse = FloorMapMachineResponse & {
     currentStatus?: currentStatus;
 };
@@ -31,12 +27,6 @@ export interface FloorMapDisplayResponse {
     spaceId: number;
     floorPlanImageUrl: string | null;
     machines: FloorMapMachineDisplayResponse[];
-}
-
-export interface FloorMapStatusResponse {
-    spaceId: number;
-    floorPlanImageUrl: string | null;
-    machines: FloorMapMachineStatusResponse[];
 }
 
 export interface MachineFloorPositionRequest {

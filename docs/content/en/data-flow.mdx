@@ -1,651 +1,650 @@
-# Endpoint → Service → Store → UI
-
-This page explains the standard workflow for adding an API-backed feature in Qwaste v2.
-
-```txt
-Backend endpoint
-  -> src/services/endpoints.ts
-  -> src/services/{Domain}Service.ts
-  -> src/stores/{Domain}Store.ts
-  -> page/component with useAppDispatch + useAppSelector
-```
-
-Not every feature needs Redux. If data is used only by one small component or one simple page, a local hook can call the service directly. Use a store when data is shared across components/screens, needs loading/error state, receives realtime updates, or exposes reusable actions.
-
-## When to use a store
-
-| Case | Recommended |
-| --- | --- |
-| List data used by several components in one module | Store or module-local hook |
-| Data synchronized with WebSocket | Store |
-| Page has many actions: fetch, create, update, delete, export | Store |
-| Small one-off dropdown | Service in a local hook |
-| Temporary form state | Local state or form library |
-| Modal open/close owned by one component | Local state |
-
-Existing Qwaste stores include `OrderStore`, `MachineStore`, `NotificationStore`, `FactoryOverviewStore`, and `DrawingCodeStore`.
-
-## Step 1: Define types
-
-Create or update a file under `src/types`.
-
-```ts
-// src/types/Example.ts
-export interface ExampleResponse {
-  exampleId: string
-  exampleCode: string
-  exampleName: string
-  status: 'ACTIVE' | 'INACTIVE'
-  createdTime: number
-}
-
-export interface ExampleCreationRequest {
-  exampleCode: string
-  exampleName: string
-}
-
-export interface ExampleUpdationRequest extends ExampleCreationRequest {
-  exampleId: string
-}
-```
-
-Conventions:
-
-- Response types represent backend data.
-- Request types represent payloads sent to the backend.
-- Avoid `any` for new APIs.
-- If the contract is still changing, type the fields the UI actually uses.
-
-If the type should be exported centrally, add it to `src/types/index.ts`.
-
-## Step 2: Add endpoints
-
-Add endpoints in `src/services/endpoints.ts`.
-
-```ts
-type PathParam = string | number
-
-const WITH_PARAM = (base: string, param: PathParam): string => `${base}/${param}`
-
-export const ENDPOINTS = {
-  EXAMPLES: {
-    BASE: '/api/examples/v1',
-    DETAIL: (id: PathParam) => WITH_PARAM('/api/examples/v1', id),
-    RESTORE: (id: PathParam) => `/api/examples/v1/${id}/restoring`,
-    PICKING: '/api/examples/v1/picking'
-  }
-} as const
-```
-
-Conventions:
-
-| Endpoint type | Suggested name |
-| --- | --- |
-| List/create | `BASE` |
-| Detail/update/delete | `DETAIL(id)` |
-| Restore | `RESTORE(id)` |
-| Dropdown/select | `PICKING` |
-| Custom action | `CONFIRM(id)`, `CANCEL(id)`, `EXPORT(id)` |
-
-Do not hard-code endpoint URLs in components or stores. Stores call services, services use `ENDPOINTS`.
-
-## Step 3: Create the service
-
-Create `src/services/ExampleService.ts`.
-
-```ts
-import { ENDPOINTS } from './endpoints'
-import { NetworkService } from './NetworkService'
-import {
-  ExampleCreationRequest,
-  ExampleResponse,
-  ExampleUpdationRequest
-} from '@/types/Example'
-
-export class ExampleService {
-  static async getAllExamples(): Promise<ExampleResponse[]> {
-    const response = await NetworkService.requestJson<ExampleResponse[]>({
-      method: 'GET',
-      url: ENDPOINTS.EXAMPLES.BASE
-    })
-
-    return response.result as ExampleResponse[]
-  }
-
-  static async getExampleById(exampleId: string): Promise<ExampleResponse> {
-    const response = await NetworkService.requestJson<ExampleResponse>({
-      method: 'GET',
-      url: ENDPOINTS.EXAMPLES.DETAIL(exampleId)
-    })
-
-    return response.result as ExampleResponse
-  }
-
-  static async createExample(payload: ExampleCreationRequest): Promise<ExampleResponse> {
-    const response = await NetworkService.requestJson<ExampleResponse>({
-      method: 'POST',
-      url: ENDPOINTS.EXAMPLES.BASE,
-      data: payload
-    })
-
-    return response.result as ExampleResponse
-  }
-
-  static async updateExample(payload: ExampleUpdationRequest): Promise<ExampleResponse> {
-    const response = await NetworkService.requestJson<ExampleResponse>({
-      method: 'PUT',
-      url: ENDPOINTS.EXAMPLES.DETAIL(payload.exampleId),
-      data: payload
-    })
-
-    return response.result as ExampleResponse
-  }
-
-  static async deleteExample(exampleId: string): Promise<void> {
-    await NetworkService.requestJson<void>({
-      method: 'DELETE',
-      url: ENDPOINTS.EXAMPLES.DETAIL(exampleId)
-    })
-  }
-}
-```
-
-Services should only handle API contracts:
-
-- No `toast`.
-- No modal open/close.
-- No Redux state reads.
-- No route navigation.
-- No direct `apiClient` usage from UI.
-
-If you want barrel imports from `@/services`, add:
-
-```ts
-export { ExampleService } from './ExampleService'
-```
-
-## Step 4: Create the store
-
-Create `src/stores/ExampleStore.ts` when data is shared or actions need to be reused.
-
-```ts
-import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit'
-import { ExampleService } from '@/services/ExampleService'
-import {
-  ExampleCreationRequest,
-  ExampleResponse,
-  ExampleUpdationRequest
-} from '@/types/Example'
-
-export interface IExampleStoreState {
-  examples: ExampleResponse[]
-  currentExample: ExampleResponse | null
-  isLoading: boolean
-  isSubmitting: boolean
-  error: string | null
-
-  // Keep module-wide UI state here only when several components need it.
-  isFormOpen: boolean
-  selectedExampleId: string | null
-}
-
-const initialState: IExampleStoreState = {
-  examples: [],
-  currentExample: null,
-  isLoading: false,
-  isSubmitting: false,
-  error: null,
-  isFormOpen: false,
-  selectedExampleId: null
-}
-
-const slice = createSlice({
-  name: 'example',
-  initialState,
-  reducers: {
-    setExamples: (state, action: PayloadAction<ExampleResponse[]>) => {
-      state.examples = action.payload
-    },
-    setCurrentExample: (state, action: PayloadAction<ExampleResponse | null>) => {
-      state.currentExample = action.payload
-    },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload
-      if (action.payload) state.error = null
-    },
-    setSubmitting: (state, action: PayloadAction<boolean>) => {
-      state.isSubmitting = action.payload
-    },
-    setError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload
-    },
-    setFormOpen: (state, action: PayloadAction<boolean>) => {
-      state.isFormOpen = action.payload
-    },
-    setSelectedExampleId: (state, action: PayloadAction<string | null>) => {
-      state.selectedExampleId = action.payload
-    },
-    resetState: () => initialState
-  }
-})
-
-export const { reducer } = slice
-
-const getErrorMessage = (error: any, fallback: string) => {
-  return error?.response?.data?.message || error?.message || fallback
-}
-
-export const exampleActions = {
-  fetchExamples: () => async (dispatch: Dispatch) => {
-    dispatch(slice.actions.setLoading(true))
-
-    try {
-      const data = await ExampleService.getAllExamples()
-      dispatch(slice.actions.setExamples(data))
-    } catch (error: any) {
-      dispatch(slice.actions.setError(getErrorMessage(error, 'Failed to fetch examples')))
-    } finally {
-      dispatch(slice.actions.setLoading(false))
-    }
-  },
-
-  fetchExampleDetail: (exampleId: string) => async (dispatch: Dispatch) => {
-    dispatch(slice.actions.setLoading(true))
-
-    try {
-      const data = await ExampleService.getExampleById(exampleId)
-      dispatch(slice.actions.setCurrentExample(data))
-    } catch (error: any) {
-      dispatch(slice.actions.setError(getErrorMessage(error, 'Failed to fetch example detail')))
-    } finally {
-      dispatch(slice.actions.setLoading(false))
-    }
-  },
-
-  createExample: (payload: ExampleCreationRequest) => async (dispatch: any) => {
-    dispatch(slice.actions.setSubmitting(true))
-
-    try {
-      await ExampleService.createExample(payload)
-      dispatch(exampleActions.fetchExamples())
-      dispatch(slice.actions.setFormOpen(false))
-      return { success: true }
-    } catch (error: any) {
-      const message = getErrorMessage(error, 'Failed to create example')
-      dispatch(slice.actions.setError(message))
-      return { success: false, error: message }
-    } finally {
-      dispatch(slice.actions.setSubmitting(false))
-    }
-  },
-
-  updateExample: (payload: ExampleUpdationRequest) => async (dispatch: any) => {
-    dispatch(slice.actions.setSubmitting(true))
-
-    try {
-      const updated = await ExampleService.updateExample(payload)
-      dispatch(exampleActions.fetchExamples())
-      dispatch(slice.actions.setCurrentExample(updated))
-      dispatch(slice.actions.setFormOpen(false))
-      return { success: true }
-    } catch (error: any) {
-      const message = getErrorMessage(error, 'Failed to update example')
-      dispatch(slice.actions.setError(message))
-      return { success: false, error: message }
-    } finally {
-      dispatch(slice.actions.setSubmitting(false))
-    }
-  },
-
-  deleteExample: (exampleId: string) => async (dispatch: any) => {
-    dispatch(slice.actions.setSubmitting(true))
-
-    try {
-      await ExampleService.deleteExample(exampleId)
-      dispatch(exampleActions.fetchExamples())
-      return { success: true }
-    } catch (error: any) {
-      const message = getErrorMessage(error, 'Failed to delete example')
-      dispatch(slice.actions.setError(message))
-      return { success: false, error: message }
-    } finally {
-      dispatch(slice.actions.setSubmitting(false))
-    }
-  },
-
-  openForm: (exampleId?: string) => (dispatch: Dispatch) => {
-    dispatch(slice.actions.setSelectedExampleId(exampleId || null))
-    dispatch(slice.actions.setFormOpen(true))
-  },
-
-  closeForm: () => (dispatch: Dispatch) => {
-    dispatch(slice.actions.setFormOpen(false))
-    dispatch(slice.actions.setSelectedExampleId(null))
-  },
-
-  clearError: () => slice.actions.setError(null),
-  resetState: slice.actions.resetState
-}
-```
-
-Qwaste stores typically contain:
-
-| State group | Example |
-| --- | --- |
-| Data | `examples`, `currentExample` |
-| Loading | `isLoading`, `isSubmitting` |
-| Error | `error` |
-| Module-wide UI | `isFormOpen`, `selectedExampleId` |
-| Realtime updater | `updateExampleRealtime` when WebSocket is needed |
-
-## Step 5: Register reducer and actions
-
-Update `src/stores/index.ts`.
-
-```ts
-import * as exampleStore from './ExampleStore'
-
-export interface AppState {
-  example: exampleStore.IExampleStoreState
-}
-
-export const reducers: any = {
-  example: exampleStore.reducer
-}
-
-export { exampleActions } from './ExampleStore'
-```
-
-In the real file, do not remove existing reducers. Add `example` to `AppState`, `reducers`, and action exports.
-
-`src/stores/configureStore.ts` will pick it up because it imports `reducers` from `src/stores/index.ts`.
-
-## Step 6: Use it in a page
-
-In a client page or component:
-
-```tsx
-'use client'
-
-import { useEffect } from 'react'
-import { Button, Card, Spin, Alert } from 'antd'
-import { useAppDispatch, useAppSelector } from '@/stores/hook'
-import { exampleActions } from '@/stores'
-import { ExampleTable } from './_components/ExampleTable'
-import { ExampleForm } from './_components/ExampleForm'
-
-export default function ExamplePage() {
-  const dispatch = useAppDispatch()
-  const {
-    examples,
-    isLoading,
-    isSubmitting,
-    error,
-    isFormOpen,
-    selectedExampleId
-  } = useAppSelector((state) => state.example)
-
-  useEffect(() => {
-    dispatch(exampleActions.fetchExamples())
-  }, [dispatch])
-
-  const handleCreate = () => {
-    dispatch(exampleActions.openForm())
-  }
-
-  const handleEdit = (exampleId: string) => {
-    dispatch(exampleActions.openForm(exampleId))
-    dispatch(exampleActions.fetchExampleDetail(exampleId))
-  }
-
-  return (
-    <>
-      {error && (
-        <Alert
-          type="error"
-          message={error}
-          closable
-          onClose={() => dispatch(exampleActions.clearError())}
-        />
-      )}
-
-      <Card
-        title="Examples"
-        extra={<Button onClick={handleCreate}>Create</Button>}
-      >
-        <Spin spinning={isLoading}>
-          <ExampleTable
-            data={examples}
-            onEdit={handleEdit}
-            onDelete={(id) => dispatch(exampleActions.deleteExample(id))}
-          />
-        </Spin>
-      </Card>
-
-      <ExampleForm
-        open={isFormOpen}
-        exampleId={selectedExampleId}
-        submitting={isSubmitting}
-        onCancel={() => dispatch(exampleActions.closeForm())}
-      />
-    </>
-  )
-}
-```
-
-Pages should:
-
-- Dispatch initial fetch in `useEffect`.
-- Select the slice with `useAppSelector`.
-- Pass data/actions to child components through clear props.
-- Avoid direct `apiClient` calls.
-- Avoid duplicating loading/error state already managed by the store.
-
-## Step 7: Form submit
-
-The form component can dispatch create/update actions.
-
-```tsx
-import { Form, Input, Modal } from 'antd'
-import { useAppDispatch } from '@/stores/hook'
-import { exampleActions } from '@/stores'
-import { ExampleCreationRequest } from '@/types/Example'
-
-interface ExampleFormProps {
-  open: boolean
-  exampleId: string | null
-  submitting: boolean
-  onCancel: () => void
-}
-
-export function ExampleForm({ open, exampleId, submitting, onCancel }: ExampleFormProps) {
-  const dispatch = useAppDispatch()
-  const [form] = Form.useForm<ExampleCreationRequest>()
-
-  const handleSubmit = async () => {
-    const values = await form.validateFields()
-
-    const result = exampleId
-      ? await dispatch(exampleActions.updateExample({ ...values, exampleId }))
-      : await dispatch(exampleActions.createExample(values))
-
-    if (result.success) {
-      form.resetFields()
-    }
-  }
-
-  return (
-    <Modal
-      open={open}
-      title={exampleId ? 'Edit example' : 'Create example'}
-      confirmLoading={submitting}
-      onOk={handleSubmit}
-      onCancel={onCancel}
-    >
-      <Form form={form} layout="vertical">
-        <Form.Item name="exampleCode" label="Code" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item name="exampleName" label="Name" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-      </Form>
-    </Modal>
-  )
-}
-```
-
-For complex forms like orders, keep mappers outside JSX:
-
-```ts
-const payload = mapExampleFormToCreationRequest(values)
-dispatch(exampleActions.createExample(payload))
-```
-
-## Step 8: Selectors and derived data
-
-If derived data is used only by one page, compute it in that page/component:
-
-```tsx
-const activeExamples = useMemo(
-  () => examples.filter((item) => item.status === 'ACTIVE'),
-  [examples]
-)
-```
-
-If derived data must stay synchronized in the store or depends on realtime updates, update it in the reducer, similar to `MachineStore.setMachines`.
-
-```ts
-setMachines: (state, action: PayloadAction<MachineOverview[]>) => {
-  state.machines = action.payload
-  state.stats = calculateMachineStats(action.payload)
-}
-```
-
-Do not store raw data plus several filtered/sorted copies when the UI can compute them cheaply.
-
-## Step 9: Realtime updates
-
-If the module receives WebSocket updates, add a reducer that updates the affected item.
-
-```ts
-updateExampleRealtime: (
-  state,
-  action: PayloadAction<{ exampleId: string; status: ExampleResponse['status'] }>
-) => {
-  const item = state.examples.find((example) => example.exampleId === action.payload.exampleId)
-  if (item) {
-    item.status = action.payload.status
-  }
-
-  if (state.currentExample?.exampleId === action.payload.exampleId) {
-    state.currentExample.status = action.payload.status
-  }
-}
-```
-
-Expose the action:
-
-```ts
-updateExampleRealtime: slice.actions.updateExampleRealtime
-```
-
-Subscribe in a component or hook:
-
-```tsx
-useEffect(() => {
-  if (!wsConnected) return
-
-  const unsubscribe = wsService.subscribe('/topic/examples/status', (message) => {
-    dispatch(exampleActions.updateExampleRealtime(message.payload))
-  })
-
-  return unsubscribe
-}, [dispatch, wsConnected, wsService])
-```
-
-Always clean up subscriptions on unmount or dependency changes.
-
-## Error and loading convention
-
-Async actions should follow this shape:
-
-```ts
-dispatch(setLoading(true))
-try {
-  const data = await Service.method()
-  dispatch(setData(data))
-  return { success: true }
-} catch (error) {
-  const message = getErrorMessage(error, fallback)
-  dispatch(setError(message))
-  return { success: false, error: message }
-} finally {
-  dispatch(setLoading(false))
-}
-```
-
-Conventions:
-
-| Action type | Return |
-| --- | --- |
-| Fetch data | No return required, or return data if UI needs it |
-| Submit/create/update/delete | Prefer `{ success, error? }` or boolean |
-| UI open/close | No async needed |
-| Export/download | Return boolean so UI knows success/failure |
-
-## When a store is not needed
-
-For data used only by one small page:
-
-```tsx
-const [examples, setExamples] = useState<ExampleResponse[]>([])
-const [isLoading, setIsLoading] = useState(false)
-
-useEffect(() => {
-  let ignore = false
-
-  const fetchData = async () => {
-    setIsLoading(true)
-    try {
-      const data = await ExampleService.getAllExamples()
-      if (!ignore) setExamples(data)
-    } finally {
-      if (!ignore) setIsLoading(false)
-    }
-  }
-
-  fetchData()
-
-  return () => {
-    ignore = true
-  }
-}, [])
-```
-
-When this logic is reused by several components or grows multiple actions, move it to a hook or store.
-
-## New API checklist
-
-1. Add or verify types in `src/types`.
-2. Add endpoint in `src/services/endpoints.ts`.
-3. Add method in `{Domain}Service`.
-4. If Redux is needed, create/update `{Domain}Store`.
-5. Register reducer/action in `src/stores/index.ts`.
-6. Page uses `useAppDispatch` and `useAppSelector`.
-7. Child components receive data/actions through props.
-8. Form submit dispatches actions; it should not call services directly when the module already has a store.
-9. Loading/error is handled consistently.
-10. Update permissions/menu/docs if a new route should be visible.
-
-## Real examples in this repo
-
-| Flow | File |
-| --- | --- |
-| Machine endpoint | `src/services/endpoints.ts` group `MACHINE` |
-| Machine service | `src/services/MachineService.ts` |
-| Machine store | `src/stores/MachineStore.ts` |
-| Machine page | `src/app/(dashboard)/admin/machines/page.tsx` |
-| Order service/store | `src/services/OrderService.ts`, `src/stores/OrderStore.ts` |
-| Store hooks | `src/stores/hook.ts` |
-| Store registry | `src/stores/index.ts`, `src/stores/configureStore.ts` |
+# Endpoint → Service → Store → UI
+
+This page explains the standard workflow for adding an API-backed feature in Qwaste v2.
+
+```txt
+Backend endpoint
+  -> src/services/endpoints.ts
+  -> src/services/{Domain}Service.ts
+  -> src/stores/{Domain}Store.ts
+  -> page/component with useAppDispatch + useAppSelector
+```
+
+Not every feature needs Redux. If data is used only by one small component or one simple page, a local hook can call the service directly. Use a store when data is shared across components/screens, needs loading/error state, receives realtime updates, or exposes reusable actions.
+
+## When to use a store
+
+| Case | Recommended |
+| --- | --- |
+| List data used by several components in one module | Store or module-local hook |
+| Data synchronized with WebSocket | Store |
+| Page has many actions: fetch, create, update, delete, export | Store |
+| Small one-off dropdown | Service in a local hook |
+| Temporary form state | Local state or form library |
+| Modal open/close owned by one component | Local state |
+
+Existing Qwaste stores include `MachineStore`, `NotificationStore`, `FactoryOverviewStore`.
+
+## Step 1: Define types
+
+Create or update a file under `src/types`.
+
+```ts
+// src/types/Example.ts
+export interface ExampleResponse {
+  exampleId: string
+  exampleCode: string
+  exampleName: string
+  status: 'ACTIVE' | 'INACTIVE'
+  createdTime: number
+}
+
+export interface ExampleCreationRequest {
+  exampleCode: string
+  exampleName: string
+}
+
+export interface ExampleUpdationRequest extends ExampleCreationRequest {
+  exampleId: string
+}
+```
+
+Conventions:
+
+- Response types represent backend data.
+- Request types represent payloads sent to the backend.
+- Avoid `any` for new APIs.
+- If the contract is still changing, type the fields the UI actually uses.
+
+If the type should be exported centrally, add it to `src/types/index.ts`.
+
+## Step 2: Add endpoints
+
+Add endpoints in `src/services/endpoints.ts`.
+
+```ts
+type PathParam = string | number
+
+const WITH_PARAM = (base: string, param: PathParam): string => `${base}/${param}`
+
+export const ENDPOINTS = {
+  EXAMPLES: {
+    BASE: '/api/examples/v1',
+    DETAIL: (id: PathParam) => WITH_PARAM('/api/examples/v1', id),
+    RESTORE: (id: PathParam) => `/api/examples/v1/${id}/restoring`,
+    PICKING: '/api/examples/v1/picking'
+  }
+} as const
+```
+
+Conventions:
+
+| Endpoint type | Suggested name |
+| --- | --- |
+| List/create | `BASE` |
+| Detail/update/delete | `DETAIL(id)` |
+| Restore | `RESTORE(id)` |
+| Dropdown/select | `PICKING` |
+| Custom action | `CONFIRM(id)`, `CANCEL(id)`, `EXPORT(id)` |
+
+Do not hard-code endpoint URLs in components or stores. Stores call services, services use `ENDPOINTS`.
+
+## Step 3: Create the service
+
+Create `src/services/ExampleService.ts`.
+
+```ts
+import { ENDPOINTS } from './endpoints'
+import { NetworkService } from './NetworkService'
+import {
+  ExampleCreationRequest,
+  ExampleResponse,
+  ExampleUpdationRequest
+} from '@/types/Example'
+
+export class ExampleService {
+  static async getAllExamples(): Promise<ExampleResponse[]> {
+    const response = await NetworkService.requestJson<ExampleResponse[]>({
+      method: 'GET',
+      url: ENDPOINTS.EXAMPLES.BASE
+    })
+
+    return response.result as ExampleResponse[]
+  }
+
+  static async getExampleById(exampleId: string): Promise<ExampleResponse> {
+    const response = await NetworkService.requestJson<ExampleResponse>({
+      method: 'GET',
+      url: ENDPOINTS.EXAMPLES.DETAIL(exampleId)
+    })
+
+    return response.result as ExampleResponse
+  }
+
+  static async createExample(payload: ExampleCreationRequest): Promise<ExampleResponse> {
+    const response = await NetworkService.requestJson<ExampleResponse>({
+      method: 'POST',
+      url: ENDPOINTS.EXAMPLES.BASE,
+      data: payload
+    })
+
+    return response.result as ExampleResponse
+  }
+
+  static async updateExample(payload: ExampleUpdationRequest): Promise<ExampleResponse> {
+    const response = await NetworkService.requestJson<ExampleResponse>({
+      method: 'PUT',
+      url: ENDPOINTS.EXAMPLES.DETAIL(payload.exampleId),
+      data: payload
+    })
+
+    return response.result as ExampleResponse
+  }
+
+  static async deleteExample(exampleId: string): Promise<void> {
+    await NetworkService.requestJson<void>({
+      method: 'DELETE',
+      url: ENDPOINTS.EXAMPLES.DETAIL(exampleId)
+    })
+  }
+}
+```
+
+Services should only handle API contracts:
+
+- No `toast`.
+- No modal open/close.
+- No Redux state reads.
+- No route navigation.
+- No direct `apiClient` usage from UI.
+
+If you want barrel imports from `@/services`, add:
+
+```ts
+export { ExampleService } from './ExampleService'
+```
+
+## Step 4: Create the store
+
+Create `src/stores/ExampleStore.ts` when data is shared or actions need to be reused.
+
+```ts
+import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit'
+import { ExampleService } from '@/services/ExampleService'
+import {
+  ExampleCreationRequest,
+  ExampleResponse,
+  ExampleUpdationRequest
+} from '@/types/Example'
+
+export interface IExampleStoreState {
+  examples: ExampleResponse[]
+  currentExample: ExampleResponse | null
+  isLoading: boolean
+  isSubmitting: boolean
+  error: string | null
+
+  // Keep module-wide UI state here only when several components need it.
+  isFormOpen: boolean
+  selectedExampleId: string | null
+}
+
+const initialState: IExampleStoreState = {
+  examples: [],
+  currentExample: null,
+  isLoading: false,
+  isSubmitting: false,
+  error: null,
+  isFormOpen: false,
+  selectedExampleId: null
+}
+
+const slice = createSlice({
+  name: 'example',
+  initialState,
+  reducers: {
+    setExamples: (state, action: PayloadAction<ExampleResponse[]>) => {
+      state.examples = action.payload
+    },
+    setCurrentExample: (state, action: PayloadAction<ExampleResponse | null>) => {
+      state.currentExample = action.payload
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload
+      if (action.payload) state.error = null
+    },
+    setSubmitting: (state, action: PayloadAction<boolean>) => {
+      state.isSubmitting = action.payload
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload
+    },
+    setFormOpen: (state, action: PayloadAction<boolean>) => {
+      state.isFormOpen = action.payload
+    },
+    setSelectedExampleId: (state, action: PayloadAction<string | null>) => {
+      state.selectedExampleId = action.payload
+    },
+    resetState: () => initialState
+  }
+})
+
+export const { reducer } = slice
+
+const getErrorMessage = (error: any, fallback: string) => {
+  return error?.response?.data?.message || error?.message || fallback
+}
+
+export const exampleActions = {
+  fetchExamples: () => async (dispatch: Dispatch) => {
+    dispatch(slice.actions.setLoading(true))
+
+    try {
+      const data = await ExampleService.getAllExamples()
+      dispatch(slice.actions.setExamples(data))
+    } catch (error: any) {
+      dispatch(slice.actions.setError(getErrorMessage(error, 'Failed to fetch examples')))
+    } finally {
+      dispatch(slice.actions.setLoading(false))
+    }
+  },
+
+  fetchExampleDetail: (exampleId: string) => async (dispatch: Dispatch) => {
+    dispatch(slice.actions.setLoading(true))
+
+    try {
+      const data = await ExampleService.getExampleById(exampleId)
+      dispatch(slice.actions.setCurrentExample(data))
+    } catch (error: any) {
+      dispatch(slice.actions.setError(getErrorMessage(error, 'Failed to fetch example detail')))
+    } finally {
+      dispatch(slice.actions.setLoading(false))
+    }
+  },
+
+  createExample: (payload: ExampleCreationRequest) => async (dispatch: any) => {
+    dispatch(slice.actions.setSubmitting(true))
+
+    try {
+      await ExampleService.createExample(payload)
+      dispatch(exampleActions.fetchExamples())
+      dispatch(slice.actions.setFormOpen(false))
+      return { success: true }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to create example')
+      dispatch(slice.actions.setError(message))
+      return { success: false, error: message }
+    } finally {
+      dispatch(slice.actions.setSubmitting(false))
+    }
+  },
+
+  updateExample: (payload: ExampleUpdationRequest) => async (dispatch: any) => {
+    dispatch(slice.actions.setSubmitting(true))
+
+    try {
+      const updated = await ExampleService.updateExample(payload)
+      dispatch(exampleActions.fetchExamples())
+      dispatch(slice.actions.setCurrentExample(updated))
+      dispatch(slice.actions.setFormOpen(false))
+      return { success: true }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to update example')
+      dispatch(slice.actions.setError(message))
+      return { success: false, error: message }
+    } finally {
+      dispatch(slice.actions.setSubmitting(false))
+    }
+  },
+
+  deleteExample: (exampleId: string) => async (dispatch: any) => {
+    dispatch(slice.actions.setSubmitting(true))
+
+    try {
+      await ExampleService.deleteExample(exampleId)
+      dispatch(exampleActions.fetchExamples())
+      return { success: true }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to delete example')
+      dispatch(slice.actions.setError(message))
+      return { success: false, error: message }
+    } finally {
+      dispatch(slice.actions.setSubmitting(false))
+    }
+  },
+
+  openForm: (exampleId?: string) => (dispatch: Dispatch) => {
+    dispatch(slice.actions.setSelectedExampleId(exampleId || null))
+    dispatch(slice.actions.setFormOpen(true))
+  },
+
+  closeForm: () => (dispatch: Dispatch) => {
+    dispatch(slice.actions.setFormOpen(false))
+    dispatch(slice.actions.setSelectedExampleId(null))
+  },
+
+  clearError: () => slice.actions.setError(null),
+  resetState: slice.actions.resetState
+}
+```
+
+Qwaste stores typically contain:
+
+| State group | Example |
+| --- | --- |
+| Data | `examples`, `currentExample` |
+| Loading | `isLoading`, `isSubmitting` |
+| Error | `error` |
+| Module-wide UI | `isFormOpen`, `selectedExampleId` |
+| Realtime updater | `updateExampleRealtime` when WebSocket is needed |
+
+## Step 5: Register reducer and actions
+
+Update `src/stores/index.ts`.
+
+```ts
+import * as exampleStore from './ExampleStore'
+
+export interface AppState {
+  example: exampleStore.IExampleStoreState
+}
+
+export const reducers: any = {
+  example: exampleStore.reducer
+}
+
+export { exampleActions } from './ExampleStore'
+```
+
+In the real file, do not remove existing reducers. Add `example` to `AppState`, `reducers`, and action exports.
+
+`src/stores/configureStore.ts` will pick it up because it imports `reducers` from `src/stores/index.ts`.
+
+## Step 6: Use it in a page
+
+In a client page or component:
+
+```tsx
+'use client'
+
+import { useEffect } from 'react'
+import { Button, Card, Spin, Alert } from 'antd'
+import { useAppDispatch, useAppSelector } from '@/stores/hook'
+import { exampleActions } from '@/stores'
+import { ExampleTable } from './_components/ExampleTable'
+import { ExampleForm } from './_components/ExampleForm'
+
+export default function ExamplePage() {
+  const dispatch = useAppDispatch()
+  const {
+    examples,
+    isLoading,
+    isSubmitting,
+    error,
+    isFormOpen,
+    selectedExampleId
+  } = useAppSelector((state) => state.example)
+
+  useEffect(() => {
+    dispatch(exampleActions.fetchExamples())
+  }, [dispatch])
+
+  const handleCreate = () => {
+    dispatch(exampleActions.openForm())
+  }
+
+  const handleEdit = (exampleId: string) => {
+    dispatch(exampleActions.openForm(exampleId))
+    dispatch(exampleActions.fetchExampleDetail(exampleId))
+  }
+
+  return (
+    <>
+      {error && (
+        <Alert
+          type="error"
+          message={error}
+          closable
+          onClose={() => dispatch(exampleActions.clearError())}
+        />
+      )}
+
+      <Card
+        title="Examples"
+        extra={<Button onClick={handleCreate}>Create</Button>}
+      >
+        <Spin spinning={isLoading}>
+          <ExampleTable
+            data={examples}
+            onEdit={handleEdit}
+            onDelete={(id) => dispatch(exampleActions.deleteExample(id))}
+          />
+        </Spin>
+      </Card>
+
+      <ExampleForm
+        open={isFormOpen}
+        exampleId={selectedExampleId}
+        submitting={isSubmitting}
+        onCancel={() => dispatch(exampleActions.closeForm())}
+      />
+    </>
+  )
+}
+```
+
+Pages should:
+
+- Dispatch initial fetch in `useEffect`.
+- Select the slice with `useAppSelector`.
+- Pass data/actions to child components through clear props.
+- Avoid direct `apiClient` calls.
+- Avoid duplicating loading/error state already managed by the store.
+
+## Step 7: Form submit
+
+The form component can dispatch create/update actions.
+
+```tsx
+import { Form, Input, Modal } from 'antd'
+import { useAppDispatch } from '@/stores/hook'
+import { exampleActions } from '@/stores'
+import { ExampleCreationRequest } from '@/types/Example'
+
+interface ExampleFormProps {
+  open: boolean
+  exampleId: string | null
+  submitting: boolean
+  onCancel: () => void
+}
+
+export function ExampleForm({ open, exampleId, submitting, onCancel }: ExampleFormProps) {
+  const dispatch = useAppDispatch()
+  const [form] = Form.useForm<ExampleCreationRequest>()
+
+  const handleSubmit = async () => {
+    const values = await form.validateFields()
+
+    const result = exampleId
+      ? await dispatch(exampleActions.updateExample({ ...values, exampleId }))
+      : await dispatch(exampleActions.createExample(values))
+
+    if (result.success) {
+      form.resetFields()
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      title={exampleId ? 'Edit example' : 'Create example'}
+      confirmLoading={submitting}
+      onOk={handleSubmit}
+      onCancel={onCancel}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item name="exampleCode" label="Code" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="exampleName" label="Name" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
+  )
+}
+```
+
+For complex forms like orders, keep mappers outside JSX:
+
+```ts
+const payload = mapExampleFormToCreationRequest(values)
+dispatch(exampleActions.createExample(payload))
+```
+
+## Step 8: Selectors and derived data
+
+If derived data is used only by one page, compute it in that page/component:
+
+```tsx
+const activeExamples = useMemo(
+  () => examples.filter((item) => item.status === 'ACTIVE'),
+  [examples]
+)
+```
+
+If derived data must stay synchronized in the store or depends on realtime updates, update it in the reducer, similar to `MachineStore.setMachines`.
+
+```ts
+setMachines: (state, action: PayloadAction<MachineOverview[]>) => {
+  state.machines = action.payload
+  state.stats = calculateMachineStats(action.payload)
+}
+```
+
+Do not store raw data plus several filtered/sorted copies when the UI can compute them cheaply.
+
+## Step 9: Realtime updates
+
+If the module receives WebSocket updates, add a reducer that updates the affected item.
+
+```ts
+updateExampleRealtime: (
+  state,
+  action: PayloadAction<{ exampleId: string; status: ExampleResponse['status'] }>
+) => {
+  const item = state.examples.find((example) => example.exampleId === action.payload.exampleId)
+  if (item) {
+    item.status = action.payload.status
+  }
+
+  if (state.currentExample?.exampleId === action.payload.exampleId) {
+    state.currentExample.status = action.payload.status
+  }
+}
+```
+
+Expose the action:
+
+```ts
+updateExampleRealtime: slice.actions.updateExampleRealtime
+```
+
+Subscribe in a component or hook:
+
+```tsx
+useEffect(() => {
+  if (!wsConnected) return
+
+  const unsubscribe = wsService.subscribe('/topic/examples/status', (message) => {
+    dispatch(exampleActions.updateExampleRealtime(message.payload))
+  })
+
+  return unsubscribe
+}, [dispatch, wsConnected, wsService])
+```
+
+Always clean up subscriptions on unmount or dependency changes.
+
+## Error and loading convention
+
+Async actions should follow this shape:
+
+```ts
+dispatch(setLoading(true))
+try {
+  const data = await Service.method()
+  dispatch(setData(data))
+  return { success: true }
+} catch (error) {
+  const message = getErrorMessage(error, fallback)
+  dispatch(setError(message))
+  return { success: false, error: message }
+} finally {
+  dispatch(setLoading(false))
+}
+```
+
+Conventions:
+
+| Action type | Return |
+| --- | --- |
+| Fetch data | No return required, or return data if UI needs it |
+| Submit/create/update/delete | Prefer `{ success, error? }` or boolean |
+| UI open/close | No async needed |
+| Export/download | Return boolean so UI knows success/failure |
+
+## When a store is not needed
+
+For data used only by one small page:
+
+```tsx
+const [examples, setExamples] = useState<ExampleResponse[]>([])
+const [isLoading, setIsLoading] = useState(false)
+
+useEffect(() => {
+  let ignore = false
+
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const data = await ExampleService.getAllExamples()
+      if (!ignore) setExamples(data)
+    } finally {
+      if (!ignore) setIsLoading(false)
+    }
+  }
+
+  fetchData()
+
+  return () => {
+    ignore = true
+  }
+}, [])
+```
+
+When this logic is reused by several components or grows multiple actions, move it to a hook or store.
+
+## New API checklist
+
+1. Add or verify types in `src/types`.
+2. Add endpoint in `src/services/endpoints.ts`.
+3. Add method in `{Domain}Service`.
+4. If Redux is needed, create/update `{Domain}Store`.
+5. Register reducer/action in `src/stores/index.ts`.
+6. Page uses `useAppDispatch` and `useAppSelector`.
+7. Child components receive data/actions through props.
+8. Form submit dispatches actions; it should not call services directly when the module already has a store.
+9. Loading/error is handled consistently.
+10. Update permissions/menu/docs if a new route should be visible.
+
+## Real examples in this repo
+
+| Flow | File |
+| --- | --- |
+| Machine endpoint | `src/services/endpoints.ts` group `MACHINE` |
+| Machine service | `src/services/MachineService.ts` |
+| Machine store | `src/stores/MachineStore.ts` |
+| Machine page | `src/app/(dashboard)/admin/machines/page.tsx` |
+| Store hooks | `src/stores/hook.ts` |
+| Store registry | `src/stores/index.ts`, `src/stores/configureStore.ts` |
