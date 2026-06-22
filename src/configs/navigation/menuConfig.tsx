@@ -67,14 +67,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         action: 'view',
     },
     {
-        key: 'operator-tasks',
-        route: '/operator/tasks',
-        i18nKey: 'operatorTasks.page.title',
-        icon: <CheckSquareOutlined />,
-        subject: 'operator_dashboard',
-        action: 'view',
-    },
-    {
         key: 'operator-reviews',
         route: '/operator/my-reviews',
         i18nKey: 'operatorReview.page.title',

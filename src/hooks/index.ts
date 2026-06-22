@@ -7,4 +7,3 @@ export * from './useRouteAccess';
 export * from './useTheme';
 export * from './useWebSocket';
 export * from './useWebSocketNotification';
-export * from './kanban/useKanbanTasks';

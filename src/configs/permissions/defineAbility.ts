@@ -21,7 +21,7 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
         }
 
         if (hasOperatorRole) {
-            can('view', ['operator_dashboard', 'operator_reviews']);
+            can('view', 'operator_reviews');
         }
 
         return build();
@@ -78,7 +78,7 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
             case 'maintenance':
                 can(['confirm', 'decline'], 'task_review');
                 if (normalizedRole === 'operator' || normalizedRole === 'op') {
-                    can('view', ['operator_dashboard', 'operator_reviews']);
+                    can('view', 'operator_reviews');
                 }
                 break;
 

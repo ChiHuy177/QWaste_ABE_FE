@@ -153,16 +153,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     //     );
     // }
 
-    if (ability.can('view', 'operator_dashboard')) {
-        items.push(
-            createMenuItem(
-                '/operator/tasks',
-                t('operatorTasks.page.title', { defaultValue: 'Operator Tasks' }),
-                <CheckSquareOutlined />
-            )
-        );
-    }
-
     if (ability.can('view', 'operator_reviews')) {
         items.push(
             createMenuItem(

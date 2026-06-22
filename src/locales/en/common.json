@@ -4307,7 +4307,6 @@
         "machine_monitoring": "Machine Monitoring",
         "machine_operator_history": "Machine Operator History",
         "profile": "Profile",
-        "operator_dashboard": "Operator Dashboard",
         "operator_reviews": "Operator Reviews",
         "qc_dashboard": "QC Dashboard",
         "manager_reviews": "Manager Reviews",
@@ -4322,71 +4321,6 @@
         "floor_map": "Floor Map",
         "all": "All",
         "other": "Other"
-    },
-    "operatorTasks": {
-        "page": {
-            "title": "My Tasks"
-        },
-        "columns": {
-            "todo": {
-                "title": "To do",
-                "description": "Assigned tasks waiting to start"
-            },
-            "in_progress": {
-                "title": "In progress",
-                "description": "Tasks currently being handled"
-            },
-            "qc_check": {
-                "title": "QC check",
-                "description": "Tasks ready for quality check"
-            },
-            "complete": {
-                "title": "Complete",
-                "description": "Finished tasks"
-            }
-        },
-        "status": {
-            "todo": "To do",
-            "in_progress": "In progress",
-            "qc_check": "QC check",
-            "complete": "Complete"
-        },
-        "priority": {
-            "high": "High",
-            "medium": "Medium",
-            "low": "Low"
-        },
-        "filters": {
-            "searchPlaceholder": "Search task, order, machine...",
-            "allPriority": "All priority"
-        },
-        "actions": {
-            "drag": "Drag"
-        },
-        "legend": {
-            "cardAccent": "Card accent"
-        },
-        "empty": {
-            "noTasks": "No tasks"
-        },
-        "detail": {
-            "title": "Task detail",
-            "description": "Description",
-            "notes": "Notes",
-            "sections": {
-                "production": "Production details",
-                "context": "Order and schedule"
-            },
-            "fields": {
-                "order": "Order",
-                "customer": "Customer",
-                "machine": "Machine",
-                "drawing": "Drawing",
-                "location": "Location",
-                "dueDate": "Due date",
-                "estimate": "Estimate"
-            }
-        }
     },
     "stepTemplates": "Step templates"
 }

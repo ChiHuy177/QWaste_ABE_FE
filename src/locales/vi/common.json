@@ -4357,7 +4357,6 @@
         "machine_monitoring": "Giám sát máy",
         "machine_operator_history": "Lịch sử vận hành máy",
         "profile": "Hồ sơ cá nhân",
-        "operator_dashboard": "Dashboard Vận hành",
         "operator_reviews": "Đánh giá Vận hành",
         "qc_dashboard": "Dashboard QC",
         "manager_reviews": "Đánh giá Quản lý",
@@ -4371,71 +4370,6 @@
         "space_monitoring": "Giám sát khu vực",
         "floor_map": "Sơ đồ mặt bằng",
         "all": "Tất cả"
-    },
-    "operatorTasks": {
-        "page": {
-            "title": "Công việc của tôi"
-        },
-        "columns": {
-            "todo": {
-                "title": "Cần làm",
-                "description": "Công việc đã giao đang chờ bắt đầu"
-            },
-            "in_progress": {
-                "title": "Đang thực hiện",
-                "description": "Công việc đang được xử lý"
-            },
-            "qc_check": {
-                "title": "Chờ QC",
-                "description": "Công việc đã sẵn sàng kiểm tra chất lượng"
-            },
-            "complete": {
-                "title": "Hoàn thành",
-                "description": "Công việc đã hoàn tất"
-            }
-        },
-        "status": {
-            "todo": "Cần làm",
-            "in_progress": "Đang thực hiện",
-            "qc_check": "Chờ QC",
-            "complete": "Hoàn thành"
-        },
-        "priority": {
-            "high": "Cao",
-            "medium": "Trung bình",
-            "low": "Thấp"
-        },
-        "filters": {
-            "searchPlaceholder": "Tìm công việc, đơn hàng, máy...",
-            "allPriority": "Tất cả độ ưu tiên"
-        },
-        "actions": {
-            "drag": "Kéo"
-        },
-        "legend": {
-            "cardAccent": "Màu viền card"
-        },
-        "empty": {
-            "noTasks": "Không có công việc"
-        },
-        "detail": {
-            "title": "Chi tiết công việc",
-            "description": "Mô tả",
-            "notes": "Ghi chú",
-            "sections": {
-                "production": "Thông tin sản xuất",
-                "context": "Đơn hàng và lịch"
-            },
-            "fields": {
-                "order": "Đơn hàng",
-                "customer": "Khách hàng",
-                "machine": "Máy",
-                "drawing": "Bản vẽ",
-                "location": "Vị trí",
-                "dueDate": "Hạn hoàn thành",
-                "estimate": "Thời lượng dự kiến"
-            }
-        }
     },
     "stepTemplates": "Các bước làm"
 }

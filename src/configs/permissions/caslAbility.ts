@@ -40,7 +40,6 @@ export type Subject =
     // Settings
     | 'profile'
     // Operator
-    | 'operator_dashboard'
     | 'operator_reviews'
     // QC
     | 'qc_dashboard'
