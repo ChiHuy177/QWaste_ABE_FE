@@ -193,7 +193,7 @@ export default function FAQSection() {
                     <Collapse
                         accordion
                         items={items}
-                        expandIconPosition="end"
+                        expandIconPlacement="end"
                         onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
                         style={{
                             backgroundColor: 'transparent',

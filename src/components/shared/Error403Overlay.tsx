@@ -26,8 +26,8 @@ export function Error403Overlay() {
     // Full-page overlay with simple text
     // TODO: Replace with image later
     return (
-        <div className="fixed inset-0 z-50 bg-background flex items-center justify-center">
-            <h1 className="text-4xl font-bold text-foreground">KHÔNG CÓ QUYỀN 1</h1>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'var(--background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: 'var(--foreground)', margin: 0 }}>KHÔNG CÓ QUYỀN</h1>
         </div>
     );
 }

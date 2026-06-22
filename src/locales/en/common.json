@@ -49,6 +49,7 @@
         "submit": "Submit",
         "total": "Total",
         "download": "Download",
+        "exportExcel": "Export Excel",
         "view": "View",
         "details": "Details",
         "settings": "Settings",
@@ -225,7 +226,8 @@
             "pdf": {
                 "dragAndDrop": "Click or drag PDF to upload",
                 "supportText": "Support for single PDF file (Max 10MB)",
-                "uploading": "Uploading PDF..."
+                "uploading": "Uploading PDF...",
+                "uploadFailed": "PDF upload failed: {{error}}"
             }
         },
         "buttons": {
@@ -243,7 +245,11 @@
             "previous": "Previous",
             "continue": "Continue",
             "back": "Back"
-        }
+        },
+        "home": "Home",
+        "moveDown": "Move Down",
+        "moveUp": "Move Up",
+        "saving": "Saving..."
     },
     "auth": {
         "errors": {
@@ -259,7 +265,8 @@
             "networkErrorDuringLogin": "Network error during login",
             "badRequest": "Bad request",
             "accessDenied": "Access denied",
-            "loginFailed": "Login failed. Please try again"
+            "loginFailed": "Login failed. Please try again",
+            "incorrectCredentials": "Incorrect username or password"
         },
         "messages": {
             "noTokenFound": "No token found in login response",
@@ -333,7 +340,10 @@
             "electric": "Electric overview",
             "machineList": "Machine List",
             "factory": "Factory List",
-            "factoryOverview": "Factory Overview",
+            "factoryOverview": "Space Monitoring",
+            "floorMap": "Floor Map",
+            "floorMapStatus": "Floor Map Status",
+            "floorMapConfig": "Floor Map Config",
             "machineStaffing": "Machine Staffing",
             "line": "Line List",
             "rbac": "RBAC Management",
@@ -432,6 +442,83 @@
         "title": "Access Denied",
         "description": "You don't have permission to access this page. Please contact your administrator if you believe this is an error."
     },
+    "floorMap": {
+        "title": "Floor Map",
+        "viewTitle": "Floor Map Status",
+        "filters": {
+            "selectSpace": "Select space"
+        },
+        "actions": {
+            "place": "Place",
+            "removeFromMap": "Remove from map",
+            "saveChanges": "Save changes",
+            "resetChanges": "Discard changes",
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out",
+            "fitView": "Fit view",
+            "fullscreen": "Fullscreen",
+            "exitFullscreen": "Exit fullscreen"
+        },
+        "draft": {
+            "unsavedChanges": "{{count}} unsaved changes"
+        },
+        "canvas": {
+            "dragHint": "Drag machines from the list onto the plan • Scroll to zoom"
+        },
+        "status": {
+            "placed": "Placed",
+            "unplaced": "Unplaced",
+            "RUNTIME": "Running",
+            "IDLE": "Idle",
+            "ERROR": "Error",
+            "OFFLINE": "Offline",
+            "COMPLETE": "Complete",
+            "TEMPORARY_STOP": "Temporary stop",
+            "OPEN_DOOR": "Open door",
+            "WARNING": "Warning",
+            "UNKNOWN": "Unknown"
+        },
+        "statusSummary": {
+            "totalMachines": "Total machines",
+            "placedMachines": "Placed machines",
+            "liveConnected": "Live connected",
+            "liveDisconnected": "Live disconnected",
+            "viewDetails": "View details"
+        },
+        "machines": {
+            "title": "Machines in Space",
+            "summary": "{{placed}}/{{total}} machines placed",
+            "collapseList": "Collapse list",
+            "expandList": "Equipment list",
+            "noMachinesInSpace": "No machines in this space yet",
+            "goToMachineList": "Go to Machine list",
+            "searchPlaceholder": "Search by machine or space",
+            "empty": "No matching machines",
+            "stats": {
+                "total": "Total"
+            },
+            "filters": {
+                "all": "All",
+                "placed": "Placed",
+                "unplaced": "Unplaced"
+            }
+        },
+        "empty": {
+            "title": "No floor map loaded",
+            "selectSpace": "Select a space to load its floor map",
+            "noImage": "This space does not have a floor plan image yet",
+            "goToSpaceConfig": "Update the image in the Space list"
+        },
+        "messages": {
+            "loadFailed": "Failed to load floor map",
+            "imageLoadFailed": "Failed to load floor plan image",
+            "positionSaved": "Machine position saved",
+            "positionsSaved": "Floor map changes saved",
+            "positionSaveFailed": "Failed to save machine position",
+            "positionRemoved": "Machine removed from floor map",
+            "positionRemoveFailed": "Failed to remove machine from floor map"
+        }
+    },
     "adminPage": {
         "title": "Overview Dashboard",
         "actions": {
@@ -463,14 +550,17 @@
             "idle": "Idle",
             "error": "Error",
             "offline": "Offline",
-            "total": "TOTAL"
+            "total": "TOTAL",
+            "noData": "No machine data"
         },
         "errorRanking": {
             "title": "Top Machines with Most Errors",
-            "total": "Total"
+            "total": "Total",
+            "noData": "No errors found"
         },
         "mttrTrend": {
-            "title": "Mean Time To Repair"
+            "title": "Mean Time To Repair",
+            "noData": "No data"
         },
         "zoneLineStatus": {
             "title": "Zone / Line Status",
@@ -542,6 +632,78 @@
             "overallEfficiency": "Overall Efficiency",
             "resourceUtilization": "Resource Utilization",
             "productionCapacityQuote": "Production capacity is currently optimized for Q3 targets."
+        },
+        "activity": {
+            "errorSpike": "Error count increased in the current shift",
+            "qcQueue": "Quality queue needs review",
+            "staffCoverage": "Active staffing coverage"
+        },
+        "chart": {
+            "noData": "No data"
+        },
+        "energy": {
+            "insight": "Track real-time electricity consumption to detect anomalies.",
+            "title": "Energy Snapshot",
+            "today": "Today"
+        },
+        "errorTimeline": {
+            "noData": "No error data",
+            "subtitle": "Error count",
+            "title": "Error Timeline",
+            "yAxis": "Errors"
+        },
+        "production": {
+            "title": "Production Snapshot"
+        },
+        "operationalOverview": {
+            "dataState": {
+                "live": "Live data",
+                "mock": "Mock data"
+            },
+            "productionHealth": {
+                "title": "Production Health",
+                "metrics": {
+                    "oee": {
+                        "label": "OEE Today",
+                        "detail": "Target 82%"
+                    },
+                    "output": {
+                        "label": "Output Today",
+                        "detail": "86% of daily plan"
+                    },
+                    "qc-fail": {
+                        "label": "QC Fail Rate",
+                        "detail": "Below 4% threshold"
+                    },
+                    "downtime": {
+                        "label": "Downtime",
+                        "detail": "2 machines affected"
+                    }
+                }
+            },
+            "priorityQueue": {
+                "title": "Priority Work Queue",
+                "items": {
+                    "cnc-01-down": {
+                        "title": "CNC 01 is blocking production",
+                        "detail": "Spindle temperature alarm, downtime 35m",
+                        "owner": "Maintenance",
+                        "eta": "Now"
+                    },
+                    "ord-2026-014": {
+                        "title": "ORD-2026-014 near deadline",
+                        "detail": "Assembly step still in progress",
+                        "owner": "Production",
+                        "eta": "6h left"
+                    },
+                    "qc-queue": {
+                        "title": "7 tasks waiting for QC",
+                        "detail": "Longest waiting item: 42m",
+                        "owner": "QC Team",
+                        "eta": "Today"
+                    }
+                }
+            }
         }
     },
     "oeeCards": {
@@ -980,7 +1142,6 @@
             "offlineNote": "Not included in percentage calculation",
             "totalActiveTime": "Total Active Time",
             "excludingOffline": "Excluding offline time",
-            "machineCode": "Machine Code",
             "propertyCode": "Property Code",
             "power": "Power Rating",
             "measuredEnergy": "Measured Energy",
@@ -1030,6 +1191,12 @@
                 "thisYear": "This Year",
                 "lastYear": "Last Year"
             }
+        },
+        "actions": {
+            "addMachine": "Add Machine"
+        },
+        "status": {
+            "running": "Running"
         }
     },
     "stepManagement": {
@@ -1072,7 +1239,8 @@
                 "stepNameRequired": "Step name is required",
                 "maxLength": "Maximum {{max}} characters",
                 "completionTimeMin": "Completion time must be greater than 0",
-                "defaultTimeRequired": "Completion time is required"
+                "defaultTimeRequired": "Completion time is required",
+                "defaultTimeMin": "Default time must be greater than 0"
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -1175,6 +1343,7 @@
                 "spaceName": "Space Name",
                 "spaceCode": "Space Code",
                 "level": "Level",
+                "floorPlanImageUrl": "Floor Plan Image URL",
                 "displayOrder": "Display Order",
                 "description": "Description",
                 "createdAt": "Created At",
@@ -1208,13 +1377,21 @@
                 "code": "Space Code",
                 "name": "Space Name",
                 "order": "Display Order",
+                "floorPlanImageUrl": "Floor Plan Image URL",
                 "description": "Description"
             },
             "placeholders": {
                 "code": "Enter space code",
                 "name": "Enter space name",
                 "order": "Enter display order",
+                "floorPlanImageUrl": "Upload floor plan image",
                 "description": "Enter detailed description of the space"
+            },
+            "help": {
+                "floorPlanImageUrl": "Upload the floor plan image used by the Floor Map page."
+            },
+            "upload": {
+                "floorPlanImageUrlSupportText": "Supports PNG/JPG up to 4MB, SVG up to 10MB"
             },
             "validation": {
                 "required": "This field is required",
@@ -1222,6 +1399,7 @@
                 "maxLength": "Maximum length is {{max}} characters",
                 "noWhitespaceOnly": "Cannot contain only whitespace characters",
                 "codePattern": "Format invalid (A-Z0-9_-)",
+                "url": "Invalid URL",
                 "minValue": "Minimum value is {{min}}"
             },
             "buttons": {
@@ -1328,7 +1506,11 @@
             "rolesBreakdown": "Roles Breakdown",
             "admins": "Admins",
             "qualityControl": "QC",
-            "operators": "Operators"
+            "operators": "Operators",
+            "completedTasks": "Completed Tasks",
+            "rejectedTasks": "Rejected Tasks",
+            "totalTasks": "Total Tasks",
+            "waitingQC": "Waiting QC"
         },
         "search": {
             "title": "Search & Filter",
@@ -1347,6 +1529,7 @@
                 "phone": "Phone",
                 "role": "Role",
                 "accessibleFactories": "Factory",
+                "accessibleSpaces": "Space",
                 "status": "Status",
                 "actions": "Actions"
             }
@@ -1397,7 +1580,8 @@
                 },
                 "group": "Group",
                 "noGroup": "No Group",
-                "accessibleFactories": "Accessible Factories"
+                "accessibleFactories": "Accessible Factories",
+                "accessibleSpaces": "Accessible Spaces"
             },
             "placeholders": {
                 "fullName": "Enter full name",
@@ -1411,7 +1595,8 @@
                 "gender": "Choose gender",
                 "group": "Select group",
                 "role": "Select role",
-                "accessibleFactories": "Select factories this staff can access"
+                "accessibleFactories": "Select factories this staff can access",
+                "accessibleSpaces": "Select spaces this staff can access"
             },
             "buttons": {
                 "create": "Create",
@@ -1802,7 +1987,6 @@
         },
         "table": {
             "headers": {
-                "machineCode": "Machine Code",
                 "machineImage": "Machine Image",
                 "machineName": "Machine Name",
                 "machineType": "Machine Type",
@@ -1853,11 +2037,10 @@
                 "productionTime": "Production Time",
                 "zone": "Zone",
                 "machineImage": "Machine Image",
-                "machineCode": "Machine Code",
                 "propertyCode": "Property Code",
                 "power": "Power",
                 "line": "Line List",
-                "space": "Location List",
+                "space": "Space",
                 "displayOrder": "Display Order"
             },
             "placeholders": {
@@ -1868,11 +2051,10 @@
                 "productionTime": "Enter production time",
                 "zone": "Select a zone",
                 "machineImage": "Upload machine image",
-                "machineCode": "Enter machine code",
                 "propertyCode": "Enter property code",
                 "power": "Enter power",
                 "line": "Choose a line",
-                "space": "Choose a location"
+                "space": "Choose a space"
             },
             "validation": {
                 "required": "This field is required",
@@ -1891,7 +2073,8 @@
                 "saving": "Saving..."
             },
             "createSuccessWithSpace": "Machine created successfully at {{spaceName}}",
-            "createError": "Failed to create machine list. Please try again."
+            "createError": "Failed to create machine list. Please try again.",
+            "createSuccess": "Machine created successfully"
         },
         "serverErrors": {
             "Machine already exists": "Machine already exists",
@@ -2299,7 +2482,7 @@
         "noDataDescription": "No electrical data found for the selected period."
     },
     "factoryOverview": {
-        "title": "Factory Overview",
+        "title": "Space Monitoring",
         "selectFactory": "Select factory",
         "selectTimePeriod": "Select time period",
         "noDataAvailable": "No data available",
@@ -2321,6 +2504,11 @@
             "totalTime": "Total time"
         },
         "filter": {
+            "all": "All",
+            "zones": "Zones",
+            "lines": "Lines",
+            "machines": "Machines",
+            "ops": "ops",
             "selectMachines": "Select Machines",
             "selectAll": "Select All",
             "selectNone": "Select None",
@@ -2329,7 +2517,10 @@
             "quickSelect": "Quick Select",
             "top10Highest": "Top 10 Highest",
             "top10Lowest": "Top 10 Lowest",
-            "middleGroup": "Middle Group"
+            "middleGroup": "Middle Group",
+            "noMatch": "No factories match your filter",
+            "searchPlaceholder": "Search factories...",
+            "selectPlaceholder": "Select factory"
         },
         "table": {
             "title": {
@@ -2382,10 +2573,17 @@
             "machines": "machines",
             "Machines": "Machine",
             "lines": "lines",
-            "line": "Line"
+            "line": "Line",
+            "linesLabel": "LINES",
+            "machinesInZoneLabel": "MACHINES DIRECTLY IN ZONE",
+            "standaloneMachinesLabel": "STANDALONE MACHINES",
+            "scrollHint": "scroll",
+            "offline": "Offline"
         },
         "line": {
-            "title": "Line"
+            "title": "Line",
+            "viewMachinesLink": "View",
+            "collapse": "Collapse"
         },
         "machine": {
             "online": "Online",
@@ -2405,7 +2603,13 @@
             "title": "Time Analytics",
             "timeAnalytics": "Time Analytics",
             "back": "Back"
-        }
+        },
+        "allFactories": "All factories",
+        "emptyState": "No space monitoring data available. Please select filters and try again.",
+        "factoryLabel": "Factory",
+        "offlineTime": "Offline time",
+        "onlineTime": "Online time",
+        "viewZones": "View zones in this factory"
     },
     "taskBoard": {
         "title": "CNC Task Management",
@@ -3013,7 +3217,11 @@
         "updateFailedBackend": "Failed to update profile picture in backend",
         "updateError": "An error occurred while updating profile picture",
         "helperText": "Recommended: Square image, max 2MB",
-        "preview": "Preview"
+        "preview": "Preview",
+        "errors": {
+            "fileTooLarge": "Image must be smaller than 4MB",
+            "invalidType": "You can only upload image files"
+        }
     },
     "errors": {
         "general": "An unexpected error occurred",
@@ -3148,11 +3356,8 @@
         "machineStaffing": "Machine Staffing Management",
         "lineList": "Line Management",
         "spaceLevelList": "Hierarchy Level Management",
-        "spaceList": "Location Management",
-        "errorGroupList": "Error Group Management",
-        "errorDetailList": "Error Detail Management",
-        "productionPlanList": "Production Plan Management",
-        "moldCodeList": "Mold Code Management"
+        "spaceList": "Space Management",
+        "industryFilterList": "Industry Filter List"
     },
     "settingsPage": {
         "success": "Settings updated successfully",
@@ -3203,7 +3408,8 @@
         },
         "actions": {
             "retryLoading": "Retry Loading"
-        }
+        },
+        "error": "Failed to update settings"
     },
     "machineStaffing": {
         "title": "Machine Staffing",
@@ -3217,7 +3423,6 @@
         "addRecord": "Add Staffing",
         "table": {
             "headers": {
-                "machineCode": "Machine Code",
                 "machineName": "Machine Name",
                 "factoryName": "Factory Name",
                 "operatorCount": "Operator Count",
@@ -3249,7 +3454,8 @@
                 "required": "This field is required",
                 "machineRequired": "Please select a machine",
                 "integerOnly": "Please enter a whole number",
-                "positiveOnly": "Please enter a positive value"
+                "positiveOnly": "Please enter a positive value",
+                "minValue": "Value must be greater than or equal to {{min}}"
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -3486,6 +3692,7 @@
             "phoneNumber": "Phone Number",
             "gender": "Gender",
             "address": "Address",
+            "space": "Space",
             "factory": "Factory",
             "factories": "Factories"
         },
@@ -3498,6 +3705,7 @@
             "employeeCode": "Enter employee code",
             "phoneNumber": "Enter phone number",
             "address": "Enter address",
+            "space": "Select space",
             "factory": "Select factory",
             "factories": "Select factories"
         },
@@ -3523,6 +3731,7 @@
             "phoneNumberInvalid": "Phone number is invalid (10 digits and start with 0)",
             "genderRequired": "Gender is required",
             "addressRequired": "Address is required",
+            "spaceRequired": "Please select a space",
             "factoryRequired": "Please select a factory",
             "factoriesRequired": "Please select at least one factory"
         },
@@ -3556,6 +3765,7 @@
             "emailExists": "This email is already registered",
             "usernameExists": "This username already exists",
             "serverError": "Server error. Please try again later.",
+            "spaceLoadFailed": "Failed to load spaces. Please refresh the page.",
             "factoryLoadFailed": "Failed to load factories. Please refresh the page."
         },
         "info": {
@@ -3792,7 +4002,8 @@
             "deleteError": "Failed to delete user",
             "updateError": "Failed to update user",
             "saveError": "Failed to save user",
-            "fetchError": "Failed to load users"
+            "fetchError": "Failed to load users",
+            "superAdminLocked": "Roles and permissions of a Super Admin account cannot be updated"
         },
         "roleAssignment": {
             "title": "Assign Roles ({{count}} selected)",
@@ -4260,7 +4471,8 @@
                 "noWhitespaceOnly": "Cannot contain only whitespace",
                 "completionTimeMin": "Completion time must be greater than 0",
                 "pdfRequired": "Technical Drawing (PDF) is required",
-                "pdfLink": "Technical Drawing (PDF) is required"
+                "pdfLink": "Technical Drawing (PDF) is required",
+                "customerRequired": "Please select a customer"
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -4308,8 +4520,12 @@
                 "stepNameRequired": "All steps must have a name",
                 "stepInvalid": "Some steps have invalid data. Please check the fields in red.",
                 "stepTimeRequired": "Step time is required",
-                "materialRequired": "Material is required"
-            }
+                "materialRequired": "Material is required",
+                "atLeastOneStep": "Please add at least one step template to the drawing code"
+            },
+            "createError": "Failed to create standard step: {{error}}",
+            "createSuccess": "Standard step created successfully",
+            "fetchError": "Failed to load standard steps: {{error}}"
         },
         "dialogs": {
             "deleteConfirmation": {
@@ -4606,7 +4822,8 @@
                 "totalEstimatedLeadtime": "Total Est. Lead Time",
                 "cancellationReason": "Cancellation Reason",
                 "penaltyAmount": "Penalty Amount",
-                "attachments": "Attachments"
+                "attachments": "Attachments",
+                "actualQty": "Actual Qty"
             },
             "drawing": {
                 "assignments": "Task Assignments",
@@ -4670,7 +4887,10 @@
             "document": "Document",
             "pdfLink": "PDF Link",
             "viewDocument": "View Document",
-            "viewPdfDocument": "View PDF Document"
+            "viewPdfDocument": "View PDF Document",
+            "clickToExpand": "Click to expand",
+            "errorTag": "Error",
+            "noDescription": "No description provided"
         },
         "step": {
             "stepLabel": "STEP",
@@ -4716,7 +4936,8 @@
             "operators": "operators",
             "Operators": "Operator",
             "minOneTask": "At least 1 task is required",
-            "addTask": "Add Task"
+            "addTask": "Add Task",
+            "errorTag": "Error"
         }
     },
     "operatorReview": {
@@ -4821,7 +5042,7 @@
         "industry_filter": "Industry Filter",
         "industry_config": "Industry Config",
         "drawing_code": "Drawing Code",
-        "factory_overview": "Factory Overview",
+        "factory_overview": "Space Monitoring",
         "energy": "Energy",
         "machine_overview": "Machine Overview",
         "machine_monitoring": "Machine Monitoring",
@@ -4839,6 +5060,7 @@
         "tasks": "Tasks",
         "task_review": "Task Review",
         "space_monitoring": "Space Monitoring",
+        "floor_map": "Floor Map",
         "all": "All",
         "other": "Other"
     },
@@ -4907,499 +5129,5 @@
             }
         }
     },
-    "maintenance": {
-        "page": {
-            "title": "Incident Reports"
-        },
-        "stats": {
-            "totalReports": "Total Reports",
-            "open": "Open",
-            "inProgress": "In Progress",
-            "resolved": "Resolved",
-            "percentOfTotal": "{{percent}} of total"
-        },
-        "status": {
-            "all": "All Statuses",
-            "open": "Open",
-            "inProgress": "In Progress",
-            "resolved": "Resolved"
-        },
-        "classification": {
-            "machine": "Machine",
-            "mold": "Mold",
-            "allTypes": "All Types"
-        },
-        "list": {
-            "title": "Incident Reports",
-            "subtitleTable": "{{count}} report total",
-            "subtitleTable_plural": "{{count}} reports total",
-            "subtitleCard": "{{count}} report found",
-            "subtitleCard_plural": "{{count}} reports found",
-            "refresh": "Refresh",
-            "newReport": "New Report",
-            "searchPlaceholder": "Search report, machine, error...",
-            "empty": "No incident reports found",
-            "table": {
-                "reportNo": "Report No.",
-                "machineMold": "Machine / Mold",
-                "errorGroup": "Error Group",
-                "errorDetail": "Error Detail",
-                "description": "Description",
-                "status": "Status",
-                "reportedBy": "Reported By",
-                "reportedAt": "Reported At"
-            },
-            "card": {
-                "errorGroup": "Error Group",
-                "errorCode": "Error Code",
-                "reported": "Reported",
-                "by": "By",
-                "view": "View"
-            }
-        },
-        "detail": {
-            "edit": "Edit",
-            "viewImage": "View Image",
-            "sections": {
-                "incidentInfo": "Incident Information",
-                "machineDetails": "Machine Details",
-                "moldDetails": "Mold Details",
-                "errorClassification": "Error Classification",
-                "descriptionAnalysis": "Description & Analysis",
-                "attachment": "Attachment",
-                "auditTrail": "Audit Trail",
-                "errorInfo": "Error Information",
-                "images": "Images",
-                "assignedTechnician": "Assigned Technician",
-                "actions": "Actions"
-            },
-            "fields": {
-                "reportNo": "Report No.",
-                "classification": "Classification",
-                "status": "Status",
-                "reportedBy": "Reported By",
-                "reportedAt": "Reported At",
-                "resolvedAt": "Resolved At",
-                "machineName": "Machine Name",
-                "moldName": "Mold Name",
-                "code": "Code",
-                "errorGroup": "Error Group",
-                "errorCode": "Error Code",
-                "errorDetail": "Error Detail",
-                "description": "Description",
-                "rootCause": "Root Cause",
-                "createdAt": "Created At",
-                "createdBy": "Created By",
-                "updatedAt": "Updated At",
-                "updatedBy": "Updated By"
-            },
-            "tabs": {
-                "overview": "Overview",
-                "timeline": "Timeline",
-                "attachments": "Attachments"
-            },
-            "images": {
-                "addMore": "Add More",
-                "empty": "No images attached"
-            },
-            "rootCause": {
-                "pending": "Pending",
-                "analysisInProgress": "Root cause analysis is in progress."
-            },
-            "technicianRole": "Maintenance Technician",
-            "reassign": "Reassign",
-            "assignedAt": "Assigned At {{date}}",
-            "actions": {
-                "investigate": "Investigate",
-                "resolve": "Resolve",
-                "more": "More",
-                "closeReport": "Close Report",
-                "reopen": "Reopen",
-                "editReport": "Edit Report"
-            },
-            "timeline": {
-                "statusChange": "Status: {{status}}",
-                "updatedBy": "Updated by {{name}}",
-                "incidentReported": "Incident Reported",
-                "reportedBy": "Reported by {{name}}",
-                "reportCreated": "Report Created",
-                "by": "By {{name}}"
-            },
-            "attachments": {
-                "imageLabel": "Image {{number}}",
-                "empty": "No attachments"
-            }
-        },
-        "form": {
-            "createTitle": "Create Incident Report",
-            "editTitle": "Edit Incident Report",
-            "createDescription": "Record a new machine or mold incident.",
-            "editDescription": "Update the incident report details.",
-            "fields": {
-                "classification": "Classification",
-                "machine": "Machine",
-                "mold": "Mold",
-                "errorGroup": "Error Group",
-                "errorDetail": "Error Detail",
-                "description": "Description",
-                "rootCause": "Root Cause",
-                "imageUrl": "Image",
-                "status": "Status"
-            },
-            "placeholders": {
-                "selectMachine": "Select machine",
-                "selectMold": "Select mold",
-                "selectErrorGroup": "Select error group",
-                "selectErrorDetail": "Select error detail",
-                "selectErrorGroupFirst": "Select an error group first",
-                "description": "Describe what happened...",
-                "rootCause": "Describe the root cause (optional)..."
-            },
-            "upload": {
-                "dragOrClick": "Click or drag image here to upload",
-                "supported": "Supports JPG, PNG, GIF, WEBP (max 5 MB)",
-                "remove": "Remove"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create Report",
-                "edit": "Save Changes",
-                "saving": "Saving..."
-            }
-        },
-        "messages": {
-            "created": "Incident report created.",
-            "updated": "Incident report updated.",
-            "deleted": "{{reportNumber}} deleted."
-        },
-        "charts": {
-            "byErrorGroup": "Incidents by Error Group",
-            "overTime": "Incidents Over Time",
-            "last7Days": "(Last 7 days)",
-            "last6Months": "(Last 6 months)",
-            "noData": "No data",
-            "total": "Total",
-            "open": "Open",
-            "inProgress": "In Progress",
-            "resolved": "Resolved",
-            "closed": "Closed",
-            "incidents": "incidents"
-        },
-        "alerts": {
-            "pageTitle": "Incident Alerts",
-            "stats": {
-                "total": "Total Alerts",
-                "critical": "Critical",
-                "high": "High",
-                "medium": "Medium"
-            },
-            "search": "Search machine, error code...",
-            "severity": {
-                "all": "All Severity",
-                "critical": "Critical",
-                "high": "High",
-                "medium": "Medium"
-            },
-            "status": {
-                "all": "All Status",
-                "active": "Active",
-                "reported": "Reported",
-                "resolved": "Resolved"
-            },
-            "table": {
-                "severity": "Severity",
-                "target": "Machine / Mold",
-                "error": "Error",
-                "detectedAt": "Detected",
-                "status": "Status"
-            },
-            "card": {
-                "detectedAt": "Detected",
-                "createReport": "Create Report",
-                "dismiss": "Dismiss"
-            },
-            "section": {
-                "active": "Active Incidents",
-                "resolved": "Resolved Incidents"
-            },
-            "empty": {
-                "title": "No Active Alerts",
-                "desc": "All machines are operating normally.",
-                "noResolved": "No resolved incidents yet."
-            },
-            "messages": {
-                "dismissed": "Alert dismissed.",
-                "reportCreated": "Incident report created successfully."
-            }
-        },
-        "kanban": {
-            "priority": {
-                "normal": "Normal",
-                "critical": "Critical",
-                "high": "High",
-                "low": "Low"
-            },
-            "card": {
-                "reportedAt": "Reported At {{date}}",
-                "resolvedAt": "Resolved At {{date}}"
-            },
-            "column": {
-                "noReports": "No reports",
-                "showMore": "+ {{count}} more",
-                "showLess": "Show less"
-            },
-            "actions": {
-                "delete": "Delete"
-            }
-        }
-    },
-    "errorGroupManagement": {
-        "title": "Error Group Management",
-        "addErrorGroup": "Add Error Group",
-        "searchPlaceholder": "Search by group name...",
-        "fetchError": "Failed to load error groups",
-        "deleteSuccess": "Error group deleted successfully",
-        "deleteError": "Failed to delete error group",
-        "updateSuccess": "Error group updated successfully",
-        "updateError": "Failed to update error group",
-        "table": {
-            "headers": {
-                "id": "ID",
-                "errorGroupName": "Group Name",
-                "description": "Description",
-                "status": "Status",
-                "createdAt": "Created At",
-                "updatedAt": "Updated At",
-                "actions": "Actions"
-            }
-        },
-        "actions": {
-            "viewDetails": "View Details",
-            "edit": "Edit",
-            "delete": "Delete"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Delete Error Group",
-                "description": "Are you sure you want to delete this error group?"
-            }
-        },
-        "form": {
-            "createTitle": "Create New Error Group",
-            "editTitle": "Edit Error Group",
-            "createSuccess": "Error group created successfully",
-            "createError": "Failed to create error group",
-            "fields": {
-                "errorGroupName": "Group Name",
-                "description": "Description",
-                "status": "Status"
-            },
-            "placeholders": {
-                "errorGroupName": "Enter group name",
-                "description": "Enter group description",
-                "status": "Select status"
-            },
-            "validation": {
-                "required": "This field is required",
-                "minLength": "Minimum length is {{min}} characters",
-                "maxLength": "Maximum length is {{max}} characters"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create",
-                "save": "Save",
-                "saving": "Saving...",
-                "close": "Close",
-                "update": "Update"
-            }
-        }
-    },
-    "errorDetailManagement": {
-        "title": "Error Detail Management",
-        "addErrorDetail": "Add Error Detail",
-        "searchPlaceholder": "Search by error name...",
-        "fetchError": "Failed to load error details",
-        "deleteSuccess": "Error detail deleted successfully",
-        "deleteError": "Failed to delete error detail",
-        "updateSuccess": "Error detail updated successfully",
-        "updateError": "Failed to update error detail",
-        "table": {
-            "headers": {
-                "id": "ID",
-                "errorName": "Error Name",
-                "description": "Description",
-                "status": "Status",
-                "createdAt": "Created At",
-                "updatedAt": "Updated At",
-                "actions": "Actions"
-            }
-        },
-        "actions": {
-            "viewDetails": "View Details",
-            "edit": "Edit",
-            "delete": "Delete"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Delete Error Detail",
-                "description": "Are you sure you want to delete this error detail?"
-            }
-        },
-        "form": {
-            "createTitle": "Create New Error Detail",
-            "editTitle": "Edit Error Detail",
-            "createSuccess": "Error detail created successfully",
-            "createError": "Failed to create error detail",
-            "fields": {
-                "errorName": "Error Name",
-                "description": "Description",
-                "status": "Status"
-            },
-            "placeholders": {
-                "errorName": "Enter error name",
-                "description": "Enter error description",
-                "status": "Select status"
-            },
-            "validation": {
-                "required": "This field is required",
-                "minLength": "Minimum length is {{min}} characters",
-                "maxLength": "Maximum length is {{max}} characters"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create",
-                "save": "Save",
-                "saving": "Saving...",
-                "close": "Close",
-                "update": "Update"
-            }
-        }
-    },
-    "productionPlanManagement": {
-        "title": "Production Plan Management",
-        "addProductionPlan": "Add Production Plan",
-        "searchPlaceholder": "Search by machine ID...",
-        "fetchError": "Failed to load production plans",
-        "deleteSuccess": "Production plan deleted successfully",
-        "deleteError": "Failed to delete production plan",
-        "updateSuccess": "Production plan updated successfully",
-        "updateError": "Failed to update production plan",
-        "table": {
-            "headers": {
-                "id": "Plan ID",
-                "filterId": "Period",
-                "machineId": "Machine ID",
-                "plannedQuantity": "Planned Quantity",
-                "status": "Status",
-                "createdAt": "Created At",
-                "actions": "Actions"
-            }
-        },
-        "actions": {
-            "viewDetails": "View Details",
-            "edit": "Edit",
-            "delete": "Delete"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Delete Production Plan",
-                "description": "Are you sure you want to delete this production plan?"
-            }
-        },
-        "form": {
-            "createTitle": "Create Production Plan",
-            "editTitle": "Edit Production Plan",
-            "createSuccess": "Production plan created successfully",
-            "createError": "Failed to create production plan",
-            "filterOptions": {
-                "day": "Day",
-                "week": "Week"
-            },
-            "fields": {
-                "filterId": "Period",
-                "machineId": "Machine ID",
-                "plannedQuantity": "Planned Quantity",
-                "status": "Status"
-            },
-            "placeholders": {
-                "filterId": "Select period (Day / Week)",
-                "machineId": "Enter machine ID",
-                "plannedQuantity": "Enter planned quantity",
-                "status": "Select status"
-            },
-            "validation": {
-                "required": "This field is required",
-                "minValue": "Value must be greater than or equal to {{min}}"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create",
-                "save": "Save",
-                "saving": "Saving...",
-                "close": "Close",
-                "update": "Update"
-            }
-        }
-    },
-    "moldCodeManagement": {
-        "title": "Mold Code Management",
-        "addMoldCode": "Add Mold Code",
-        "searchPlaceholder": "Search by mold code...",
-        "fetchError": "Failed to load mold codes",
-        "deleteSuccess": "Mold code deleted successfully",
-        "deleteError": "Failed to delete mold code",
-        "updateSuccess": "Mold code updated successfully",
-        "updateError": "Failed to update mold code",
-        "table": {
-            "headers": {
-                "id": "ID",
-                "moldCodeName": "Mold Code",
-                "description": "Description",
-                "status": "Status",
-                "createdAt": "Created At",
-                "updatedAt": "Updated At",
-                "actions": "Actions"
-            }
-        },
-        "actions": {
-            "viewDetails": "View Details",
-            "edit": "Edit",
-            "delete": "Delete"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Delete Mold Code",
-                "description": "Are you sure you want to delete this mold code?"
-            }
-        },
-        "form": {
-            "createTitle": "Create New Mold Code",
-            "editTitle": "Edit Mold Code",
-            "createSuccess": "Mold code created successfully",
-            "createError": "Failed to create mold code",
-            "fields": {
-                "moldCodeName": "Mold Code",
-                "description": "Description",
-                "status": "Status"
-            },
-            "placeholders": {
-                "moldCodeName": "Enter mold code (e.g. MLD-A001)",
-                "description": "Enter mold code description",
-                "status": "Select status"
-            },
-            "validation": {
-                "required": "This field is required",
-                "minLength": "Minimum length is {{min}} characters",
-                "maxLength": "Maximum length is {{max}} characters"
-            },
-            "buttons": {
-                "cancel": "Cancel",
-                "create": "Create",
-                "save": "Save",
-                "saving": "Saving...",
-                "close": "Close",
-                "update": "Update"
-            }
-        }
-    }
+    "stepTemplates": "Step templates"
 }

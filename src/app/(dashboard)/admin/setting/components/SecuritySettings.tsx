@@ -186,7 +186,7 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                     </Button>
                 }
             >
-                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                     {/* Steps Indicator */}
                     <Steps
                         current={1}
@@ -207,12 +207,12 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                     />
 
                     <Alert
-                        message={t('securitySettings.verification.description')}
+                        title={t('securitySettings.verification.description')}
                         type="info"
                         showIcon
                     />
 
-                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                    <Space orientation="vertical" size="small" style={{ width: '100%' }}>
                         <label style={{ fontSize: 14, fontWeight: 500 }}>
                             {t('securitySettings.verification.otpLabel')}
                         </label>
@@ -236,7 +236,7 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                                 fontWeight: 600,
                             }}
                         />
-                        {error && <Alert message={error} type="error" showIcon />}
+                        {error && <Alert title={error} type="error" showIcon />}
                         <div
                             style={{
                                 fontSize: 12,
@@ -273,7 +273,7 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                 </Space>
             }
         >
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                 {/* Steps Indicator */}
                 <Steps
                     current={0}
@@ -293,9 +293,9 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                     ]}
                 />
 
-                <Alert message={t('securitySettings.description')} type="info" showIcon />
+                <Alert title={t('securitySettings.description')} type="info" showIcon />
 
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="small" style={{ width: '100%' }}>
                     <label style={{ fontSize: 14, fontWeight: 500 }}>
                         {t('securitySettings.fields.currentPassword')}
                     </label>
@@ -318,7 +318,7 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                     />
                 </Space>
 
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="small" style={{ width: '100%' }}>
                     <label style={{ fontSize: 14, fontWeight: 500 }}>
                         {t('securitySettings.fields.newPassword')}
                     </label>
@@ -366,7 +366,7 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                     )}
                 </Space>
 
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="small" style={{ width: '100%' }}>
                     <label style={{ fontSize: 14, fontWeight: 500 }}>
                         {t('securitySettings.fields.confirmPassword')}
                     </label>
@@ -398,7 +398,7 @@ export function SecuritySettings({ onRequestOTP, onVerifyOTP }: SecuritySettings
                     />
                 </Space>
 
-                {error && <Alert message={error} type="error" showIcon />}
+                {error && <Alert title={error} type="error" showIcon />}
 
                 <Button
                     type="primary"

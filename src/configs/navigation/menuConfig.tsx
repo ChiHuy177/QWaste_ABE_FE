@@ -1,5 +1,4 @@
 import {
-    LayoutOutlined,
     LaptopOutlined,
     ApartmentOutlined,
     SettingOutlined,
@@ -37,19 +36,11 @@ export interface GroupConfig {
 export const MENU_CONFIG: MenuItemConfig[] = [
     // Top-level items
     {
-        key: 'overview',
-        route: '/admin',
-        i18nKey: 'sidebar.navigation.overview',
-        icon: <LayoutOutlined />,
-        subject: 'overview',
-        action: 'view',
-    },
-    {
-        key: 'factory-overview',
-        route: '/admin/factory-overview',
-        i18nKey: 'sidebar.navigation.factoryOverview',
+        key: 'space-monitoring',
+        route: '/admin/space-monitoring',
+        i18nKey: 'permissionSubjects.space_monitoring',
         icon: <ApartmentOutlined />,
-        subject: 'factory_overview',
+        subject: 'space_monitoring',
         action: 'view',
     },
     {

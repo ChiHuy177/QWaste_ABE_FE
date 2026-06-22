@@ -126,7 +126,7 @@ export default function Navbar() {
             <Drawer
                 title={null}
                 placement="right"
-                width={280}
+                size={280}
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 closable={false}

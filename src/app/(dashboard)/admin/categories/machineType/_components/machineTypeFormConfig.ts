@@ -2,7 +2,7 @@ import { FormFieldConfig } from '../../../../../../components/shared/FormModal/t
 
 export const getMachineTypeFormFields = (
     t: any,
-    _mode: 'create' | 'edit'
+    mode: 'create' | 'edit'
 ): FormFieldConfig[] => {
     return [
         // Machine Type Name

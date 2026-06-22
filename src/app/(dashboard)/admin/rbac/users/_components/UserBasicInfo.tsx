@@ -36,7 +36,7 @@ export const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ user }) => {
 
                             <Divider style={{ margin: '20px 0' }} />
 
-                            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                            <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
                                 <div>
                                     <Text
                                         type="secondary"

@@ -1,6 +1,17 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
 import { SpaceDetailResponse } from './Space';
 
+export type currentStatus =
+    | 'RUNTIME'
+    | 'IDLE'
+    | 'ERROR'
+    | 'OFFLINE'
+    | 'COMPLETE'
+    | 'TEMPORARY_STOP'
+    | 'OPEN_DOOR'
+    | 'WARNING'
+    | 'UNKNOWN';
+
 export interface MachinePaginatedParams {
     page: number;
     size: number;
@@ -8,7 +19,6 @@ export interface MachinePaginatedParams {
     search?: string;
     spaceId?: number;
     machineName?: string;
-    machineCode?: string;
     propertyCode?: string;
     topic?: string;
 }
@@ -19,7 +29,6 @@ export interface Machine {
     description: string;
     topic: string;
     displayOrder: number;
-    machineCode: string;
     productionTime: number;
     machineImage: string;
     space: SpaceDetailResponse;
@@ -34,7 +43,6 @@ export interface MachineFormData {
     machineName: string;
     description: string;
     topic: string;
-    machineCode: string;
     machineImage: string;
     spaceId: number;
     propertyCode?: string;
@@ -46,7 +54,6 @@ export interface MachineUpdateFormData {
     machineName: string;
     description: string;
     topic: string;
-    machineCode: string;
     machineImage: string;
     spaceId: number;
     propertyCode?: string;
@@ -54,22 +61,12 @@ export interface MachineUpdateFormData {
 }
 export interface MachineLog {
     totalLogStateTime: number;
-    logStatus:
-        | 'RUNTIME'
-        | 'IDLE'
-        | 'ERROR'
-        | 'OFFLINE'
-        | 'COMPLETE'
-        | 'TEMPORARY_STOP'
-        | 'OPEN_DOOR'
-        | 'WARNING'
-        | 'UNKNOWN';
+    logStatus: currentStatus;
 }
 
 export interface MachineOverview {
     machineId: string;
     machineName: string;
-    machineCode: string;
     propertyCode?: string;
     power?: number;
     status: 'running' | 'idle' | 'error' | 'empty';
@@ -79,16 +76,7 @@ export interface MachineOverview {
     // taskName?: string;
     logs: MachineLog[];
     currentEnergyConsumption: number;
-    currentStatus?:
-        | 'RUNTIME'
-        | 'IDLE'
-        | 'ERROR'
-        | 'OFFLINE'
-        | 'COMPLETE'
-        | 'TEMPORARY_STOP'
-        | 'OPEN_DOOR'
-        | 'WARNING'
-        | 'UNKNOWN';
+    currentStatus?: currentStatus;
     productionCounter?: number;
     totalProductions?: number;
     lastStatusUpdate?: Date | string;
@@ -105,6 +93,18 @@ export interface MachineOverview {
     topic?: string;
 }
 
+export interface MachineCurrentShiftOverview {
+    machineId: string;
+    machineName: string;
+    propertyCode?: string;
+    power?: number;
+    topic?: string;
+    currentStatus: currentStatus;
+    operatorCount?: number;
+    totalProductions?: number;
+    runtimeByStatus?: Partial<Record<currentStatus, number>>;
+}
+
 export interface MachineStats {
     totalRun: number;
     totalIdle: number;
@@ -116,22 +116,12 @@ export type ZoneFilter = 'all' | 'zone1' | 'zone2' | 'zone3';
 
 export interface MachineWithStatusLogsSummary {
     machineId: string;
-    machineCode: string;
     machineName: string;
     propertyCode: string;
     power: number;
     machineDisplayOrder: number;
     topic: string;
-    currentStatus:
-        | 'RUNTIME'
-        | 'IDLE'
-        | 'ERROR'
-        | 'OFFLINE'
-        | 'COMPLETE'
-        | 'TEMPORARY_STOP'
-        | 'OPEN_DOOR'
-        | 'WARNING'
-        | 'UNKNOWN';
+    currentStatus: currentStatus;
     operatorCount: number;
     totalProductions: number;
     runtimeByStatus?: {

@@ -31,7 +31,7 @@
 //     {
 //         roleId: 4,
 //         roleName: 'Client',
-//         description: 'Limited access to view factory overview',
+//         description: 'Limited access to view space monitoring',
 //         isSystemRole: true,
 //         permissionIds: [2, 6, 10, 14], // Limited read permissions
 //         createdAt: '2024-01-01T00:00:00Z',

@@ -133,7 +133,7 @@ export function PreferenceSettings({ settings, onUpdate }: PreferenceSettingsPro
     }, [settings.theme, settings.language]);
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* Theme Settings Card */}
             <Card
                 title={
@@ -146,7 +146,7 @@ export function PreferenceSettings({ settings, onUpdate }: PreferenceSettingsPro
                     </Space>
                 }
             >
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
                     <div>
                         <div style={{ marginBottom: 12, fontSize: 14, fontWeight: 500 }}>
                             {t('preferenceSettings.appearance.theme')}
@@ -157,7 +157,7 @@ export function PreferenceSettings({ settings, onUpdate }: PreferenceSettingsPro
                             disabled={isUpdating('theme')}
                             style={{ width: '100%' }}
                         >
-                            <Space direction="vertical" style={{ width: '100%' }}>
+                            <Space orientation="vertical" style={{ width: '100%' }}>
                                 {THEME_OPTIONS.map((option) => (
                                     <Radio.Button
                                         key={option.value}
@@ -210,7 +210,7 @@ export function PreferenceSettings({ settings, onUpdate }: PreferenceSettingsPro
                     </Space>
                 }
             >
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
                     <div>
                         <div style={{ marginBottom: 12, fontSize: 14, fontWeight: 500 }}>
                             {t('preferenceSettings.language.displayLanguage')}

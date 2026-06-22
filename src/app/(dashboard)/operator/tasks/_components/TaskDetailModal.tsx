@@ -49,7 +49,7 @@ function DetailItem({ icon, label, value, token }: DetailItemProps) {
             >
                 {icon}
             </div>
-            <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
+            <Space orientation="vertical" size={0} style={{ minWidth: 0 }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                     {label}
                 </Text>
@@ -129,7 +129,7 @@ export function TaskDetailModal({ task, open, onClose }: TaskDetailModalProps) {
             }}
         >
             {task && (
-                <Space direction="vertical" size={14} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={14} style={{ width: '100%' }}>
                     <Card
                         size="small"
                         title={

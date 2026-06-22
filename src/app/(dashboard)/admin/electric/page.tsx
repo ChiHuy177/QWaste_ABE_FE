@@ -5,16 +5,14 @@ import { ElectricStatsCards, ElectricStats } from './_components/ElectricStatsCa
 import { EnergyConsumption, TimePeriod, Zone } from '@/types';
 import { useEffect, useMemo, useState } from 'react';
 import ElectricFilters from './_components/ElectricFilter';
-import dayjs from 'dayjs';
-import { ZoneService } from '@/services/ZoneService';
 import { toast } from 'sonner';
 import { ElectricService } from '@/services';
 import ZoneConsumptionCards from './_components/ZoneConsumptionCard';
-import { Empty, Row, Col, Skeleton, Card, Flex, Typography, theme } from 'antd';
+import { Row, Col, Skeleton, Card, Flex, Typography, theme } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import ElectricalChart from './_components/ElectricalChart';
 import TopZoneConsumption from './_components/TopZoneConsumption';
-import { calculateElectricityBill, formatCurrencyShort } from '@/utils';
+import { calculateElectricityBill } from '@/utils';
 import { useEnergyWebSocket } from '@/hooks/useWebSocket';
 import { t } from 'i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -59,14 +57,12 @@ const ElectricOverviewPage = () => {
     const [timePeriod, setTimePeriod] = useState<TimePeriod>('TODAY');
     const [dateRange, setDateRange] = useState<[string, string] | null>(null);
     const [zoneId, setZoneId] = useState<string | null>(null);
-    const [zones, setZones] = useState<Zone[]>([]);
+    const [zones] = useState<Zone[]>([]);
     const [electricData, setElectricData] = useState<ElectricStats>(initialElectricStats);
     const [energyConsumption, setEnergyConsumption] = useState<EnergyConsumption[]>([]);
     const [loading, setLoading] = useState(false);
     const {
         energyData,
-        isConnected,
-        lastUpdate,
         setInitialData,
     } = useEnergyWebSocket({
         selectedZoneId: zoneId,
@@ -146,14 +142,10 @@ const ElectricOverviewPage = () => {
         const loadInitialData = async () => {
             setLoading(true);
             try {
-                const [zoneData, todayData] = await Promise.all([
-                    ZoneService.getZoneForPicking(),
-                    ElectricService.getElectricByDateAndZone('TODAY'),
-                ]);
+                const todayData = await ElectricService.getElectricByDateAndZone('TODAY');
 
                 if (!isSubscribed) return;
 
-                setZones(zoneData);
                 setElectricData(BUILD_ELECTRIC_STATS(todayData));
                 const transformedData = TRANSFORM_ENERGY_DATA(todayData);
                 setEnergyConsumption(transformedData);

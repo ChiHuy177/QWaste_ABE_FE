@@ -62,7 +62,7 @@ export const EditConfirmModal: React.FC<EditConfirmModalProps> = ({
             okButtonProps={{ danger: true, loading }}
             cancelButtonProps={{ disabled: loading }}
             zIndex={1100}
-            maskClosable={!loading}
+            mask={{ closable: !loading }}
             closable={!loading}
         >
             <p>

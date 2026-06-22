@@ -446,9 +446,9 @@ export const DrawingDetailForm: React.FC<DrawingDetailFormProps> = ({
                         <Text strong>{t('orderManagement.form.plan.drawingDetails')}</Text>
                     </Flex>
                 }
-                bordered={false}
+                variant="borderless"
             >
-                <Space direction="vertical" size={18} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={18} style={{ width: '100%' }}>
                     <Row gutter={[16, 12]} align="top">
                         <Col xs={24} lg={13}>
                             <Form.Item
@@ -479,7 +479,10 @@ export const DrawingDetailForm: React.FC<DrawingDetailFormProps> = ({
                                 <Select
                                     size="large"
                                     placeholder={t('orderManagement.form.plan.selectDrawingCode')}
-                                    showSearch
+                                    showSearch={{
+                                        filterOption: (input, option) =>
+                                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+                                    }}
                                     onChange={(value) => {
                                         const template = drawingTemplates.find(
                                             (item) => item.drawingCodeId === value
@@ -519,9 +522,6 @@ export const DrawingDetailForm: React.FC<DrawingDetailFormProps> = ({
                                             );
                                         }
                                     }}
-                                    filterOption={(input, option) =>
-                                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                                    }
                                     options={drawingTemplates.map((t) => ({
                                         value: t.drawingCodeId,
                                         label: `${t.drawingCode} - ${t.drawingCodeName}`,
@@ -532,7 +532,7 @@ export const DrawingDetailForm: React.FC<DrawingDetailFormProps> = ({
                                         );
 
                                         return (
-                                            <Space direction="vertical" size={2}>
+                                            <Space orientation="vertical" size={2}>
                                                 <Text strong>{template?.drawingCode}</Text>
                                                 <Text type="secondary" style={{ fontSize: 12 }}>
                                                     {template?.drawingCodeName}
@@ -669,7 +669,7 @@ export const DrawingDetailForm: React.FC<DrawingDetailFormProps> = ({
                                 wrap="wrap"
                                 style={{ marginBottom: 16 }}
                             >
-                                <Space direction="vertical" size={4} style={{ flex: 1, minWidth: 220 }}>
+                                <Space orientation="vertical" size={4} style={{ flex: 1, minWidth: 220 }}>
                                     <Text type="secondary" style={{ fontSize: 12 }}>
                                         {t('orderManagement.form.plan.drawingDetails')}
                                     </Text>
@@ -815,7 +815,7 @@ export const DrawingDetailForm: React.FC<DrawingDetailFormProps> = ({
                             <Alert
                                 type="warning"
                                 showIcon
-                                message={quantityMismatchMessage}
+                                title={quantityMismatchMessage}
                                 description={t(
                                     'orderManagement.form.plan.stepQuantityBalanceDescription'
                                 )}

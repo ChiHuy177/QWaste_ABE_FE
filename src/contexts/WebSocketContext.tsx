@@ -4,7 +4,6 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { useAuth } from '@/contexts/AuthContext';
 import { WebSocketService, getWebSocketService } from '@/services/WebSocketService';
 import type { AccountRole } from '@/types/User';
-import { USE_DEMO_AUTH } from '@/mockData/auth';
 
 interface WebSocketContextValue {
     wsService: WebSocketService;
@@ -47,16 +46,6 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        if (USE_DEMO_AUTH) {
-            if (wsServiceRef.current?.connected) {
-                wsServiceRef.current.disconnect();
-            }
-            roleUnsubscribersRef.current.forEach((fn) => fn());
-            roleUnsubscribersRef.current = [];
-            setIsConnected(false);
-            return;
-        }
-
         if (!isAuthenticated) {
             // Disconnect when user logs out
             if (wsServiceRef.current?.connected) {

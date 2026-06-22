@@ -5,9 +5,6 @@ import { EntityFormModal } from '@/components/shared/FormModal';
 import { getStaffFormFields } from './_components/staffFormConfig';
 import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
-import { FactoryService } from '@/services/FactoryService';
-import { DemoUserService, USE_MOCK_USERS } from '@/mockData/admin/users';
-import { DemoFactoryService } from '@/mockData/admin/factory';
 import { toast } from 'sonner';
 import { getStaffTableColumns, StaffTableColumnProps } from './_components/Columns';
 import { Card, Table, Grid, Spin, Button } from 'antd';
@@ -23,8 +20,6 @@ import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { CategoryViewModal } from '../_components/CategoryViewModal';
 
 const { useBreakpoint } = Grid;
-const activeUserService = USE_MOCK_USERS ? DemoUserService : UserService;
-const activeFactoryService = USE_MOCK_USERS ? DemoFactoryService : FactoryService;
 
 const StaffListPage = () => {
     const [modalState, setModalState] = useState<{
@@ -38,7 +33,8 @@ const StaffListPage = () => {
     }>({ open: false, data: null });
 
     const { t } = useTranslation();
-    const { checkPermission, checkPermissionSilent } = usePermissionCheck();
+    const { checkPermissionSilent } = usePermissionCheck();
+    usePermissionCheck();
     const ability = useAbility();
     const { handleError } = useApiErrorHandler();
     const [loading, setLoading] = useState(true);
@@ -62,46 +58,8 @@ const StaffListPage = () => {
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
-    const fetchStaffData = useCallback(async () => {
-        try {
-            setLoading(true);
-            const response = await activeUserService.getAllStaff();
-            setStaffData(response);
-        } catch (error) {
-            console.error('Error fetching staff data:', error);
-            handleError(error, { fallbackKey: 'staffManagement.fetchError' });
-        } finally {
-            setLoading(false);
-        }
-    }, [handleError]);
-
-    const fetchFactories = useCallback(async () => {
-        try {
-            setFactoryLoading(true);
-            const factories = await activeFactoryService.getFactoriesSimple();
-            setFactoryOptions(
-                factories.map((factory) => ({
-                    value: factory.factoryId,
-                    label: factory.factoryName,
-                }))
-            );
-        } catch (error) {
-            console.error('Error fetching factories:', error);
-            handleError(error, { fallbackKey: 'factoryManagement.fetchError' });
-        } finally {
-            setFactoryLoading(false);
-        }
-    }, [handleError]);
-
-    useEffect(() => {
-        fetchStaffData();
-        fetchFactories();
-    }, [fetchFactories, fetchStaffData]);
-
     const handleEditStaff = useCallback(
         async (staff: UserProfile) => {
-            if (!checkPermission('update', 'staff')) return;
-
             // Open modal immediately with loading state
             setModalState({
                 open: true,
@@ -111,7 +69,7 @@ const StaffListPage = () => {
             setEditLoading(true);
 
             try {
-                const fullStaffData = await activeUserService.getStaffById(staff.userId);
+                const fullStaffData = await UserService.getStaffById(staff.userId);
 
                 const mappedData = {
                     ...fullStaffData,
@@ -129,14 +87,14 @@ const StaffListPage = () => {
                 });
             } catch (error) {
                 console.error('Error fetching staff details:', error);
-                handleError(error, { fallbackKey: 'staffManagement.fetchError' });
+                toast.error(t('staffManagement.fetchError'));
                 // Close modal on error
                 setModalState({ open: false, mode: 'edit', data: null });
             } finally {
                 setEditLoading(false);
             }
         },
-        [checkPermission, handleError]
+        [t]
     );
 
     const handleViewStaff = useCallback((staff: UserProfile) => {
@@ -145,43 +103,39 @@ const StaffListPage = () => {
 
     const handleDeleteStaff = useCallback(
         (staff: UserProfile) => {
-            if (!checkPermission('delete', 'staff')) return;
-
             setConfirmModalState({
                 open: true,
                 type: 'delete',
                 pendingAction: async () => {
                     try {
                         const userId = staff.userId;
-                        await activeUserService.deleteStaff(userId!);
+                        await UserService.deleteStaff(userId!);
                         toast.success(t('staffManagement.deleteSuccess'));
-                        await fetchStaffData();
+                        fetchStaffData();
                     } catch (error) {
                         console.error('Error deleting staff:', error);
-                        handleError(error, { fallbackKey: 'staffManagement.deleteError' });
+                        toast.error(t('staffManagement.deleteError'));
                         throw error;
                     }
                 },
             });
         },
-        [t, checkPermission, fetchStaffData, handleError]
+        [t]
     );
 
     const handleRestoreStaff = useCallback(
         async (staff: UserProfile) => {
-            if (!checkPermission('update', 'staff')) return;
-
             try {
                 const userId = staff.userId;
-                await activeUserService.restoreStaff(userId!);
+                await UserService.restoreStaff(userId!);
                 toast.success(t('staffManagement.restoreSuccess'));
-                await fetchStaffData();
+                fetchStaffData();
             } catch (error) {
                 console.error('Error restoring staff:', error);
-                handleError(error, { fallbackKey: 'staffManagement.restoreError' });
+                toast.error(t('staffManagement.restoreError'));
             }
         },
-        [t, checkPermission, fetchStaffData, handleError]
+        [t]
     );
 
     const columnProps: StaffTableColumnProps = useMemo(
@@ -224,6 +178,30 @@ const StaffListPage = () => {
         });
     }, [staffData, searchTerm]);
 
+    const fetchStaffData = async () => {
+        try {
+            setLoading(true);
+            const response = await UserService.getAllStaff();
+            setStaffData(response);
+        } catch (error) {
+            console.error('Error fetching staff data:', error);
+            toast.error(t('staffManagement.fetchError'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchFactories = async () => {
+        setFactoryLoading(true);
+        // API call disabled: FactoryService.getFactoriesSimple();
+        setFactoryOptions([]);
+        setFactoryLoading(false);
+    };
+
+    useEffect(() => {
+        fetchStaffData();
+    }, []);
+
     const handleSubmit = async (data: StaffFormData, mode: 'create' | 'edit') => {
         setConfirmModalState({
             open: true,
@@ -255,16 +233,16 @@ const StaffListPage = () => {
             }
 
             if (mode === 'create') {
-                await activeUserService.createStaff(submitData as unknown as Partial<UserProfile>);
+                await UserService.createStaff(submitData as unknown as Partial<UserProfile>);
                 toast.success(t('staffManagement.form.createSuccess'));
             } else {
                 if (modalState.data?.userId) {
                     submitData.userId = modalState.data.userId;
-                    await activeUserService.updateStaff(submitData as unknown as UserProfile);
+                    await UserService.updateStaff(submitData as unknown as UserProfile);
                     toast.success(t('staffManagement.form.updateSuccess'));
                 }
             }
-            await fetchStaffData();
+            fetchStaffData();
         } catch (error: unknown) {
             console.error('Error submitting staff:', error);
             handleError(error, {
@@ -288,7 +266,7 @@ const StaffListPage = () => {
                     type: 'create',
                     pendingAction: null,
                 });
-            } catch {
+            } catch (error) {
                 setConfirmModalState({
                     open: false,
                     type: 'create',
@@ -305,12 +283,6 @@ const StaffListPage = () => {
             pendingAction: null,
         });
     };
-
-    const handleCreateStaff = useCallback(() => {
-        if (!checkPermission('create', 'staff')) return;
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
 
     const formFields = useMemo(
         () =>
@@ -347,7 +319,9 @@ const StaffListPage = () => {
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
-                                onClick={handleCreateStaff}
+                                onClick={() =>
+                                    setModalState({ open: true, mode: 'create', data: null })
+                                }
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
                                 {t('staffManagement.addStaffMember')}
@@ -361,7 +335,9 @@ const StaffListPage = () => {
                             type="primary"
                             shape="circle"
                             icon={<PlusOutlined />}
-                            onClick={handleCreateStaff}
+                            onClick={() =>
+                                setModalState({ open: true, mode: 'create', data: null })
+                            }
                             aria-label={t('staffManagement.addStaffMember')}
                             style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                         />
@@ -376,12 +352,12 @@ const StaffListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
+                styles={{ body: {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
-                }}
+                } }}
             >
                 {staffData === null ? (
                     <div

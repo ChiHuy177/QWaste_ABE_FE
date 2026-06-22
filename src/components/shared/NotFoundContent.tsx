@@ -32,10 +32,9 @@ export function NotFoundContent() {
 
         switch (firstRole) {
             case 'admin':
-                return '/admin';
             case 'director':
             case 'client':
-                return '/admin/factory-overview';
+                return '/admin/space-monitoring';
             default:
                 return '/';
         }
@@ -76,14 +75,13 @@ export function NotFoundContent() {
             <div className="blueprint-grid" />
 
             {/* Technical Lines SVG */}
-            <svg className="technical-lines" xmlns="http://www.w3.org/2000/svg">
+            <svg className="technical-lines" style={{ color: '#94a3b8' }} xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M100,0 V200 H300"
                     fill="none"
                     stroke="currentColor"
                     strokeDasharray="4 4"
                     strokeWidth="1"
-                    className="text-slate-400"
                 />
                 <path
                     d="M0,500 H200 V700"
@@ -91,7 +89,6 @@ export function NotFoundContent() {
                     stroke="currentColor"
                     strokeDasharray="4 4"
                     strokeWidth="1"
-                    className="text-slate-400"
                 />
                 <circle
                     cx="85%"
@@ -101,19 +98,16 @@ export function NotFoundContent() {
                     stroke="currentColor"
                     strokeDasharray="8 4"
                     strokeWidth="1"
-                    className="text-slate-400"
                 />
                 <line
                     x1="85%" x2="85%" y1="10%" y2="30%"
                     stroke="currentColor"
                     strokeWidth="0.5"
-                    className="text-slate-400"
                 />
                 <line
                     x1="75%" x2="95%" y1="20%" y2="20%"
                     stroke="currentColor"
                     strokeWidth="0.5"
-                    className="text-slate-400"
                 />
             </svg>
 

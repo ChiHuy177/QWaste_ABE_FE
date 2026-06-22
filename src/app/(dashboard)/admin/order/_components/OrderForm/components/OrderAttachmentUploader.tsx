@@ -147,9 +147,10 @@ export const OrderAttachmentsUploader: React.FC<OrderAttachmentsUploaderProps> =
             <div style={{ display: 'none' }}>
                 <Image
                     src={previewImage}
+                    alt="Order attachment preview"
                     preview={{
-                        visible: previewOpen,
-                        onVisibleChange: (visible) => setPreviewOpen(visible),
+                        open: previewOpen,
+                        onOpenChange: (visible) => setPreviewOpen(visible),
                         src: previewImage,
                     }}
                 />

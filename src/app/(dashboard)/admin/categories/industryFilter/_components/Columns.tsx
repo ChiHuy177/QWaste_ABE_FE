@@ -3,6 +3,7 @@
 import { Button, Popconfirm, Space, Tooltip, Typography, Tag } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { EditOutlined, DeleteOutlined, CheckCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { AppAbility } from '@/configs/permissions/caslAbility';
 const { Text } = Typography;
@@ -14,6 +15,7 @@ export type IndustryFilterTableColumnProps = {
     isMobile?: boolean;
     t: (key: string) => string;
     ability?: AppAbility;
+
 };
 
 export const getIndustryFilterTableColumns = (
@@ -104,7 +106,7 @@ export const getIndustryFilterTableColumns = (
             width: 180,
             align: 'center',
             render: (_, record: IndustryFilter) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Text style={{ fontSize: 14 }}>
                         {record.startTime} - {record.endTime}
                     </Text>

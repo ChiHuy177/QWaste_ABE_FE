@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button, Card, Table, Select, Grid, Spin, Typography, Modal, Descriptions } from 'antd';
@@ -18,7 +18,6 @@ import { MachineOperatorHistoryService } from '@/services/MachineOperatorHistory
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { getMachineStaffingFormFields } from './_components/machineStaffingFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { FactoryService } from '@/services';
 import { FactoryPickingResponse } from '@/types/Factory';
 import { ZonePickingResponse } from '@/types/Zone';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -39,8 +38,8 @@ const MachineStaffingPage = () => {
     const { t } = useTranslation();
     const { checkPermission } = usePermissionCheck();
     const ability = useAbility();
-    const [loading, setLoading] = useState(true);
-    const [historyData, setHistoryData] = useState<MachineOperatorHistory[] | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [historyData, setHistoryData] = useState<MachineOperatorHistory[] | null>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const { handleError } = useApiErrorHandler();
     const [confirmModalState, setConfirmModalState] = useState<{
@@ -67,9 +66,6 @@ const MachineStaffingPage = () => {
     const [selectedFactory, setSelectedFactory] = useState<number | undefined>(undefined);
     const [selectedZone, setSelectedZone] = useState<number | undefined>(undefined);
     const [isLoadingFactories, setIsLoadingFactories] = useState(false);
-
-    // States for dropdown options
-    const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
     usePageTitle(t('pageTitle.machineStaffing'));
 
@@ -145,32 +141,6 @@ const MachineStaffingPage = () => {
         });
     }, [historyData, searchTerm]);
 
-    // Fetch factories with zones
-    const fetchFactories = async () => {
-        try {
-            setIsLoadingFactories(true);
-            const response = await FactoryService.getFactoriesForPicking();
-            setFactories(response);
-
-            // Auto-select first factory and first zone
-            if (response.length > 0) {
-                const firstFactory = response[0];
-                setSelectedFactory(firstFactory.factoryId);
-                setZones(firstFactory.zones);
-
-                if (firstFactory.zones.length > 0) {
-                    const firstZoneId = firstFactory.zones[0].zoneId;
-                    setSelectedZone(firstZoneId);
-                    fetchHistoryData(firstZoneId);
-                }
-            }
-        } catch (error) {
-            toast.error(t('machineStaffing.fetchDetailsError.factories'));
-        } finally {
-            setIsLoadingFactories(false);
-        }
-    };
-
     const fetchHistoryData = async (zoneId: number) => {
         try {
             setLoading(true);
@@ -184,9 +154,6 @@ const MachineStaffingPage = () => {
         }
     };
 
-    useEffect(() => {
-        fetchFactories();
-    }, []);
     const handleSubmit = async (data: MachineOperatorHistoryFormData, mode: 'create' | 'edit') => {
         if (mode !== 'edit') {
             throw new Error('Only edit mode is supported');
@@ -419,13 +386,13 @@ const MachineStaffingPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
+                styles={{ body: {
                     flex: 1,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
-                }}
+                } }}
             >
                 {historyData === null ? (
                     <div

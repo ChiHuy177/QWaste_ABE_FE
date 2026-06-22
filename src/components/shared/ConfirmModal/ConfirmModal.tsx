@@ -45,7 +45,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             await onConfirm();
             // Reset input after successful confirmation
             setConfirmInput('');
-        } catch (error) {
+        } catch {
             // Error handling is done in parent
         } finally {
             setLoading(false);
@@ -72,7 +72,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             okButtonProps={{ danger: type === 'delete', loading }}
             cancelButtonProps={{ disabled: loading }}
             zIndex={1100}
-            maskClosable={!loading}
+            mask={{ closable: !loading }}
             closable={!loading}
         >
             <p>

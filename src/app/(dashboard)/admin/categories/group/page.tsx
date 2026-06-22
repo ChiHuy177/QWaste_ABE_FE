@@ -166,12 +166,12 @@ const GroupListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
+                styles={{ body: {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
-                }}
+                } }}
             >
                 <Table<UserGroup>
                     columns={columns}

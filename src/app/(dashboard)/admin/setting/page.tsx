@@ -3,7 +3,6 @@
 import { SettingsPage } from '@/app/(dashboard)/admin/setting/components/SettingPage';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { DemoUserService, USE_MOCK_USERS } from '@/mockData/admin/users';
 import { UserService } from '@/services/UserService';
 import { UserProfile, UserSettings } from '@/types/User';
 import { useCallback, useEffect } from 'react';
@@ -11,18 +10,6 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { userSettingsActions } from '@/stores';
-
-const activeUserService = USE_MOCK_USERS ? DemoUserService : UserService;
-
-const buildUserSettings = (profile: UserProfile): UserSettings => ({
-    accountId: profile.userId,
-    status: 'active',
-    id: profile.userId,
-    theme: profile.preferences.theme || 'light',
-    language: profile.preferences.language || 'en',
-    createdTime: Date.now(),
-    updatedTime: null,
-});
 
 const SettingPage = () => {
     const { user } = useAuth();
@@ -37,23 +24,48 @@ const SettingPage = () => {
     // Initialize data
     useEffect(() => {
         const initializeData = async () => {
-            try {
-                dispatch(userSettingsActions.setLoading(true));
-                dispatch(userSettingsActions.setError(null));
+            if (user) {
+                dispatch(userSettingsActions.setProfile(user));
 
-                const userData = user ?? (await activeUserService.getMe());
+                if (user.preferences) {
+                    dispatch(
+                        userSettingsActions.setSettings({
+                            accountId: user.userId,
+                            status: 'active',
+                            id: user.userId,
+                            theme: user.preferences.theme || 'light',
+                            language: user.preferences.language || 'en',
+                            createdTime: Date.now(),
+                            updatedTime: null,
+                        })
+                    );
+                }
+            } else {
+                try {
+                    const userData = await UserService.getMe();
+                    dispatch(userSettingsActions.setProfile(userData));
 
-                dispatch(userSettingsActions.setProfile(userData));
-                dispatch(userSettingsActions.setSettings(buildUserSettings(userData)));
-            } catch {
-                dispatch(userSettingsActions.setError(t('settingsPage.errors.settingsError')));
-            } finally {
-                dispatch(userSettingsActions.setLoading(false));
+                    if (userData.preferences) {
+                        dispatch(
+                            userSettingsActions.setSettings({
+                                accountId: userData.userId,
+                                status: 'active',
+                                id: userData.userId,
+                                theme: userData.preferences.theme || 'light',
+                                language: userData.preferences.language || 'en',
+                                createdTime: Date.now(),
+                                updatedTime: null,
+                            })
+                        );
+                    }
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                }
             }
         };
 
         initializeData();
-    }, [user, dispatch, t]);
+    }, [user, dispatch]);
 
     // Profile update handler
     const handleProfileUpdate = useCallback(
@@ -65,9 +77,7 @@ const SettingPage = () => {
 
                 if (result.success) {
                     toast.success(t('avatarUpload.updateSuccess'));
-                    if (!USE_MOCK_USERS) {
-                        window.location.reload();
-                    }
+                    window.location.reload();
                 } else {
                     toast.error(result.error || t('avatarUpload.updateError'));
                 }

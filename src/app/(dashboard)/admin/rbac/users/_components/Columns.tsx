@@ -2,20 +2,16 @@ import { ColumnsType } from 'antd/es/table';
 import { UserWithRBAC } from '@/types/User';
 import { Button, Space, Tag } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import { AppAbility } from '@/configs/permissions/caslAbility';
 
 export type UserTableColumnProps = {
     onEdit?: (user: UserWithRBAC) => void;
     // onDelete?: (user: UserWithRBAC) => void;
     t: (key: string, options?: any) => string;
     isMobileResponsive?: boolean;
-    ability?: AppAbility;
 };
 
 export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<UserWithRBAC> => {
     const t = props?.t || ((key: string) => key);
-    const ability = props?.ability;
-    const canUpdate = ability?.can('update', 'user') ?? false;
 
     const columns: ColumnsType<UserWithRBAC> = [
         {
@@ -81,10 +77,7 @@ export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<U
                 );
             },
         },
-    ];
-
-    if (canUpdate) {
-        columns.push({
+        {
             title: t('userManagement.columns.actions'),
             key: 'actions',
             fixed: props?.isMobileResponsive ? undefined : 'right',
@@ -99,10 +92,27 @@ export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<U
                     >
                         {!props?.isMobileResponsive && t('userManagement.actions.edit')}
                     </Button>
+                    {/* <Popconfirm
+                        title={t('userManagement.actions.confirmDeleteTitle')}
+                        description={t('userManagement.actions.confirmDeleteMessage')}
+                        onConfirm={() => props?.onDelete?.(record)}
+                        okText={t('userManagement.actions.confirmYes')}
+                        cancelText={t('userManagement.actions.confirmNo')}
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button
+                            type="link"
+                            danger
+                            icon={<DeleteOutlined />}
+                            style={{ padding: props?.isMobileResponsive ? '4px' : '4px 8px' }}
+                        >
+                            {!props?.isMobileResponsive && t('userManagement.actions.delete')}
+                        </Button>
+                    </Popconfirm> */}
                 </Space>
             ),
-        });
-    }
+        },
+    ];
 
     return columns;
 };

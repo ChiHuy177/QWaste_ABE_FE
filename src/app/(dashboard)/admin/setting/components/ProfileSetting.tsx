@@ -14,7 +14,6 @@ import { UserProfile, UserSettings, ValidationErrors } from '@/types/User';
 import { useTranslation } from 'react-i18next';
 import { useUploadThing } from '@/utils/uploadthing';
 import { AvatarUpload } from './AvatarUpload';
-import { DemoUserSettingService, USE_MOCK_USERS } from '@/mockData/admin/users';
 
 const COUNTRY_CODES = [
     { code: '+1', country: 'US/CA', label: '+1 (US/Canada)' },
@@ -202,25 +201,20 @@ export function ProfileSetting({
             try {
                 let uploadedAvatarUrl = formData.avatarUrl;
 
+                // Upload avatar if a new file was selected
                 if (selectedAvatarFile) {
                     toast.info(t('avatarUpload.uploadingMessage') || 'Uploading avatar...');
 
                     try {
-                        if (USE_MOCK_USERS) {
-                            uploadedAvatarUrl =
-                                await DemoUserSettingService.uploadAvatarFile(selectedAvatarFile);
-                        } else {
-                            const uploadResult = await startUpload([selectedAvatarFile]);
+                        const uploadResult = await startUpload([selectedAvatarFile]);
 
-                            if (!uploadResult || !uploadResult[0] || !uploadResult[0].url) {
-                                throw new Error('Upload failed - no URL returned');
-                            }
-
-                            uploadedAvatarUrl = uploadResult[0].url;
+                        if (!uploadResult || !uploadResult[0] || !uploadResult[0].url) {
+                            throw new Error('Upload failed - no URL returned');
                         }
 
+                        uploadedAvatarUrl = uploadResult[0].url;
                         setPreviewImage(uploadedAvatarUrl);
-                        setSelectedAvatarFile(null);
+                        setSelectedAvatarFile(null); // Clear selected file after successful upload
                     } catch (uploadError) {
                         console.error('Avatar upload error:', uploadError);
                         toast.error(t('avatarUpload.uploadError') || 'Failed to upload avatar');
@@ -278,16 +272,7 @@ export function ProfileSetting({
                 setIsUpdating(false);
             }
         },
-        [
-            formData,
-            onUpdateProfile,
-            onUpdateSettings,
-            profile,
-            selectedAvatarFile,
-            settings,
-            startUpload,
-            t,
-        ]
+        [formData, profile, settings, selectedAvatarFile, onUpdateProfile, onUpdateSettings, t]
     );
 
     if (isInitialLoading || !profile || !settings) {
@@ -302,7 +287,7 @@ export function ProfileSetting({
     }
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* Form Section */}
             <Card
                 style={{
@@ -330,7 +315,7 @@ export function ProfileSetting({
                     <Col xs={24} sm={16} md={18}>
                         <form onSubmit={handleSubmit}>
                             <Card style={{ border: `1px solid ${token.colorBorder}` }}>
-                                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                                     {/* Personal Information Section Title */}
                                     <div
                                         style={{
@@ -517,8 +502,7 @@ export function ProfileSetting({
                                                     }
                                                     style={{ width: 180 }}
                                                     size="large"
-                                                    showSearch
-                                                    optionFilterProp="label"
+                                                    showSearch={{ optionFilterProp: 'label' }}
                                                     options={COUNTRY_CODES.map((country) => ({
                                                         label: country.label,
                                                         value: country.code,

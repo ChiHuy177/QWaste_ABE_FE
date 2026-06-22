@@ -83,17 +83,17 @@ const TaskTagsPreview: React.FC<TaskTagsPreviewProps> = ({ drawingIndex, stepInd
     return (
         <Space size={8}>
             {reqQty && (
-                <Tag bordered={false} style={{ fontSize: 11 }}>
+                <Tag variant="filled" style={{ fontSize: 11 }}>
                     {t('orderManagement.task.reqQtyLabel')}: {reqQty}
                 </Tag>
             )}
             {planQty && (
-                <Tag bordered={false} color="blue" style={{ fontSize: 11 }}>
+                <Tag variant="filled" color="blue" style={{ fontSize: 11 }}>
                     {t('orderManagement.task.planQtyLabel')}: {planQty}
                 </Tag>
             )}
             {operatorIds.length > 0 && (
-                <Tag bordered={false} color="green" style={{ fontSize: 11 }}>
+                <Tag variant="filled" color="green" style={{ fontSize: 11 }}>
                     {operatorIds.length} {t('orderManagement.task.operatorsAssigned', { defaultValue: 'operators' })}
                 </Tag>
             )}
@@ -256,7 +256,7 @@ const SortableTaskItemComponent: React.FC<SortableTaskItemProps> = ({
                     borderRadius: '0 0 8px 8px',
                     display: isExpanded ? 'block' : 'none'
                 }}>
-                    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                         <Form.Item
                                 {...restField}
                                 name={[field.name, 'taskName']}
@@ -509,7 +509,7 @@ export const TaskList: React.FC<TaskListProps> = ({ drawingIndex, stepIndex, ope
                         </Button>
                         {errors.length > 0 && (
                             <Alert
-                                message={errors[0]}
+                                title={errors[0]}
                                 type="error"
                                 showIcon
                                 style={{ marginTop: 8 }}

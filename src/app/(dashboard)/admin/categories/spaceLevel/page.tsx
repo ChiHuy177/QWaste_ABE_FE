@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
-import { DemoSpaceLevelService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 import { toast } from 'sonner';
 import {
     Button,
@@ -35,6 +34,7 @@ import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import { UtilsService } from '@/services/UtilsService';
 
 const { useBreakpoint } = Grid;
 const { Title } = Typography;
@@ -44,7 +44,7 @@ interface SpaceLevelFormData {
     spaceLevelName?: string;
 }
 
-const SORT_DEFAULT = 'spaceLevel,DESC';
+const SORT_DEFAULT = 'spaceLevel,ASC';
 const DEFAULT_PAGE_SIZE = 10;
 
 const spaceLevelQueryKeys = {
@@ -60,10 +60,6 @@ const spaceLevelQueryKeys = {
     highest: ['space-levels', 'highest'] as const,
     detail: (spaceLevelId: number | string) => ['space-levels', 'detail', spaceLevelId] as const,
 };
-
-const activeSpaceLevelService = USE_MOCK_FACTORY_OVERVIEW
-    ? DemoSpaceLevelService
-    : SpaceLevelService;
 
 const SpaceLevelListPage = () => {
     const [modalState, setModalState] = useState<{
@@ -134,7 +130,7 @@ const SpaceLevelListPage = () => {
             const validSorters = sorters
                 .filter((s) => s.field && s.order)
                 .map((s) => {
-                    const field = Array.isArray(s.field) ? s.field.join('.') : s.field;
+                    const field = Array.isArray(s.field) ? s.field.join('.') : String(s.field);
                     const order = s.order === 'ascend' ? 'ASC' : 'DESC';
                     return `${field},${order}`;
                 });
@@ -163,7 +159,7 @@ const SpaceLevelListPage = () => {
             spaceLevelNameFilter
         ),
         queryFn: async () =>
-            activeSpaceLevelService.getSpaceLevelsPaginated({
+            SpaceLevelService.getSpaceLevelsPaginated({
                 page,
                 size: pageSize,
                 sort,
@@ -190,15 +186,11 @@ const SpaceLevelListPage = () => {
     }, [spaceLevelsQuery.error, handleError]);
 
     const handleCreateLevel = useCallback(async () => {
-        if (!checkPermission('create', 'space_level')) {
-            return;
-        }
-
         try {
             setIsFormLoading(true);
             const highestLevel = await queryClient.fetchQuery({
                 queryKey: spaceLevelQueryKeys.highest,
-                queryFn: () => activeSpaceLevelService.getHighestSpaceLevel(),
+                queryFn: () => UtilsService.getHighestSpaceLevel(),
             });
 
             setModalState({
@@ -212,7 +204,7 @@ const SpaceLevelListPage = () => {
         } finally {
             setIsFormLoading(false);
         }
-    }, [checkPermission, handleError, queryClient]);
+    }, [handleError, queryClient]);
 
     const handleEditLevel = useCallback(
         async (level: SpaceLevelDTO) => {
@@ -230,8 +222,7 @@ const SpaceLevelListPage = () => {
             try {
                 const detailData = await queryClient.fetchQuery({
                     queryKey: spaceLevelQueryKeys.detail(level.spaceLevelId),
-                    queryFn: () =>
-                        activeSpaceLevelService.getSpaceLevelById(level.spaceLevelId),
+                    queryFn: () => SpaceLevelService.getSpaceLevelById(level.spaceLevelId),
                 });
                 setModalState({
                     open: true,
@@ -250,8 +241,7 @@ const SpaceLevelListPage = () => {
     );
 
     const { mutateAsync: createSpaceLevel } = useMutation({
-        mutationFn: (data: SpaceLevelCreationRequest) =>
-            activeSpaceLevelService.createSpaceLevel(data),
+        mutationFn: (data: SpaceLevelCreationRequest) => SpaceLevelService.createSpaceLevel(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: spaceLevelQueryKeys.lists });
             queryClient.invalidateQueries({ queryKey: spaceLevelQueryKeys.highest });
@@ -259,8 +249,7 @@ const SpaceLevelListPage = () => {
     });
 
     const { mutateAsync: updateSpaceLevel } = useMutation({
-        mutationFn: (data: SpaceLevelUpdationRequest) =>
-            activeSpaceLevelService.updateSpaceLevel(data),
+        mutationFn: (data: SpaceLevelUpdationRequest) => SpaceLevelService.updateSpaceLevel(data),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: spaceLevelQueryKeys.lists });
             queryClient.invalidateQueries({
@@ -271,7 +260,7 @@ const SpaceLevelListPage = () => {
 
     const { mutateAsync: deleteSpaceLevel } = useMutation({
         mutationFn: (spaceLevelId: number | string) =>
-            activeSpaceLevelService.deleteSpaceLevel(spaceLevelId),
+            SpaceLevelService.deleteSpaceLevel(spaceLevelId),
         onSuccess: (_data, spaceLevelId) => {
             queryClient.invalidateQueries({ queryKey: spaceLevelQueryKeys.lists });
             queryClient.invalidateQueries({ queryKey: spaceLevelQueryKeys.highest });
@@ -310,8 +299,7 @@ const SpaceLevelListPage = () => {
             try {
                 const detailData = await queryClient.fetchQuery({
                     queryKey: spaceLevelQueryKeys.detail(level.spaceLevelId),
-                    queryFn: () =>
-                        activeSpaceLevelService.getSpaceLevelById(level.spaceLevelId),
+                    queryFn: () => SpaceLevelService.getSpaceLevelById(level.spaceLevelId),
                 });
                 setViewModalState((prev) => ({ ...prev, data: detailData }));
             } catch (error) {
@@ -525,8 +513,8 @@ const SpaceLevelListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
                                             ? dayjs(
-                                                  viewModalState.data.auditMetaData.createdAt
-                                              ).format('DD/MM/YYYY HH:mm:ss')
+                                                viewModalState.data.auditMetaData.createdAt
+                                            ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -535,8 +523,8 @@ const SpaceLevelListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
                                             ? dayjs(
-                                                  viewModalState.data.auditMetaData.updatedAt
-                                              ).format('DD/MM/YYYY HH:mm:ss')
+                                                viewModalState.data.auditMetaData.updatedAt
+                                            ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>
@@ -576,11 +564,13 @@ const SpaceLevelListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflowY: isMobile ? 'auto' : 'hidden',
+                styles={{
+                    body: {
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflowY: isMobile ? 'auto' : 'hidden',
+                    }
                 }}
             >
                 {spaceLevelsQuery.isLoading ? (
@@ -609,7 +599,7 @@ const SpaceLevelListPage = () => {
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 'max-content',

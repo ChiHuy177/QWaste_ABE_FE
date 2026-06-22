@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
-import { DemoIndustryFilterService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 import { toast } from 'sonner';
 import {
     Button,
@@ -18,11 +17,7 @@ import {
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
-import {
-    IndustryFilter,
-    IndustryFilterFormData,
-    IndustryFilterUpdateData,
-} from '@/types/IndustryFilter';
+import { IndustryFilter, IndustryFilterFormData } from '@/types/IndustryFilter';
 import {
     getIndustryFilterTableColumns,
     IndustryFilterTableColumnProps,
@@ -38,19 +33,16 @@ import dayjs from 'dayjs';
 import ShiftBreaksContent from './_components/ShiftBreaksContent';
 
 const { useBreakpoint } = Grid;
-const activeIndustryFilterService = USE_MOCK_FACTORY_OVERVIEW
-    ? DemoIndustryFilterService
-    : IndustryFilterService;
 
 const IndustryFilterListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: IndustryFilter | null;
+        data: any | null;
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
-    const { checkPermission } = usePermissionCheck();
+    const { checkPermission, checkPermissionSilent } = usePermissionCheck();
     const ability = useAbility();
     const [loading, setLoading] = useState(true);
     const [industryFilterData, setIndustryFilterData] = useState<IndustryFilter[] | null>(null);
@@ -85,22 +77,14 @@ const IndustryFilterListPage = () => {
     const fetchIndustryFilterData = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await activeIndustryFilterService.getAllIndustryFilters();
+            const response = await IndustryFilterService.getAllIndustryFilters();
             setIndustryFilterData(response);
         } catch (error) {
-            handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
+            toast.error(t('industryFilterManagement.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [handleError]);
-
-    const handleCreateIndustryFilter = useCallback(() => {
-        if (!checkPermission('create', 'industry_filter')) {
-            return;
-        }
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
+    }, [t]);
 
     const handleEditIndustryFilter = useCallback(
         async (filter: IndustryFilter) => {
@@ -115,7 +99,7 @@ const IndustryFilterListPage = () => {
             setIsFormLoading(true);
 
             try {
-                const detailData = await activeIndustryFilterService.getIndustryFilterById(
+                const detailData = await IndustryFilterService.getIndustryFilterById(
                     filter.filterId
                 );
                 setModalState({
@@ -123,13 +107,14 @@ const IndustryFilterListPage = () => {
                     mode: 'edit',
                     data: detailData,
                 });
-            } catch (error) {
+            } catch (error: any) {
+                console.error('Error fetching industry filter details:', error);
                 handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
             } finally {
                 setIsFormLoading(false);
             }
         },
-        [checkPermission, handleError]
+        [checkPermission]
     );
 
     const handleDeleteIndustryFilter = useCallback(
@@ -144,10 +129,11 @@ const IndustryFilterListPage = () => {
                 pendingAction: async () => {
                     try {
                         const filterId = filter.filterId;
-                        await activeIndustryFilterService.deleteIndustryFilter(filterId);
+                        await IndustryFilterService.deleteIndustryFilter(filterId);
                         toast.success(t('industryFilterManagement.deleteSuccess'));
-                        await fetchIndustryFilterData();
+                        fetchIndustryFilterData();
                     } catch (error) {
+                        console.error('Error deleting industry filter:', error);
                         handleError(error, { fallbackKey: 'industryFilterManagement.deleteError' });
                         throw error;
                     }
@@ -157,15 +143,14 @@ const IndustryFilterListPage = () => {
         [t, fetchIndustryFilterData, checkPermission, handleError]
     );
 
-    const handleViewIndustryFilter = useCallback(
-        async (filter: IndustryFilter) => {
+    const handleViewStep = useCallback(
+        async (step: IndustryFilter) => {
             setViewModalState({ open: true, loading: true, data: null });
             try {
-                const detailData = await activeIndustryFilterService.getIndustryFilterById(
-                    filter.filterId
-                );
+                const detailData = await IndustryFilterService.getIndustryFilterById(step.filterId);
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error) {
+            } catch (error: any) {
+                console.error('Error fetching industry filter details:', error);
                 handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
             }
@@ -175,21 +160,14 @@ const IndustryFilterListPage = () => {
 
     const columnProps: IndustryFilterTableColumnProps = useMemo(
         () => ({
-            onView: handleViewIndustryFilter,
+            onView: handleViewStep,
             onEdit: handleEditIndustryFilter,
             onDelete: handleDeleteIndustryFilter,
             isMobile,
             t,
             ability,
         }),
-        [
-            handleEditIndustryFilter,
-            handleDeleteIndustryFilter,
-            handleViewIndustryFilter,
-            isMobile,
-            t,
-            ability,
-        ]
+        [handleEditIndustryFilter, handleDeleteIndustryFilter, handleViewStep, isMobile, t, ability]
     );
 
     const columns = useMemo(() => getIndustryFilterTableColumns(columnProps), [columnProps]);
@@ -234,20 +212,21 @@ const IndustryFilterListPage = () => {
     const executeSubmit = async (data: IndustryFilterFormData, mode: 'create' | 'edit') => {
         try {
             if (mode === 'create') {
-                await activeIndustryFilterService.createIndustryFilter(data);
+                await IndustryFilterService.createIndustryFilter(data);
                 toast.success(t('industryFilterManagement.form.createSuccess'));
             } else {
                 if (modalState.data?.filterId) {
-                    const submitData: IndustryFilterUpdateData = {
+                    const submitData = {
                         ...data,
                         filterId: modalState.data.filterId,
                     };
-                    await activeIndustryFilterService.updateIndustryFilter(submitData);
+                    await IndustryFilterService.updateIndustryFilter(submitData as any);
                     toast.success(t('industryFilterManagement.updateSuccess'));
                 }
             }
-            await fetchIndustryFilterData();
+            fetchIndustryFilterData();
         } catch (error) {
+            console.error('Error submitting industry filter:', error);
             handleError(error, {
                 fallbackKey:
                     mode === 'create'
@@ -259,22 +238,24 @@ const IndustryFilterListPage = () => {
     };
 
     const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) {
-            return;
-        }
-
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pending action.
-        } finally {
-            setConfirmModalState({
-                open: false,
-                type: 'create',
-                pendingAction: null,
-            });
+        if (confirmModalState.pendingAction) {
+            try {
+                setConfirmModalState((prev) => ({ ...prev, open: false }));
+                await confirmModalState.pendingAction();
+                setModalState((prev) => ({ ...prev, open: false }));
+                setConfirmModalState({
+                    open: false,
+                    type: 'create',
+                    pendingAction: null,
+                });
+            } catch (error) {
+                // Reset state on error
+                setConfirmModalState({
+                    open: false,
+                    type: 'create',
+                    pendingAction: null,
+                });
+            }
         }
     };
 
@@ -290,21 +271,6 @@ const IndustryFilterListPage = () => {
         () => getIndustryFilterFormFields(t, modalState.mode),
         [t, modalState.mode]
     );
-
-    const industryFilterFormInitialData = useMemo<IndustryFilterFormData | null>(() => {
-        if (!modalState.data) {
-            return null;
-        }
-
-        return {
-            displayNameEn: modalState.data.displayNameEn,
-            displayNameVi: modalState.data.displayNameVi,
-            shortNameEn: modalState.data.shortNameEn ?? undefined,
-            startTime: modalState.data.startTime,
-            endTime: modalState.data.endTime,
-            sortOrder: modalState.data.sortOrder,
-        };
-    }, [modalState.data]);
 
     return (
         <>
@@ -331,7 +297,9 @@ const IndustryFilterListPage = () => {
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 block={isMobile}
-                                onClick={handleCreateIndustryFilter}
+                                onClick={() =>
+                                    setModalState({ open: true, mode: 'create', data: null })
+                                }
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
                                 {t('industryFilterManagement.addIndustryFilter')}
@@ -345,7 +313,9 @@ const IndustryFilterListPage = () => {
                             type="primary"
                             shape="circle"
                             icon={<PlusOutlined />}
-                            onClick={handleCreateIndustryFilter}
+                            onClick={() =>
+                                setModalState({ open: true, mode: 'create', data: null })
+                            }
                             aria-label={t('industryFilterManagement.addIndustryFilter')}
                             style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                         />
@@ -541,11 +511,13 @@ const IndustryFilterListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingBottom: 0,
+                styles={{
+                    body: {
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
                 }}
             >
                 {industryFilterData === null ? (
@@ -587,10 +559,10 @@ const IndustryFilterListPage = () => {
 
             <EntityFormModal<IndustryFilterFormData>
                 open={modalState.open}
-                onOpenChange={(open) => setModalState((prev) => ({ ...prev, open }))}
+                onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
-                initialData={industryFilterFormInitialData}
+                initialData={modalState.data}
                 fields={formFields}
                 title={{
                     create: t('industryFilterManagement.form.createTitle'),

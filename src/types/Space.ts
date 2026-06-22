@@ -14,6 +14,7 @@ export interface SpaceDetailResponse {
     spaceParentCode: string | null;
     spaceCode: string;
     spaceName: string;
+    floorPlanImageUrl?: string | null;
     description: string | null;
     displayOrder: number;
     auditMetaData: AuditMetaData;
@@ -25,6 +26,7 @@ export interface SpaceWithChildrenResponse {
     parentId: number | null;
     spaceCode: string;
     spaceName: string;
+    floorPlanImageUrl?: string | null;
     description: string | null;
     displayOrder: number;
     auditMetaData: AuditMetaData;
@@ -44,6 +46,7 @@ export interface SpaceCRUDResponse {
     spaceId: number;
     spaceCode: string;
     spaceName: string;
+    floorPlanImageUrl?: string | null;
     description: string | null;
     displayOrder: number;
     spaceLevel: SpaceLevel;
@@ -55,6 +58,7 @@ export interface SpaceCreationRequest {
     parentSpaceId?: number | null;
     spaceCode: string;
     spaceName: string;
+    floorPlanImageUrl?: string | null;
     description?: string;
     displayOrder?: number;
     spaceLevelId?: number;
@@ -65,6 +69,7 @@ export interface SpaceUpdationRequest {
     parentSpaceId?: number | null;
     spaceCode: string;
     spaceName: string;
+    floorPlanImageUrl?: string | null;
     description?: string;
     displayOrder?: number;
 }

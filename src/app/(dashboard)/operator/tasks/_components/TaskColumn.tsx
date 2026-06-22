@@ -66,7 +66,7 @@ export function TaskColumn({ column, tasks, total, onOpenTask }: TaskColumnProps
                 }}
             >
                 <Flex align="flex-start" justify="space-between" gap={12} style={{ position: 'relative', zIndex: 1 }}>
-                    <Space direction="vertical" size={2} style={{ minWidth: 0 }}>
+                    <Space orientation="vertical" size={2} style={{ minWidth: 0 }}>
                         <Text strong style={{ fontSize: 15 }}>
                             {column.title}
                         </Text>

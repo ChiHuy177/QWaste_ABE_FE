@@ -13,6 +13,8 @@ import {
     Spin,
     Typography,
     Tag,
+    Tooltip,
+    Collapse,
     Popover,
 } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -29,8 +31,7 @@ import { EntityFormModal } from '@/components/shared/FormModal';
 import { getDrawingCodeFormFields } from './_components/drawingCodeFormConfig';
 import { StepBuilder } from './_components/StepBuilder';
 import { PDFPreviewModal } from '@/components/shared/PDFPreviewModal';
-import { DrawingCodeService } from '@/services/DrawingCodeService';
-import { DemoDrawingCodeService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
+import { DrawingCodeService } from '@/services';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useUploadThing } from '@/utils/uploadthing';
@@ -40,7 +41,6 @@ import dayjs from 'dayjs';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 
 const { useBreakpoint } = Grid;
-const activeDrawingCodeService = USE_MOCK_ORDERS ? DemoDrawingCodeService : DrawingCodeService;
 
 const DrawingCodeListPage = () => {
     const [modalState, setModalState] = useState<{
@@ -89,18 +89,18 @@ const DrawingCodeListPage = () => {
 
     usePageTitle(t('pageTitle.drawingCodeList'));
 
-    const fetchDrawingCodeData = useCallback(async () => {
+    const fetchDrawingCodeData = async () => {
         try {
             setLoading(true);
-            const response = await activeDrawingCodeService.getAllDrawingCode();
+            const response = await DrawingCodeService.getAllDrawingCode();
             setDrawingCodeData(response);
         } catch (error) {
             console.error('Error fetching drawing code data:', error);
-            handleError(error, { fallbackKey: 'drawingCodeManagement.fetchError' });
+            toast.error(t('drawingCodeManagement.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [handleError]);
+    };
 
     const handleEditDrawingCode = useCallback(
         async (drawingCode: DrawingCode) => {
@@ -112,19 +112,19 @@ const DrawingCodeListPage = () => {
             setIsFormLoading(true);
 
             try {
-                const detailData = await activeDrawingCodeService.getDrawingCodeById(
+                const detailData = await DrawingCodeService.getDrawingCodeById(
                     drawingCode.drawingCodeId
                 );
                 setModalState({ open: true, mode: 'edit', data: detailData });
             } catch (error) {
                 console.error('Error fetching drawing code data:', error);
-                handleError(error, { fallbackKey: 'drawingCodeManagement.fetchError' });
+                toast.error(t('drawingCodeManagement.fetchError'));
                 setModalState({ open: false, mode: 'create', data: null });
             } finally {
                 setIsFormLoading(false);
             }
         },
-        [checkPermission, handleError]
+        [t, checkPermission]
     );
 
     const handleDeleteDrawingCode = useCallback(
@@ -138,17 +138,21 @@ const DrawingCodeListPage = () => {
                 type: 'delete',
                 pendingAction: async () => {
                     try {
-                        await activeDrawingCodeService.deleteDrawingCode(drawingCode.drawingCodeId);
+                        await DrawingCodeService.deleteDrawingCode(drawingCode.drawingCodeId);
                         toast.success(t('drawingCodeManagement.deleteSuccess'));
-                        await fetchDrawingCodeData();
+                        fetchDrawingCodeData();
                     } catch (error) {
-                        handleError(error, { fallbackKey: 'drawingCodeManagement.deleteError' });
+                        const errorMessage =
+                            error instanceof Error
+                                ? error.message
+                                : t('drawingCodeManagement.deleteError');
+                        toast.error(errorMessage);
                         throw error;
                     }
                 },
             });
         },
-        [t, checkPermission, fetchDrawingCodeData, handleError]
+        [t]
     );
 
     const handleRestoreDrawingCode = useCallback(
@@ -162,19 +166,21 @@ const DrawingCodeListPage = () => {
                 type: 'restore',
                 pendingAction: async () => {
                     try {
-                        await activeDrawingCodeService.restoreDrawingCode(
-                            drawingCode.drawingCodeId
-                        );
+                        await DrawingCodeService.restoreDrawingCode(drawingCode.drawingCodeId);
                         toast.success(t('drawingCodeManagement.restoreSuccess'));
-                        await fetchDrawingCodeData();
+                        fetchDrawingCodeData();
                     } catch (error) {
-                        handleError(error, { fallbackKey: 'drawingCodeManagement.restoreError' });
+                        const errorMessage =
+                            error instanceof Error
+                                ? error.message
+                                : t('drawingCodeManagement.restoreError');
+                        toast.error(errorMessage);
                         throw error;
                     }
                 },
             });
         },
-        [t, checkPermission, fetchDrawingCodeData, handleError]
+        [t]
     );
 
     const handlePreviewPDF = useCallback((drawingCode: DrawingCode) => {
@@ -190,7 +196,7 @@ const DrawingCodeListPage = () => {
         async (drawing_code: DrawingCode) => {
             setViewModalState({ open: true, loading: true, data: null });
             try {
-                const detailData = await activeDrawingCodeService.getDrawingCodeById(
+                const detailData = await DrawingCodeService.getDrawingCodeById(
                     drawing_code.drawingCodeId
                 );
                 setViewModalState({ open: true, loading: false, data: detailData });
@@ -238,16 +244,21 @@ const DrawingCodeListPage = () => {
 
     useEffect(() => {
         fetchDrawingCodeData();
-    }, [fetchDrawingCodeData]);
+    }, []);
 
-    const handleSubmit = async (data: any, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
-    };
+    const handleSubmit = useCallback(
+        async (data: any, mode: 'create' | 'edit') => {
+            setConfirmModalState({
+                open: true,
+                type: mode,
+                pendingAction: () => executeSubmit(data, mode),
+            });
+            // We throw this error to tell EntityFormModal that we are waiting for confirmation
+            // This prevents the modal from closing automatically if it does that
+            throw new Error('CONFIRMATION_PENDING');
+        },
+        [t, startUpload, modalState.data]
+    );
 
     const executeSubmit = async (data: any, mode: 'create' | 'edit') => {
         const stepTemplates: StepTemplate[] = (data.stepTemplates || []).map(
@@ -262,15 +273,11 @@ const DrawingCodeListPage = () => {
             let pdfUrl = data.pdfLink;
             if (data.pdfLink instanceof File) {
                 try {
-                    if (USE_MOCK_ORDERS) {
-                        pdfUrl = URL.createObjectURL(data.pdfLink);
+                    const result = await startUpload([data.pdfLink]);
+                    if (result && result[0]) {
+                        pdfUrl = result[0].ufsUrl || result[0].url;
                     } else {
-                        const result = await startUpload([data.pdfLink]);
-                        if (result && result[0]) {
-                            pdfUrl = result[0].ufsUrl || result[0].url;
-                        } else {
-                            throw new Error('Failed to upload PDF');
-                        }
+                        throw new Error('Failed to upload PDF');
                     }
                 } catch (error) {
                     toast.error(
@@ -290,7 +297,7 @@ const DrawingCodeListPage = () => {
                 ofCustomer: data.ofCustomer || 'WOODSLAND',
                 stepTemplates: stepTemplates,
             };
-            await activeDrawingCodeService.createDrawingCode(payload);
+            await DrawingCodeService.createDrawingCode(payload);
             toast.success(t('drawingCodeManagement.form.createSuccess'));
         } else {
             const payload: UpdateDrawingCodeRequest = {
@@ -301,19 +308,11 @@ const DrawingCodeListPage = () => {
                 ofCustomer: data.ofCustomer || 'WOODSLAND',
                 stepTemplates: stepTemplates.length > 0 ? stepTemplates : undefined,
             };
-            await activeDrawingCodeService.updateDrawingCode(payload);
+            await DrawingCodeService.updateDrawingCode(payload);
             toast.success(t('drawingCodeManagement.updateSuccess'));
         }
-        await fetchDrawingCodeData();
+        fetchDrawingCodeData();
     };
-
-    const handleCreateDrawingCode = useCallback(() => {
-        if (!checkPermission('create', 'drawing_code')) {
-            return;
-        }
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
 
     const handleConfirmAction = async () => {
         if (confirmModalState.pendingAction) {
@@ -370,7 +369,7 @@ const DrawingCodeListPage = () => {
                 icon={<CodeOutlined />}
                 loading={loading}
                 rightContent={
-                    <Space wrap direction={isMobile ? 'vertical' : 'horizontal'}>
+                    <Space wrap orientation={isMobile ? 'vertical' : 'horizontal'}>
                         <SearchInput
                             placeholder={t('drawingCodeManagement.searchPlaceholder')}
                             value={searchTerm}
@@ -381,7 +380,9 @@ const DrawingCodeListPage = () => {
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
-                                onClick={handleCreateDrawingCode}
+                                onClick={() =>
+                                    setModalState({ open: true, mode: 'create', data: null })
+                                }
                             >
                                 {t('drawingCodeManagement.addDrawingCode')}
                             </Button>
@@ -395,7 +396,9 @@ const DrawingCodeListPage = () => {
                             shape="circle"
                             icon={<PlusOutlined />}
                             block={isMobile}
-                            onClick={handleCreateDrawingCode}
+                            onClick={() =>
+                                setModalState({ open: true, mode: 'create', data: null })
+                            }
                             aria-label={t('drawingCodeManagement.addDrawingCode')}
                         />
                     ) : null
@@ -516,8 +519,8 @@ const DrawingCodeListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
                                             ? dayjs(
-                                                  viewModalState.data.auditMetaData.createdAt
-                                              ).format('DD/MM/YYYY HH:mm:ss')
+                                                viewModalState.data.auditMetaData.createdAt
+                                            ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -526,8 +529,8 @@ const DrawingCodeListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
                                             ? dayjs(
-                                                  viewModalState.data.auditMetaData.updatedAt
-                                              ).format('DD/MM/YYYY HH:mm:ss')
+                                                viewModalState.data.auditMetaData.updatedAt
+                                            ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>

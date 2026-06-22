@@ -1,5 +1,4 @@
 import {
-    LayoutOutlined,
     LaptopOutlined,
     ApartmentOutlined,
     SettingOutlined,
@@ -9,7 +8,7 @@ import {
     TeamOutlined,
     CheckSquareOutlined,
     AppstoreOutlined,
-    ToolOutlined,
+    PartitionOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -27,16 +26,22 @@ const createMenuItem = (key: string, label: string, icon?: React.ReactNode): Men
 export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     const items: MenuItem[] = [];
 
-    if (ability.can('view', 'overview')) {
-        items.push(createMenuItem('/admin', t('sidebar.navigation.overview'), <LayoutOutlined />));
-    }
-
-    if (ability.can('view', 'factory_overview')) {
+    if (ability.can('view', 'space_monitoring')) {
         items.push(
             createMenuItem(
-                '/admin/factory-overview',
-                t('sidebar.navigation.factoryOverview'),
+                '/admin/space-monitoring',
+                t('permissionSubjects.space_monitoring'),
                 <ApartmentOutlined />
+            )
+        );
+    }
+
+    if (ability.can('view', 'floor_map')) {
+        items.push(
+            createMenuItem(
+                '/admin/floor-map/status',
+                t('sidebar.navigation.floorMapStatus'),
+                <PartitionOutlined />
             )
         );
     }
@@ -89,6 +94,11 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             createMenuItem('/admin/categories/space', t('sidebar.navigation.space'))
         );
     }
+    if (ability.can('update', 'floor_map') && ability.can('view', 'floor_map')) {
+        spaceConfigurationItems.push(
+            createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
+        );
+    }
     if (spaceConfigurationItems.length > 0) {
         categoryItems.push({
             key: 'space_configuration',
@@ -130,39 +140,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
         });
     }
 
-    // Group: Factory Operations
-    const factoryOperationsItems: MenuItem[] = [];
-    if (ability.can('view', 'error_group')) {
-        factoryOperationsItems.push(
-            createMenuItem('/admin/categories/errorGroup', t('sidebar.navigation.errorGroup'))
-        );
-    }
-    if (ability.can('view', 'error_detail')) {
-        factoryOperationsItems.push(
-            createMenuItem('/admin/categories/errorDetail', t('sidebar.navigation.errorDetail'))
-        );
-    }
-    if (ability.can('view', 'production_plan')) {
-        factoryOperationsItems.push(
-            createMenuItem(
-                '/admin/categories/productionPlan',
-                t('sidebar.navigation.productionPlan')
-            )
-        );
-    }
-    if (ability.can('view', 'mold_code')) {
-        factoryOperationsItems.push(
-            createMenuItem('/admin/categories/moldCode', t('sidebar.navigation.moldCode'))
-        );
-    }
-    if (factoryOperationsItems.length > 0) {
-        categoryItems.push({
-            key: 'factory_operations',
-            label: t('sidebar.navigation.factoryOperations'),
-            children: factoryOperationsItems,
-        });
-    }
-
     if (categoryItems.length > 0) {
         items.push({
             key: 'categories',
@@ -172,35 +149,17 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
         });
     }
 
-    if (ability.can('view', 'incident_report')) {
-        items.push({
-            key: 'maintenance',
-            icon: <ToolOutlined />,
-            label: t('sidebar.navigation.maintenance'),
-            children: [
-                createMenuItem(
-                    '/maintenance/incidents',
-                    t('sidebar.navigation.incidentReports')
-                ),
-                createMenuItem(
-                    '/maintenance/incidents/overview',
-                    t('sidebar.navigation.incidentOverview')
-                ),
-            ],
-        });
-    }
-
     if (ability.can('view', 'order')) {
         items.push(
             createMenuItem('/admin/order', t('sidebar.navigation.order'), <ShoppingOutlined />)
         );
     }
 
-    // if (ability.can('view', 'process')) {
-    //     items.push(
-    //         createMenuItem('/admin/process', t('sidebar.navigation.process'), <ProjectOutlined />)
-    //     );
-    // }
+    if (ability.can('view', 'process')) {
+        items.push(
+            createMenuItem('/admin/process', t('sidebar.navigation.process'), <ProjectOutlined />)
+        );
+    }
 
     if (ability.can('view', 'staff')) {
         items.push(createMenuItem('/admin/staff', t('sidebar.navigation.staff'), <TeamOutlined />));

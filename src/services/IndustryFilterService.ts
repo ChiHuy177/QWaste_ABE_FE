@@ -15,6 +15,14 @@ export class IndustryFilterService {
         return response.result as IndustryFilter[];
     }
 
+    static async getIndustryFiltersForPicking(): Promise<IndustryFilter[]> {
+        const response = await NetworkService.requestJson<IndustryFilter[]>({
+            method: 'GET',
+            url: ENDPOINTS.INDUSTRY_FILTER.PICKING,
+        });
+        return response.result as IndustryFilter[];
+    }
+
     static async getIndustryFilterById(filterId: number): Promise<IndustryFilter> {
         const response = await NetworkService.requestJson<IndustryFilter>({
             method: 'GET',
@@ -39,9 +47,7 @@ export class IndustryFilterService {
         return response.result as IndustryFilter[];
     }
 
-    static async createIndustryFilter(
-        filterData: IndustryFilterFormData
-    ): Promise<IndustryFilter> {
+    static async createIndustryFilter(filterData: IndustryFilterFormData): Promise<IndustryFilter> {
         const response = await NetworkService.requestJson<IndustryFilter>({
             method: 'POST',
             url: ENDPOINTS.INDUSTRY_FILTER.BASE,
@@ -50,9 +56,7 @@ export class IndustryFilterService {
         return response.result as IndustryFilter;
     }
 
-    static async updateIndustryFilter(
-        filterData: IndustryFilterUpdateData
-    ): Promise<string> {
+    static async updateIndustryFilter(filterData: IndustryFilterUpdateData): Promise<string> {
         const response = await NetworkService.requestJson<IndustryFilter>({
             method: 'PUT',
             url: ENDPOINTS.INDUSTRY_FILTER.BASE,

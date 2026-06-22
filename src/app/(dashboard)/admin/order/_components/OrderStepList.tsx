@@ -119,17 +119,17 @@ const StepTagsPreview: React.FC<StepTagsPreviewProps> = ({ drawingIndex, stepFie
                 return (
                     <Space size={8}>
                         {materialName && (
-                            <Tag bordered={false} style={{ fontSize: 11 }}>
+                            <Tag variant="filled" style={{ fontSize: 11 }}>
                                 {materialName}
                             </Tag>
                         )}
                         {timeSeconds && (
-                            <Tag bordered={false} color="blue" style={{ fontSize: 11 }}>
+                            <Tag variant="filled" color="blue" style={{ fontSize: 11 }}>
                                 {formatDuration(timeSeconds)}
                             </Tag>
                         )}
                         {requiresQc && (
-                            <Tag bordered={false} color="orange" style={{ fontSize: 11 }}>
+                            <Tag variant="filled" color="orange" style={{ fontSize: 11 }}>
                                 QC
                             </Tag>
                         )}
@@ -277,7 +277,7 @@ const OrderStepItem: React.FC<OrderStepItemProps> = ({
                         <InputNumber />
                     </Form.Item>
 
-                    <Space direction="vertical" size={20} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={20} style={{ width: '100%' }}>
                         {/* Step Name */}
                         <Form.Item
                             {...restField}

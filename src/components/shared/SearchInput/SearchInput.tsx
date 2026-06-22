@@ -66,6 +66,7 @@ export const SearchInput = ({
             suffix={
                 showFilterIcon && FilterIcon ? (
                     <FilterIcon
+                        aria-label="Open filters"
                         style={{
                             color: isFilterActive ? '#1677ff' : '#bfbfbf',
                             cursor: 'pointer',

@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { AuthService } from '@/services/AuthService';
-import { DemoAuthService, USE_DEMO_AUTH } from '@/mockData/auth';
 
 export default function GlobalErrorHandler() {
     const router = useRouter();
@@ -19,11 +18,7 @@ export default function GlobalErrorHandler() {
         const isProtectedRoute = currentPath.startsWith('/admin') || currentPath.startsWith('/qc');
 
         try {
-            if (USE_DEMO_AUTH) {
-                DemoAuthService.logout();
-            } else {
-                await AuthService.logout();
-            }
+            await AuthService.logout();
             console.log('[GlobalErrorHandler] Logout successful - cookie cleared');
         } catch (error) {
             console.error('[GlobalErrorHandler] Logout failed but continuing:', error);

@@ -5,7 +5,6 @@ import { Select, Spin } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { UserService } from '@/services/UserService';
 import { UserForPickingByRole } from '@/types/User';
-import { DemoOrderService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
 
 interface OperatorSelectorProps {
     value?: string[];
@@ -41,9 +40,7 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
         const fetchOperators = async () => {
             try {
                 setLoadingLocal(true);
-                const data = USE_MOCK_ORDERS
-                    ? await DemoOrderService.getOperators()
-                    : await UserService.getUsersByRole('OPERATOR');
+                const data = await UserService.getUsersByRole('OPERATOR');
                 setOperatorsLocal(data);
             } catch (error) {
                 console.error('Failed to fetch operators:', error);
@@ -64,10 +61,10 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
             placeholder={placeholder || t('orderManagement.task.selectOperatorPlaceholder')}
             disabled={disabled || loading}
             className={className}
-            showSearch
-            filterOption={(input, option) =>
-                (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
-            }
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase()),
+            }}
             notFoundContent={loading ? <Spin size="small" /> : t('orderManagement.task.noOperatorFound')}
             options={operators.map((op) => ({
                 value: op.userId,

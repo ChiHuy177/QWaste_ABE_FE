@@ -44,7 +44,6 @@ import { orderActions } from '@/stores/OrderStore';
 import { TaskAssignment, TaskResponse, OrderDrawingSummaryResponse, OrderAttachment, TaskReview } from '@/types';
 import { DrawingCodePickingResponse } from '@/types/DrawingCode';
 import { DrawingCodeService, OrderService } from '@/services';
-import { DemoOrderService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
 
 
 const { Text } = Typography;
@@ -194,9 +193,7 @@ export const OrderDetailDrawer: React.FC = () => {
             // Load templates if needed (for DRAFT orders)
             const loadDrawingTemplates = async () => {
                 try {
-                    const templates = USE_MOCK_ORDERS
-                        ? await DemoOrderService.getDrawingTemplates()
-                        : await DrawingCodeService.getDrawingCodesForPicking();
+                    const templates = await DrawingCodeService.getDrawingCodesForPicking();
                     if (isMounted) {
                         setDrawingTemplates(templates);
                     }
@@ -233,9 +230,7 @@ export const OrderDetailDrawer: React.FC = () => {
         // Gọi API tải chi tiết
         setLoadingDrawingsMap(prev => ({ ...prev, [orderDrawingId]: true }));
         try {
-            const detail = USE_MOCK_ORDERS
-                ? await DemoOrderService.getOrderDrawingDetail(selectedOrderId, String(orderDrawingId))
-                : await OrderService.getOrderDrawingDetail(selectedOrderId, String(orderDrawingId));
+            const detail = await OrderService.getOrderDrawingDetail(selectedOrderId, String(orderDrawingId));
             setLoadedDrawingDetails(prev => ({ ...prev, [orderDrawingId]: detail }));
         } catch (error) {
             console.error('Error fetching drawing detail:', error);
@@ -267,7 +262,7 @@ export const OrderDetailDrawer: React.FC = () => {
 
     // 3. Render Overview Tab
     const renderOrderOverview = () => (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* Order Basic Info */}
             <Card
                 title={
@@ -282,8 +277,7 @@ export const OrderDetailDrawer: React.FC = () => {
                 <Descriptions
                     column={{ xs: 1, sm: 2, md: 3 }}
                     size="middle"
-                    labelStyle={{ color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }}
-                    contentStyle={{ fontWeight: 600, fontSize: 13 }}
+                    styles={{ label: { color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }, content: { fontWeight: 600, fontSize: 13 } }}
                 >
                     <Descriptions.Item label={t('orderManagement.list.table.orderCode')}>
                         <Text strong style={{ color: token.colorPrimary }}>{currentOrder?.orderCode}</Text>
@@ -331,8 +325,7 @@ export const OrderDetailDrawer: React.FC = () => {
                 <Descriptions
                     column={{ xs: 1, sm: 2, md: 3 }}
                     size="middle"
-                    labelStyle={{ color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }}
-                    contentStyle={{ fontWeight: 600, fontSize: 13 }}
+                    styles={{ label: { color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }, content: { fontWeight: 600, fontSize: 13 } }}
                 >
                     <Descriptions.Item label={t('orderManagement.detail.overview.expectedStartDate')}>
                         {currentOrder?.expectedStartDate
@@ -356,8 +349,7 @@ export const OrderDetailDrawer: React.FC = () => {
                         <Descriptions
                             column={{ xs: 1, sm: 2 }}
                             size="middle"
-                            labelStyle={{ color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }}
-                            contentStyle={{ fontWeight: 600, fontSize: 13 }}
+                    styles={{ label: { color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }, content: { fontWeight: 600, fontSize: 13 } }}
                         >
                             {currentOrder.penaltyAmount !== undefined && currentOrder.penaltyAmount !== null && currentOrder.penaltyAmount > 0 && (
                                 <Descriptions.Item label={t('orderManagement.detail.overview.penaltyAmount')}>
@@ -394,8 +386,7 @@ export const OrderDetailDrawer: React.FC = () => {
                 <Descriptions
                     column={{ xs: 1, sm: 2, md: 3 }}
                     size="middle"
-                    labelStyle={{ color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }}
-                    contentStyle={{ fontWeight: 600, fontSize: 13 }}
+                    styles={{ label: { color: token.colorTextSecondary, fontWeight: 500, fontSize: 13 }, content: { fontWeight: 600, fontSize: 13 } }}
                 >
                     <Descriptions.Item label={t('orderManagement.detail.overview.customer')}>
                         {currentOrder?.customerName || '-'}
@@ -441,7 +432,7 @@ export const OrderDetailDrawer: React.FC = () => {
                         <Space>
                             <PaperClipOutlined style={{ color: token.colorPrimary }} />
                             <Text strong>{t('orderManagement.detail.overview.attachments')}</Text>
-                            <Tag bordered={false} style={{ margin: 0 }}>{currentOrder.orderAttachments.length}</Tag>
+                            <Tag variant="filled" style={{ margin: 0 }}>{currentOrder.orderAttachments.length}</Tag>
                         </Space>
                     }
                     style={{ borderRadius: 12 }}
@@ -495,8 +486,7 @@ export const OrderDetailDrawer: React.FC = () => {
                     <Descriptions
                         column={{ xs: 1, sm: 2, md: 4 }}
                         size="small"
-                        labelStyle={{ color: token.colorTextTertiary, fontSize: 12 }}
-                        contentStyle={{ fontSize: 12 }}
+                    styles={{ label: { color: token.colorTextTertiary, fontSize: 12 }, content: { fontSize: 12 } }}
                     >
                         <Descriptions.Item label={t('orderManagement.detail.overview.createdAt')}>
                             {currentOrder.auditMetaData.createdAt
@@ -537,7 +527,7 @@ export const OrderDetailDrawer: React.FC = () => {
         const sortedSteps = Array.from(stepMap.entries()).sort((a, b) => a[0] - b[0]);
 
         return (
-            <Space direction="vertical" style={{ width: '100%', paddingTop: 8 }} size="middle">
+            <Space orientation="vertical" style={{ width: '100%', paddingTop: 8 }} size="middle">
                 {sortedSteps.map(([stepOrder, stepTasks]) => {
                     const firstTask = stepTasks[0];
                     return (
@@ -560,7 +550,7 @@ export const OrderDetailDrawer: React.FC = () => {
                                     </Text>
                                 )}
                                 {firstTask.materialName && (
-                                    <Tag bordered={false} style={{ margin: 0, fontSize: 11 }}>
+                                    <Tag variant="filled" style={{ margin: 0, fontSize: 11 }}>
                                         {firstTask.materialName}
                                     </Tag>
                                 )}
@@ -572,7 +562,7 @@ export const OrderDetailDrawer: React.FC = () => {
                             )}
 
                             {/* Tasks in this step */}
-                            <Space direction="vertical" style={{ width: '100%', paddingLeft: 12 }} size="small">
+                            <Space orientation="vertical" style={{ width: '100%', paddingLeft: 12 }} size="small">
                                 {stepTasks.sort((a, b) => (a.taskOrder || 0) - (b.taskOrder || 0)).map((task) => (
                                     <div
                                         key={task.taskId}
@@ -586,13 +576,13 @@ export const OrderDetailDrawer: React.FC = () => {
                                             alignItems: 'center',
                                         }}
                                     >
-                                        <Space direction="vertical" size={2}>
+                                        <Space orientation="vertical" size={2}>
                                             <Space size={8}>
                                                 <Text strong style={{ fontSize: 13 }}>
                                                     {task.taskName || `${t('orderManagement.task.taskLabel')} ${task.taskOrder || ''}`}
                                                 </Text>
                                                 {task.taskType === 'REWORK' && (
-                                                    <Tag bordered={false} style={{ margin: 0, fontSize: token.fontSizeSM, color: token.colorError, background: token.colorErrorBg }}>
+                                                    <Tag variant="filled" style={{ margin: 0, fontSize: token.fontSizeSM, color: token.colorError, background: token.colorErrorBg }}>
                                                         {t('orderManagement.detail.kanban.rework')}
                                                     </Tag>
                                                 )}
@@ -734,7 +724,7 @@ export const OrderDetailDrawer: React.FC = () => {
 
         if (allReviews.length === 0) {
             return (
-                <Space direction="vertical" size={12} style={{ width: '100%', paddingTop: 8 }}>
+                <Space orientation="vertical" size={12} style={{ width: '100%', paddingTop: 8 }}>
                     <Space wrap size={[8, 8]}>
                         <Tag style={{ margin: 0 }}>{t('managerReview.drawer.stats.totalTasks')}: {tasks.length}</Tag>
                         <Tag color="warning" style={{ margin: 0 }}>
@@ -889,7 +879,7 @@ export const OrderDetailDrawer: React.FC = () => {
         ).length;
 
         return (
-            <Space direction="vertical" size="middle" style={{ width: '100%', paddingTop: 12 }}>
+            <Space orientation="vertical" size="middle" style={{ width: '100%', paddingTop: 12 }}>
                 <Card
                     size="small"
                     style={{ borderRadius: token.borderRadiusLG, borderColor: token.colorBorderSecondary }}
@@ -933,7 +923,7 @@ export const OrderDetailDrawer: React.FC = () => {
                                 border: `1px solid ${token.colorBorderSecondary}`,
                                 boxShadow: token.boxShadowTertiary,
                             }}
-                            bodyStyle={{ padding: token.padding }}
+                            styles={{ body: { padding: token.padding } }}
                         >
                             {/* Thanh Header của mỗi Bản vẽ */}
                             <Flex justify="space-between" align="center" style={{ cursor: 'pointer' }} onClick={() => handleToggleDrawingDetail(drawing.orderDrawingId)}>
@@ -954,7 +944,7 @@ export const OrderDetailDrawer: React.FC = () => {
                                     >
                                         <AimOutlined />
                                     </div>
-                                    <Space direction="vertical" size={4}>
+                                    <Space orientation="vertical" size={4}>
                                         <Text strong style={{ fontSize: token.fontSizeLG }}>
                                             {drawing.drawingCode} - {drawing.drawingCodeName}
                                         </Text>
@@ -997,7 +987,7 @@ export const OrderDetailDrawer: React.FC = () => {
                                             )}
                                         </Space>
                                         {(drawing.description || drawing.pdfLink) && (
-                                            <Space direction="vertical" size={8} style={{ marginTop: 8 }}>
+                                            <Space orientation="vertical" size={8} style={{ marginTop: 8 }}>
                                                 {drawing.description && (
                                                     <Text type="secondary" style={{ fontSize: 12 }}>
                                                         {drawing.description}
@@ -1049,7 +1039,7 @@ export const OrderDetailDrawer: React.FC = () => {
                                     size="small"
                                     showInfo
                                     strokeColor={token.colorPrimary}
-                                    trailColor={token.colorFillSecondary}
+                                    railColor={token.colorFillSecondary}
                                     format={(percent) =>
                                         `${percent}% (${actualQty}/${targetQty || 0})`
                                     }
@@ -1067,7 +1057,7 @@ export const OrderDetailDrawer: React.FC = () => {
                                 >
                                     {isDrawingLoading ? (
                                         <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                                            <Spin tip={t('common.loading')} size="small" />
+                                            <Spin description={t('common.loading')} size="small" />
                                         </div>
                                     ) : drawingDetail ? (
                                         renderDrawingExpandedDetail(drawingDetail)
@@ -1161,7 +1151,7 @@ export const OrderDetailDrawer: React.FC = () => {
             }
             open={isOrderDetailDrawerOpen}
             onClose={handleClose}
-            width={900}
+            size={900}
             styles={{
                 header: { borderBottom: `1px solid ${token.colorBorderSecondary}` },
                 body: { background: token.colorBgLayout, padding: '16px 24px' }

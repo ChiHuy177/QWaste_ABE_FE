@@ -1,5 +1,4 @@
 import { OrderService, TaskService } from '@/services';
-import { DemoOrderService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
 import {
     OrderSummaryResponse,
     OrderResponse,
@@ -282,9 +281,7 @@ export const orderActions = {
     fetchOrders: () => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingOrders(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getAllOrders()
-                : await OrderService.getAllOrders();
+            const data = await OrderService.getAllOrders();
             dispatch(slice.actions.setOrders(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch orders'));
@@ -296,9 +293,7 @@ export const orderActions = {
     fetchOrderDetail: (orderId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingDetail(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getOrderById(orderId)
-                : await OrderService.getOrderById(orderId);
+            const data = await OrderService.getOrderById(orderId);
             dispatch(slice.actions.setCurrentOrder(data as OrderResponse));
         } catch (error: any) {
             console.error(`Failed to fetch order ${orderId}:`, error);
@@ -311,9 +306,7 @@ export const orderActions = {
     fetchTasks: (orderId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingTasks(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getTasksByOrderId(orderId)
-                : await TaskService.getTasksByOrderId(orderId);
+            const data = await TaskService.getTasksByOrderId(orderId);
             dispatch(slice.actions.setTasks(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch tasks'));
@@ -365,11 +358,7 @@ export const orderActions = {
     createOrder: (payload: OrderCreationRequest) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.createOrder(payload);
-            } else {
-                await OrderService.createOrder(payload);
-            }
+            await OrderService.createOrder(payload);
             dispatch(orderActions.fetchOrders());
             return { success: true };
         } catch (error: any) {
@@ -384,11 +373,7 @@ export const orderActions = {
     updateOrder: (payload: OrderUpdationRequest) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.updateOrder(payload);
-            } else {
-                await OrderService.updateOrder(payload);
-            }
+            await OrderService.updateOrder(payload);
             dispatch(orderActions.fetchOrders());
             dispatch(orderActions.fetchOrderDetail(payload.orderId));
             return { success: true };
@@ -404,11 +389,7 @@ export const orderActions = {
     updateOrderInfo: (payload: OrderInfoUpdationRequest) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.updateOrderInfo(payload);
-            } else {
-                await OrderService.updateOrderInfo(payload);
-            }
+            await OrderService.updateOrderInfo(payload);
             dispatch(orderActions.fetchOrders());
             dispatch(orderActions.fetchOrderDetail(payload.orderId));
             return { success: true };
@@ -424,11 +405,7 @@ export const orderActions = {
     updateOrderPlan: (payload: OrderPlanUpdationRequest) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.updateOrderPlan(payload);
-            } else {
-                await OrderService.updateOrderPlan(payload);
-            }
+            await OrderService.updateOrderPlan(payload);
             dispatch(orderActions.fetchOrders());
             dispatch(orderActions.fetchOrderDetail(payload.orderId));
             return { success: true };
@@ -444,11 +421,7 @@ export const orderActions = {
     confirmOrder: (orderId: string) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.confirmOrder(orderId);
-            } else {
-                await OrderService.confirmOrder(orderId);
-            }
+            await OrderService.confirmOrder(orderId);
             // Sau khi confirm, gọi lại API để đồng bộ DRAFT -> IN_PRODUCTION và LOCKED -> TO_DO
             dispatch(orderActions.fetchOrders());
             dispatch(orderActions.fetchOrderDetail(orderId));
@@ -465,11 +438,7 @@ export const orderActions = {
     deleteOrder: (orderId: string) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.deleteOrder(orderId);
-            } else {
-                await OrderService.deleteOrder(orderId);
-            }
+            await OrderService.deleteOrder(orderId);
             dispatch(slice.actions.setCurrentOrder(null)); // Clear current order nếu đang mở
             dispatch(orderActions.fetchOrders());
             return true;
@@ -550,9 +519,7 @@ export const orderActions = {
     fetchOrderDrawings: (orderId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingDrawings(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getOrderDrawings(orderId)
-                : await OrderService.getOrderDrawings(orderId);
+            const data = await OrderService.getOrderDrawings(orderId);
             dispatch(slice.actions.setOrderDrawings(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch order drawings'));
@@ -564,9 +531,7 @@ export const orderActions = {
     fetchOrderDrawingDetail: (orderId: string, drawingId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingDrawings(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getOrderDrawingDetail(orderId, drawingId)
-                : await OrderService.getOrderDrawingDetail(orderId, drawingId);
+            const data = await OrderService.getOrderDrawingDetail(orderId, drawingId);
             dispatch(slice.actions.setCurrentDrawing(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch drawing detail'));
@@ -578,9 +543,7 @@ export const orderActions = {
     fetchMyReviewingOrders: () => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingOrders(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getMyReviewingOrders()
-                : await OrderService.getMyReviewingOrders();
+            const data = await OrderService.getMyReviewingOrders();
             dispatch(slice.actions.setMyReviewingOrders(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch reviewing orders'));
@@ -592,9 +555,7 @@ export const orderActions = {
     fetchManagerReviewDashboard: (orderId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingReviewData(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getManagerReviewDashboard(orderId)
-                : await OrderService.getManagerReviewDashboard(orderId);
+            const data = await OrderService.getManagerReviewDashboard(orderId);
             dispatch(slice.actions.setManagerReviewData(data));
         } catch (error: any) {
             dispatch(
@@ -608,9 +569,7 @@ export const orderActions = {
     fetchOperatorReviewForm: (orderId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingReviewData(true));
         try {
-            const data = USE_MOCK_ORDERS
-                ? await DemoOrderService.getOperatorReviewForm(orderId)
-                : await OrderService.getOperatorReviewForm(orderId);
+            const data = await OrderService.getOperatorReviewForm(orderId);
             dispatch(slice.actions.setOperatorReviewData(data));
         } catch (error: any) {
             dispatch(
@@ -624,11 +583,7 @@ export const orderActions = {
     cancelOrder: (orderId: string, reason: string) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.cancelOrder(orderId, reason);
-            } else {
-                await OrderService.cancelOrder(orderId, reason);
-            }
+            await OrderService.cancelOrder(orderId, reason);
             dispatch(orderActions.fetchOrders());
             dispatch(orderActions.fetchOrderDetail(orderId));
             return true;
@@ -646,23 +601,12 @@ export const orderActions = {
             await Promise.all(
                 reviews.map(async (review) => {
                     if (review.reviewStatus === 'CONFIRMED') {
-                        if (USE_MOCK_ORDERS) {
-                            await DemoOrderService.confirmTaskReview(review.taskReviewId);
-                        } else {
-                            await OrderService.confirmTaskReview(review.taskReviewId);
-                        }
+                        await OrderService.confirmTaskReview(review.taskReviewId);
                     } else if (review.reviewStatus === 'DECLINED') {
-                        if (USE_MOCK_ORDERS) {
-                            await DemoOrderService.declineTaskReview(review.taskReviewId, {
-                                declineReason: review.declineReason!,
-                                declineComment: review.declineComment || undefined,
-                            });
-                        } else {
-                            await OrderService.declineTaskReview(review.taskReviewId, {
-                                declineReason: review.declineReason!,
-                                declineComment: review.declineComment || undefined,
-                            });
-                        }
+                        await OrderService.declineTaskReview(review.taskReviewId, {
+                            declineReason: review.declineReason!,
+                            declineComment: review.declineComment || undefined,
+                        });
                     }
                 })
             );
@@ -685,23 +629,12 @@ export const orderActions = {
         async (dispatch: any) => {
             try {
                 if (payload.reviewStatus === 'CONFIRMED') {
-                    if (USE_MOCK_ORDERS) {
-                        await DemoOrderService.confirmTaskReview(payload.taskReviewId);
-                    } else {
-                        await OrderService.confirmTaskReview(payload.taskReviewId);
-                    }
+                    await OrderService.confirmTaskReview(payload.taskReviewId);
                 } else if (payload.reviewStatus === 'DECLINED') {
-                    if (USE_MOCK_ORDERS) {
-                        await DemoOrderService.declineTaskReview(payload.taskReviewId, {
-                            declineReason: payload.declineReason!,
-                            declineComment: payload.declineComment || undefined,
-                        });
-                    } else {
-                        await OrderService.declineTaskReview(payload.taskReviewId, {
-                            declineReason: payload.declineReason!,
-                            declineComment: payload.declineComment || undefined,
-                        });
-                    }
+                    await OrderService.declineTaskReview(payload.taskReviewId, {
+                        declineReason: payload.declineReason!,
+                        declineComment: payload.declineComment || undefined,
+                    });
                 }
                 return true;
             } catch (error: any) {
@@ -713,11 +646,7 @@ export const orderActions = {
     restoreOrder: (orderId: string) => async (dispatch: any) => {
         dispatch(slice.actions.setSubmitting(true));
         try {
-            if (USE_MOCK_ORDERS) {
-                await DemoOrderService.restoreOrder(orderId);
-            } else {
-                await OrderService.restoreOrder(orderId);
-            }
+            await OrderService.restoreOrder(orderId);
             dispatch(orderActions.fetchOrders());
             dispatch(orderActions.fetchOrderDetail(orderId));
             return true;
@@ -732,9 +661,7 @@ export const orderActions = {
     exportOrderToExcel: (orderId: string) => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setExporting(true));
         try {
-            const blob = USE_MOCK_ORDERS
-                ? await DemoOrderService.exportOrderToExcel(orderId)
-                : await OrderService.exportOrderToExcel(orderId);
+            const blob = await OrderService.exportOrderToExcel(orderId);
             // Trigger download
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -756,13 +683,8 @@ export const orderActions = {
     fetchDrawingTemplates: () => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingTemplates(true));
         try {
-            let data: DrawingCodePickingResponse[];
-            if (USE_MOCK_ORDERS) {
-                data = await DemoOrderService.getDrawingTemplates();
-            } else {
-                const { DrawingCodeService } = await import('@/services');
-                data = await DrawingCodeService.getDrawingCodesForPicking();
-            }
+            const { DrawingCodeService } = await import('@/services');
+            const data = await DrawingCodeService.getDrawingCodesForPicking();
             dispatch(slice.actions.setDrawingTemplates(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch drawing templates'));
@@ -774,13 +696,8 @@ export const orderActions = {
     fetchOperators: () => async (dispatch: Dispatch) => {
         dispatch(slice.actions.setLoadingOperators(true));
         try {
-            let data: UserForPickingByRole[];
-            if (USE_MOCK_ORDERS) {
-                data = await DemoOrderService.getOperators();
-            } else {
-                const { UserService } = await import('@/services/UserService');
-                data = await UserService.getUsersByRole('OPERATOR');
-            }
+            const { UserService } = await import('@/services/UserService');
+            const data = await UserService.getUsersByRole('OPERATOR');
             dispatch(slice.actions.setOperators(data));
         } catch (error: any) {
             dispatch(slice.actions.setError(error.message || 'Failed to fetch operators'));

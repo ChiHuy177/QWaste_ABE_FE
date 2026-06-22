@@ -25,7 +25,7 @@ export default function RegisterPage() {
     // User will be auto-redirected after successful OTP verification in RegisterForm
     // useEffect(() => {
     //     if (AuthStore.isAuthenticated()) {
-    //         router.replace('/admin/factory-overview');
+    //         router.replace('/admin/space-monitoring');
     //     }
     // }, [router]);
 

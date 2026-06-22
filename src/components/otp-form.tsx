@@ -8,25 +8,25 @@ export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
 
     return (
         <Card {...props} title="Enter verification code">
-            <p className="text-muted-foreground mb-4">We sent a 6-digit code to your email.</p>
+            <p style={{ color: 'var(--muted-foreground)', marginBottom: 16 }}>We sent a 6-digit code to your email.</p>
             <form>
-                <div className="space-y-4">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div>
-                        <label htmlFor="otp" className="block text-sm font-medium mb-2">
+                        <label htmlFor="otp" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
                             Verification code
                         </label>
                         <OTP length={6} value={otpValue} onChange={setOtpValue} size="large" />
-                        <p className="text-sm text-muted-foreground mt-2">
+                        <p style={{ fontSize: 14, color: 'var(--muted-foreground)', marginTop: 8 }}>
                             Enter the 6-digit code sent to your email.
                         </p>
                     </div>
-                    <div className="space-y-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <Button type="primary" htmlType="submit" block>
                             Verify
                         </Button>
-                        <p className="text-center text-sm text-muted-foreground">
+                        <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--muted-foreground)', margin: 0 }}>
                             Didn&apos;t receive the code?{' '}
-                            <a href="#" className="text-primary">
+                            <a href="#" style={{ color: 'var(--primary)' }}>
                                 Resend
                             </a>
                         </p>

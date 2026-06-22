@@ -101,9 +101,9 @@ export const StepDetailForm: React.FC<StepDetailFormProps> = ({
                     <Text strong>{t('orderManagement.form.plan.stepDetails')}</Text>
                 </Flex>
             }
-            bordered={false}
+            variant="borderless"
         >
-            <Space direction="vertical" size={20} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={20} style={{ width: '100%' }}>
                 {/* Hidden stepOrder field */}
                 <Form.Item
                     name={['orderDrawings', drawingIndex, 'orderSteps', stepIndex, 'stepOrder']}
@@ -235,7 +235,7 @@ export const StepDetailForm: React.FC<StepDetailFormProps> = ({
                         <Alert
                             type="warning"
                             showIcon
-                            message={t(
+                            title={t(
                                 'orderManagement.form.planValidation.stepQuantityMismatch',
                                 {
                                     stepTotal: stepTaskRequestedQuantityTotal,
@@ -299,7 +299,7 @@ export const StepDetailForm: React.FC<StepDetailFormProps> = ({
                 <Divider />
 
                 {/* Quick Actions */}
-                <Card bordered={false} style={{ background: token.colorBgLayout }}>
+                <Card variant="borderless" style={{ background: token.colorBgLayout }}>
                     <Flex justify="space-between" align="center">
                         <Text strong>{t('orderManagement.form.plan.quickActions')}</Text>
                         <Button

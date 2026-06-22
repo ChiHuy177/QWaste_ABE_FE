@@ -8,7 +8,7 @@ export interface RegisterFormData {
     phoneNumber: string;
     gender: string;
     address: string;
-    factoryId: number | null;
+    spaceId: number | null;
 }
 
 export interface RegisterRequest {
@@ -21,7 +21,7 @@ export interface RegisterRequest {
     gender: string;
     userCode: string;
     address: string;
-    factoryId: number;
+    spaceId: number;
 }
 
 export interface FormErrors {

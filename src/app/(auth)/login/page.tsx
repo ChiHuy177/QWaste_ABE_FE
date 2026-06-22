@@ -7,7 +7,6 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useTranslation } from 'react-i18next';
 import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { DemoAuthService, USE_DEMO_AUTH } from '@/mockData/auth';
 
 export default function LoginPage() {
     const searchParams = useSearchParams();
@@ -23,11 +22,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (searchParams.get('logout') === 'true') {
-            if (USE_DEMO_AUTH) {
-                DemoAuthService.logout();
-            } else {
-                AuthStore.clear();
-            }
+            AuthStore.clear();
             // Preserve returnUrl when clearing logout param
             const returnUrl = searchParams.get('returnUrl');
             const newUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login';

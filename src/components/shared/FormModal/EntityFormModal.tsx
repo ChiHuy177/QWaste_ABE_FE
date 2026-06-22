@@ -222,9 +222,9 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
             width={width}
             footer={null}
             destroyOnHidden
-            maskClosable={!isSubmitting}
+            mask={{ closable: !isSubmitting }}
         >
-            {currentDescription && <p className="text-gray-500 mb-6">{currentDescription}</p>}
+            {currentDescription && <p style={{ color: '#6b7280', marginBottom: 24 }}>{currentDescription}</p>}
 
             {loading ? (
                 <div style={{ padding: '16px 0' }}>
@@ -335,8 +335,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                     <Text type="secondary">
                                         {auditMetaData.createdAt
                                             ? dayjs(auditMetaData.createdAt).format(
-                                                  'DD/MM/YYYY HH:mm:ss'
-                                              )
+                                                'DD/MM/YYYY HH:mm:ss'
+                                            )
                                             : '-'}
                                     </Text>
                                 </Descriptions.Item>
@@ -347,8 +347,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                     <Text type="secondary">
                                         {auditMetaData.updatedAt
                                             ? dayjs(auditMetaData.updatedAt).format(
-                                                  'DD/MM/YYYY HH:mm:ss'
-                                              )
+                                                'DD/MM/YYYY HH:mm:ss'
+                                            )
                                             : '-'}
                                     </Text>
                                 </Descriptions.Item>
@@ -369,8 +369,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                 {isSubmitting
                                     ? labels.saving
                                     : isEditMode
-                                      ? labels.edit
-                                      : labels.create}
+                                        ? labels.edit
+                                        : labels.create}
                             </Button>
                         </div>
                     </Form.Item>

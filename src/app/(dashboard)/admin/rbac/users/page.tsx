@@ -12,19 +12,10 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import { RoleAssignment } from './_components/RoleAssignment';
 import { CustomPermissions } from './_components/CustomPermissions';
 import { UserBasicInfo } from './_components/UserBasicInfo';
-import { UserService } from '@/services/UserService';
-import { RoleService } from '@/services/RoleService';
-import { DemoUserService, USE_MOCK_USERS } from '@/mockData/admin/users';
-import { DemoRoleService, USE_MOCK_RBAC } from '@/mockData/admin/rbac';
+import { UserService, RoleService } from '@/services';
 import { UserPermission } from '@/types/User';
 import { Role } from '@/types/Role';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import { useAbility } from '@/contexts/AbilityContext';
-import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-
-const activeUserService = USE_MOCK_USERS ? DemoUserService : UserService;
-const activeRoleService = USE_MOCK_RBAC ? DemoRoleService : RoleService;
 
 const UserManagementPage = () => {
     const [modalState, setModalState] = useState<{
@@ -34,9 +25,6 @@ const UserManagementPage = () => {
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
-    const { handleError } = useApiErrorHandler();
-    const ability = useAbility();
-    const { checkPermission } = usePermissionCheck();
     const [allRoles, setAllRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(false);
     const [userData, setUserData] = useState<UserWithRBAC[] | null>(null);
@@ -65,17 +53,12 @@ const UserManagementPage = () => {
     usePageTitle(t('userManagement.title'));
 
     useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                const roles = await activeRoleService.getRolesForPicking();
-                setAllRoles(roles);
-            } catch (error) {
-                handleError(error, { fallbackKey: 'roleManagement.messages.fetchError' });
-            }
-        };
-
-        fetchRoles();
-    }, [handleError]);
+        RoleService.getRolesForPicking()
+            .then(setAllRoles)
+            .catch((error) => {
+                console.error('Error fetching roles:', error);
+            });
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -86,8 +69,8 @@ const UserManagementPage = () => {
                 setLoadingUserDetails(true);
                 try {
                     const [userDetails, rolesPermissionsSummary] = await Promise.all([
-                        activeUserService.getStaffById(currentUserId),
-                        activeUserService.getRolesAndPermissionsSummary(currentUserId),
+                        UserService.getStaffById(currentUserId),
+                        UserService.getRolesAndPermissionsSummary(currentUserId),
                     ]);
 
                     if (cancelled) return;
@@ -101,10 +84,15 @@ const UserManagementPage = () => {
                             .filter((id): id is number => id !== undefined);
 
                         setSelectedRoleIds(roleIds);
+                        console.log('Mapped role IDs:', roleIds);
                     }
 
                     if (rolesPermissionsSummary.allTypePermissions?.finalPermissions) {
                         setFinalPermissionSlugs(
+                            rolesPermissionsSummary.allTypePermissions.finalPermissions
+                        );
+                        console.log(
+                            'Final Permissions:',
                             rolesPermissionsSummary.allTypePermissions.finalPermissions
                         );
                     }
@@ -113,23 +101,30 @@ const UserManagementPage = () => {
                         setGrantedPermissionSlugs(
                             rolesPermissionsSummary.allTypePermissions.grantedPermissions
                         );
+                        console.log(
+                            'Granted Permissions:',
+                            rolesPermissionsSummary.allTypePermissions.grantedPermissions
+                        );
                     }
 
                     if (rolesPermissionsSummary.allTypePermissions?.deniedPermissions) {
                         setDeniedPermissionSlugs(
                             rolesPermissionsSummary.allTypePermissions.deniedPermissions
                         );
+                        console.log(
+                            'Denied Permissions:',
+                            rolesPermissionsSummary.allTypePermissions.deniedPermissions
+                        );
                     }
-                } catch (error) {
+
+                    console.log('Roles & Permissions Summary:', rolesPermissionsSummary);
+                } catch (error: any) {
                     if (cancelled) return;
-                    const maybeCancelledError = error as { code?: string; name?: string };
-                    if (
-                        maybeCancelledError?.code === 'ERR_CANCELED' ||
-                        maybeCancelledError?.name === 'AbortError'
-                    ) {
+                    if (error?.code === 'ERR_CANCELED' || error?.name === 'AbortError') {
                         return;
                     }
-                    handleError(error, { fallbackKey: 'userManagement.fetchUserError' });
+                    console.error('Error fetching user details:', error);
+                    toast.error(t('userManagement.fetchUserError'));
                 } finally {
                     if (!cancelled) {
                         setLoadingUserDetails(false);
@@ -150,7 +145,7 @@ const UserManagementPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [modalState.open, modalState.data?.userId, allRoles, handleError]);
+    }, [modalState.open, modalState.data?.userId, allRoles]);
 
     // Convert UserProfile to UserWithRBAC
     const mapUserProfileToRBAC = (user: UserProfile): UserWithRBAC => {
@@ -169,35 +164,33 @@ const UserManagementPage = () => {
 
     // Fetch users from API
     const fetchUsers = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const data = await activeUserService.getAllStaff();
+            const data = await UserService.getAllStaff();
             const activeUsers = data.filter((user) => !user.softDeleteMetaData?.isDeleted);
             const mappedData = activeUsers.map(mapUserProfileToRBAC);
             setUserData(mappedData);
         } catch (error) {
-            handleError(error, { fallbackKey: 'userManagement.messages.fetchError' });
+            console.error('Error fetching users:', error);
+            toast.error(t('userManagement.messages.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [handleError]);
+    }, [t]);
 
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
 
+    // Handle Edit Action
     const handleEditUser = useCallback((user: UserWithRBAC) => {
-        if (!checkPermission('update', 'user')) {
-            return;
-        }
-
         setModalState({
             open: true,
             mode: 'edit',
             data: user,
         });
         setActiveTab('1');
-    }, [checkPermission]);
+    }, []);
 
     // Handle Delete Action
     // const handleDeleteUser = useCallback((user: UserWithRBAC) => {
@@ -223,10 +216,9 @@ const UserManagementPage = () => {
             // onDelete: handleDeleteUser,
             t,
             isMobileResponsive,
-            ability,
         }),
         // [handleEditUser, handleDeleteUser, t, isMobileResponsive]
-        [handleEditUser, t, isMobileResponsive, ability]
+        [handleEditUser, t, isMobileResponsive]
     );
 
     const columns = useMemo(() => getUserTableColumns(columnProps), [columnProps]);
@@ -274,9 +266,6 @@ const UserManagementPage = () => {
 
     // Update roles only (from Tab 2)
     const handleUpdateRoles = useCallback(async () => {
-        if (!checkPermission('update', 'user')) {
-            return;
-        }
         if (!modalState.data?.userId) return;
 
         // Validate form before submitting
@@ -292,7 +281,7 @@ const UserManagementPage = () => {
             pendingAction: async () => {
                 setLoading(true);
                 try {
-                    await activeUserService.updateRolesAndPermissions({
+                    await UserService.updateRolesAndPermissions({
                         userId: modalState.data!.userId,
                         roleIds: selectedRoleIds,
                         deniedPermissionIds: [],
@@ -301,20 +290,18 @@ const UserManagementPage = () => {
                     toast.success(t('userManagement.messages.updateSuccess'));
                     await fetchUsers();
                 } catch (error) {
-                    handleError(error, { fallbackKey: 'userManagement.messages.updateError' });
+                    console.error('Error updating roles:', error);
+                    toast.error(t('userManagement.messages.updateError'));
                     throw error;
                 } finally {
                     setLoading(false);
                 }
             },
         });
-    }, [checkPermission, modalState.data?.userId, selectedRoleIds, t, fetchUsers, handleError]);
+    }, [modalState.data?.userId, selectedRoleIds, t, fetchUsers]);
 
     // Update custom permissions (from Tab 3)
     const handleUpdatePermissions = useCallback(async () => {
-        if (!checkPermission('update', 'user')) {
-            return;
-        }
         if (!modalState.data?.userId) return;
 
         const deniedPermissionIds = customPermissions
@@ -331,7 +318,7 @@ const UserManagementPage = () => {
             pendingAction: async () => {
                 setLoading(true);
                 try {
-                    await activeUserService.updateRolesAndPermissions({
+                    await UserService.updateRolesAndPermissions({
                         userId: modalState.data!.userId,
                         roleIds: selectedRoleIds,
                         deniedPermissionIds,
@@ -340,39 +327,33 @@ const UserManagementPage = () => {
                     toast.success(t('userManagement.messages.updateSuccess'));
                     await fetchUsers();
                 } catch (error) {
-                    handleError(error, { fallbackKey: 'userManagement.messages.updateError' });
+                    console.error('Error updating permissions:', error);
+                    toast.error(t('userManagement.messages.updateError'));
                     throw error;
                 } finally {
                     setLoading(false);
                 }
             },
         });
-    }, [
-        checkPermission,
-        modalState.data?.userId,
-        selectedRoleIds,
-        customPermissions,
-        t,
-        fetchUsers,
-        handleError,
-    ]);
+    }, [modalState.data?.userId, selectedRoleIds, customPermissions, t, fetchUsers]);
 
     const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) {
-            return;
-        }
-
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-        } catch {
-            // Error already handled in pending action.
-        } finally {
-            setConfirmModalState({
-                open: false,
-                type: 'edit',
-                pendingAction: null,
-            });
+        if (confirmModalState.pendingAction) {
+            try {
+                setConfirmModalState((prev) => ({ ...prev, open: false }));
+                await confirmModalState.pendingAction();
+                setConfirmModalState({
+                    open: false,
+                    type: 'edit',
+                    pendingAction: null,
+                });
+            } catch {
+                setConfirmModalState({
+                    open: false,
+                    type: 'edit',
+                    pendingAction: null,
+                });
+            }
         }
     };
 

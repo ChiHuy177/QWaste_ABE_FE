@@ -4,10 +4,11 @@ const VALIDATION_CONFIG = Object.freeze({
     SPACE_CODE: { min: 2, max: 10, pattern: '^[A-Z0-9_-]+$', required: true },
     SPACE_NAME: { min: 5, max: 50, required: true },
     DISPLAY_ORDER: { min: 1, required: true, maxLength: 9 },
+    FLOOR_PLAN_IMAGE_URL: { required: false },
     DESCRIPTION: { max: 500, required: false },
 });
 
-export const getSpaceFormFields = (t: any, mode: 'create' | 'edit'): FormFieldConfig[] => {
+export const getSpaceFormFields = (t: any, _mode: 'create' | 'edit'): FormFieldConfig[] => {
     return [
         {
             name: 'spaceCode',
@@ -80,6 +81,23 @@ export const getSpaceFormFields = (t: any, mode: 'create' | 'edit'): FormFieldCo
                 },
             ],
             span: { xs: 24, sm: 12 },
+        },
+        {
+            name: 'floorPlanImageUrl',
+            label: t('spaceManagement.form.fields.floorPlanImageUrl'),
+            type: 'image',
+            placeholder: t('spaceManagement.form.placeholders.floorPlanImageUrl'),
+            required: VALIDATION_CONFIG.FLOOR_PLAN_IMAGE_URL.required,
+            extra: t('spaceManagement.form.help.floorPlanImageUrl'),
+            imageUpload: {
+                preserveOriginal: true,
+                accept: 'image/*,.svg',
+                maxFileSizeMB: 4,
+                svgMaxFileSizeMB: 10,
+                previewAlt: t('spaceManagement.form.fields.floorPlanImageUrl'),
+                supportText: t('spaceManagement.form.upload.floorPlanImageUrlSupportText'),
+            },
+            span: { xs: 24 },
         },
         {
             name: 'description',

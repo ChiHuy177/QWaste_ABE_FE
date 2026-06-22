@@ -3,7 +3,6 @@ import { SelectOption } from '@/types/Common';
 
 const VALIDATION_CONFIG = Object.freeze({
     MACHINE_NAME: { required: true, minLength: 2, maxLength: 50 },
-    MACHINE_CODE: { required: true, maxLength: 20 },
     PROPERTY_CODE: { required: true, maxLength: 15 },
     POWER: { required: true, min: 0.1, maxLength: 10 },
     DESCRIPTION: { required: true, maxLength: 255 },
@@ -48,28 +47,6 @@ export const getMachineListFormFields = (
             ],
             span: { xs: 24, md: 12 },
         },
-        // Machine Code
-        {
-            name: 'machineCode',
-            label: t('machineListManagement.form.fields.machineCode'),
-            type: 'text',
-            placeholder: t('machineListManagement.form.placeholders.machineCode'),
-            required: VALIDATION_CONFIG.MACHINE_CODE.required,
-            maxLength: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
-            rules: [
-                {
-                    required: VALIDATION_CONFIG.MACHINE_CODE.required,
-                    message: t('machineListManagement.form.validation.required'),
-                },
-                {
-                    max: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
-                    message: t('machineListManagement.form.validation.maxLength', {
-                        max: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
-                    }),
-                },
-            ],
-            span: { xs: 24, md: 12 },
-        },
         {
             name: 'propertyCode',
             label: t('machineListManagement.form.fields.propertyCode'),
@@ -107,8 +84,8 @@ export const getMachineListFormFields = (
                 },
                 {
                     type: 'number',
-                    min: 0,
-                    message: t('machineListManagement.form.validation.minValue', { min: 0 }),
+                    min: 0.1,
+                    message: t('machineListManagement.form.validation.minValue', { min: 0.1 }),
                 },
             ],
             span: { xs: 24, md: 8 },

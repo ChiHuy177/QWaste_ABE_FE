@@ -3,6 +3,7 @@ import { AuditMetaData } from '@/types/Metadata';
 
 export type FieldType =
     | 'text'
+    | 'time'
     | 'email'
     | 'password'
     | 'number'
@@ -56,6 +57,14 @@ export interface FormFieldConfig {
     value?: any;
     normalize?: (value: any) => any;
     textTransform?: 'uppercase' | 'lowercase' | 'capitalize' | 'none';
+    imageUpload?: {
+        preserveOriginal?: boolean;
+        accept?: string;
+        maxFileSizeMB?: number;
+        svgMaxFileSizeMB?: number;
+        previewAlt?: string;
+        supportText?: string;
+    };
 }
 
 export interface EntityFormModalProps<TFormData extends Record<string, any>> {

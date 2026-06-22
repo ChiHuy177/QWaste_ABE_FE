@@ -63,32 +63,28 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
                     'order',
                     'task_review',
                     'space_monitoring',
+                    'floor_map',
                     'standard_step',
                 ]);
-                can('view', 'factory_overview');
+                can('view', 'space_monitoring');
                 can('view', 'machine_overview');
                 // All 40 permissions are usually granted via API,
                 // but this fallback ensures they have basic view access.
                 break;
 
-            case 'maintenance':
-                can(['view', 'create', 'update', 'delete'], 'incident_report');
-                can(['confirm', 'decline'], 'task_review');
-                break;
-
             case 'operator':
             case 'op':
-                can(['confirm', 'decline'], 'task_review');
-                can('view', ['operator_dashboard', 'operator_reviews']);
-                break;
-
             case 'qc_staff':
             case 'qc':
+            case 'maintenance':
                 can(['confirm', 'decline'], 'task_review');
+                if (normalizedRole === 'operator' || normalizedRole === 'op') {
+                    can('view', ['operator_dashboard', 'operator_reviews']);
+                }
                 break;
 
             case 'client':
-                can('view', 'factory_overview');
+                can('view', 'space_monitoring');
                 break;
         }
     });

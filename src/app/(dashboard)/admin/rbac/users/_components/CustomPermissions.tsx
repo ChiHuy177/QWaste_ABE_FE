@@ -4,21 +4,12 @@ import { Table, Button, Space, Tag, Row, Col, Typography, Card, Spin } from 'ant
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { UserPermission } from '@/types/User';
 import { Permission } from '@/types/Permission';
-import { PermissionService } from '@/services/PermissionService';
-import { RoleService } from '@/services/RoleService';
-import {
-    DemoPermissionService,
-    DemoRoleService,
-    USE_MOCK_RBAC,
-} from '@/mockData/admin/rbac';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { PermissionService, RoleService } from '@/services';
 import { Role } from '@/types/Role';
 import { ColumnsType } from 'antd/es/table';
 import { SearchInput } from '@/components/shared/SearchInput';
 
 const { Text } = Typography;
-const activePermissionService = USE_MOCK_RBAC ? DemoPermissionService : PermissionService;
-const activeRoleService = USE_MOCK_RBAC ? DemoRoleService : RoleService;
 
 // Helper to extract subject/action from slug
 const getPermissionDetails = (slug: string) => {
@@ -42,7 +33,7 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
     selectedRoles = [],
     value = [],
     onChange,
-    finalPermissionSlugs: _finalPermissionSlugs = [],
+    finalPermissionSlugs = [],
     grantedPermissionSlugs = [],
     deniedPermissionSlugs = [],
     allRoles: parentRoles,
@@ -55,7 +46,6 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
     const [rolePermSearch, setRolePermSearch] = useState('');
     const [availablePermSearch, setAvailablePermSearch] = useState('');
     const [finalPermSearch, setFinalPermSearch] = useState('');
-    const { handleError } = useApiErrorHandler();
 
     const filterPermissions = useCallback((permissions: Permission[], searchTerm: string) => {
         if (!searchTerm.trim()) return permissions;
@@ -77,25 +67,25 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
             try {
                 if (parentRoles) {
                     // Only fetch permissions if parent provides roles
-                    const permissions = await activePermissionService.getAllPermissions();
+                    const permissions = await PermissionService.getAllPermissions();
                     setAllPermissions(permissions);
                 } else {
                     // Fetch both if no parent roles
                     const [permissions, roles] = await Promise.all([
-                        activePermissionService.getAllPermissions(),
-                        activeRoleService.getRolesForPicking(),
+                        PermissionService.getAllPermissions(),
+                        RoleService.getRolesForPicking(),
                     ]);
                     setAllPermissions(permissions);
                     setFetchedRoles(roles);
                 }
             } catch (error) {
-                handleError(error, { fallbackKey: 'permissionManagement.messages.fetchError' });
+                console.error('Error fetching permissions/roles:', error);
             } finally {
                 setLoading(false);
             }
         };
         fetchData();
-    }, [parentRoles, handleError]);
+    }, [parentRoles]);
 
     // Get permissions from selected roles
     const rolePermissions = useMemo(() => {

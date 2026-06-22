@@ -2,10 +2,11 @@
 
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { Layout, Grid, theme, Card } from 'antd';
+import { Layout, Grid, theme, Card, ConfigProvider } from 'antd';
 import LoginForm from './LoginForm';
 import LanguageSwitcher from '@/components/shared/header/LanguageSwitcher';
 import { useBrandingConfig } from '@/configs/brandingConfig';
+import { lightTheme } from '@/configs/antdTheme';
 
 const { Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -110,7 +111,6 @@ PoweredBySection.displayName = 'PoweredBySection';
 
 const LoginLayout = React.memo(() => {
     const screens = useBreakpoint();
-    const { token } = theme.useToken();
 
     const isLargeScreen = !!screens.lg;
 
@@ -122,6 +122,7 @@ const LoginLayout = React.memo(() => {
     }, [screens.xl, screens.lg, screens.sm]);
 
     return (
+        <ConfigProvider theme={{ ...lightTheme, algorithm: theme.defaultAlgorithm }}>
         <Layout
             style={{
                 minHeight: '100vh',
@@ -226,11 +227,11 @@ const LoginLayout = React.memo(() => {
                     {/* Login Form Card */}
                     <Card
                         style={{
-                            borderRadius: token.borderRadiusLG,
+                            borderRadius: 12,
                             boxShadow: isLargeScreen
                                 ? '0 8px 32px rgba(0, 0, 0, 0.08)'
                                 : '0 4px 16px rgba(0, 0, 0, 0.08)',
-                            border: `1px solid ${token.colorBorderSecondary}`,
+                            border: '1px solid #f0f0f0',
                             backgroundColor: '#fff',
                         }}
                         styles={{
@@ -247,6 +248,7 @@ const LoginLayout = React.memo(() => {
                 </div>
             </Content>
         </Layout>
+        </ConfigProvider>
     );
 });
 

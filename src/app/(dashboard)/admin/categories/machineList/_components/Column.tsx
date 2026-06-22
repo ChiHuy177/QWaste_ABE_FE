@@ -31,24 +31,6 @@ export const getMachineListTableColumns = (
 
     const columns: ColumnsType<Machine> = [
         {
-            title: () => t('machineListManagement.table.headers.machineCode'),
-            dataIndex: 'machineCode',
-            key: 'machineCode',
-            sorter: (a, b) => a.machineCode.localeCompare(b.machineCode),
-            width: 150,
-            align: 'center',
-            ellipsis: { showTitle: false },
-            render: (text: string) => (
-                <Tooltip placement="topLeft" title={`#${text}`}>
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <Text strong style={{ fontSize: 14 }}>
-                            #{text}
-                        </Text>
-                    </div>
-                </Tooltip>
-            ),
-        },
-        {
             title: () => t('machineListManagement.table.headers.machineImage'),
             dataIndex: 'machineImage',
             key: 'machineImage',
@@ -66,7 +48,7 @@ export const getMachineListTableColumns = (
                         height={60}
                         style={{ objectFit: 'cover', borderRadius: 4 }}
                         preview={{
-                            mask: <div>Preview</div>,
+                            cover: <div>Preview</div>,
                         }}
                     />
                 );
@@ -101,37 +83,6 @@ export const getMachineListTableColumns = (
                     <Tooltip placement="topLeft" title={text}>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             <Text type="secondary">{text}</Text>
-                        </div>
-                    </Tooltip>
-                );
-            },
-        },
-        {
-            title: () => t('machineListManagement.table.headers.space'),
-            dataIndex: ['space', 'spaceName'],
-            key: 'space',
-            width: 150,
-            align: 'center',
-            ellipsis: { showTitle: false },
-            render: (zoneName: string) => {
-                if (!zoneName) return <Text type="secondary">{t('common.notAvailable')}</Text>;
-                return (
-                    <Tooltip placement="topLeft" title={zoneName}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <Tag
-                                color="green"
-                                style={{
-                                    fontSize: 13,
-                                    maxWidth: '100%',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    verticalAlign: 'middle',
-                                    marginInlineEnd: 0
-                                }}
-                            >
-                                {zoneName}
-                            </Tag>
                         </div>
                     </Tooltip>
                 );
@@ -208,15 +159,13 @@ export const getMachineListTableColumns = (
         },
         {
             title: () => t('machineListManagement.table.headers.status'),
-            dataIndex: ['softDeleteMetaData', 'isDeleted'],
-            key: 'softDeleteMetaData.isDeleted',
+            dataIndex: ['softDeleteMetaData', 'deleted'],
+            key: 'softDeleteMetaData.deleted',
             width: 150,
             align: 'center',
             ellipsis: { showTitle: false },
-            render: (value: boolean) => {
-                const text = value
-                    ? t('machineListManagement.status.inactive')
-                    : t('machineListManagement.status.active');
+            render: (value) => {
+                const text = value ? t('machineListManagement.status.inactive') : t('machineListManagement.status.active');
                 return (
                     <Tooltip placement="topLeft" title={text}>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

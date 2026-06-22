@@ -462,7 +462,7 @@ export const OrderFormContainer: React.FC = () => {
                 style={{ maxWidth: 1500 }}
                 footer={null}
                 destroyOnHidden
-                maskClosable={false}
+                mask={{ closable: false }}
             >
                 <Spin
                     spinning={

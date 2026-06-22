@@ -38,7 +38,7 @@ export const DrawingConfigStep: React.FC<DrawingConfigStepProps> = ({
     const { token } = useToken();
 
     return (
-        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={24} style={{ width: '100%' }}>
             <div
                 style={{
                     padding: '20px',

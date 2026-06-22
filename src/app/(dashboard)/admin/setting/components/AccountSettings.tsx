@@ -15,7 +15,6 @@ import { UserProfile, UserSettings, ValidationErrors } from '@/types/User';
 import { useTranslation } from 'react-i18next';
 import { AvatarUpload } from './AvatarUpload';
 import { useUploadThing } from '@/utils/uploadthing';
-import { DemoUserSettingService, USE_MOCK_USERS } from '@/mockData/admin/users';
 
 const COUNTRY_CODES = [
     { code: '+1', country: 'US/CA', label: '+1 (US/Canada)' },
@@ -226,25 +225,20 @@ export function AccountSettings({
             try {
                 let uploadedAvatarUrl = formData.avatarUrl;
 
+                // Upload avatar if a new file was selected
                 if (selectedAvatarFile) {
                     toast.info(t('avatarUpload.uploadingMessage') || 'Uploading avatar...');
 
                     try {
-                        if (USE_MOCK_USERS) {
-                            uploadedAvatarUrl =
-                                await DemoUserSettingService.uploadAvatarFile(selectedAvatarFile);
-                        } else {
-                            const uploadResult = await startUpload([selectedAvatarFile]);
+                        const uploadResult = await startUpload([selectedAvatarFile]);
 
-                            if (!uploadResult || !uploadResult[0] || !uploadResult[0].url) {
-                                throw new Error('Upload failed - no URL returned');
-                            }
-
-                            uploadedAvatarUrl = uploadResult[0].url;
+                        if (!uploadResult || !uploadResult[0] || !uploadResult[0].url) {
+                            throw new Error('Upload failed - no URL returned');
                         }
 
+                        uploadedAvatarUrl = uploadResult[0].url;
                         setPreviewImage(uploadedAvatarUrl);
-                        setSelectedAvatarFile(null);
+                        setSelectedAvatarFile(null); // Clear selected file after successful upload
                     } catch (uploadError) {
                         console.error('Avatar upload error:', uploadError);
                         toast.error(t('avatarUpload.uploadError') || 'Failed to upload avatar');
@@ -302,16 +296,7 @@ export function AccountSettings({
                 setIsUpdating(false);
             }
         },
-        [
-            formData,
-            onUpdateProfile,
-            onUpdateSettings,
-            profile,
-            selectedAvatarFile,
-            settings,
-            startUpload,
-            t,
-        ]
+        [formData, profile, settings, selectedAvatarFile, onUpdateProfile, onUpdateSettings, t]
     );
 
     if (isInitialLoading || !profile || !settings) {
@@ -326,7 +311,7 @@ export function AccountSettings({
     }
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* Profile Header Card */}
             <Card
                 style={{
@@ -499,8 +484,8 @@ export function AccountSettings({
             <div style={{ display: 'none' }}>
                 <Image.PreviewGroup
                     preview={{
-                        visible: previewOpen,
-                        onVisibleChange: (visible) => setPreviewOpen(visible),
+                        open: previewOpen,
+                        onOpenChange: (visible) => setPreviewOpen(visible),
                     }}
                 >
                     <Image src={previewImage} alt="Avatar Preview" />

@@ -200,7 +200,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 >
                     {icon}
                 </div>
-                <Space direction="vertical" size={0} style={{ minWidth: 0 }}>
+                <Space orientation="vertical" size={0} style={{ minWidth: 0 }}>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         {label}
                     </Text>
@@ -284,9 +284,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                     : drawingInfo.defaultCompletionTimeSeconds || 0;
 
             return (
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                     <Flex justify="space-between" align="start" gap={12} wrap="wrap">
-                        <Space direction="vertical" size={2}>
+                        <Space orientation="vertical" size={2}>
                             <Tag color={token.colorPrimary} style={{ width: 'fit-content' }}>
                                 {drawingIndex + 1}.0
                             </Tag>
@@ -308,11 +308,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                     <Descriptions column={{ xs: 1, sm: 2 }} size="small" bordered>
                         <Descriptions.Item label={t('orderManagement.form.fields.productionType')}>
                             {drawing.productionType === 'BATCH' ? (
-                                <Tag color="blue" bordered={false}>
+                                <Tag color="blue" variant="filled">
                                     {t('orderManagement.list.table.batch')}
                                 </Tag>
                             ) : (
-                                <Tag color="cyan" bordered={false}>
+                                <Tag color="cyan" variant="filled">
                                     {t('orderManagement.list.table.single')}
                                 </Tag>
                             )}
@@ -362,9 +362,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 
         if (type === 'step' && step) {
             return (
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                     <Flex justify="space-between" align="start" gap={12} wrap="wrap">
-                        <Space direction="vertical" size={2}>
+                        <Space orientation="vertical" size={2}>
                             <Tag color="purple" style={{ width: 'fit-content' }}>
                                 {drawingIndex + 1}.{step.stepOrder || stepIndex + 1}
                             </Tag>
@@ -412,9 +412,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 .filter(Boolean);
 
             return (
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                     <Flex justify="space-between" align="start" gap={12} wrap="wrap">
-                        <Space direction="vertical" size={2}>
+                        <Space orientation="vertical" size={2}>
                             <Tag color="green" style={{ width: 'fit-content' }}>
                                 {drawingIndex + 1}.{step?.stepOrder || stepIndex + 1}.
                                 {task.taskOrder || taskIndex + 1}
@@ -476,7 +476,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     };
 
     const treePanel = (
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
             <Input
                 placeholder={t('common.search')}
                 prefix={<SearchOutlined />}
@@ -512,7 +512,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     );
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <style jsx global>{`
                 .order-review-tree .ant-tree-treenode {
                     max-width: 100%;
@@ -543,7 +543,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             `}</style>
 
             <Alert
-                message={t('orderManagement.form.confirm.title')}
+                title={t('orderManagement.form.confirm.title')}
                 description={t('orderManagement.form.confirm.subtitle')}
                 type="info"
                 showIcon

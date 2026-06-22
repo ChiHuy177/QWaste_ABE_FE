@@ -69,7 +69,7 @@ export const getStepFormFields = (t: any): FormFieldConfig[] => {
             label: t('stepManagement.form.fields.defaultTime'),
             type: 'custom',
             required: VALIDATION_CONFIG.COMPLETION_TIME.required,
-            renderCustom: () => <DurationPicker size="middle" disabled={false} />,
+            renderCustom: (fieldKey) => <DurationPicker size="middle" disabled={false} />,
             rules: [
                 {
                     required: VALIDATION_CONFIG.COMPLETION_TIME.required,

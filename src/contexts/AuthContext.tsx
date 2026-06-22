@@ -3,14 +3,15 @@
 import { AuthService } from '@/services/AuthService';
 import { UserService } from '@/services/UserService';
 
-import { UserProfile } from '@/types/User';
+import { UserProfile, UserSettings } from '@/types/User';
 import { useRouter, usePathname } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import { setLanguageToCookie } from '@/lib/cookies';
-import { DemoAuthService, USE_DEMO_AUTH } from '@/mockData/auth';
+import { useAppDispatch } from '@/stores/hook';
+import { userSettingsActions } from '@/stores';
 
 interface AuthContextType {
     user: UserProfile | null;
@@ -28,6 +29,20 @@ interface AuthProviderProps {
     children: ReactNode;
 }
 
+const createSettingsFromProfile = (userProfile: UserProfile): UserSettings => {
+    const language = userProfile.preferences?.language as string | undefined;
+
+    return {
+        accountId: userProfile.userId,
+        status: 'active',
+        id: userProfile.userId,
+        theme: userProfile.preferences?.theme || 'light',
+        language: (language === 'vn' ? 'vi' : language || 'en') as UserSettings['language'],
+        createdTime: Date.now(),
+        updatedTime: null,
+    };
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<UserProfile | null>();
     const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +52,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const pathname = usePathname();
     const { setTheme } = useTheme();
     const { i18n } = useTranslation();
+    const dispatch = useAppDispatch();
+
+    const hydrateUserSettings = (userProfile: UserProfile) => {
+        dispatch(userSettingsActions.setProfile(userProfile));
+        dispatch(userSettingsActions.setSettings(createSettingsFromProfile(userProfile)));
+    };
 
     const syncPreferences = (userProfile: UserProfile) => {
         if (!userProfile.preferences) return;
@@ -62,17 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             if (isPublicRoute) {
                 console.log('[AUTH] Public route detected, skipping auth check');
                 setUser(null);
-                setIsLoading(false);
-                setIsAuthenticating(false);
-                return;
-            }
-
-            if (USE_DEMO_AUTH) {
-                const currentUser = DemoAuthService.getCurrentUser();
-                setUser(currentUser);
-                if (currentUser) {
-                    syncPreferences(currentUser);
-                }
+                dispatch(userSettingsActions.resetUserSettings());
                 setIsLoading(false);
                 setIsAuthenticating(false);
                 return;
@@ -84,26 +95,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
                 if (currentUser !== null) {
                     setUser(currentUser);
+                    hydrateUserSettings(currentUser);
                     syncPreferences(currentUser);
                 } else {
                     console.log('[AUTH] No user found');
                     setUser(null);
+                    dispatch(userSettingsActions.resetUserSettings());
                 }
             } catch (err: any) {
-                if (
-                    err.response?.status === 401 ||
-                    err.code === 401 ||
-                    err.response?.status === 403
-                ) {
-                    console.log(
-                        '[AUTH] No valid session - apiClient will handle sessionExpired event'
-                    );
+                if (err.response?.status === 401 || err.code === 401 || err.response?.status === 403) {
+                    console.log('[AUTH] No valid session - apiClient will handle sessionExpired event');
                     // Không gọi logout() - apiClient đã dispatch 'sessionExpired' event
                     // GlobalErrorHandler sẽ xử lý redirect
                     setUser(null);
+                    dispatch(userSettingsActions.resetUserSettings());
                 } else {
                     console.error('[AUTH] Failed to fetch user profile:', err);
                     setUser(null);
+                    dispatch(userSettingsActions.resetUserSettings());
                 }
             } finally {
                 setIsLoading(false);
@@ -119,13 +128,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         console.log('[AUTH CONTEXT] Login attempt for:', username);
         try {
-            const user = USE_DEMO_AUTH
-                ? DemoAuthService.login(username, password)
-                : await AuthService.login(username, password).then(() => UserService.getMe());
+            await AuthService.login(username, password);
+            const user = await UserService.getMe();
             console.log('[AUTH CONTEXT] User fetched:', user);
             console.log('[AUTH CONTEXT] Setting user state with roles:', user?.roles);
             setUser(user);
             if (user) {
+                hydrateUserSettings(user);
                 syncPreferences(user);
             }
             console.log('[AUTH CONTEXT] User state updated');
@@ -134,6 +143,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             console.error('[AUTH CONTEXT] Login error:', errorMsg);
             setError(errorMsg);
             setUser(null);
+            dispatch(userSettingsActions.resetUserSettings());
             throw err;
         }
     };
@@ -143,12 +153,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsAuthenticating(true);
         setError(null);
         try {
-            if (USE_DEMO_AUTH) {
-                DemoAuthService.logout();
-            } else {
-                await AuthService.logout();
-            }
+            await AuthService.logout();
             setUser(null);
+            dispatch(userSettingsActions.resetUserSettings());
         } catch (err: any) {
             console.error('[AUTH CONTEXT] Logout failed:', err.message);
         } finally {
@@ -163,17 +170,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setError(null);
 
         try {
-            const user = USE_DEMO_AUTH
-                ? DemoAuthService.getCurrentUser()
-                : await UserService.getMe();
+            const user = await UserService.getMe();
             setUser(user);
             if (user) {
+                hydrateUserSettings(user);
                 syncPreferences(user);
+            } else {
+                dispatch(userSettingsActions.resetUserSettings());
             }
         } catch (err: any) {
             const errorMsg = err.message || 'Failed to sync user';
             setError(errorMsg);
             setUser(null);
+            dispatch(userSettingsActions.resetUserSettings());
             throw err;
         }
     };

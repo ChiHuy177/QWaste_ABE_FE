@@ -1,21 +1,30 @@
 import React, { useEffect } from 'react';
-import { Input, Select, InputNumber, DatePicker, Upload, UploadProps, message, Image, Switch } from 'antd';
+import {
+    Input,
+    Select,
+    InputNumber,
+    DatePicker,
+    Upload,
+    UploadProps,
+    message,
+    Image,
+    Switch,
+} from 'antd';
 import {
     EyeInvisibleOutlined,
     EyeOutlined,
     CameraOutlined,
-    LoadingOutlined,
     DeleteOutlined,
     FilePdfOutlined,
 } from '@ant-design/icons';
 import { FormFieldConfig } from './types';
 import type { UploadFile } from 'antd/es/upload/interface';
 import { toast } from 'sonner';
-import { useUploadThing } from '@/utils/uploadthing';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { DurationPicker } from '../DurationPicker';
+import { TimePicker } from 'antd';
 
-const compressImage = (file: File, quality = 0.7, maxWidth = 1920): Promise<File> => {
+export const compressImage = (file: File, quality = 0.7, maxWidth = 1920): Promise<File> => {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -61,6 +70,7 @@ const compressImage = (file: File, quality = 0.7, maxWidth = 1920): Promise<File
 };
 import { SpaceTreeSelect } from '../filters/SpaceTreeSelect';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 
 export const renderTextField = (field: FormFieldConfig) => {
     return (
@@ -279,6 +289,7 @@ export const renderSpaceTreeSelectField = (field: FormFieldConfig) => {
             placeholder={field.placeholder}
             disabled={field.disabled as boolean}
             allowClear={field.allowClear !== false}
+            onChange={field.onChange}
         />
     );
 };
@@ -287,98 +298,89 @@ const ImageUploader = ({
     value,
     onChange,
     disabled,
+    accept = 'image/*',
+    maxFileSizeMB = 5,
+    svgMaxFileSizeMB,
+    previewAlt,
+    supportText,
 }: {
-    value?: string;
-    onChange?: (value: string) => void;
+    value?: string | File | null;
+    onChange?: (value: string | File) => void;
     disabled?: boolean;
+    preserveOriginal?: boolean;
+    accept?: string;
+    maxFileSizeMB?: number;
+    svgMaxFileSizeMB?: number;
+    previewAlt?: string;
+    supportText?: string;
 }) => {
     const { t } = useTranslation();
     const [fileList, setFileList] = React.useState<UploadFile[]>([]);
-    const [uploading, setUploading] = React.useState(false);
     const [previewVisible, setPreviewVisible] = React.useState(false);
+    const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
-    const { startUpload, isUploading } = useUploadThing('imageUploader', {
-        onClientUploadComplete: (res: any) => {
-            if (res && res[0]) {
-                const url = res[0].ufsUrl || res[0].url;
-                onChange?.(url);
-                toast.success(t('common.uploadImageSuccess'));
+    useEffect(() => {
+        return () => {
+            if (previewUrl?.startsWith('blob:')) {
+                URL.revokeObjectURL(previewUrl);
             }
-        },
-        onUploadError: (error: Error) => {
-            toast.error(`Error uploading image: ${error.message}`);
-            setFileList([]);
-        },
-    });
+        };
+    }, [previewUrl]);
 
-    React.useEffect(() => {
-        if (value) {
+    useEffect(() => {
+        if (value instanceof File) {
+            const url = URL.createObjectURL(value);
+            setPreviewUrl(url);
+            setFileList([
+                {
+                    uid: (value as any).uid || '-1',
+                    name: value.name,
+                    status: 'done',
+                    url,
+                    originFileObj: value as any,
+                },
+            ]);
+        } else if (typeof value === 'string' && value) {
+            setPreviewUrl(value);
             setFileList([
                 {
                     uid: '-1',
-                    name: 'image.jpg',
+                    name: value.split('/').pop() || 'image.jpg',
                     status: 'done',
                     url: value,
                 },
             ]);
         } else {
+            setPreviewUrl(null);
             setFileList([]);
         }
     }, [value]);
 
-    const customRequest = async (options: any) => {
-        const { file, onSuccess, onError, onProgress } = options;
-
-        try {
-            setUploading(true);
-            onProgress({ percent: 10 });
-
-            const compressedFile = await compressImage(file as File);
-            onProgress({ percent: 30 });
-
-            const result = await startUpload([compressedFile]);
-
-            if (result && result[0]) {
-                onProgress({ percent: 100 });
-                const url = result[0].url;
-                onSuccess({ url });
-                setFileList([
-                    {
-                        uid: file.uid,
-                        name: file.name,
-                        status: 'done',
-                        url: url,
-                    },
-                ]);
-            }
-        } catch (error) {
-            console.error('Upload failed', error);
-            onError(error);
-        } finally {
-            setUploading(false);
-        }
-    };
-
     const uploadProps: UploadProps = {
         beforeUpload: (file) => {
-            const isImage = file.type.startsWith('image/');
+            const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+            const isImage = file.type.startsWith('image/') || isSvg;
             if (!isImage) {
-                message.error('You can only upload image files!');
+                toast.error('You can only upload image files!');
                 return Upload.LIST_IGNORE;
             }
-            const isLt5M = file.size / 1024 / 1024 < 5;
-            if (!isLt5M) {
-                message.error('Image must be smaller than 5MB!');
+            const fileMaxSizeMB = isSvg ? (svgMaxFileSizeMB ?? maxFileSizeMB) : maxFileSizeMB;
+            const isLtMaxSize = file.size / 1024 / 1024 < fileMaxSizeMB;
+            if (!isLtMaxSize) {
+                toast.error(
+                    `${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`
+                );
                 return Upload.LIST_IGNORE;
             }
-            return true;
+            onChange?.(file);
+            return false;
         },
-        customRequest,
         maxCount: 1,
-        accept: 'image/*',
+        accept,
         fileList,
         onRemove: () => {
             setFileList([]);
+            setPreviewUrl(null);
             onChange?.('');
             return true;
         },
@@ -387,15 +389,8 @@ const ImageUploader = ({
 
     return (
         <>
-            <Upload.Dragger {...uploadProps} disabled={disabled || uploading || isUploading}>
-                {uploading || isUploading ? (
-                    <div style={{ padding: 40 }}>
-                        <LoadingOutlined style={{ fontSize: 48, color: '#1890ff' }} />
-                        <p className="ant-upload-text" style={{ marginTop: 16 }}>
-                            {t('common.loading')}
-                        </p>
-                    </div>
-                ) : fileList.length > 0 && fileList[0].url ? (
+            <Upload.Dragger {...uploadProps} disabled={disabled}>
+                {fileList.length > 0 && fileList[0].url ? (
                     <div
                         style={{
                             padding: 16,
@@ -415,7 +410,7 @@ const ImageUploader = ({
                         >
                             <img
                                 src={fileList[0].url}
-                                alt="Machine preview"
+                                alt={previewAlt || t('common.upload.preview')}
                                 style={{
                                     width: '100%',
                                     maxHeight: 200,
@@ -490,6 +485,7 @@ const ImageUploader = ({
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setFileList([]);
+                                            setPreviewUrl(null);
                                             onChange?.('');
                                         }}
                                         style={{
@@ -528,7 +524,9 @@ const ImageUploader = ({
                             <CameraOutlined style={{ fontSize: 48, color: '#1890ff' }} />
                         </p>
                         <p className="ant-upload-text">{t('common.upload.image.dragAndDrop')}</p>
-                        <p className="ant-upload-hint">{t('common.upload.image.supportText')}</p>
+                        <p className="ant-upload-hint">
+                            {supportText || t('common.upload.image.supportText')}
+                        </p>
                     </>
                 )}
             </Upload.Dragger>
@@ -537,11 +535,11 @@ const ImageUploader = ({
             <div style={{ display: 'none' }}>
                 <Image.PreviewGroup
                     preview={{
-                        visible: previewVisible,
-                        onVisibleChange: (visible) => setPreviewVisible(visible),
+                        open: previewVisible,
+                        onOpenChange: (visible) => setPreviewVisible(visible),
                     }}
                 >
-                    <Image src={fileList[0]?.url || ''} />
+                    <Image src={previewUrl || fileList[0]?.url || ''} alt="Image preview" />
                 </Image.PreviewGroup>
             </div>
 
@@ -559,7 +557,18 @@ const ImageUploader = ({
 };
 
 export const renderImageField = (field: FormFieldConfig) => {
-    return <ImageUploader value={field.value} disabled={field.disabled as boolean} />;
+    return (
+        <ImageUploader
+            value={field.value}
+            disabled={field.disabled as boolean}
+            preserveOriginal={field.imageUpload?.preserveOriginal}
+            accept={field.imageUpload?.accept}
+            maxFileSizeMB={field.imageUpload?.maxFileSizeMB}
+            svgMaxFileSizeMB={field.imageUpload?.svgMaxFileSizeMB}
+            previewAlt={field.imageUpload?.previewAlt}
+            supportText={field.imageUpload?.supportText}
+        />
+    );
 };
 
 const PdfUploader = ({
@@ -719,6 +728,27 @@ export const renderSwitchField = (field: FormFieldConfig) => {
     return <Switch disabled={field.disabled as boolean} />;
 };
 
+const TimePickerWrapper = ({
+    value,
+    onChange,
+    placeholder,
+    disabled,
+}: {
+    value?: string;
+    onChange?: (value: string | null) => void;
+    placeholder?: string;
+    disabled?: boolean;
+}) => (
+    <TimePicker
+        format="HH:mm A"
+        style={{ width: '100%' }}
+        placeholder={placeholder}
+        disabled={disabled}
+        value={value ? dayjs(value, 'HH:mm') : null}
+        onChange={(time) => onChange?.(time ? time.format('HH:mm') : null)}
+    />
+);
+
 /**
  * Main field renderer - routes to specific renderer based on field type
  */
@@ -732,6 +762,13 @@ export const renderField = (field: FormFieldConfig): React.ReactNode => {
     switch (field.type) {
         case 'text':
             return renderTextField(field);
+        case 'time':
+            return (
+                <TimePickerWrapper
+                    placeholder={field.placeholder}
+                    disabled={field.disabled as boolean}
+                />
+            );
         case 'email':
             return renderEmailField(field);
         case 'password':

@@ -2,7 +2,8 @@
 
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { Layout, Grid, theme, Card } from 'antd';
+import { Layout, Grid, theme, Card, ConfigProvider } from 'antd';
+import { lightTheme } from '@/configs/antdTheme';
 import RegisterForm from './RegisterForm';
 import LanguageSwitcher from '@/components/shared/header/LanguageSwitcher';
 
@@ -125,7 +126,6 @@ PoweredBySection.displayName = 'PoweredBySection';
 
 const RegisterLayout = React.memo(() => {
     const screens = useBreakpoint();
-    const { token } = theme.useToken();
 
     const isLargeScreen = !!screens.lg;
 
@@ -137,6 +137,7 @@ const RegisterLayout = React.memo(() => {
     }, [screens.xl, screens.lg, screens.sm]);
 
     return (
+        <ConfigProvider theme={{ ...lightTheme, algorithm: theme.defaultAlgorithm }}>
         <Layout
             style={{
                 minHeight: '100vh',
@@ -255,11 +256,11 @@ const RegisterLayout = React.memo(() => {
                     {/* Register Form Card */}
                     <Card
                         style={{
-                            borderRadius: token.borderRadiusLG,
+                            borderRadius: 12,
                             boxShadow: isLargeScreen
                                 ? '0 8px 32px rgba(0, 0, 0, 0.1)'
                                 : '0 4px 16px rgba(0, 0, 0, 0.08)',
-                            border: `1px solid ${token.colorBorderSecondary}`,
+                            border: '1px solid #f0f0f0',
                             backgroundColor: '#fff',
                             maxHeight: 'calc(100vh - 360px)',
                             display: 'flex',
@@ -270,7 +271,7 @@ const RegisterLayout = React.memo(() => {
                                 padding: screens.sm ? 28 : 20,
                                 overflow: 'auto',
                                 scrollbarWidth: 'thin',
-                                scrollbarColor: `${token.colorBorder} transparent`,
+                                scrollbarColor: '#d9d9d9 transparent',
                             },
                         }}
                     >
@@ -282,6 +283,7 @@ const RegisterLayout = React.memo(() => {
                 </div>
             </Content>
         </Layout>
+        </ConfigProvider>
     );
 });
 

@@ -22,10 +22,8 @@ import { toast } from 'sonner';
 import { ColumnsType } from 'antd/es/table';
 
 import { ShiftBreakPeriodService } from '@/services/ShiftBreakPeriodService';
-import { DemoShiftBreakPeriodService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 import { ShiftBreakPeriod } from '@/types/ShiftBreakPeriod';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import i18n from '../../../../../../../i18n';
 import dayjs from 'dayjs';
 
@@ -37,9 +35,6 @@ const VALIDATION_CONFIG = Object.freeze({
 
 const { useBreakpoint } = Grid;
 const { Text } = Typography;
-const activeShiftBreakPeriodService = USE_MOCK_FACTORY_OVERVIEW
-    ? DemoShiftBreakPeriodService
-    : ShiftBreakPeriodService;
 
 type Props = {
     filter: IndustryFilter;
@@ -61,23 +56,18 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
 
     const screens = useBreakpoint();
     const isMobile = !screens.md;
-    const { handleError } = useApiErrorHandler();
 
     const fetchItems = useCallback(async () => {
         try {
             setLoading(true);
 
-            const response = await activeShiftBreakPeriodService.getAllShiftBreakPeriods(
-                filter.filterId
-            );
+            const response = await ShiftBreakPeriodService.getAllShiftBreakPeriods(filter.filterId);
 
             setItems(response || []);
-        } catch (error) {
-            handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
         } finally {
             setLoading(false);
         }
-    }, [filter.filterId, handleError]);
+    }, [filter.filterId]);
 
     useEffect(() => {
         fetchItems();
@@ -92,40 +82,33 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
         setFormOpen(true);
     };
 
-    const handleOpenEdit = useCallback(
-        (record: ShiftBreakPeriod) => {
-            setFormMode('edit');
+    const handleOpenEdit = (record: ShiftBreakPeriod) => {
+        setFormMode('edit');
 
-            setEditing(record);
+        setEditing(record);
 
-            form.setFieldsValue({
-                ...record,
-                breakStartTime: record.breakStartTime ? dayjs(record.breakStartTime, 'HH:mm') : null,
-                breakEndTime: record.breakEndTime ? dayjs(record.breakEndTime, 'HH:mm') : null,
-            });
+        form.setFieldsValue({
+            ...record,
+            breakStartTime: record.breakStartTime ? dayjs(record.breakStartTime, 'HH:mm') : null,
+            breakEndTime: record.breakEndTime ? dayjs(record.breakEndTime, 'HH:mm') : null,
+        });
 
-            setFormOpen(true);
-        },
-        [form]
-    );
+        setFormOpen(true);
+    };
 
-    const handleDelete = useCallback(async (id: number) => {
+    const handleDelete = async (id: number) => {
         try {
             setLoading(true);
 
-            await activeShiftBreakPeriodService.deleteShiftBreakPeriod(id);
+            await ShiftBreakPeriodService.deleteShiftBreakPeriod(id);
 
             toast.success(t('industryFilterManagement.shiftBreaks.deleteSuccess'));
 
-            await fetchItems();
-        } catch (error) {
-            handleError(error, {
-                fallbackKey: 'industryFilterManagement.shiftBreaks.deleteError',
-            });
+            fetchItems();
         } finally {
             setLoading(false);
         }
-    }, [fetchItems, handleError, t]);
+    };
 
     const handleSubmit = async (values: any) => {
         try {
@@ -167,14 +150,14 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
             }
 
             if (formMode === 'create') {
-                await activeShiftBreakPeriodService.createShiftBreakPeriod({
+                await ShiftBreakPeriodService.createShiftBreakPeriod({
                     filterId: filter.filterId,
                     ...payload,
                 });
 
                 toast.success(t('industryFilterManagement.shiftBreaks.createSuccess'));
             } else if (editing) {
-                await activeShiftBreakPeriodService.updateShiftBreakPeriods([
+                await ShiftBreakPeriodService.updateShiftBreakPeriods([
                     {
                         breakPeriodId: editing.breakPeriodId,
                         ...payload,
@@ -185,9 +168,9 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
             }
 
             setFormOpen(false);
-            await fetchItems();
-        } catch (error) {
-            handleError(error, { fallbackKey: 'common.error' });
+            fetchItems();
+        } catch (error: any) {
+            toast.error(t('common.error'));
         } finally {
             setLoading(false);
         }
@@ -250,7 +233,7 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
         }
 
         return baseColumns;
-    }, [t, readOnly, handleDelete, handleOpenEdit]);
+    }, [t, readOnly, handleDelete]);
 
     return (
         <>
@@ -267,7 +250,7 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
                         {t('industryFilterManagement.shiftBreaks.createTitle')}
                     </Button>
                 )}
-                <Space direction="vertical" size={4} style={{ marginBottom: 16 }}>
+                <Space orientation="vertical" size={4} style={{ marginBottom: 16 }}>
                     <Text type="secondary">
                         {t('industryFilterManagement.shiftBreaks.shiftTime')}
                     </Text>
@@ -295,6 +278,7 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
                     x: 'max-content',
                     y: 32 * 5,
                 }}
+                // footer={() => ''}
             />
 
             <Modal

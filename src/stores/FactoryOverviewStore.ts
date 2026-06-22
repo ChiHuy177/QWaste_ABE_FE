@@ -1,5 +1,4 @@
 import { SpaceService } from '@/services';
-import { DemoFactoryOverviewService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 import { SpacePickingWithChildren, SpaceOverview } from '@/types/Space';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch, RootState } from './configureStore';
@@ -9,6 +8,7 @@ export interface IFactoryOverviewStoreState {
     selectedStartDate: string;
     selectedEndDate: string;
     selectedTimePeriod: number | null;
+    selectedShiftFilterId: number | null;
     selectedSpaceId: number | null;
     spaces: SpacePickingWithChildren[];
     spaceData: SpaceOverview | null;
@@ -21,6 +21,7 @@ const initialState: IFactoryOverviewStoreState = {
     selectedStartDate: dayjs().format('YYYY-MM-DD'),
     selectedEndDate: dayjs().format('YYYY-MM-DD'),
     selectedTimePeriod: null,
+    selectedShiftFilterId: null,
     selectedSpaceId: null,
     spaces: [],
     spaceData: null,
@@ -43,6 +44,10 @@ const slice = createSlice({
 
         setSelectedTimePeriod: (state, action: PayloadAction<number | null>) => {
             state.selectedTimePeriod = action.payload;
+        },
+
+        setSelectedShiftFilterId: (state, action: PayloadAction<number | null>) => {
+            state.selectedShiftFilterId = action.payload;
         },
 
         setSelectedSpaceId: (state, action: PayloadAction<number | null>) => {
@@ -88,9 +93,7 @@ export const factoryOverviewActions = {
         dispatch(slice.actions.setError(null));
 
         try {
-            const data = USE_MOCK_FACTORY_OVERVIEW
-                ? await DemoFactoryOverviewService.getSpaces()
-                : await SpaceService.getSpacesByLevel(1);
+            const data = await SpaceService.getSpacesByLevel(1);
             dispatch(slice.actions.setSpaces(data));
             return { success: true, data };
         } catch (error) {
@@ -103,15 +106,17 @@ export const factoryOverviewActions = {
     },
 
     fetchSpaceOverview:
-        (spaceId: number, filterId: number) =>
+        (spaceId: number, filterId: number, shiftFilterId?: number) =>
         async (dispatch: AppDispatch) => {
             dispatch(slice.actions.setIsLoading(true));
             dispatch(slice.actions.setError(null));
 
             try {
-                const overview = USE_MOCK_FACTORY_OVERVIEW
-                    ? await DemoFactoryOverviewService.getSpaceOverview()
-                    : await SpaceService.getSpaceOverview(spaceId, filterId);
+                const overview = await SpaceService.getSpaceOverview(
+                    spaceId,
+                    filterId,
+                    shiftFilterId
+                );
                 dispatch(slice.actions.setSpaceData(overview));
                 return { success: true, data: overview };
             } catch (error) {
@@ -131,14 +136,12 @@ export const factoryOverviewActions = {
             dispatch(slice.actions.setError(null));
 
             try {
-                const overview = USE_MOCK_FACTORY_OVERVIEW
-                    ? await DemoFactoryOverviewService.getSpaceOverviewByDateRange()
-                    : await SpaceService.getSpaceOverviewByDateRange(
-                          spaceId,
-                          startDate,
-                          endDate,
-                          filterId
-                      );
+                const overview = await SpaceService.getSpaceOverviewByDateRange(
+                    spaceId,
+                    startDate,
+                    endDate,
+                    filterId
+                );
                 dispatch(slice.actions.setSpaceData(overview));
                 return { success: true, data: overview };
             } catch (error) {
@@ -191,6 +194,7 @@ export const factoryOverviewActions = {
 
     setSelectedDateRange: slice.actions.setSelectedDateRange,
     setSelectedTimePeriod: slice.actions.setSelectedTimePeriod,
+    setSelectedShiftFilterId: slice.actions.setSelectedShiftFilterId,
     setSelectedSpaceId: slice.actions.setSelectedSpaceId,
     setSpaceData: slice.actions.setSpaceData,
     updateSpaceData: slice.actions.updateSpaceData,

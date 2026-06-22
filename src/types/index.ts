@@ -12,3 +12,4 @@ export * from './Order';
 export * from './Task';
 export * from './DrawingCode';
 export * from './Step';
+export * from './FloorMap';

@@ -1,9 +1,5 @@
 import { createSlice, PayloadAction, Dispatch } from '@reduxjs/toolkit';
 import { Notification } from '@/types/Notification';
-import {
-    DemoNotificationService,
-    USE_MOCK_NOTIFICATIONS,
-} from '@/mockData/notifications';
 import { NotificationService } from '@/services/NotificationService';
 import { WebSocketService } from '@/services/WebSocketService';
 import { WebSocketMessage } from '@/types/WebSocket';
@@ -28,9 +24,6 @@ const initialState: INotificationStoreState = {
 
 const TOAST_DEDUPE_COOLDOWN_MS = 8000;
 const toastDedupeMap = new Map<string, number>();
-const activeNotificationService = USE_MOCK_NOTIFICATIONS
-    ? DemoNotificationService
-    : NotificationService;
 
 const formatKeyArgs = (template: string, args: unknown[] = []) =>
     template.replace(/\{(\d+)\}/g, (_, index: string) => String(args[Number(index)] ?? ''));
@@ -169,7 +162,7 @@ export const { reducer } = slice;
 export const notificationActions = {
     fetchUnreadCount: () => async (dispatch: Dispatch) => {
         try {
-            const count = await activeNotificationService.getUnreadNotification();
+            const count = await NotificationService.getUnreadNotification();
             dispatch(slice.actions.setUnreadCount(count));
         } catch (error) {
             console.error('[NotificationStore] Failed to fetch unread count:', error);
@@ -178,11 +171,6 @@ export const notificationActions = {
     },
 
     connectWebSocket: () => (dispatch: Dispatch) => {
-        if (USE_MOCK_NOTIFICATIONS) {
-            dispatch(slice.actions.setWebSocketConnected(false));
-            return;
-        }
-
         const wsService = WebSocketService.getInstance();
 
         if (!wsService.connected) {
@@ -215,9 +203,7 @@ export const notificationActions = {
                         showNotificationToast(notification, 'error');
                         try {
                             new Audio('/sounds/notification.mp3').play().catch(() => { });
-                        } catch {
-                            // Browser may block audio playback before user interaction.
-                        }
+                        } catch { }
                     }
                     break;
                 }
@@ -270,7 +256,7 @@ export const notificationActions = {
 
     markAsRead: (notificationId: number) => async (dispatch: Dispatch) => {
         try {
-            await activeNotificationService.markAsRead([notificationId]);
+            await NotificationService.markAsRead([notificationId]);
             dispatch(slice.actions.markNotificationAsRead(notificationId));
             dispatch(slice.actions.decrementUnreadCount());
         } catch (error) {
@@ -281,7 +267,7 @@ export const notificationActions = {
 
     markAllAsRead: () => async (dispatch: Dispatch) => {
         try {
-            await activeNotificationService.markAsRead([], true);
+            await NotificationService.markAsRead([], true);
             dispatch(slice.actions.markAllNotificationsAsRead());
         } catch (error) {
             console.error('[NotificationStore] Failed to mark all as read:', error);

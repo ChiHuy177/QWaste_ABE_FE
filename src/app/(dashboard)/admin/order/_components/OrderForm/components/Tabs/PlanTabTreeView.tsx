@@ -219,7 +219,7 @@ export const PlanTabTreeView: React.FC<PlanTabTreeViewProps> = ({
     }, [orderDrawings]);
 
     const treePanel = (
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
             {/* Search */}
             <Input
                 placeholder={t('common.search')}
@@ -262,7 +262,7 @@ export const PlanTabTreeView: React.FC<PlanTabTreeViewProps> = ({
                         <Alert
                             type="error"
                             showIcon
-                            message={emptyStateError}
+                            title={emptyStateError}
                             style={{ marginBottom: 16, textAlign: 'left' }}
                         />
                     )}
@@ -279,7 +279,7 @@ export const PlanTabTreeView: React.FC<PlanTabTreeViewProps> = ({
                     onExpand={setExpandedKeys}
                     titleRender={(nodeData) => (
                         <TreeNodeRenderer
-                            key={`${nodeData.key}-${validationVersion}`}
+                            key={`${String(nodeData.key)}-${validationVersion}`}
                             nodeData={nodeData}
                             form={form}
                             isSelected={selectedNode?.key === nodeData.key}
@@ -340,7 +340,7 @@ export const PlanTabTreeView: React.FC<PlanTabTreeViewProps> = ({
             `}</style>
             {/* Toolbar */}
             <Card
-                bordered={false}
+                variant="borderless"
                 style={{
                     marginBottom: 16,
                     background: token.colorBgContainer,
@@ -351,7 +351,7 @@ export const PlanTabTreeView: React.FC<PlanTabTreeViewProps> = ({
                         <Title level={5} style={{ margin: 0 }}>
                             {t('orderManagement.form.plan.planConfiguration')}
                         </Title>
-                        {!isMobile && <Divider type="vertical" />}
+                        {!isMobile && <Divider orientation="vertical" />}
                         <Space size={8} wrap>
                             <Tag color="blue" icon={<FileTextOutlined />}>
                                 {t('orderManagement.form.plan.drawingsCount', {

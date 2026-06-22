@@ -2,7 +2,7 @@ import { FormFieldConfig } from '@/components/shared/FormModal/types';
 
 const VALIDATION_CONFIG = Object.freeze({
     SPACE_LEVEL: { min: 1, required: true, maxLength: 9 },
-    SPACE_LEVEL_NAME: { required: true, minLength: 3, maxLength: 255 },
+    SPACE_LEVEL_NAME: { required: true, minLength: 3, maxLength: 100 },
 });
 
 export const getSpaceLevelFormFields = (
@@ -50,6 +50,12 @@ export const getSpaceLevelFormFields = (
                     min: VALIDATION_CONFIG.SPACE_LEVEL_NAME.minLength,
                     message: t('spaceLevelManagement.form.validation.minLength', {
                         min: VALIDATION_CONFIG.SPACE_LEVEL_NAME.minLength,
+                    }),
+                },
+                {
+                    max: VALIDATION_CONFIG.SPACE_LEVEL_NAME.maxLength,
+                    message: t('spaceLevelManagement.form.validation.maxLength', {
+                        max: VALIDATION_CONFIG.SPACE_LEVEL_NAME.maxLength,
                     }),
                 },
             ],

@@ -22,7 +22,6 @@ import {
     EyeTwoTone,
     MailOutlined,
     CheckCircleOutlined,
-    CloseCircleOutlined,
     LoadingOutlined,
     ArrowLeftOutlined,
     ArrowRightOutlined,
@@ -31,7 +30,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { AuthService } from '@/services/AuthService';
-import { FactoryService } from '@/services/FactoryService';
+import { SpaceService } from '@/services/SpaceService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { RegisterFormData } from '@/types/Register';
@@ -110,8 +109,8 @@ const RegisterForm = React.memo(() => {
     const [otpCode, setOtpCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
-    const [factories, setFactories] = useState<Array<{ value: number; label: string }>>([]);
-    const [loadingFactories, setLoadingFactories] = useState(false);
+    const [spaces, setSpaces] = useState<Array<{ value: number; label: string }>>([]);
+    const [loadingSpaces, setLoadingSpaces] = useState(false);
     const [generalError, setGeneralError] = useState<string | null>(null);
     const [emailForOtp, setEmailForOtp] = useState('');
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -121,25 +120,25 @@ const RegisterForm = React.memo(() => {
     const router = useRouter();
     const { syncUser } = useAuth();
 
-    // Fetch factories on mount
+    // Fetch registration spaces on mount
     useEffect(() => {
-        const fetchFactories = async () => {
+        const fetchSpaces = async () => {
             try {
-                setLoadingFactories(true);
-                const response = await FactoryService.getAllFactoriesPickingForRegister();
-                const options = response.map((factory) => ({
-                    value: factory.factoryId,
-                    label: `${factory.factoryCode} - ${factory.factoryName}`,
+                setLoadingSpaces(true);
+                const response = await SpaceService.getRootSpacesForRegistration();
+                const options = response.map((space) => ({
+                    value: space.spaceId,
+                    label: `${space.spaceCode} - ${space.spaceName}`,
                 }));
-                setFactories(options);
+                setSpaces(options);
             } catch (error) {
-                console.error('[RegisterForm] Failed to fetch factories:', error);
-                toast.error(t('registerPage.messages.factoryLoadFailed'));
+                console.error('[RegisterForm] Failed to fetch registration spaces:', error);
+                toast.error(t('registerPage.messages.spaceLoadFailed'));
             } finally {
-                setLoadingFactories(false);
+                setLoadingSpaces(false);
             }
         };
-        fetchFactories();
+        fetchSpaces();
     }, [t]);
 
     // Handle continue from Step 1 to Step 2
@@ -176,7 +175,7 @@ const RegisterForm = React.memo(() => {
                 password,
                 confirmPassword,
                 username,
-                factoryId: values.factoryId!,
+                spaceId: values.spaceId!,
             });
 
             if (result.success) {
@@ -257,7 +256,7 @@ const RegisterForm = React.memo(() => {
     if (currentStep === 'otp') {
         return (
             <div style={{ width: '100%', maxWidth: 420, margin: '0 auto' }}>
-                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                     <Steps
                         current={currentStepIndex}
                         items={[{ title: '' }, { title: '' }, { title: '' }]}
@@ -293,7 +292,7 @@ const RegisterForm = React.memo(() => {
                         </div>
                     </div>
 
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
                         <label
                             style={{
                                 fontSize: 14,
@@ -328,7 +327,7 @@ const RegisterForm = React.memo(() => {
                             disabled={isVerifying}
                             autoFocus
                         />
-                        {generalError && <Alert message={generalError} type="error" showIcon />}
+                        {generalError && <Alert title={generalError} type="error" showIcon />}
                         <div
                             style={{
                                 fontSize: 12,
@@ -600,7 +599,7 @@ const RegisterForm = React.memo(() => {
                             size="large"
                             block
                             icon={<ArrowRightOutlined />}
-                            iconPosition="end"
+                            iconPlacement="end"
                         >
                             {t('registerPage.buttons.continue')}
                         </Button>
@@ -818,38 +817,35 @@ const RegisterForm = React.memo(() => {
                     />
                 </Form.Item>
 
-                {/* Factory Selection */}
+                {/* Space Selection */}
                 <Form.Item
-                    name="factoryId"
+                    name="spaceId"
                     label={
                         <Text strong>
-                            {t('registerPage.fields.factory')} <Text type="danger">*</Text>
+                            {t('registerPage.fields.space')} <Text type="danger">*</Text>
                         </Text>
                     }
                     rules={[
-                        { required: true, message: t('registerPage.validation.factoryRequired') },
+                        { required: true, message: t('registerPage.validation.spaceRequired') },
                     ]}
                     style={{ marginBottom: 0 }}
                 >
                     <Select
                         size="large"
-                        placeholder={t('registerPage.placeholders.factory')}
-                        loading={loadingFactories}
-                        disabled={isSubmitting || loadingFactories}
-                        options={factories}
-                        showSearch
-                        filterOption={(input, option) =>
-                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                        }
+                        placeholder={t('registerPage.placeholders.space')}
+                        loading={loadingSpaces}
+                        disabled={isSubmitting || loadingSpaces}
+                        options={spaces}
+                        showSearch={{ filterOption: (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase()) }}
                     />
                 </Form.Item>
 
                 {/* Error Message */}
-                {generalError && <Alert message={generalError} type="error" showIcon />}
+                {generalError && <Alert title={generalError} type="error" showIcon />}
 
                 {/* Action Buttons */}
                 <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-                    <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                         <Button
                             type="primary"
                             htmlType="submit"

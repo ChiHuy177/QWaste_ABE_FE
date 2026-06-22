@@ -46,31 +46,25 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'drawing_code',
         action: 'view',
     },
-    '/admin/categories/errorGroup': {
-        subject: 'error_group',
-        action: 'view',
-    },
-    '/admin/categories/errorDetail': {
-        subject: 'error_detail',
-        action: 'view',
-    },
-    '/admin/categories/productionPlan': {
-        subject: 'production_plan',
-        action: 'view',
-    },
-    '/admin/categories/moldCode': {
-        subject: 'mold_code',
-        action: 'view',
-    },
     '/admin/setting': {
         subject: 'profile',
         action: 'view',
     },
 
-    // Factory overview
-    '/admin/factory-overview': {
-        subject: 'factory_overview',
+    // Space monitoring
+    '/admin/space-monitoring': {
+        subject: 'space_monitoring',
         action: 'view',
+    },
+
+    // Floor map
+    '/admin/floor-map/status': {
+        subject: 'floor_map',
+        action: 'view',
+    },
+    '/admin/floor-map': {
+        subject: 'floor_map',
+        action: 'update',
     },
 
     // Machines
@@ -119,11 +113,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    '/admin': {
-        subject: 'overview',
-        action: 'view',
-    },
-
     // Order Management
     '/admin/order': {
         subject: 'order',
@@ -147,20 +136,12 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'tasks',
         action: 'view',
     },
-
-    // Maintenance
-    '/maintenance/incidents': {
-        subject: 'incident_report',
-        action: 'view',
-    },
 };
 
 const DEFAULT_ROUTE_PRIORITY: string[] = [
-    '/admin',
-    '/admin/factory-overview',
+    '/admin/space-monitoring',
     '/admin/machines',
     '/operator/tasks',
-    '/maintenance/incidents',
     '/qc',
     '/admin/categories/machineList',
     '/admin/categories/spaceLevel',
@@ -173,8 +154,8 @@ export function getDefaultRoute(ability: AppAbility): string {
             return route;
         }
     }
-    // All authenticated users can access settings
-    return '/admin/setting';
+    // Fallback to the primary admin landing route.
+    return '/admin/space-monitoring';
 }
 
 export function hasRouteAccessWithAbility(route: string, ability: AppAbility): boolean {

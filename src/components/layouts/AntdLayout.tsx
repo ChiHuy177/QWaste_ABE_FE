@@ -197,8 +197,7 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                     styles={{
                         body: { padding: 0 },
                     }}
-                    size="default"
-                    width={300}
+                    size={300}
                     closable={false}
                 >
                     {menuContent}

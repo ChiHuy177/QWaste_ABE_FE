@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    DemoOperatorReviewService,
-    USE_MOCK_OPERATOR_REVIEWS,
-} from '@/mockData/operator';
-import { UtilsService } from '@/services/UtilsService';
-import type { TaskDeclineReason as TaskDeclineReasonOption } from '@/services/UtilsService';
+import { UtilsService } from '@/services';
 import {
     Card,
     Button,
@@ -45,9 +40,6 @@ import {
 
 const { TextArea } = Input;
 const { Text } = Typography;
-const activeReviewUtilityService = USE_MOCK_OPERATOR_REVIEWS
-    ? DemoOperatorReviewService
-    : UtilsService;
 
 type ReviewFilter = 'ALL' | TaskReviewStatus;
 
@@ -73,32 +65,15 @@ export const OperatorReviewDrawer = () => {
     const { t } = useTranslation('common');
 
     const [reviews, setReviews] = useState<Record<string, ReviewDecision>>({});
-    const [declineReasons, setDeclineReasons] = useState<TaskDeclineReasonOption[]>([]);
+    const [declineReasons, setDeclineReasons] = useState<any[]>([]);
     const [submittingTasks, setSubmittingTasks] = useState<Record<string, boolean>>({});
     const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('PENDING');
 
     useEffect(() => {
-        if (!isOperatorReviewDrawerOpen || declineReasons.length > 0) return;
-
-        let ignoreResult = false;
-
-        const fetchDeclineReasons = async () => {
-            try {
-                const reasons = await activeReviewUtilityService.getTaskDeclineReasons();
-                if (!ignoreResult) {
-                    setDeclineReasons(reasons);
-                }
-            } catch {
-                message.error('Failed to load decline reasons');
-            }
-        };
-
-        fetchDeclineReasons();
-
-        return () => {
-            ignoreResult = true;
-        };
-    }, [declineReasons.length, isOperatorReviewDrawerOpen]);
+        if (isOperatorReviewDrawerOpen && declineReasons.length === 0) {
+            UtilsService.getTaskDeclineReasons().then(setDeclineReasons).catch(console.error);
+        }
+    }, [isOperatorReviewDrawerOpen]);
 
     useEffect(() => {
         if (isOperatorReviewDrawerOpen && selectedOperatorReviewOrderId) {
@@ -280,7 +255,7 @@ export const OperatorReviewDrawer = () => {
     return (
         <Drawer
             title={
-                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                     <Space>
                         <CheckCircleOutlined style={{ fontSize: 18, color: token.colorPrimary }} />
                         <Text strong style={{ fontSize: 16 }}>
@@ -295,7 +270,7 @@ export const OperatorReviewDrawer = () => {
                 </Space>
             }
             placement="right"
-            width={1000}
+            size={1000}
             onClose={handleClose}
             open={isOperatorReviewDrawerOpen}
             styles={{
@@ -320,7 +295,7 @@ export const OperatorReviewDrawer = () => {
                     <Space size={16}>
                         {reviewCounts.pending > 0 ? (
                             <Alert
-                                message={t('operatorReview.drawer.tasksNeedReview', {
+                                title={t('operatorReview.drawer.tasksNeedReview', {
                                     count: reviewCounts.pending,
                                 })}
                                 type="warning"
@@ -329,7 +304,7 @@ export const OperatorReviewDrawer = () => {
                             />
                         ) : (
                             <Alert
-                                message={t('operatorReview.drawer.allTasksReviewed')}
+                                title={t('operatorReview.drawer.allTasksReviewed')}
                                 type="success"
                                 showIcon
                                 style={{ margin: 0, padding: '4px 12px' }}
@@ -390,7 +365,7 @@ export const OperatorReviewDrawer = () => {
                                 flexWrap: 'wrap',
                             }}
                         >
-                            <Space direction="vertical" size={6} style={{ minWidth: 0 }}>
+                            <Space orientation="vertical" size={6} style={{ minWidth: 0 }}>
                                 <Space size={8} wrap>
                                     <Text code>{operatorReviewData.orderCode}</Text>
                                     <Tag
@@ -600,7 +575,7 @@ export const OperatorReviewDrawer = () => {
                                                                                             alignItems: 'center',
                                                                                         }}
                                                                                     >
-                                                                                        <Space direction="vertical" size={4} style={{ minWidth: 0 }}>
+                                                                                        <Space orientation="vertical" size={4} style={{ minWidth: 0 }}>
                                                                                             <Space size={8} wrap>
                                                                                                 <Tag style={{ marginInlineEnd: 0 }}>
                                                                                                     #{task.taskOrder}
@@ -638,7 +613,7 @@ export const OperatorReviewDrawer = () => {
                                                                                         {task.myReview.reviewStatus === 'CONFIRMED' && review?.reviewStatus === 'CONFIRMED' && (
                                                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                                                 <Alert
-                                                                                                    message={t('operatorReview.drawer.readyForProduction')}
+                                                                                                    title={t('operatorReview.drawer.readyForProduction')}
                                                                                                     type="success"
                                                                                                     showIcon
                                                                                                     style={{ flex: 1, marginRight: 16 }}
@@ -666,7 +641,7 @@ export const OperatorReviewDrawer = () => {
                                                                                                 gap: 8
                                                                                             }}>
                                                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                                                                    <Space direction="vertical" size={2}>
+                                                                                                    <Space orientation="vertical" size={2}>
                                                                                                         <Text strong style={{ fontSize: 13, color: token.colorError }}>
                                                                                                             {t('operatorReview.drawer.decline')}: {
                                                                                                                 declineReasons.find(r => r.name === task.myReview.declineReason)?.nameVi ||
@@ -758,7 +733,7 @@ export const OperatorReviewDrawer = () => {
                                                                                                         value={review?.declineReason}
                                                                                                         onChange={(e) => handleReviewChange(task.taskId, 'declineReason', e.target.value)}
                                                                                                     >
-                                                                                                        <Space direction="vertical">
+                                                                                                        <Space orientation="vertical">
                                                                                                             {declineReasons.map((reason) => (
                                                                                                                 <Radio key={reason.name} value={reason.name}>
                                                                                                                     {reason.nameVi} ({reason.nameEn})

@@ -2,16 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Typography, Tag, Space, Spin, Empty, Collapse, Checkbox, Button, theme, Form, Alert } from 'antd';
 import type { CollapseProps } from 'antd';
-import { RoleService } from '@/services/RoleService';
-import { UserService } from '@/services/UserService';
-import { DemoRoleService, USE_MOCK_RBAC } from '@/mockData/admin/rbac';
-import { DemoUserService, USE_MOCK_USERS } from '@/mockData/admin/users';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { RoleService, UserService } from '@/services';
 import { Role, RolePermission } from '@/types/Role';
 
 const { Text } = Typography;
-const activeRoleService = USE_MOCK_RBAC ? DemoRoleService : RoleService;
-const activeUserService = USE_MOCK_USERS ? DemoUserService : UserService;
 
 const groupPermissionsBySubject = (permissions: RolePermission[]) => {
     const subjects = Array.from(
@@ -88,7 +82,6 @@ export const RoleAssignment: React.FC<RoleAssignmentProps> = ({
     const [fetchedRoles, setFetchedRoles] = useState<Role[]>([]);
     const allRoles = parentRoles ?? fetchedRoles; // Use parent roles if available
     const selectedRoleIds = value;
-    const { handleError } = useApiErrorHandler();
 
     // Fetch all roles - only if not provided by parent
     useEffect(() => {
@@ -97,35 +90,35 @@ export const RoleAssignment: React.FC<RoleAssignmentProps> = ({
         const fetchRoles = async () => {
             setLoading(true);
             try {
-                const roles = await activeRoleService.getRolesForPicking();
+                const roles = await RoleService.getRolesForPicking();
                 setFetchedRoles(roles);
             } catch (error) {
-                handleError(error, { fallbackKey: 'roleManagement.messages.fetchError' });
+                console.error('Error fetching roles:', error);
             } finally {
                 setLoading(false);
             }
         };
         fetchRoles();
-    }, [parentRoles, handleError]);
+    }, [parentRoles]);
 
     // Fetch user's current roles when editing
     useEffect(() => {
         if (userId && allRoles.length > 0) {
             const fetchUserRoles = async () => {
                 try {
-                    const data = await activeUserService.getRolesAndPermissionsSummary(userId);
+                    const data = await UserService.getRolesAndPermissionsSummary(userId);
                     // Map role names to role IDs
                     const roleIds = allRoles
                         .filter((role) => data.roles?.includes(role.roleName))
                         .map((role) => role.roleId);
                     onChange?.(roleIds);
                 } catch (error) {
-                    handleError(error, { fallbackKey: 'userManagement.fetchUserError' });
+                    console.error('Error fetching user roles:', error);
                 }
             };
             fetchUserRoles();
         }
-    }, [userId, allRoles, onChange, handleError]);
+    }, [userId, allRoles]);
 
     const handleRoleChange = useCallback(
         (roleId: number, checked: boolean) => {
@@ -187,7 +180,7 @@ export const RoleAssignment: React.FC<RoleAssignmentProps> = ({
                             </Text>
                         )}
                         {groupedPermissions.length > 0 ? (
-                            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                            <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
                                 {groupedPermissions.map(({ subject, actionCounts }) => (
                                     <div key={subject}>
                                         <Text
@@ -246,7 +239,7 @@ export const RoleAssignment: React.FC<RoleAssignmentProps> = ({
             {hasError && (
                 <Alert
                     type="error"
-                    message={errors?.[0] || t('userManagement.validation.roleRequired')}
+                    title={errors?.[0] || t('userManagement.validation.roleRequired')}
                     showIcon
                     style={{ marginBottom: 12 }}
                 />
@@ -262,7 +255,7 @@ export const RoleAssignment: React.FC<RoleAssignmentProps> = ({
                     border: `1px solid ${token.colorBorder}`,
                 }}
             >
-                <Space split="|" size="large">
+                <Space separator="|" size="large">
                     <Text>
                         <Text strong>{selectedRoleIds.length}</Text>
                         <Text type="secondary"> / {allRoles.length} {t('userManagement.roleAssignment.roles')}</Text>

@@ -40,14 +40,13 @@ export default function LanguageSwitcher() {
         ([code, { name, flag }]) => ({
             key: code,
             label: (
-                <div className="flex items-center gap-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Image
                         src={flag}
                         alt={name}
                         width={28}
                         height={20}
-                        className="rounded object-cover"
-
+                        style={{ borderRadius: 4, objectFit: 'cover' }}
                     />
                     <span>{name}</span>
                 </div>
@@ -58,12 +57,15 @@ export default function LanguageSwitcher() {
 
     if (!mounted) {
         return (
-            <div
-                suppressHydrationWarning
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background"
-            >
-                <div className="w-6 h-6 bg-muted animate-pulse rounded" />
-            </div>
+            <>
+                <style>{`@keyframes lang-pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+                <div
+                    suppressHydrationWarning
+                    style={{ display: 'inline-flex', width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 6, border: '1px solid var(--input)', background: 'var(--background)' }}
+                >
+                    <div style={{ width: 24, height: 24, borderRadius: 4, background: 'var(--muted)', animation: 'lang-pulse 2s cubic-bezier(0.4,0,0.6,1) infinite' }} />
+                </div>
+            </>
         );
     }
 
@@ -75,8 +77,7 @@ export default function LanguageSwitcher() {
         >
             <Button
                 type="text"
-                className="inline-flex h-9 w-9 items-center justify-center"
-                style={{ padding: 0 }}
+                style={{ padding: 0, display: 'inline-flex', width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
                 aria-label="Select language"
             >
                 <Image
@@ -84,7 +85,7 @@ export default function LanguageSwitcher() {
                     alt={languages[currentLanguage as keyof typeof languages].name}
                     width={40}
                     height={60}
-                    className="rounded"
+                    style={{ borderRadius: 4 }}
                 />
             </Button>
         </Dropdown>

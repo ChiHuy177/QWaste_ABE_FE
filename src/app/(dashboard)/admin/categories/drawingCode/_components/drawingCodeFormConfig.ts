@@ -8,7 +8,7 @@ const VALIDATION_CONFIG = Object.freeze({
 });
 export const getDrawingCodeFormFields = (
     t: (key: string, options?: Record<string, any>) => string,
-    _mode: 'create' | 'edit'
+    mode: 'create' | 'edit'
 ): FormFieldConfig[] => {
     return [
         {
@@ -115,6 +115,12 @@ export const getDrawingCodeFormFields = (
                     message: t('drawingCodeManagement.form.validation.pdfRequired'),
                 },
             ],
+        },
+        {
+            name: 'stepTemplates',
+            label: t('drawingCodeManagement.steps.title'),
+            type: 'custom',
+            hidden: true, // Rendered as children in EntityFormModal
         },
     ];
 };

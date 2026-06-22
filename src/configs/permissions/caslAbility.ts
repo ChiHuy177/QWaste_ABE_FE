@@ -36,7 +36,6 @@ export type Subject =
     | 'industry_filter'
     | 'drawing_code'
     // Factory
-    | 'factory_overview'
     | 'energy'
     | 'industry_config'
     // Machines
@@ -68,13 +67,7 @@ export type Subject =
     | 'task_review'
     // Space
     | 'space_monitoring'
-    // Maintenance
-    | 'incident_report'
-    // Factory Operations
-    | 'error_group'
-    | 'error_detail'
-    | 'production_plan'
-    | 'mold_code'
+    | 'floor_map'
     // Special
     | 'all';
 

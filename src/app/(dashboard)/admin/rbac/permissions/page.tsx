@@ -11,15 +11,10 @@ import { getPermissionTableColumns, PermissionTableColumnProps } from './_compon
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { getPermissionFormFields } from './_components/permissionFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { PermissionService } from '@/services/PermissionService';
-import { DemoPermissionService, USE_MOCK_RBAC } from '@/mockData/admin/rbac';
+import { PermissionService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { Can, useAbility } from '@/contexts/AbilityContext';
-import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-
-const activePermissionService = USE_MOCK_RBAC ? DemoPermissionService : PermissionService;
 
 const toSnakeCase = (str: string): string => {
     return str
@@ -38,8 +33,6 @@ const PermissionManagementPage = () => {
 
     const { t } = useTranslation();
     const { handleError } = useApiErrorHandler();
-    const ability = useAbility();
-    const { checkPermission } = usePermissionCheck();
     const [loading, setLoading] = useState(false);
     const [permissionData, setPermissionData] = useState<Permission[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -58,67 +51,53 @@ const PermissionManagementPage = () => {
     usePageTitle(t('permissionManagement.title'));
 
     const fetchPermissions = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const data = await activePermissionService.getAllPermissions();
+            const data = await PermissionService.getAllPermissions();
             setPermissionData(data);
         } catch (error) {
-            handleError(error, { fallbackKey: 'permissionManagement.messages.fetchError' });
+            console.error('Error fetching permissions:', error);
+            toast.error(t('permissionManagement.messages.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [handleError]);
+    }, [t]);
 
     useEffect(() => {
         fetchPermissions();
     }, [fetchPermissions]);
 
-    const handleCreatePermission = useCallback(() => {
-        if (!checkPermission('create', 'permission')) {
-            return;
-        }
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
-
+    // Handle Edit Action
     const handleEditPermission = useCallback((permission: Permission) => {
-        if (!checkPermission('update', 'permission')) {
-            return;
-        }
-
         setModalState({
             open: true,
             mode: 'edit',
             data: permission,
         });
-    }, [checkPermission]);
+    }, []);
 
+    // Handle Delete Action
     const handleDeletePermission = useCallback(
         (permission: Permission) => {
-            if (!checkPermission('delete', 'permission')) {
-                return;
-            }
-
             setConfirmModalState({
                 open: true,
                 type: 'delete',
                 pendingAction: async () => {
                     try {
-                        await activePermissionService.deletePermission(permission.permissionId!);
+                        await PermissionService.deletePermission(permission.permissionId!);
                         setPermissionData((prev) =>
                             (prev ?? []).filter((p) => p.permissionId !== permission.permissionId)
                         );
                         toast.success(t('permissionManagement.messages.deleteSuccess'));
                     } catch (error) {
-                        handleError(error, {
-                            fallbackKey: 'permissionManagement.messages.deleteError',
-                        });
+                        console.error('Error deleting permission:', error);
+                        toast.error(t('permissionManagement.messages.deleteError'));
                         throw error;
                     }
                 },
             });
         },
-        [checkPermission, handleError, t]
+        [t]
     );
 
     const columnProps: PermissionTableColumnProps = useMemo(
@@ -127,9 +106,8 @@ const PermissionManagementPage = () => {
             onDelete: handleDeletePermission,
             t,
             isMobileResponsive,
-            ability,
         }),
-        [handleEditPermission, handleDeletePermission, t, isMobileResponsive, ability]
+        [handleEditPermission, handleDeletePermission, t, isMobileResponsive]
     );
 
     const columns = useMemo(() => getPermissionTableColumns(columnProps), [columnProps]);
@@ -224,7 +202,7 @@ const PermissionManagementPage = () => {
                             : data.permissionName;
 
                     try {
-                        const newPermission = await activePermissionService.createPermission({
+                        const newPermission = await PermissionService.createPermission({
                             slug,
                             permissionName,
                             description: data.description,
@@ -257,7 +235,7 @@ const PermissionManagementPage = () => {
             } else {
                 const action = actions[0];
                 const slug = `${toSnakeCase(data.subject)}:${action}`;
-                const updatedPermission = await activePermissionService.updatePermission({
+                const updatedPermission = await PermissionService.updatePermission({
                     ...modalState.data!,
                     slug,
                     permissionName: data.permissionName,
@@ -270,10 +248,13 @@ const PermissionManagementPage = () => {
                 );
                 toast.success(t('permissionManagement.messages.updateSuccess'));
             }
-        } catch (error) {
-            const errorData = (error as { response?: { data?: { code?: number } } })?.response
-                ?.data;
+        } catch (error: any) {
+            console.error('Error submitting permission:', error);
+
+            // Handle duplicate permission error (code 2001)
+            const errorData = (error as any)?.response?.data;
             if (errorData?.code === 2001) {
+                const conflictValue = errorData?.result?.conflictValue || '';
                 handleError(error, {
                     fallbackKey: 'permissionManagement.messages.duplicateError',
                     customMappings: { 409: `permissionManagement.messages.duplicateError` },
@@ -312,22 +293,23 @@ const PermissionManagementPage = () => {
     };
 
     const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) {
-            return;
-        }
-
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pending action.
-        } finally {
-            setConfirmModalState({
-                open: false,
-                type: 'create',
-                pendingAction: null,
-            });
+        if (confirmModalState.pendingAction) {
+            try {
+                setConfirmModalState((prev) => ({ ...prev, open: false }));
+                await confirmModalState.pendingAction();
+                setModalState((prev) => ({ ...prev, open: false }));
+                setConfirmModalState({
+                    open: false,
+                    type: 'create',
+                    pendingAction: null,
+                });
+            } catch {
+                setConfirmModalState({
+                    open: false,
+                    type: 'create',
+                    pendingAction: null,
+                });
+            }
         }
     };
 
@@ -355,29 +337,29 @@ const PermissionManagementPage = () => {
                             onChange={setSearchTerm}
                             width={250}
                         />
-                        <Can I="create" a="permission">
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={handleCreatePermission}
-                                style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
-                            >
-                                {t('permissionManagement.addPermission')}
-                            </Button>
-                        </Can>
+                        <Button
+                            color="primary"
+                            variant="solid"
+                            icon={<PlusOutlined />}
+                            onClick={() =>
+                                setModalState({ open: true, mode: 'create', data: null })
+                            }
+                            style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
+                        >
+                            {t('permissionManagement.addPermission')}
+                        </Button>
                     </div>
                 }
                 rightContentMobile={
-                    <Can I="create" a="permission">
-                        <Button
-                            type="primary"
-                            shape="circle"
-                            icon={<PlusOutlined />}
-                            onClick={handleCreatePermission}
-                            aria-label={t('permissionManagement.addPermission')}
-                            style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
-                        />
-                    </Can>
+                    <Button
+                        color="primary"
+                        variant="solid"
+                        shape="circle"
+                        icon={<PlusOutlined />}
+                        onClick={() => setModalState({ open: true, mode: 'create', data: null })}
+                        aria-label={t('permissionManagement.addPermission')}
+                        style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
+                    />
                 }
             />
 
@@ -424,14 +406,18 @@ const PermissionManagementPage = () => {
                         }}
                         scroll={{ x: 'max-content', y: 'calc(100vh - 320px)' }}
                         style={{ flex: 1 }}
-                        rowClassName={(record) => record.children ? 'bg-gray-50/50 font-medium' : ''}
+                        onRow={(record) => ({
+                            style: record.children
+                                ? { backgroundColor: 'var(--ant-color-fill-alter)', fontWeight: 500 }
+                                : undefined,
+                        })}
                     />
                 )}
             </Card>
 
             <EntityFormModal<PermissionFormData>
                 open={modalState.open}
-                onOpenChange={(open) => setModalState((prev) => ({ ...prev, open }))}
+                onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleFormSubmit}
                 mode={modalState.mode}
                 initialData={getInitialFormData(modalState.data)}

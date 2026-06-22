@@ -60,7 +60,7 @@ interface LoadingSkeletonProps {
 const LoadingSkeleton = ({ bgColorLayout }: LoadingSkeletonProps): JSX.Element => (
     <div style={{ minHeight: '100vh', background: bgColorLayout }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                 <Skeleton active paragraph={{ rows: 2 }} />
                 <Skeleton active paragraph={{ rows: 4 }} />
             </Space>
@@ -88,7 +88,7 @@ const ErrorState = ({
     <div style={{ minHeight: '100vh', background: token.colorBgLayout }}>
         <div style={{ margin: '0 auto' }}>
             <Alert
-                message={t('settingsPage.errors.settingsError')}
+                title={t('settingsPage.errors.settingsError')}
                 description={error}
                 type="error"
                 showIcon

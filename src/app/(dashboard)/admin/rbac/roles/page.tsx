@@ -11,14 +11,8 @@ import { getRoleTableColumns, RoleTableColumnProps } from './_components/Columns
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { getRoleFormFields } from './_components/roleFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { RoleService } from '@/services/RoleService';
-import { DemoRoleService, USE_MOCK_RBAC } from '@/mockData/admin/rbac';
+import { RoleService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import { Can, useAbility } from '@/contexts/AbilityContext';
-import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-
-const activeRoleService = USE_MOCK_RBAC ? DemoRoleService : RoleService;
 
 const RoleManagementPage = () => {
     const [modalState, setModalState] = useState<{
@@ -28,9 +22,6 @@ const RoleManagementPage = () => {
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
-    const { handleError } = useApiErrorHandler();
-    const ability = useAbility();
-    const { checkPermission } = usePermissionCheck();
     const [loading, setLoading] = useState(false);
     const [roleData, setRoleData] = useState<Role[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -49,63 +40,51 @@ const RoleManagementPage = () => {
     usePageTitle(t('roleManagement.title'));
 
     const fetchRoles = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const data = await activeRoleService.getAllRoles();
+            const data = await RoleService.getAllRoles();
             setRoleData(data);
         } catch (error) {
-            handleError(error, { fallbackKey: 'roleManagement.messages.fetchError' });
+            console.error('Error fetching roles:', error);
+            toast.error(t('roleManagement.messages.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [handleError]);
+    }, [t]);
 
     useEffect(() => {
         fetchRoles();
     }, [fetchRoles]);
 
-    const handleCreateRole = useCallback(() => {
-        if (!checkPermission('create', 'role')) {
-            return;
-        }
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
-
+    // Handle Edit Action
     const handleEditRole = useCallback((role: Role) => {
-        if (!checkPermission('update', 'role')) {
-            return;
-        }
-
         setModalState({
             open: true,
             mode: 'edit',
             data: role,
         });
-    }, [checkPermission]);
+    }, []);
 
+    // Handle Delete Action
     const handleDeleteRole = useCallback(
         (role: Role) => {
-            if (!checkPermission('delete', 'role')) {
-                return;
-            }
-
             setConfirmModalState({
                 open: true,
                 type: 'delete',
                 pendingAction: async () => {
                     try {
-                        await activeRoleService.deleteRole(role.roleId);
-                        setRoleData((prev) => (prev ?? []).filter((r) => r.roleId !== role.roleId));
+                        await RoleService.deleteRole(role.roleId!);
+                        setRoleData(prev => (prev ?? []).filter(r => r.roleId !== role.roleId));
                         toast.success(t('roleManagement.messages.deleteSuccess'));
                     } catch (error) {
-                        handleError(error, { fallbackKey: 'roleManagement.messages.deleteError' });
+                        console.error('Error deleting role:', error);
+                        toast.error(t('roleManagement.messages.deleteError'));
                         throw error;
                     }
                 },
             });
         },
-        [checkPermission, handleError, t]
+        [t]
     );
 
     const columnProps: RoleTableColumnProps = useMemo(
@@ -114,9 +93,8 @@ const RoleManagementPage = () => {
             onDelete: handleDeleteRole,
             t,
             isMobileResponsive,
-            ability,
         }),
-        [handleEditRole, handleDeleteRole, t, isMobileResponsive, ability]
+        [handleEditRole, handleDeleteRole, t, isMobileResponsive]
     );
 
     const columns = useMemo(() => getRoleTableColumns(columnProps), [columnProps]);
@@ -148,28 +126,31 @@ const RoleManagementPage = () => {
     const executeFormSubmit = async (data: RoleFormData, mode: 'create' | 'edit') => {
         try {
             if (mode === 'create') {
-                const newRole = await activeRoleService.createRole({
+                const newRole = await RoleService.createRole({
                     roleName: data.roleName,
                     description: data.description,
                     permissionIds: data.permissionIds,
                 });
-                setRoleData((prev) => [...(prev ?? []), newRole]);
+                setRoleData(prev => [...(prev ?? []), newRole]);
                 toast.success(t('roleManagement.messages.createSuccess'));
             } else {
-                const updatedRole = await activeRoleService.updateRole({
+                const updatedRole = await RoleService.updateRole({
                     roleId: modalState.data!.roleId,
                     description: data.description,
                     permissionIds: data.permissionIds,
                 });
-                setRoleData((prev) =>
-                    (prev ?? []).map((role) =>
-                        role.roleId === modalState.data?.roleId ? updatedRole : role
+                setRoleData(prev =>
+                    (prev ?? []).map(r =>
+                        r.roleId === modalState.data?.roleId
+                            ? updatedRole
+                            : r
                     )
                 );
                 toast.success(t('roleManagement.messages.updateSuccess'));
             }
         } catch (error) {
-            handleError(error, { fallbackKey: 'roleManagement.messages.saveError' });
+            console.error('Error submitting role:', error);
+            toast.error(t('roleManagement.messages.saveError'));
             throw error;
         }
     };
@@ -185,27 +166,28 @@ const RoleManagementPage = () => {
         return {
             roleName: role.roleName,
             description: role.description,
-            permissionIds: role.permissions?.map((permission) => permission.permissionId) || [],
+            permissionIds: role.permissions?.map(p => p.permissionId) || [],
         };
     };
 
     const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) {
-            return;
-        }
-
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pending action.
-        } finally {
-            setConfirmModalState({
-                open: false,
-                type: 'create',
-                pendingAction: null,
-            });
+        if (confirmModalState.pendingAction) {
+            try {
+                setConfirmModalState((prev) => ({ ...prev, open: false }));
+                await confirmModalState.pendingAction();
+                setModalState((prev) => ({ ...prev, open: false }));
+                setConfirmModalState({
+                    open: false,
+                    type: 'create',
+                    pendingAction: null,
+                });
+            } catch {
+                setConfirmModalState({
+                    open: false,
+                    type: 'create',
+                    pendingAction: null,
+                });
+            }
         }
     };
 
@@ -233,29 +215,27 @@ const RoleManagementPage = () => {
                             onChange={setSearchTerm}
                             width={250}
                         />
-                        <Can I="create" a="role">
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={handleCreateRole}
-                                style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
-                            >
-                                {t('roleManagement.addRole')}
-                            </Button>
-                        </Can>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() =>
+                                setModalState({ open: true, mode: 'create', data: null })
+                            }
+                            style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
+                        >
+                            {t('roleManagement.addRole')}
+                        </Button>
                     </div>
                 }
                 rightContentMobile={
-                    <Can I="create" a="role">
-                        <Button
-                            type="primary"
-                            shape="circle"
-                            icon={<PlusOutlined />}
-                            onClick={handleCreateRole}
-                            aria-label={t('roleManagement.addRole')}
-                            style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
-                        />
-                    </Can>
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<PlusOutlined />}
+                        onClick={() => setModalState({ open: true, mode: 'create', data: null })}
+                        aria-label={t('roleManagement.addRole')}
+                        style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
+                    />
                 }
             />
 
@@ -286,7 +266,7 @@ const RoleManagementPage = () => {
                             width: '100%',
                         }}
                     >
-                        <Spin size="large" tip={t('common.loading')} indicator={<LoadingOutlined spin />}>
+                        <Spin size="large" description={t('common.loading')} indicator={<LoadingOutlined spin />}>
                             <div />
                         </Spin>
                     </div>
@@ -310,7 +290,7 @@ const RoleManagementPage = () => {
 
             <EntityFormModal<RoleFormData>
                 open={modalState.open}
-                onOpenChange={(open) => setModalState((prev) => ({ ...prev, open }))}
+                onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleFormSubmit}
                 mode={modalState.mode}
                 initialData={getInitialFormData(modalState.data)}

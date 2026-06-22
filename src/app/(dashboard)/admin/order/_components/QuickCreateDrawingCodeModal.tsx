@@ -25,7 +25,6 @@ import { DrawingCodeService } from '@/services';
 import { DurationPicker } from '@/components/shared/DurationPicker';
 import { useUploadThing } from '@/utils/uploadthing';
 import { StepBuilder } from '../../categories/drawingCode/_components/StepBuilder';
-import { DemoOrderService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
 
 
 const { Text } = Typography;
@@ -66,14 +65,12 @@ export const QuickCreateDrawingCodeModal: React.FC<QuickCreateDrawingCodeModalPr
         setIsSubmitting(true);
         try {
             // 1. Upload PDF
-            let pdfUrl = 'https://example.com/demo/drawing-code.pdf';
-            if (!USE_MOCK_ORDERS) {
-                const result = await startUpload([pdfFile]);
-                if (result && result[0]) {
-                    pdfUrl = result[0].ufsUrl || result[0].url;
-                } else {
-                    throw new Error('PDF upload failed');
-                }
+            let pdfUrl = '';
+            const result = await startUpload([pdfFile]);
+            if (result && result[0]) {
+                pdfUrl = result[0].ufsUrl || result[0].url;
+            } else {
+                throw new Error('PDF upload failed');
             }
 
             // 2. Build payload
@@ -102,14 +99,6 @@ export const QuickCreateDrawingCodeModal: React.FC<QuickCreateDrawingCodeModalPr
             console.log('Payload to create drawing code:', payload);
 
             // 3. Call API
-            if (USE_MOCK_ORDERS) {
-                const newCode = await DemoOrderService.createDrawingTemplate(payload);
-                message.success(t('drawingCodeManagement.form.createSuccess'));
-                onCreated(newCode);
-                handleClose();
-                return;
-            }
-
             await DrawingCodeService.createDrawingCode(payload);
             message.success(t('drawingCodeManagement.form.createSuccess'));
 
@@ -147,7 +136,7 @@ export const QuickCreateDrawingCodeModal: React.FC<QuickCreateDrawingCodeModalPr
             width={900}
             footer={null}
             destroyOnHidden
-            maskClosable={false}
+            mask={{ closable: false }}
         >
             <Form
                 form={form}

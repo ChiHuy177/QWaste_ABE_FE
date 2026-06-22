@@ -10,7 +10,7 @@ const VALIDATION_CONFIG = Object.freeze({
 
 export const getIndustryFilterFormFields = (
     t: any,
-    _mode: 'create' | 'edit'
+    mode: 'create' | 'edit'
 ): FormFieldConfig[] => {
     return [
         // Display Name (English)
@@ -116,8 +116,8 @@ export const getIndustryFilterFormFields = (
         {
             name: 'startTime',
             label: t('industryFilterManagement.form.fields.startTime'),
-            type: 'text',
-            placeholder: 'HH:mm (e.g., 08:00)',
+            type: 'time',
+            placeholder: 'HH:mm A (e.g., 08:00 AM)',
             required: true,
             maxLength: 5,
             rules: [
@@ -137,8 +137,8 @@ export const getIndustryFilterFormFields = (
         {
             name: 'endTime',
             label: t('industryFilterManagement.form.fields.endTime'),
-            type: 'text',
-            placeholder: 'HH:mm (e.g., 17:00)',
+            type: 'time',
+            placeholder: 'HH:mm A (e.g., 05:00 PM)',
             required: true,
             maxLength: 5,
             rules: [

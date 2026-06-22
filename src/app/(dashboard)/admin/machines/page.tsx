@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Input, Select, Empty, Spin, Button, Flex } from 'antd';
+import { Row, Col, Input, Select, Empty, Spin, Button } from 'antd';
 import MachineStatsCards from './_components/MachineStatsCards';
 import MachineCard from './_components/MachineCard';
 import MachineFilterInfo from './_components/MachineFilterInfo';
@@ -11,8 +11,6 @@ import { SearchOutlined, InboxOutlined } from '@ant-design/icons';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import MachineTimelineModal from './_components/MachineTimelineModal';
-import MachineDashboardSummary from './_components/MachineDashboardSummary';
-import MachineDurationSummaryTable from './_components/MachineDurationSummaryTable';
 import { MachineOverview } from '@/types/Machine';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { machineActions } from '@/stores';
@@ -23,10 +21,6 @@ import {
 } from '@/components/shared/filters/SpaceTreeSelect';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import {
-    DemoFactoryOverviewService,
-    USE_MOCK_FACTORY_OVERVIEW,
-} from '@/mockData/admin/factory';
 
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -52,8 +46,6 @@ const MachinesPage: React.FC = () => {
     } = useAppSelector((state) => state.machine);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
-    const [cardStatusFilter, setCardStatusFilter] = useState<string>('ALL');
-    const [cardSortBy, setCardSortBy] = useState<string>('default');
     const [isLoadingIndustryFilters, setIsLoadingIndustryFilters] = useState(false);
     const selectedTimePeriodRef = useRef<number | null>(selectedTimePeriod);
 
@@ -109,9 +101,7 @@ const MachinesPage: React.FC = () => {
             setIsLoadingIndustryFilters(true);
 
             try {
-                const filters = USE_MOCK_FACTORY_OVERVIEW
-                    ? await DemoFactoryOverviewService.getIndustryFilters()
-                    : await IndustryFilterService.getAllIndustryFilters();
+                const filters = await IndustryFilterService.getAllIndustryFilters();
                 setIndustryFilters(filters);
 
                 if (filters.length > 0 && selectedTimePeriodRef.current == null) {
@@ -133,21 +123,34 @@ const MachinesPage: React.FC = () => {
 
         const zoneIdParam = searchParams.get('zoneId');
         const factoryIdParam = searchParams.get('factoryId');
-        const spaceIdFromQuery = zoneIdParam ?? factoryIdParam;
 
-        // Priority: zone > factory > first available space
-        if (spaceIdFromQuery) {
-            const nextSpaceId = Number(spaceIdFromQuery);
-            if (selectedSpaceId !== nextSpaceId) {
-                dispatch(machineActions.setSelectedSpaceId(nextSpaceId));
+        // Priority: zone > factory > random space from tree
+        if (zoneIdParam) {
+            dispatch(machineActions.setSelectedSpaceId(Number(zoneIdParam)));
+        } else if (factoryIdParam) {
+            dispatch(machineActions.setSelectedSpaceId(Number(factoryIdParam)));
+        } else if (selectedSpaceId === undefined) {
+            const getAllSpaceIds = (nodes: SpaceWithChildrenResponse[]): number[] => {
+                const ids: number[] = [];
+                const traverse = (treeNodes: SpaceWithChildrenResponse[]) => {
+                    for (const node of treeNodes) {
+                        ids.push(node.spaceId);
+                        if (node.children && node.children.length > 0) {
+                            traverse(node.children);
+                        }
+                    }
+                };
+                traverse(nodes);
+                return ids;
+            };
+
+            const allIds = getAllSpaceIds(spacesTree);
+            if (allIds.length > 0) {
+                const randomId = allIds[Math.floor(Math.random() * allIds.length)];
+                dispatch(machineActions.setSelectedSpaceId(randomId));
             }
-            return;
         }
-
-        if (selectedSpaceId === undefined) {
-            dispatch(machineActions.setSelectedSpaceId(spacesTree[0].spaceId));
-        }
-    }, [searchParams, dispatch, selectedSpaceId, spacesTree]);
+    }, [searchParams, dispatch, spacesTree, selectedSpaceId]);
 
     const hasSelectedSpace = selectedSpaceId !== undefined;
 
@@ -305,40 +308,6 @@ const MachinesPage: React.FC = () => {
         );
     }, [machines, searchText]);
 
-    const displayedMachines = useMemo(() => {
-        const statusGroups: Record<string, string[]> = {
-            Running: ['RUNTIME'],
-            Stopped: ['IDLE', 'TEMPORARY_STOP', 'COMPLETE'],
-            Error: ['ERROR', 'WARNING'],
-            Offline: ['OFFLINE'],
-        };
-
-        let result = filteredMachines;
-
-        if (cardStatusFilter !== 'ALL') {
-            const allowed = statusGroups[cardStatusFilter] ?? [];
-            result = result.filter((m: MachineOverview) => allowed.includes(m.currentStatus ?? 'OFFLINE'));
-        }
-
-        if (cardSortBy === 'production_desc') {
-            result = [...result].sort((a, b) => (b.totalProductions ?? 0) - (a.totalProductions ?? 0));
-        } else if (cardSortBy === 'online_desc') {
-            const onlineSec = (m: MachineOverview) =>
-                Object.entries(m.runtimeByStatus ?? {}).reduce(
-                    (sum, [s, v]) => (s !== 'OFFLINE' ? sum + (v as number) : sum),
-                    0
-                );
-            result = [...result].sort((a, b) => onlineSec(b) - onlineSec(a));
-        } else if (cardSortBy === 'error_desc') {
-            const errorSec = (m: MachineOverview) =>
-                ((m.runtimeByStatus as Record<string, number> | undefined)?.['ERROR'] ?? 0) +
-                ((m.runtimeByStatus as Record<string, number> | undefined)?.['WARNING'] ?? 0);
-            result = [...result].sort((a, b) => errorSec(b) - errorSec(a));
-        }
-
-        return result;
-    }, [filteredMachines, cardStatusFilter, cardSortBy]);
-
     const headerActions = useMemo(
         () => (
             <>
@@ -421,7 +390,7 @@ const MachinesPage: React.FC = () => {
 
             {isInitialLoading ? (
                 <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                    <Spin size="large" tip={t('common.loading')} />
+                    <Spin size="large" description={t('common.loading')} />
                 </div>
             ) : (
                 <>
@@ -442,67 +411,18 @@ const MachinesPage: React.FC = () => {
                         />
                     )}
 
-                    {!isLoading && machines.length > 0 && (
-                        <MachineDashboardSummary machines={machines} />
-                    )}
-
                     {isLoading ? (
                         <div style={{ textAlign: 'center', padding: '60px 0' }}>
                             <Spin size="large" />
                         </div>
                     ) : filteredMachines.length > 0 ? (
-                        <>
-                            {/* Section 1 filter bar */}
-                            <Flex gap={12} align="center" style={{ marginTop: 24, marginBottom: 12, flexWrap: 'wrap' }}>
-                                <Select
-                                    value={cardStatusFilter}
-                                    onChange={setCardStatusFilter}
-                                    style={{ width: 160 }}
-                                    options={[
-                                        { label: 'All Statuses', value: 'ALL' },
-                                        { label: 'Running', value: 'Running' },
-                                        { label: 'Stopped', value: 'Stopped' },
-                                        { label: 'Error', value: 'Error' },
-                                        { label: 'Offline', value: 'Offline' },
-                                    ]}
-                                />
-                                <Select
-                                    value={cardSortBy}
-                                    onChange={setCardSortBy}
-                                    style={{ width: 200 }}
-                                    options={[
-                                        { label: 'Sort: Default', value: 'default' },
-                                        { label: 'Production count ↓', value: 'production_desc' },
-                                        { label: 'Online time ↓', value: 'online_desc' },
-                                        { label: 'Error time ↓', value: 'error_desc' },
-                                    ]}
-                                />
-                            </Flex>
-
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    gap: 16,
-                                    overflowX: 'auto',
-                                    paddingBottom: 12,
-                                    scrollSnapType: 'x mandatory',
-                                    WebkitOverflowScrolling: 'touch',
-                                }}
-                            >
-                                {displayedMachines.map((machine: MachineOverview) => (
-                                    <div
-                                        key={machine.machineId}
-                                        style={{
-                                            flex: '0 0 260px',
-                                            scrollSnapAlign: 'start',
-                                        }}
-                                    >
-                                        <MachineCard machine={machine} onCardClick={handleCardClick} />
-                                    </div>
-                                ))}
-                            </div>
-                            <MachineDurationSummaryTable machines={filteredMachines} />
-                        </>
+                        <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+                            {filteredMachines.map((machine: MachineOverview) => (
+                                <Col xs={24} sm={12} lg={6} key={machine.machineId}>
+                                    <MachineCard machine={machine} onCardClick={handleCardClick} />
+                                </Col>
+                            ))}
+                        </Row>
                     ) : (
                         <Empty
                             image={<InboxOutlined style={{ fontSize: 64, color: '#bfbfbf' }} />}

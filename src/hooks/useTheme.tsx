@@ -32,7 +32,9 @@ export function ThemeProvider({
     };
 
     const getInitialResolvedTheme = (): 'light' | 'dark' => {
-        if (typeof window === 'undefined') return 'light';
+        if (typeof window === 'undefined') {
+            return defaultTheme === 'dark' ? 'dark' : 'light';
+        }
         // Read from document class that was set by inline script
         return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
     };

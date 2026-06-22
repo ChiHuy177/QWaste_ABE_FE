@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode, useEffect, useRef } from 'react';
+import { useState, ReactNode } from 'react';
 import { Grid, Button, Tooltip } from 'antd';
 import { FilterOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -50,43 +50,6 @@ export default function ResponsivePageHeader({
     const [filterExpanded, setFilterExpanded] = useState(false);
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme === 'dark';
-    const searchInputRef = { current: null as any };
-    const [isFloating, setIsFloating] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    // Detect scroll on the closest scrollable parent
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        // Find the scrollable parent
-        let scrollParent: HTMLElement | null = containerRef.current.parentElement;
-        while (scrollParent) {
-            const overflowY = window.getComputedStyle(scrollParent).overflowY;
-            if (overflowY === 'auto' || overflowY === 'scroll') {
-                break;
-            }
-            scrollParent = scrollParent.parentElement;
-        }
-
-        if (!scrollParent) {
-            scrollParent = document.documentElement;
-        }
-
-        const handleScroll = () => {
-            const scrollTop = scrollParent!.scrollTop;
-            const shouldFloat = scrollTop > 50;
-            setIsFloating(shouldFloat);
-        };
-
-        // Initial check
-        handleScroll();
-
-        scrollParent.addEventListener('scroll', handleScroll, { passive: true });
-
-        return () => {
-            scrollParent?.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
 
     if (desktopOnly || !isMobile) {
         return (
@@ -137,17 +100,11 @@ export default function ResponsivePageHeader({
 
     return (
         <div
-            ref={containerRef}
             style={{
-                position: isFloating ? 'fixed' : 'relative',
-                top: isFloating ? 50 : 0,
-                left: isFloating ? 16 : 0,
-                right: isFloating ? 16 : 0,
+                position: 'sticky',
+                top: 0,
                 zIndex: 1000,
-                padding: isFloating ? '0 12px' : '0',
-                marginBottom: isFloating ? 0 : 16,
-                pointerEvents: 'none',
-                transition: 'all 0.3s ease-out',
+                marginBottom: 16,
             }}
         >
             <div
@@ -270,7 +227,6 @@ export default function ResponsivePageHeader({
                         }}
                     >
                         <Input
-                            ref={searchInputRef}
                             placeholder={mobileSearch?.placeholder}
                             value={mobileSearch?.text}
                             onChange={(e) => mobileSearch?.onChange(e.target.value)}

@@ -8,14 +8,7 @@ import {
     SpaceOverview,
     SpacePickingWithChildren,
 } from '@/types/Space';
-import {
-    ErrorCountChartResponse,
-    MachineErrorDetailResponse,
-    MachineStatusLogChartResponse,
-    MachineStatusSummaryResponse,
-    MtbfChartResponse,
-    MttrChartResponse,
-} from '@/types/Monitoring';
+import { MachineErrorDetailResponse } from '@/types/Monitoring';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
@@ -52,10 +45,22 @@ export class SpaceService {
         return response.result as SpacePickingWithChildren[];
     }
 
+    static async getSpacesFromLevelToLevel(
+        fromLevel: number,
+        toLevel: number
+    ): Promise<SpacePickingWithChildren[]> {
+        const response = await NetworkService.requestJson<SpacePickingWithChildren[]>({
+            method: 'GET',
+            url: ENDPOINTS.SPACES.PICKING_FROM_LEVEL_TO_LEVEL(fromLevel, toLevel),
+        });
+        return response.result as SpacePickingWithChildren[];
+    }
+
     static async getRootSpacesForRegistration(): Promise<SpacePickingResponse[]> {
         const response = await NetworkService.requestJson<SpacePickingResponse[]>({
             method: 'GET',
             url: ENDPOINTS.SPACES.PICKING_REGISTRATION,
+            skipAuthHandling: true,
         });
         return response.result as SpacePickingResponse[];
     }
@@ -85,10 +90,16 @@ export class SpaceService {
         });
     }
 
-    static async getSpaceOverview(spaceId: number, filterId: number): Promise<SpaceOverview> {
+    static async getSpaceOverview(
+        spaceId: number,
+        filterId: number,
+        shiftFilterId?: number | null
+    ): Promise<SpaceOverview> {
+        let url = `${ENDPOINTS.SPACES.MONITORING.OVERVIEW_BY_FILTER}?spaceId=${spaceId}&filterId=${filterId}`;
+        if (shiftFilterId != null) url += `&shiftFilterId=${shiftFilterId}`;
         const response = await NetworkService.requestJson<SpaceOverview>({
             method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.OVERVIEW_BY_FILTER}?spaceId=${spaceId}&filterId=${filterId}`,
+            url,
         });
         return response.result as SpaceOverview;
     }
@@ -110,107 +121,17 @@ export class SpaceService {
         return response.result as SpaceOverview;
     }
 
-    // Error Count Chart
-    static async getErrorCountByFilter(
-        filterId: number,
-        spaceId: number
-    ): Promise<ErrorCountChartResponse> {
-        const response = await NetworkService.requestJson<ErrorCountChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.ERROR_COUNT_BY_FILTER}?filterId=${filterId}&spaceId=${spaceId}`,
-        });
-        return response.result as ErrorCountChartResponse;
-    }
-
-    static async getErrorCountByDateRange(
-        startDate: string,
-        endDate: string,
-        spaceId: number
-    ): Promise<ErrorCountChartResponse> {
-        const response = await NetworkService.requestJson<ErrorCountChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.ERROR_COUNT_BY_DATE_RANGE}?startDate=${startDate}&endDate=${endDate}&spaceId=${spaceId}`,
-        });
-        return response.result as ErrorCountChartResponse;
-    }
-
-    // MTBF Chart
-    static async getMtbfByFilter(filterId: number, spaceId: number): Promise<MtbfChartResponse> {
-        const response = await NetworkService.requestJson<MtbfChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.MTBF_BY_FILTER}?filterId=${filterId}&spaceId=${spaceId}`,
-        });
-        return response.result as MtbfChartResponse;
-    }
-
-    static async getMtbfByDateRange(
-        startDate: string,
-        endDate: string,
-        spaceId: number
-    ): Promise<MtbfChartResponse> {
-        const response = await NetworkService.requestJson<MtbfChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.MTBF_BY_DATE_RANGE}?startDate=${startDate}&endDate=${endDate}&spaceId=${spaceId}`,
-        });
-        return response.result as MtbfChartResponse;
-    }
-
-    // MTTR Chart
-    static async getMttrByFilter(filterId: number, spaceId: number): Promise<MttrChartResponse> {
-        const response = await NetworkService.requestJson<MttrChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.MTTR_BY_FILTER}?filterId=${filterId}&spaceId=${spaceId}`,
-        });
-        return response.result as MttrChartResponse;
-    }
-
-    static async getMttrByDateRange(
-        startDate: string,
-        endDate: string,
-        spaceId: number
-    ): Promise<MttrChartResponse> {
-        const response = await NetworkService.requestJson<MttrChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.MTTR_BY_DATE_RANGE}?startDate=${startDate}&endDate=${endDate}&spaceId=${spaceId}`,
-        });
-        return response.result as MttrChartResponse;
-    }
-
-    // Machine Status Summary
-    static async getMachineStatusSummaryByFilter(
-        filterId: number,
-        spaceId: number
-    ): Promise<MachineStatusSummaryResponse> {
-        const response = await NetworkService.requestJson<{ data: MachineStatusSummaryResponse }>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.MACHINE_STATUS_SUMMARY_BY_FILTER}?filterId=${filterId}&spaceId=${spaceId}`,
-        });
-        return response.result as unknown as MachineStatusSummaryResponse;
-    }
-
-    static async getMachineStatusSummaryByDateRange(
-        startDate: string,
-        endDate: string,
-        spaceId: number,
-        filterId?: number
-    ): Promise<MachineStatusSummaryResponse> {
-        let url = `${ENDPOINTS.SPACES.MONITORING.MACHINE_STATUS_SUMMARY_BY_DATE_RANGE}?startDate=${startDate}&endDate=${endDate}&spaceId=${spaceId}`;
-        if (filterId != null) url += `&filterId=${filterId}`;
-        const response = await NetworkService.requestJson<{ data: MachineStatusSummaryResponse }>({
-            method: 'GET',
-            url,
-        });
-        return response.result as unknown as MachineStatusSummaryResponse;
-    }
-
     // Machine Error Detail
     static async getErrorDetailByFilter(
         filterId: number,
-        machineId: string
+        machineId: string,
+        shiftFilterId?: number | null
     ): Promise<MachineErrorDetailResponse> {
+        let url = `${ENDPOINTS.SPACES.MONITORING.ERROR_DETAIL_BY_FILTER}?filterId=${filterId}&machineId=${machineId}`;
+        if (shiftFilterId != null) url += `&shiftFilterId=${shiftFilterId}`;
         const response = await NetworkService.requestJson<{ data: MachineErrorDetailResponse }>({
             method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.ERROR_DETAIL_BY_FILTER}?filterId=${filterId}&machineId=${machineId}`,
+            url,
         });
         return response.result as unknown as MachineErrorDetailResponse;
     }
@@ -228,32 +149,5 @@ export class SpaceService {
             url,
         });
         return response.result as unknown as MachineErrorDetailResponse;
-    }
-
-    // Machine Status Log Chart
-    static async getMachineStatusLogChartByFilter(
-        filterId: number,
-        machineId: string
-    ): Promise<MachineStatusLogChartResponse> {
-        const response = await NetworkService.requestJson<MachineStatusLogChartResponse>({
-            method: 'GET',
-            url: `${ENDPOINTS.SPACES.MONITORING.MACHINE_STATUS_LOG_CHART_BY_FILTER}?filterId=${filterId}&machineId=${machineId}`,
-        });
-        return response.result as MachineStatusLogChartResponse;
-    }
-
-    static async getMachineStatusLogChartByDateRange(
-        startDate: string,
-        endDate: string,
-        machineId: string,
-        filterId?: number
-    ): Promise<MachineStatusLogChartResponse> {
-        let url = `${ENDPOINTS.SPACES.MONITORING.MACHINE_STATUS_LOG_CHART_BY_DATE_RANGE}?startDate=${startDate}&endDate=${endDate}&machineId=${machineId}`;
-        if (filterId != null) url += `&filterId=${filterId}`;
-        const response = await NetworkService.requestJson<MachineStatusLogChartResponse>({
-            method: 'GET',
-            url,
-        });
-        return response.result as MachineStatusLogChartResponse;
     }
 }

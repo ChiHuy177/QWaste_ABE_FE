@@ -7,8 +7,6 @@
         "edit": "编辑",
         "loading": "加载中...",
         "success": "成功",
-        "of": "的",
-        "items": "项",
         "restore": "恢复",
         "overview_view": "概览视图",
         "store": "存储",
@@ -275,12 +273,7 @@
                     "settings": "系统设置",
                     "machineManagement": "设备管理",
                     "spaceConfiguration": "区域配置",
-                    "staffOthers": "人员及其他",
-                    "factoryOperations": "工厂运营",
-                    "errorGroup": "错误组列表",
-                    "errorDetail": "错误详情列表",
-                    "productionPlan": "生产计划列表",
-                    "moldCode": "模具代码列表"
+                    "staffOthers": "人员及其他"
                 },
                 "tooltip": {
                     "subItems": "子菜单项"
@@ -2204,11 +2197,7 @@
                 "groupList": "组列表",
                 "zoneList": "区域管理",
                 "machineTypeList": "机器类型管理",
-                "drawingCodeList": "图纸代码列表",
-                "errorGroupList": "错误组管理",
-                "errorDetailList": "错误详情管理",
-                "productionPlanList": "生产计划管理",
-                "moldCodeList": "模具代码管理"
+                "drawingCodeList": "图纸代码列表"
             },
             "landing": {
                 "nav": {
@@ -2872,259 +2861,57 @@
             }
         }
     },
-    "pageTitle": {
-        "errorGroupList": "错误组管理",
-        "errorDetailList": "错误详情管理",
-        "productionPlanList": "生产计划管理",
-        "moldCodeList": "模具代码管理"
-    },
-    "errorGroupManagement": {
-        "title": "错误组管理",
-        "addErrorGroup": "添加错误组",
-        "searchPlaceholder": "按组名搜索...",
-        "fetchError": "获取错误组失败",
-        "deleteSuccess": "错误组删除成功",
-        "deleteError": "错误组删除失败",
-        "updateSuccess": "错误组更新成功",
-        "updateError": "错误组更新失败",
-        "table": {
-            "headers": {
-                "id": "编号",
-                "errorGroupName": "组名称",
-                "description": "描述",
-                "status": "状态",
-                "createdAt": "创建时间",
-                "updatedAt": "更新时间",
-                "actions": "操作"
-            }
+    "factoryOverview": {
+        "title": "工厂概览",
+        "selectFactory": "选择工厂",
+        "selectTimePeriod": "选择时间段",
+        "noDataAvailable": "暂无数据",
+        "noDataDescription": "请选择工厂并搜索以查看概览数据",
+        "stats": {
+            "energyConsumption": "能耗",
+            "totalRunTime": "总运行时间",
+            "totalStopTime": "总停机时间",
+            "totalErrorTime": "总故障时间"
         },
-        "actions": {
-            "viewDetails": "查看详情",
-            "edit": "编辑",
-            "delete": "删除"
+        "zone": {
+            "energy": "能耗",
+            "run": "运行",
+            "stop": "停机",
+            "error": "故障",
+            "machines": "机器",
+            "Machines": "机器",
+            "lines": "生产线",
+            "line": "生产线",
+            "linesLabel": "生产线",
+            "machinesInZoneLabel": "区域直属机器",
+            "standaloneMachinesLabel": "独立机器",
+            "scrollHint": "滑动"
         },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "删除错误组",
-                "description": "您确定要删除此错误组吗？"
-            }
+        "line": {
+            "title": "生产线",
+            "viewMachinesLink": "查看",
+            "collapse": "收起"
         },
-        "form": {
-            "createTitle": "创建新错误组",
-            "editTitle": "编辑错误组",
-            "createSuccess": "错误组创建成功",
-            "createError": "错误组创建失败",
-            "fields": {
-                "errorGroupName": "组名称",
-                "description": "描述",
-                "status": "状态"
-            },
-            "placeholders": {
-                "errorGroupName": "输入组名称",
-                "description": "输入组描述",
-                "status": "选择状态"
-            },
-            "validation": {
-                "required": "此字段为必填项",
-                "minLength": "最小长度为{{min}}个字符",
-                "maxLength": "最大长度为{{max}}个字符"
-            },
-            "buttons": {
-                "cancel": "取消",
-                "create": "创建",
-                "save": "保存",
-                "saving": "保存中...",
-                "close": "关闭",
-                "update": "更新"
-            }
-        }
-    },
-    "errorDetailManagement": {
-        "title": "错误详情管理",
-        "addErrorDetail": "添加错误详情",
-        "searchPlaceholder": "按错误名称搜索...",
-        "fetchError": "获取错误详情失败",
-        "deleteSuccess": "错误详情删除成功",
-        "deleteError": "错误详情删除失败",
-        "updateSuccess": "错误详情更新成功",
-        "updateError": "错误详情更新失败",
-        "table": {
-            "headers": {
-                "id": "编号",
-                "errorName": "错误名称",
-                "description": "描述",
-                "status": "状态",
-                "createdAt": "创建时间",
-                "updatedAt": "更新时间",
-                "actions": "操作"
-            }
+        "machine": {
+            "online": "在线",
+            "offline": "离线",
+            "operators": "操作员",
+            "production": "产量"
         },
-        "actions": {
-            "viewDetails": "查看详情",
-            "edit": "编辑",
-            "delete": "删除"
+        "filter": {
+            "all": "全部",
+            "zones": "区域",
+            "lines": "生产线",
+            "machines": "机器",
+            "ops": "操作"
         },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "删除错误详情",
-                "description": "您确定要删除此错误详情吗？"
-            }
-        },
-        "form": {
-            "createTitle": "创建新错误详情",
-            "editTitle": "编辑错误详情",
-            "createSuccess": "错误详情创建成功",
-            "createError": "错误详情创建失败",
-            "fields": {
-                "errorName": "错误名称",
-                "description": "描述",
-                "status": "状态"
-            },
-            "placeholders": {
-                "errorName": "输入错误名称",
-                "description": "输入错误描述",
-                "status": "选择状态"
-            },
-            "validation": {
-                "required": "此字段为必填项",
-                "minLength": "最小长度为{{min}}个字符",
-                "maxLength": "最大长度为{{max}}个字符"
-            },
-            "buttons": {
-                "cancel": "取消",
-                "create": "创建",
-                "save": "保存",
-                "saving": "保存中...",
-                "close": "关闭",
-                "update": "更新"
-            }
-        }
-    },
-    "productionPlanManagement": {
-        "title": "生产计划管理",
-        "addProductionPlan": "添加生产计划",
-        "searchPlaceholder": "按机器编号搜索...",
-        "fetchError": "获取生产计划失败",
-        "deleteSuccess": "生产计划删除成功",
-        "deleteError": "生产计划删除失败",
-        "updateSuccess": "生产计划更新成功",
-        "updateError": "生产计划更新失败",
-        "table": {
-            "headers": {
-                "id": "计划编号",
-                "filterId": "周期",
-                "machineId": "机器编号",
-                "plannedQuantity": "计划数量",
-                "status": "状态",
-                "createdAt": "创建时间",
-                "actions": "操作"
-            }
-        },
-        "actions": {
-            "viewDetails": "查看详情",
-            "edit": "编辑",
-            "delete": "删除"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "删除生产计划",
-                "description": "您确定要删除此生产计划吗？"
-            }
-        },
-        "form": {
-            "createTitle": "创建生产计划",
-            "editTitle": "编辑生产计划",
-            "createSuccess": "生产计划创建成功",
-            "createError": "生产计划创建失败",
-            "filterOptions": {
-                "day": "日",
-                "week": "周"
-            },
-            "fields": {
-                "filterId": "周期",
-                "machineId": "机器编号",
-                "plannedQuantity": "计划数量",
-                "status": "状态"
-            },
-            "placeholders": {
-                "filterId": "选择周期（日/周）",
-                "machineId": "输入机器编号",
-                "plannedQuantity": "输入计划数量",
-                "status": "选择状态"
-            },
-            "validation": {
-                "required": "此字段为必填项",
-                "minValue": "数值必须不小于{{min}}"
-            },
-            "buttons": {
-                "cancel": "取消",
-                "create": "创建",
-                "save": "保存",
-                "saving": "保存中...",
-                "close": "关闭",
-                "update": "更新"
-            }
-        }
-    },
-    "moldCodeManagement": {
-        "title": "模具代码管理",
-        "addMoldCode": "添加模具代码",
-        "searchPlaceholder": "按模具代码名称搜索...",
-        "fetchError": "获取模具代码失败",
-        "deleteSuccess": "模具代码删除成功",
-        "deleteError": "模具代码删除失败",
-        "updateSuccess": "模具代码更新成功",
-        "updateError": "模具代码更新失败",
-        "table": {
-            "headers": {
-                "id": "编号",
-                "moldCodeName": "模具代码",
-                "description": "描述",
-                "status": "状态",
-                "createdAt": "创建时间",
-                "updatedAt": "更新时间",
-                "actions": "操作"
-            }
-        },
-        "actions": {
-            "viewDetails": "查看详情",
-            "edit": "编辑",
-            "delete": "删除"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "删除模具代码",
-                "description": "您确定要删除此模具代码吗？"
-            }
-        },
-        "form": {
-            "createTitle": "创建新模具代码",
-            "editTitle": "编辑模具代码",
-            "createSuccess": "模具代码创建成功",
-            "createError": "模具代码创建失败",
-            "fields": {
-                "moldCodeName": "模具代码",
-                "description": "描述",
-                "status": "状态"
-            },
-            "placeholders": {
-                "moldCodeName": "输入模具代码（例如：MLD-A001）",
-                "description": "输入模具代码描述",
-                "status": "选择状态"
-            },
-            "validation": {
-                "required": "此字段为必填项",
-                "minLength": "最小长度为{{min}}个字符",
-                "maxLength": "最大长度为{{max}}个字符"
-            },
-            "buttons": {
-                "cancel": "取消",
-                "create": "创建",
-                "save": "保存",
-                "saving": "保存中...",
-                "close": "关闭",
-                "update": "更新"
-            }
+        "filters": {
+            "title": "筛选",
+            "factory": "工厂",
+            "searchFactory": "搜索工厂...",
+            "date": "日期",
+            "selectDate": "选择日期",
+            "timePeriod": "时间段"
         }
     }
 }

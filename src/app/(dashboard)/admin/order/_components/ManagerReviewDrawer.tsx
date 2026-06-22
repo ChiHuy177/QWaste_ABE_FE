@@ -196,7 +196,7 @@ export const ManagerReviewDrawer = () => {
                                                         log.newValue === 'DECLINED' ? 'red' :
                                                             log.newValue === 'PENDING' ? 'gold' : 'blue',
                                                     children: (
-                                                        <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                                                        <Space orientation="vertical" size={2} style={{ width: '100%' }}>
                                                             <Flex justify="space-between" align="center">
                                                                 <Text strong style={{ fontSize: 12 }}>{log.description}</Text>
                                                                 <Text type="secondary" style={{ fontSize: 11 }}>
@@ -208,11 +208,11 @@ export const ManagerReviewDrawer = () => {
                                                             </Text>
                                                             {isChange && log.oldValue && log.newValue && (
                                                                 <Space style={{ fontSize: 11, background: token.colorBgLayout, padding: '4px 8px', borderRadius: 4, marginTop: 2, alignItems: 'center' }}>
-                                                                    <Tag bordered={false} color="default" style={{ margin: 0 }}>
+                                                                    <Tag variant="filled" color="default" style={{ margin: 0 }}>
                                                                         <Text delete type="secondary" style={{ fontSize: 11 }}>{log.oldValue}</Text>
                                                                     </Tag>
                                                                     <Text type="secondary" style={{ fontSize: 11 }}>→</Text>
-                                                                    <Tag bordered={false} color={
+                                                                    <Tag variant="filled" color={
                                                                         log.newValue === 'CONFIRMED' ? 'success' :
                                                                             log.newValue === 'DECLINED' ? 'error' :
                                                                                 log.newValue === 'PENDING' ? 'warning' : 'processing'
@@ -241,7 +241,7 @@ export const ManagerReviewDrawer = () => {
             <Drawer
                 title={t('managerReview.drawer.title')}
                 placement="right"
-                width={"75%"}
+                size="75%"
                 onClose={handleClose}
                 open={isManagerReviewDrawerOpen}
             >
@@ -258,7 +258,7 @@ export const ManagerReviewDrawer = () => {
             <Drawer
                 title={t('managerReview.drawer.title')}
                 placement="right"
-                width={"75%"}
+                size="75%"
                 onClose={handleClose}
                 open={isManagerReviewDrawerOpen}
             >
@@ -295,7 +295,7 @@ export const ManagerReviewDrawer = () => {
         <Drawer
             title={`${t('managerReview.drawer.title')}: ${order.orderCode}`}
             placement="right"
-            width={"75%"}
+            size="75%"
             onClose={handleClose}
             open={isManagerReviewDrawerOpen}
             styles={{
@@ -369,7 +369,7 @@ export const ManagerReviewDrawer = () => {
                             title={t('managerReview.drawer.stats.completion')}
                             value={completionPercentage}
                             suffix="%"
-                            valueStyle={{ color: getReviewStatusColor(), fontWeight: 700 }}
+                            styles={{ content: { color: getReviewStatusColor(), fontWeight: 700 } }}
                         />
                         <Progress
                             percent={completionPercentage}
@@ -394,7 +394,7 @@ export const ManagerReviewDrawer = () => {
                             title={t('managerReview.drawer.stats.totalTasks')}
                             value={totalTasks}
                             prefix={<UserOutlined style={{ color: token.colorPrimary }} />}
-                            valueStyle={{ fontWeight: 700 }}
+                            styles={{ content: { fontWeight: 700 } }}
                         />
                         <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                             <Tag color="processing">{confirmedTasks} {t('managerReview.drawer.stats.confirmed')}</Tag>
@@ -525,7 +525,7 @@ export const ManagerReviewDrawer = () => {
                     style={{ marginTop: 16, borderColor: token.colorError, borderRadius: 12 }}
                     styles={{ header: { background: `rgba(255, 77, 79, 0.05)` } }}
                 >
-                    <Space direction="vertical" style={{ width: '100%' }}>
+                    <Space orientation="vertical" style={{ width: '100%' }}>
                         <Tag color="error" icon={<WarningOutlined />} style={{ padding: '4px 8px' }}>
                             {t('managerReview.drawer.actions.declinedWarning', { count: declinedTasks })}
                         </Tag>
@@ -542,7 +542,7 @@ export const ManagerReviewDrawer = () => {
                     style={{ marginTop: 16, borderColor: token.colorWarning, borderRadius: 12 }}
                     styles={{ header: { background: `#fff1b8` } }}
                 >
-                    <Space direction="vertical" style={{ width: '100%' }}>
+                    <Space orientation="vertical" style={{ width: '100%' }}>
                         <Tag color="warning" icon={<WarningOutlined />} style={{ padding: '4px 8px' }}>
                             {t('managerReview.drawer.actions.unassignedWarning', { count: unassignedTasks })}
                         </Tag>
@@ -560,7 +560,7 @@ export const ManagerReviewDrawer = () => {
 
             <Collapse
                 style={{ marginBottom: 32, borderRadius: 12, overflow: 'hidden' }}
-                expandIconPosition="start"
+                expandIconPlacement="start"
                 defaultActiveKey={orderDrawings.map((d: OrderManagerReviewDrawing) => String(d.orderDrawingId))}
                 items={orderDrawings.map((drawing: OrderManagerReviewDrawing) => {
                     const drawingTasks = drawing.tasks;
@@ -610,7 +610,7 @@ export const ManagerReviewDrawer = () => {
                         key: String(drawing.orderDrawingId),
                         label: label,
                         children: (
-                            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                                 <Flex justify="space-between" align="center" gap={12} wrap="wrap">
                                     <Segmented
                                         size="small"
@@ -690,7 +690,7 @@ export const ManagerReviewDrawer = () => {
                                                 >
                                                     {record.stepOrder}
                                                 </div>
-                                                <Space direction="vertical" size={0}>
+                                                <Space orientation="vertical" size={0}>
                                                     <Text strong>{record.taskName}</Text>
                                                     <Text type="secondary" style={{ fontSize: 11 }}>
                                                         {t('orderManagement.drawing.item')} {record.stepOrder}: {record.stepName}
@@ -746,7 +746,7 @@ export const ManagerReviewDrawer = () => {
                                             const hasComment = record.reviews.some(r => r.declineComment);
                                             if (!declinedReview && !hasComment) return <Text type="secondary" italic style={{ fontSize: 12 }}>-</Text>;
                                             return (
-                                                <Space direction="vertical" size={2}>
+                                                <Space orientation="vertical" size={2}>
                                                     {declinedReview && (
                                                         <Tag color="red" style={{ border: 'none', margin: 0, padding: '0 4px', fontSize: 11 }}>
                                                             {declinedReview.declineReason}

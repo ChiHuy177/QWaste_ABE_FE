@@ -4,19 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Dropdown, Badge, Button, theme, Typography } from 'antd';
 import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import NotificationList from './NotificationList';
-import {
-    DemoNotificationService,
-    USE_MOCK_NOTIFICATIONS,
-} from '@/mockData/notifications';
 import { NotificationService } from '@/services/NotificationService';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '@/stores/hook';
 import { notificationActions } from '@/stores/NotificationStore';
 
 const { Text } = Typography;
-const activeNotificationService = USE_MOCK_NOTIFICATIONS
-    ? DemoNotificationService
-    : NotificationService;
 
 export default function NotificationDropdown() {
     const [open, setOpen] = useState(false);
@@ -39,11 +32,6 @@ export default function NotificationDropdown() {
     }, []);
 
     useEffect(() => {
-        if (USE_MOCK_NOTIFICATIONS) {
-            dispatch(notificationActions.setUnreadCount(0));
-            return;
-        }
-
         dispatch(notificationActions.fetchUnreadCount() as any);
         const interval = setInterval(() => {
             dispatch(notificationActions.fetchUnreadCount() as any);
@@ -53,7 +41,7 @@ export default function NotificationDropdown() {
 
     const handleMarkAllAsRead = async () => {
         try {
-            await activeNotificationService.markAsRead([], true);
+            await NotificationService.markAsRead([], true);
             dispatch(notificationActions.setUnreadCount(0));
 
             // Update local state in NotificationList
@@ -69,7 +57,7 @@ export default function NotificationDropdown() {
 
     const handleOpenChange = (visible: boolean) => {
         setOpen(visible);
-        if (visible && !USE_MOCK_NOTIFICATIONS) {
+        if (visible) {
             dispatch(notificationActions.fetchUnreadCount() as any);
         }
     };
@@ -146,9 +134,7 @@ export default function NotificationDropdown() {
                 ref={notificationListRef}
                 onNotificationClick={(notification) => {
                     console.log('Notification clicked:', notification);
-                    if (!USE_MOCK_NOTIFICATIONS) {
-                        dispatch(notificationActions.fetchUnreadCount() as any);
-                    }
+                    dispatch(notificationActions.fetchUnreadCount() as any);
                 }}
             />
         </div>

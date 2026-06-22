@@ -42,7 +42,6 @@ export function parsePermissionString(permission: string): PermissionRule | null
     };
 }
 
-
 export function convertApiPermissions(finalPermissions: string[]): PermissionRule[] {
     return finalPermissions
         .map(parsePermissionString)

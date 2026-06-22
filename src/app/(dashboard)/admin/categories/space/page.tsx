@@ -1,13 +1,9 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { cloneElement, useCallback, useEffect, useMemo, useState } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceService } from '@/services/SpaceService';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
-import {
-    DemoSpaceLevelService,
-    DemoSpaceService,
-    USE_MOCK_FACTORY_OVERVIEW,
-} from '@/mockData/admin/factory';
 import { toast } from 'sonner';
 import {
     Button,
@@ -20,6 +16,7 @@ import {
     Typography,
     Modal,
     Descriptions,
+    Image,
 } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { LoadingOutlined, PlusOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
@@ -31,6 +28,7 @@ import {
 } from '@/types/Space';
 import { getSpaceTableColumns, SpaceTableColumnProps } from './_components/Columns';
 import { EntityFormModal } from '@/components/shared/FormModal';
+import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
 import { getSpaceFormFields } from './_components/spaceFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
@@ -39,6 +37,7 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useUploadThing } from '@/utils/uploadthing';
 
 const { useBreakpoint } = Grid;
 
@@ -51,11 +50,6 @@ const spaceLevelQueryKeys = {
     lists: ['space-levels', 'list'] as const,
 };
 
-const activeSpaceService = USE_MOCK_FACTORY_OVERVIEW ? DemoSpaceService : SpaceService;
-const activeSpaceLevelService = USE_MOCK_FACTORY_OVERVIEW
-    ? DemoSpaceLevelService
-    : SpaceLevelService;
-
 const sanitizeSpaceTree = (
     nodes: SpaceWithChildrenResponse[]
 ): SpaceWithChildrenResponse[] => {
@@ -66,6 +60,16 @@ const sanitizeSpaceTree = (
                 ? sanitizeSpaceTree(node.children)
                 : undefined,
     }));
+};
+
+const normalizeOptionalUrl = (value: unknown): string | null => {
+    if (typeof value !== 'string') return null;
+    const trimmedValue = value.trim();
+    return trimmedValue.length > 0 ? trimmedValue : null;
+};
+
+const isLocalFile = (value: unknown): value is File => {
+    return typeof File !== 'undefined' && value instanceof File;
 };
 
 const SpaceListPage = () => {
@@ -80,6 +84,7 @@ const SpaceListPage = () => {
     const { checkPermission } = usePermissionCheck();
     const { handleError } = useApiErrorHandler();
     const ability = useAbility();
+    const { startUpload } = useUploadThing('imageUploader');
 
     const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -111,7 +116,7 @@ const SpaceListPage = () => {
     const spaceLevelsQuery = useQuery({
         queryKey: spaceLevelQueryKeys.lists,
         queryFn: async () => {
-            const response = await activeSpaceLevelService.getAllSpaceLevels();
+            const response = await SpaceLevelService.getAllSpaceLevels();
             return [...response].sort((a, b) => a.spaceLevel - b.spaceLevel);
         },
     });
@@ -119,7 +124,7 @@ const SpaceListPage = () => {
     const spacesTreeQuery = useQuery({
         queryKey: spaceQueryKeys.tree,
         queryFn: async () => {
-            const response = await activeSpaceService.getAllSpacesTree();
+            const response = await SpaceService.getAllSpacesTree();
             return sanitizeSpaceTree(response);
         },
     });
@@ -151,9 +156,7 @@ const SpaceListPage = () => {
         return spaceLevels[spaceLevels.length - 1].spaceLevel;
     }, [spaceLevels]);
 
-    const handleCreateRoot = useCallback(() => {
-        if (!checkPermission('create', 'space')) return;
-
+    const handleCreateRoot = () => {
         if (!spaceLevels.length) {
             toast.error(t('spaceManagement.errors.noLevelConfigured'));
             return;
@@ -171,7 +174,7 @@ const SpaceListPage = () => {
                 spaceLevelName: rootLevel.spaceLevelName,
             },
         });
-    }, [checkPermission, spaceLevels, t]);
+    };
 
     const handleAddChild = useCallback(
         (parentSpace: SpaceWithChildrenResponse) => {
@@ -198,7 +201,7 @@ const SpaceListPage = () => {
                 },
             });
         },
-        [checkPermission, spaceLevels, t]
+        [checkPermission, spaceLevels]
     );
 
     const handleEditSpace = useCallback(
@@ -215,7 +218,7 @@ const SpaceListPage = () => {
             try {
                 const detailData = await queryClient.fetchQuery({
                     queryKey: spaceQueryKeys.detail(space.spaceId),
-                    queryFn: () => activeSpaceService.getSpaceById(space.spaceId),
+                    queryFn: () => SpaceService.getSpaceById(space.spaceId),
                 });
                 setModalState({
                     open: true,
@@ -234,14 +237,14 @@ const SpaceListPage = () => {
     );
 
     const { mutateAsync: createSpace } = useMutation({
-        mutationFn: (data: SpaceCreationRequest) => activeSpaceService.createSpace(data),
+        mutationFn: (data: SpaceCreationRequest) => SpaceService.createSpace(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: spaceQueryKeys.tree });
         },
     });
 
     const { mutateAsync: updateSpace } = useMutation({
-        mutationFn: (data: SpaceUpdationRequest) => activeSpaceService.updateSpace(data),
+        mutationFn: (data: SpaceUpdationRequest) => SpaceService.updateSpace(data),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: spaceQueryKeys.tree });
             queryClient.invalidateQueries({ queryKey: spaceQueryKeys.detail(variables.spaceId) });
@@ -249,7 +252,7 @@ const SpaceListPage = () => {
     });
 
     const { mutateAsync: deleteSpace } = useMutation({
-        mutationFn: (spaceId: number | string) => activeSpaceService.deleteSpace(spaceId),
+        mutationFn: (spaceId: number | string) => SpaceService.deleteSpace(spaceId),
         onSuccess: (_data, spaceId) => {
             queryClient.invalidateQueries({ queryKey: spaceQueryKeys.tree });
             queryClient.invalidateQueries({ queryKey: spaceQueryKeys.detail(spaceId) });
@@ -284,7 +287,7 @@ const SpaceListPage = () => {
             try {
                 const detailData = await queryClient.fetchQuery({
                     queryKey: spaceQueryKeys.detail(step.spaceId),
-                    queryFn: () => activeSpaceService.getSpaceById(step.spaceId),
+                    queryFn: () => SpaceService.getSpaceById(step.spaceId),
                 });
                 setViewModalState({ open: true, loading: false, data: detailData });
             } catch (error: any) {
@@ -392,12 +395,33 @@ const SpaceListPage = () => {
         throw new Error('CONFIRMATION_PENDING');
     };
 
+    const uploadFloorPlanIfNeeded = async (value: unknown): Promise<string | null> => {
+        if (!value) return null;
+        if (!isLocalFile(value)) return normalizeOptionalUrl(value);
+
+        const shouldPreserveOriginal =
+            value.type === 'image/svg+xml' || value.name.toLowerCase().endsWith('.svg');
+        const uploadFile = shouldPreserveOriginal ? value : await compressImage(value);
+        const uploadResults = await startUpload([uploadFile]);
+        const uploadResult = uploadResults?.[0];
+        const imageUrl = uploadResult?.ufsUrl || uploadResult?.url;
+
+        if (!imageUrl) {
+            throw new Error('Image upload failed');
+        }
+
+        return imageUrl;
+    };
+
     const executeSubmit = async (data: any, mode: 'create' | 'edit') => {
         try {
+            const floorPlanImageUrl = await uploadFloorPlanIfNeeded(data.floorPlanImageUrl);
+
             if (mode === 'create') {
                 const payload: SpaceCreationRequest = {
                     spaceCode: data.spaceCode,
                     spaceName: data.spaceName,
+                    floorPlanImageUrl,
                     description: data.description,
                     displayOrder: data.displayOrder,
                     spaceLevelId: modalState.data?.spaceLevelId,
@@ -411,6 +435,7 @@ const SpaceListPage = () => {
                         spaceId: modalState.data.spaceId,
                         spaceCode: data.spaceCode,
                         spaceName: data.spaceName,
+                        floorPlanImageUrl,
                         description: data.description,
                         displayOrder: data.displayOrder,
                         parentSpaceId: modalState.data.parentId,
@@ -434,7 +459,6 @@ const SpaceListPage = () => {
     const handleConfirmAction = async () => {
         if (confirmModalState.pendingAction) {
             try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
                 await confirmModalState.pendingAction();
                 setModalState((prev) => ({ ...prev, open: false }));
                 setConfirmModalState({ open: false, type: 'create', pendingAction: null });
@@ -505,6 +529,84 @@ const SpaceListPage = () => {
                                 {viewModalState.data.spaceLevel?.spaceLevelName || '-'}
                             </Descriptions.Item>
                             <Descriptions.Item
+                                label={t('spaceManagement.table.headers.floorPlanImageUrl')}
+                                span={isMobile ? 1 : 2}
+                            >
+                                {viewModalState.data.floorPlanImageUrl ? (
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 12,
+                                            minWidth: 0,
+                                            maxWidth: '100%',
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: 160,
+                                                height: 96,
+                                                border: `1px solid ${themeToken.colorBorderSecondary}`,
+                                                borderRadius: themeToken.borderRadiusSM,
+                                                background: themeToken.colorBgContainer,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                overflow: 'hidden',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            <Image
+                                                src={viewModalState.data.floorPlanImageUrl}
+                                                alt={t(
+                                                    'spaceManagement.table.headers.floorPlanImageUrl'
+                                                )}
+                                                width={160}
+                                                height={96}
+                                                style={{
+                                                    objectFit: 'contain',
+                                                    background: themeToken.colorBgContainer,
+                                                }}
+                                                preview={{
+                                                    imageRender: (originalNode) => {
+                                                        const imageNode =
+                                                            originalNode as ReactElement<{
+                                                                style?: CSSProperties;
+                                                            }>;
+
+                                                        return cloneElement(imageNode, {
+                                                            style: {
+                                                                ...imageNode.props.style,
+                                                                background:
+                                                                    themeToken.colorBgContainer,
+                                                            },
+                                                        });
+                                                    },
+                                                }}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="link"
+                                            size="small"
+                                            href={viewModalState.data.floorPlanImageUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{
+                                                paddingInline: 0,
+                                                height: 'auto',
+                                                whiteSpace: 'normal',
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            {t('common.view')}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    '-'
+                                )}
+                            </Descriptions.Item>
+                            <Descriptions.Item
                                 label={t('spaceManagement.table.headers.displayOrder')}
                             >
                                 {viewModalState.data.displayOrder || '-'}
@@ -561,12 +663,12 @@ const SpaceListPage = () => {
 
             <Card
                 style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                bodyStyle={{
+                styles={{ body: {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     overflowY: isMobile ? 'auto' : 'hidden',
-                }}
+                } }}
             >
                 {spaceLevels.length === 0 && loading ? (
                     <div

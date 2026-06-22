@@ -11,14 +11,11 @@ import { MainPagination } from './_components/MainPagination';
 import { MetricCard } from './_components/MetricCard';
 import { TaskGrid } from './_components/TaskGrid';
 import { UserService } from '@/services/UserService';
-import { DemoUserService, USE_MOCK_USERS } from '@/mockData/admin/users';
 import { UserProfile } from '@/types/User';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { generateMockTasks } from './mockTaskData';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
-
-const activeUserService = USE_MOCK_USERS ? DemoUserService : UserService;
 
 const OperatorDashboard = () => {
     const [mainPage, setMainPage] = useState(1);
@@ -34,7 +31,7 @@ const OperatorDashboard = () => {
         const fetchOperators = async () => {
             try {
                 setLoading(true);
-                const data = await activeUserService.getOperators();
+                const data = await UserService.getOperators();
                 setOperators(data);
             } catch (error) {
                 console.error('Error fetching operators:', error);

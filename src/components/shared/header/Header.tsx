@@ -200,7 +200,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 {screens.md && (
                     <>
                         <Divider
-                            type="vertical"
+                            orientation="vertical"
                             style={{
                                 height: 32,
                                 margin: '0 12px',

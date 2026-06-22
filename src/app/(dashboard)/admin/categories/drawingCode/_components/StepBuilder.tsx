@@ -24,8 +24,7 @@ import {
     ArrowDownOutlined,
     MenuOutlined,
 } from '@ant-design/icons';
-import { StepService } from '@/services/StepService';
-import { DemoStepService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
+import { StandardStepService } from '@/services/StepService';
 import { StepDTO } from '@/types/Step';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { getStepFormFields } from '../../step/_components/stepFormConfig';
@@ -33,7 +32,6 @@ import { getStepFormFields } from '../../step/_components/stepFormConfig';
 
 
 const { Text } = Typography;
-const activeStepService = USE_MOCK_ORDERS ? DemoStepService : StepService;
 
 interface StepBuilderProps {
     t: (key: string, options?: any) => string;
@@ -70,7 +68,7 @@ export const StepBuilder = React.memo(({ t }: StepBuilderProps) => {
     const fetchSteps = async () => {
         try {
             setLoadingSteps(true);
-            const steps = await activeStepService.getAllSteps();
+            const steps = await StandardStepService.getAllSteps();
             setStandardSteps(steps);
         } catch (error) {
             console.error('Error fetching steps:', error);
@@ -90,7 +88,7 @@ export const StepBuilder = React.memo(({ t }: StepBuilderProps) => {
 
     const handleCreateStep = async (data: any) => {
         try {
-            const createdStep = await activeStepService.createStep({
+            const createdStep = await StandardStepService.createStep({
                 stepName: data.stepName,
                 description: data.description,
                 requiresQc: data.requiresQc ?? false,
@@ -136,7 +134,7 @@ export const StepBuilder = React.memo(({ t }: StepBuilderProps) => {
 
     return (
         <Form.List
-            name="stepTemplates"
+            name='stepTemplates'
             rules={[
                 {
                     validator: async (_, names) => {
@@ -190,8 +188,14 @@ export const StepBuilder = React.memo(({ t }: StepBuilderProps) => {
                             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                                 <Select
                                     open={isDropdownOpen}
-                                    onDropdownVisibleChange={(open) => setIsDropdownOpen(open)}
-                                    showSearch
+                                    onOpenChange={(open) => setIsDropdownOpen(open)}
+                                    showSearch={{
+                                        filterOption: (input, option) =>
+                                            (option?.label ?? '')
+                                                .toString()
+                                                .toLowerCase()
+                                                .includes(input.toLowerCase()),
+                                    }}
                                     allowClear
                                     placeholder={
                                         fields.length === 0
@@ -207,12 +211,6 @@ export const StepBuilder = React.memo(({ t }: StepBuilderProps) => {
                                     }
                                     loading={loadingSteps}
                                     style={{ width: '100%' }}
-                                    filterOption={(input, option) =>
-                                        (option?.label ?? '')
-                                            .toString()
-                                            .toLowerCase()
-                                            .includes(input.toLowerCase())
-                                    }
                                     options={standardSteps
                                         .filter(
                                             (step) =>
@@ -241,7 +239,7 @@ export const StepBuilder = React.memo(({ t }: StepBuilderProps) => {
                                             triggerStepAddedFeedback(step.stepName);
                                         }
                                     }}
-                                    dropdownRender={(menu) => (
+                                    popupRender={(menu) => (
                                         <>
                                             {menu}
                                             <Divider style={{ margin: '8px 0' }} />

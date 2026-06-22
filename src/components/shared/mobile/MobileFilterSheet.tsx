@@ -429,7 +429,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
             >
                 {config.label}
             </label>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
                 {config.options.map((option) => (
                     <Button
                         key={option.value}
@@ -498,7 +498,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
             placement="bottom"
             onClose={onClose}
             open={isOpen}
-            height="85vh"
+            size="85vh"
             zIndex={800}
             closeIcon={<CloseOutlined style={{ fontSize: '24px' }} />}
             styles={{

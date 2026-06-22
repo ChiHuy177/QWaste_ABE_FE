@@ -1,4 +1,11 @@
-import { Machine, MachineFormData, MachineOverview, MachineUpdateFormData, MachinePaginatedParams } from '@/types/Machine';
+import {
+    Machine,
+    MachineCurrentShiftOverview,
+    MachineFormData,
+    MachineOverview,
+    MachineUpdateFormData,
+    MachinePaginatedParams,
+} from '@/types/Machine';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 import { PaginatedResult } from '@/types/Common';
@@ -30,7 +37,6 @@ export class MachineService {
         }
 
         MachineService.appendTrimmedParam(queryParams, 'machineName', params.machineName);
-        MachineService.appendTrimmedParam(queryParams, 'machineCode', params.machineCode);
         MachineService.appendTrimmedParam(queryParams, 'propertyCode', params.propertyCode);
         MachineService.appendTrimmedParam(queryParams, 'topic', params.topic);
 
@@ -88,6 +94,23 @@ export class MachineService {
         });
 
         return response.result as MachineOverview[];
+    }
+
+    static async getMachineOverviewByCurrentShift(machineId: string): Promise<MachineOverview> {
+        const response = await NetworkService.requestJson<MachineCurrentShiftOverview>({
+            method: 'GET',
+            url: ENDPOINTS.MACHINE.OVERVIEW_BY_CURRENT_SHIFT(machineId),
+        });
+
+        const overview = response.result as MachineCurrentShiftOverview;
+
+        return {
+            ...overview,
+            status: 'empty',
+            logs: [],
+            currentEnergyConsumption: 0,
+            runtimeByStatus: overview.runtimeByStatus as MachineOverview['runtimeByStatus'],
+        };
     }
 
     static async createMachine(machineData: MachineFormData): Promise<MachineFormData> {

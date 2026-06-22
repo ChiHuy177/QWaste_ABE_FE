@@ -1,16 +1,54 @@
 import { ColumnsType } from 'antd/es/table';
 import { Permission } from '@/types/Permission';
-import { Button, Space, Popconfirm, Tag } from 'antd';
+import { Button, Space, Popconfirm, Tag, Badge, theme } from 'antd';
 import { EditOutlined, DeleteOutlined, FolderOpenOutlined } from '@ant-design/icons';
-import { Badge } from 'antd';
-import { AppAbility } from '@/configs/permissions/caslAbility';
+
+const FolderCell = ({
+    text,
+    childrenCount,
+    isMobileResponsive,
+}: {
+    text: string;
+    childrenCount: number;
+    isMobileResponsive?: boolean;
+}) => {
+    const { token } = theme.useToken();
+    return (
+        <Space size="small" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <FolderOpenOutlined style={{ color: token.colorPrimary, fontSize: '16px', flexShrink: 0 }} />
+            <span
+                style={{
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    color: token.colorText,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'inline-block',
+                    maxWidth: isMobileResponsive ? '120px' : 'none',
+                }}
+            >
+                {text}
+            </span>
+            <Badge
+                count={childrenCount}
+                style={{
+                    backgroundColor: token.colorInfoBg,
+                    color: token.colorInfo,
+                    boxShadow: 'none',
+                    border: `1px solid ${token.colorInfoBorder}`,
+                    flexShrink: 0,
+                }}
+            />
+        </Space>
+    );
+};
 
 export type PermissionTableColumnProps = {
     onEdit?: (permission: Permission) => void;
     onDelete?: (permission: Permission) => void;
     t: (key: string) => string;
     isMobileResponsive?: boolean;
-    ability?: AppAbility;
 };
 
 const getActionColor = (action: string): string => {
@@ -62,10 +100,6 @@ const getActionColor = (action: string): string => {
 
 export const getPermissionTableColumns = (props?: PermissionTableColumnProps): ColumnsType<any> => {
     const t = props?.t || ((key: string) => key);
-    const ability = props?.ability;
-    const canUpdate = ability?.can('update', 'permission') ?? false;
-    const canDelete = ability?.can('delete', 'permission') ?? false;
-    const hasAnyAction = canUpdate || canDelete;
 
     const columns: ColumnsType<any> = [
         {
@@ -78,31 +112,11 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
             render: (text: string, record: any) => {
                 if (record.children) {
                     return (
-                        <Space size="small" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                            <FolderOpenOutlined style={{ color: '#1890ff', fontSize: '16px', flexShrink: 0 }} />
-                            <span style={{ 
-                                fontWeight: 600, 
-                                fontSize: '14px', 
-                                color: '#1f1f1f',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                display: 'inline-block',
-                                maxWidth: props?.isMobileResponsive ? '120px' : 'none'
-                            }}>
-                                {text}
-                            </span>
-                            <Badge 
-                                count={record.children.length} 
-                                style={{ 
-                                    backgroundColor: '#e6f7ff', 
-                                    color: '#1890ff',
-                                    boxShadow: 'none',
-                                    border: '1px solid #91d5ff',
-                                    flexShrink: 0
-                                }} 
-                            />
-                        </Space>
+                        <FolderCell
+                            text={text}
+                            childrenCount={record.children.length}
+                            isMobileResponsive={props?.isMobileResponsive}
+                        />
                     );
                 }
 
@@ -120,10 +134,10 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
                 return (
                     <Space>
                         {action && (
-                            <Tag 
-                                color={getActionColor(action)} 
-                                style={{ 
-                                    borderRadius: '12px', 
+                            <Tag
+                                color={getActionColor(action)}
+                                style={{
+                                    borderRadius: '12px',
                                     padding: '0 10px',
                                     textTransform: 'uppercase',
                                     fontSize: '11px',
@@ -144,10 +158,7 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
             ellipsis: true,
             width: '35%',
         },
-    ];
-
-    if (hasAnyAction) {
-        columns.push({
+        {
             title: t('permissionManagement.columns.actions'),
             key: 'actions',
             fixed: props?.isMobileResponsive ? undefined : 'right',
@@ -156,40 +167,36 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
                 if (record.children) return null;
                 return (
                     <Space size="small">
-                        {canUpdate && (
+                        <Button
+                            variant="link"
+                            icon={<EditOutlined />}
+                            onClick={() => props?.onEdit?.(record)}
+                            style={{ padding: props?.isMobileResponsive ? '4px' : '4px 8px' }}
+                        >
+                            {!props?.isMobileResponsive && t('permissionManagement.actions.edit')}
+                        </Button>
+                        <Popconfirm
+                            title={t('permissionManagement.actions.confirmDeleteTitle')}
+                            description={t('permissionManagement.actions.confirmDeleteMessage')}
+                            onConfirm={() => props?.onDelete?.(record)}
+                            okText={t('permissionManagement.actions.confirmYes')}
+                            cancelText={t('permissionManagement.actions.confirmNo')}
+                            okButtonProps={{ color: 'danger', variant: 'solid' }}
+                        >
                             <Button
-                                type="link"
-                                icon={<EditOutlined />}
-                                onClick={() => props?.onEdit?.(record)}
+                                variant="link"
+                                color="danger"
+                                icon={<DeleteOutlined />}
                                 style={{ padding: props?.isMobileResponsive ? '4px' : '4px 8px' }}
                             >
-                                {!props?.isMobileResponsive && t('permissionManagement.actions.edit')}
+                                {!props?.isMobileResponsive && t('permissionManagement.actions.delete')}
                             </Button>
-                        )}
-                        {canDelete && (
-                            <Popconfirm
-                                title={t('permissionManagement.actions.confirmDeleteTitle')}
-                                description={t('permissionManagement.actions.confirmDeleteMessage')}
-                                onConfirm={() => props?.onDelete?.(record)}
-                                okText={t('permissionManagement.actions.confirmYes')}
-                                cancelText={t('permissionManagement.actions.confirmNo')}
-                                okButtonProps={{ danger: true }}
-                            >
-                                <Button
-                                    type="link"
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    style={{ padding: props?.isMobileResponsive ? '4px' : '4px 8px' }}
-                                >
-                                    {!props?.isMobileResponsive && t('permissionManagement.actions.delete')}
-                                </Button>
-                            </Popconfirm>
-                        )}
+                        </Popconfirm>
                     </Space>
                 );
             },
-        });
-    }
+        },
+    ];
 
     return columns;
 };

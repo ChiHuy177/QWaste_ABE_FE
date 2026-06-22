@@ -2,24 +2,17 @@
 
 import { useState, useCallback, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Notification } from '@/types/Notification';
-import {
-    DemoNotificationService,
-    USE_MOCK_NOTIFICATIONS,
-} from '@/mockData/notifications';
 import { NotificationService } from '@/services/NotificationService';
 import NotificationItem from './NotificationItem';
 import { Spin, Empty, theme, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { InboxOutlined } from '@ant-design/icons';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { useAppSelector } from '@/stores/hook';
 
 interface NotificationListProps {
     onNotificationClick?: (notification: Notification) => void;
 }
-
-const activeNotificationService = USE_MOCK_NOTIFICATIONS
-    ? DemoNotificationService
-    : NotificationService;
 
 const mergeUniqueNotifications = (
     currentNotifications: Notification[],
@@ -51,6 +44,17 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
         const { t } = useTranslation();
         const isMountedRef = useRef(false);
         const isFetchingRef = useRef(false);
+        const notificationsRef = useRef<Notification[]>([]);
+        const liveNotifications = useAppSelector((state) => state.notification.notifications);
+
+        useEffect(() => {
+            notificationsRef.current = notifications;
+        }, [notifications]);
+
+        useEffect(() => {
+            if (liveNotifications.length === 0) return;
+            setNotifications((prev) => mergeUniqueNotifications(liveNotifications, prev));
+        }, [liveNotifications]);
 
         // Expose method to parent component
         useImperativeHandle(ref, () => ({
@@ -83,22 +87,31 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
                     }
 
                     const response = isInitial
-                        ? await activeNotificationService.getNotifications()
-                        : await activeNotificationService.getNotifications(
-                              10,
-                              lastCreatedAt,
-                              lastId
-                          );
+                        ? await NotificationService.getNotifications()
+                        : await NotificationService.getNotifications(10, lastCreatedAt, lastId);
 
-                    if (isInitial) {
-                        setNotifications(mergeUniqueNotifications([], response.notifications));
-                    } else {
-                        setNotifications((prev) =>
-                            mergeUniqueNotifications(prev, response.notifications)
+                    const prevList = notificationsRef.current;
+                    const merged = isInitial
+                        ? mergeUniqueNotifications([], response.notifications)
+                        : mergeUniqueNotifications(prevList, response.notifications);
+                    const addedCount = isInitial ? merged.length : merged.length - prevList.length;
+
+                    setNotifications(merged);
+                    notificationsRef.current = merged;
+
+                    // Nếu BE báo còn dữ liệu nhưng trang này không thêm được item mới nào
+                    // (toàn bộ đã trùng với danh sách hiện tại), dừng phân trang để tránh
+                    // InfiniteScroll bị kẹt ở trạng thái loading vĩnh viễn (xem
+                    // react-infinite-scroll-component componentDidUpdate: chỉ reset
+                    // actionTriggered/showLoader khi dataLength thay đổi).
+                    if (!isInitial && response.hasNext && addedCount <= 0) {
+                        console.warn(
+                            'Notification pagination returned no new items while hasNext=true, stopping pagination'
                         );
+                        setHasMore(false);
+                    } else {
+                        setHasMore(response.hasNext);
                     }
-
-                    setHasMore(response.hasNext);
                     setLastCreatedAt(response.lastCreatedAt);
                     setLastId(response.lastNotificationId);
                     setError(null);
@@ -126,7 +139,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
 
         const handleMarkAsRead = useCallback(async (notificationId: number) => {
             try {
-                await activeNotificationService.markAsRead([notificationId]);
+                await NotificationService.markAsRead([notificationId]);
                 setNotifications((prev) =>
                     prev.map((notif) =>
                         notif.notificationId === notificationId ? { ...notif, isRead: true } : notif
@@ -160,7 +173,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
                         backgroundColor: token.colorBgContainer,
                     }}
                 >
-                    <Spin size="default" />
+                    <Spin size="medium" />
                 </div>
             );
         }
@@ -193,7 +206,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
                             </span>
                         }
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        imageStyle={{ height: 0 }}
+                        styles={{ image: { height: 0 } }}
                     >
                         <Button
                             type="primary"
@@ -236,7 +249,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
                             </span>
                         }
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        imageStyle={{ height: 0 }}
+                        styles={{ image: { height: 0 } }}
                     />
                 </div>
             );

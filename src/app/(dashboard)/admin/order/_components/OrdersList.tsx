@@ -461,7 +461,7 @@ export const OrdersList: React.FC = () => {
                                         {order.orderCode}
                                     </Text>
                                 </div>
-                                <Space direction="vertical" size={4} align="end">
+                                <Space orientation="vertical" size={4} align="end">
                                     {isDeleted ? (
                                         <Tag color="default">{t('common.table.headers.deleted', 'Deleted')}</Tag>
                                     ) : (
@@ -622,7 +622,7 @@ export const OrdersList: React.FC = () => {
     );
 
     return (
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             {/* Header Controls */}
             <Flex
                 justify="space-between"

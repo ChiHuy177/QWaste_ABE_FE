@@ -2,15 +2,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Button, Card, Descriptions, Grid, Modal, Spin, Table, Typography } from 'antd';
+import { Button, Card, Descriptions, Grid, Modal, Spin, Table, TableProps, Typography } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ToolOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { MachineType } from '@/types/MachineType';
 import { MachineTypeTableColumnProps, getMachineTypeTableColumns } from './_components/Column';
 import { MachineTypeService } from '@/services/MachineTypeService';
-import { DemoMachineTypeService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
-import { EntityFormModal } from '@/components/shared/FormModal';
+import { EntityFormModal } from '../../../../../components/shared/FormModal';
 import { getMachineTypeFormFields } from './_components/machineTypeFormConfig';
 import { MachineTypeFormData } from '@/types/MachineType';
 import { SearchInput } from '@/components/shared/SearchInput';
@@ -21,9 +20,6 @@ import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import dayjs from 'dayjs';
 
 const { useBreakpoint } = Grid;
-const activeMachineTypeService = USE_MOCK_FACTORY_OVERVIEW
-    ? DemoMachineTypeService
-    : MachineTypeService;
 
 const MachineTypeListPage = () => {
     const [modalState, setModalState] = useState<{
@@ -38,6 +34,7 @@ const MachineTypeListPage = () => {
 
     const [loading, setLoading] = useState(true);
     const [machineTypeData, setMachineTypeData] = useState<MachineType[]>([]);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     // ConfirmModal State
@@ -62,26 +59,8 @@ const MachineTypeListPage = () => {
 
     const screens = useBreakpoint();
     const isMobile = !screens.md;
-    const canCreateMachineType = checkPermissionSilent('create', 'machine_type');
 
     usePageTitle(t('pageTitle.machineTypeList'));
-
-    const fetchMachineTypeData = useCallback(async () => {
-        try {
-            setLoading(true);
-            const response = await activeMachineTypeService.getAllMachineTypes();
-            setMachineTypeData(response);
-        } catch (error) {
-            console.error('Error fetching machine type data:', error);
-            handleError(error, { fallbackKey: 'machineTypeManagement.fetchError' });
-        } finally {
-            setLoading(false);
-        }
-    }, [handleError]);
-
-    useEffect(() => {
-        fetchMachineTypeData();
-    }, [fetchMachineTypeData]);
 
     const handleEditMachineType = useCallback(
         (machineType: MachineType) => {
@@ -104,9 +83,9 @@ const MachineTypeListPage = () => {
                 pendingAction: async () => {
                     try {
                         const machineTypeId = machineType.machineTypeId;
-                        await activeMachineTypeService.deleteMachineType(machineTypeId);
+                        await MachineTypeService.deleteMachineType(machineTypeId);
                         toast.success(t('machineTypeManagement.deleteSuccess'));
-                        await fetchMachineTypeData();
+                        fetchMachineTypeData();
                     } catch (error) {
                         console.error('Error deleting machine type:', error);
                         handleError(error, { fallbackKey: 'machineTypeManagement.deleteError' });
@@ -115,16 +94,14 @@ const MachineTypeListPage = () => {
                 },
             });
         },
-        [t, checkPermission, fetchMachineTypeData, handleError]
+        [t, checkPermission, handleError]
     );
 
     const handleViewMachineType = useCallback(
         async (step: MachineType) => {
             setViewModalState({ open: true, loading: true, data: null });
             try {
-                const detailData = await activeMachineTypeService.getMachineTypeById(
-                    step.machineTypeId
-                );
+                const detailData = await MachineTypeService.getMachineTypeById(step.machineTypeId);
                 setViewModalState({ open: true, loading: false, data: detailData });
             } catch (error: any) {
                 console.error('Error fetching machine type details:', error);
@@ -160,10 +137,37 @@ const MachineTypeListPage = () => {
         });
     }, [machineTypeData, searchTerm]);
 
+    const rowSelection: TableProps<MachineType>['rowSelection'] = {
+        selectedRowKeys,
+        onChange: (newSelectedRowKeys: React.Key[]) => {
+            setSelectedRowKeys(newSelectedRowKeys);
+        },
+        getCheckboxProps: () => ({
+            disabled: true,
+        }),
+    };
+
+    const fetchMachineTypeData = async () => {
+        try {
+            setLoading(true);
+            const response = await MachineTypeService.getAllMachineTypes();
+            setMachineTypeData(response);
+        } catch (error) {
+            console.error('Error fetching machine type data:', error);
+            toast.error(t('machineTypeManagement.fetchError'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchMachineTypeData();
+    }, []);
+
     const executeSubmit = async (data: MachineTypeFormData, mode: 'create' | 'edit') => {
         try {
             if (mode === 'create') {
-                await activeMachineTypeService.createMachineType(data);
+                await MachineTypeService.createMachineType(data);
                 toast.success(t('machineTypeManagement.form.createSuccess'));
             } else {
                 if (modalState.data?.machineTypeId) {
@@ -171,11 +175,11 @@ const MachineTypeListPage = () => {
                         ...data,
                         machineTypeId: modalState.data.machineTypeId,
                     };
-                    await activeMachineTypeService.updateMachineType(submitData);
+                    await MachineTypeService.updateMachineType(submitData);
                     toast.success(t('machineTypeManagement.updateSuccess'));
                 }
             }
-            await fetchMachineTypeData();
+            fetchMachineTypeData();
         } catch (error) {
             console.error('Error submitting machine type:', error);
             handleError(error, {
@@ -197,12 +201,6 @@ const MachineTypeListPage = () => {
         throw new Error('CONFIRMATION_PENDING');
     };
 
-    const handleCreateMachineType = useCallback(() => {
-        if (!checkPermission('create', 'machine_type')) return;
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
-
     const handleConfirmAction = async () => {
         if (confirmModalState.pendingAction) {
             try {
@@ -214,7 +212,7 @@ const MachineTypeListPage = () => {
                     type: 'create',
                     pendingAction: null,
                 });
-            } catch {
+            } catch (error) {
                 setConfirmModalState({
                     open: false,
                     type: 'create',
@@ -253,7 +251,9 @@ const MachineTypeListPage = () => {
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
-                                onClick={handleCreateMachineType}
+                                onClick={() =>
+                                    setModalState({ open: true, mode: 'create', data: null })
+                                }
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
                                 {t('machineTypeManagement.addMachineType')}
@@ -262,28 +262,27 @@ const MachineTypeListPage = () => {
                     </div>
                 }
                 mobileMenuItems={
-                    canCreateMachineType
+                    checkPermissionSilent('create', 'machine_type')
                         ? [
                             {
                                 key: 'add',
                                 label: t('machineTypeManagement.addMachineType'),
                                 icon: <PlusOutlined />,
-                                onClick: handleCreateMachineType,
+                                onClick: () =>
+                                    setModalState({ open: true, mode: 'create', data: null }),
                             },
                         ]
                         : []
                 }
                 rightContentMobile={
-                    canCreateMachineType ? (
-                        <Button
-                            type="primary"
-                            shape="circle"
-                            icon={<PlusOutlined />}
-                            onClick={handleCreateMachineType}
-                            aria-label={t('machineTypeManagement.addMachineType')}
-                            style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
-                        />
-                    ) : null
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<PlusOutlined />}
+                        onClick={() => setModalState({ open: true, mode: 'create', data: null })}
+                        aria-label={t('machineTypeManagement.addMachineType')}
+                        style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
+                    />
                 }
             />
 
@@ -363,16 +362,17 @@ const MachineTypeListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
+                styles={{ body: {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
-                }}
+                } }}
             >
                 <Table<MachineType>
                     columns={columns}
                     dataSource={filteredMachineTypeData}
+                    rowSelection={rowSelection}
                     loading={loading}
                     rowKey={(record) => record.machineTypeId}
                     pagination={{

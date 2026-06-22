@@ -4,7 +4,6 @@ import { SpaceWithChildrenResponse } from '@/types/Space';
 import { MachineService } from '@services/MachineService';
 import { calculateMachineStats } from '@/utils/machineUtils';
 import { SpaceService } from '@/services/SpaceService';
-import { DemoMachineService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 
 export interface IMachineStoreState {
     // Loading states
@@ -166,9 +165,7 @@ export const machineActions = {
         dispatch(slice.actions.setLoadingFactories(true));
 
         try {
-            const spacesTree = USE_MOCK_FACTORY_OVERVIEW
-                ? await DemoMachineService.getSpacesTree()
-                : await SpaceService.getAllSpacesTree();
+            const spacesTree = await SpaceService.getAllSpacesTree();
             dispatch(slice.actions.setSpacesTree(spacesTree));
         } catch (error) {
             console.error('Error fetching spaces tree:', error);
@@ -184,9 +181,10 @@ export const machineActions = {
                 dispatch(slice.actions.setFetching(true));
 
                 try {
-                    const machines = USE_MOCK_FACTORY_OVERVIEW
-                        ? await DemoMachineService.getMachinesWithLogs(spaceId)
-                        : await MachineService.getMachinesWithLogs(spaceId, filterId);
+                    const machines = await MachineService.getMachinesWithLogs(
+                        spaceId,
+                        filterId
+                    );
                     dispatch(slice.actions.setMachines(machines));
                 } catch (error) {
                     console.error('Error fetching machines:', error);

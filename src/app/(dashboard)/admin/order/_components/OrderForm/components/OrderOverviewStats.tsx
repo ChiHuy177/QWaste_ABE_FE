@@ -25,14 +25,14 @@ export const OrderOverviewStats: React.FC<OrderOverviewStatsProps> = ({ currentO
 
     return (
         <div style={{ marginBottom: 8 }}>
-            <Divider orientation="left" orientationMargin={0}>
+            <Divider titlePlacement="left" styles={{ content: { margin: 0 } }}>
                 <Text strong style={{ fontSize: 15, color: token.colorPrimary }}>
                     {t('orderManagement.form.sections.orderOverview')}
                 </Text>
             </Divider>
             <Row gutter={[16, 16]}>
                 <Col xs={12} md={6}>
-                    <Space direction="vertical" size={2}>
+                    <Space orientation="vertical" size={2}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {t('orderManagement.form.fields.status')}
                         </Text>
@@ -42,7 +42,7 @@ export const OrderOverviewStats: React.FC<OrderOverviewStatsProps> = ({ currentO
                     </Space>
                 </Col>
                 <Col xs={12} md={6}>
-                    <Space direction="vertical" size={2}>
+                    <Space orientation="vertical" size={2}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {t('orderManagement.form.fields.totalEstimatedLeadtime')}
                         </Text>
@@ -50,7 +50,7 @@ export const OrderOverviewStats: React.FC<OrderOverviewStatsProps> = ({ currentO
                     </Space>
                 </Col>
                 <Col xs={12} md={4}>
-                    <Space direction="vertical" size={2}>
+                    <Space orientation="vertical" size={2}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {t('orderManagement.form.fields.requestedQuantity')}
                         </Text>
@@ -58,7 +58,7 @@ export const OrderOverviewStats: React.FC<OrderOverviewStatsProps> = ({ currentO
                     </Space>
                 </Col>
                 <Col xs={12} md={4}>
-                    <Space direction="vertical" size={2}>
+                    <Space orientation="vertical" size={2}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {t('orderManagement.form.fields.plannedQuantity')}
                         </Text>
@@ -68,7 +68,7 @@ export const OrderOverviewStats: React.FC<OrderOverviewStatsProps> = ({ currentO
                     </Space>
                 </Col>
                 <Col xs={12} md={4}>
-                    <Space direction="vertical" size={2}>
+                    <Space orientation="vertical" size={2}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {t('orderManagement.form.fields.actualQuantity')}
                         </Text>
@@ -83,7 +83,7 @@ export const OrderOverviewStats: React.FC<OrderOverviewStatsProps> = ({ currentO
                     <Col span={24}>
                         <Alert
                             type="error"
-                            message={t('orderManagement.form.fields.cancellationReason')}
+                            title={t('orderManagement.form.fields.cancellationReason')}
                             description={currentOrder.cancellationReason}
                             showIcon
                         />

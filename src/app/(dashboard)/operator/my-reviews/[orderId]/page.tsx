@@ -3,12 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-    DemoOperatorReviewService,
-    USE_MOCK_OPERATOR_REVIEWS,
-} from '@/mockData/operator';
-import { UtilsService } from '@/services/UtilsService';
-import type { TaskDeclineReason as TaskDeclineReasonOption } from '@/services/UtilsService';
-import {
     Card,
     Descriptions,
     Button,
@@ -40,13 +34,9 @@ import {
 
 const { Panel } = Collapse;
 const { TextArea } = Input;
-const activeReviewUtilityService = USE_MOCK_OPERATOR_REVIEWS
-    ? DemoOperatorReviewService
-    : UtilsService;
 
 interface ReviewDecision {
     taskId: string;
-    taskReviewId: number;
     reviewStatus: TaskReviewStatus;
     declineReason?: TaskDeclineReason | null;
     declineComment?: string | null;
@@ -61,7 +51,6 @@ const OperatorReviewFormPage = () => {
 
     const { operatorReviewData, isLoadingReviewData } = useAppSelector((state) => state.order);
     const [reviews, setReviews] = useState<Record<string, ReviewDecision>>({});
-    const [declineReasons, setDeclineReasons] = useState<TaskDeclineReasonOption[]>([]);
 
     useEffect(() => {
         if (orderId) {
@@ -77,7 +66,6 @@ const OperatorReviewFormPage = () => {
                     step.tasks.forEach((task: OrderOperatorReviewTask) => {
                         initialReviews[task.taskId] = {
                             taskId: task.taskId,
-                            taskReviewId: task.myReview.taskReviewId,
                             reviewStatus: task.myReview.reviewStatus,
                             declineReason: task.myReview.declineReason,
                             declineComment: task.myReview.declineComment,
@@ -88,27 +76,6 @@ const OperatorReviewFormPage = () => {
             setReviews(initialReviews);
         }
     }, [operatorReviewData]);
-
-    useEffect(() => {
-        let ignoreResult = false;
-
-        const fetchDeclineReasons = async () => {
-            try {
-                const reasons = await activeReviewUtilityService.getTaskDeclineReasons();
-                if (!ignoreResult) {
-                    setDeclineReasons(reasons);
-                }
-            } catch {
-                message.error('Failed to load decline reasons');
-            }
-        };
-
-        fetchDeclineReasons();
-
-        return () => {
-            ignoreResult = true;
-        };
-    }, []);
 
     const handleReviewChange = (
         taskId: string,
@@ -131,22 +98,8 @@ const OperatorReviewFormPage = () => {
             return;
         }
 
-        const invalidDeclinedReviews = Object.values(reviews).filter(
-            (review) => review.reviewStatus === 'DECLINED' && !review.declineReason
-        );
-        if (invalidDeclinedReviews.length > 0) {
-            message.warning('Please select a decline reason before submitting');
-            return;
-        }
-
-        const success = await dispatch(orderActions.submitOperatorReviews(Object.values(reviews)));
-        if (!success) {
-            message.error('Failed to submit reviews');
-            return;
-        }
-
+        // TODO: Add submit endpoint
         message.success('Reviews submitted successfully');
-        await dispatch(orderActions.fetchMyReviewingOrders());
         router.push('/operator/my-reviews');
     };
 
@@ -249,7 +202,7 @@ const OperatorReviewFormPage = () => {
                                                 size="small"
                                                 style={{ marginBottom: 8 }}
                                             >
-                                                <Space direction="vertical" style={{ width: '100%' }}>
+                                                <Space orientation="vertical" style={{ width: '100%' }}>
                                                     <div>
                                                         <strong>Task:</strong> {task.taskName}
                                                     </div>
@@ -287,7 +240,7 @@ const OperatorReviewFormPage = () => {
                                                     </div>
 
                                                     {review?.reviewStatus === 'DECLINED' && (
-                                                        <Space direction="vertical" style={{ width: '100%' }}>
+                                                        <Space orientation="vertical" style={{ width: '100%' }}>
                                                             <div>
                                                                 <strong>Decline Reason:</strong>
                                                                 <Radio.Group
@@ -301,14 +254,16 @@ const OperatorReviewFormPage = () => {
                                                                     }
                                                                     style={{ marginLeft: 16 }}
                                                                 >
-                                                                    {declineReasons.map((reason) => (
-                                                                        <Radio
-                                                                            key={reason.name}
-                                                                            value={reason.name}
-                                                                        >
-                                                                            {reason.nameEn}
-                                                                        </Radio>
-                                                                    ))}
+                                                                    <Radio value="WORKLOAD_FULL">
+                                                                        Workload Full
+                                                                    </Radio>
+                                                                    <Radio value="SKILL_MISMATCH">
+                                                                        Skill Mismatch
+                                                                    </Radio>
+                                                                    <Radio value="EQUIPMENT_UNAVAILABLE">
+                                                                        Equipment Unavailable
+                                                                    </Radio>
+                                                                    <Radio value="OTHER">Other</Radio>
                                                                 </Radio.Group>
                                                             </div>
                                                             <div>

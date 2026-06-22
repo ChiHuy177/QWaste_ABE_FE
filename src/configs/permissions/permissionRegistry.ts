@@ -107,14 +107,14 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Delete permission',
     },
 
-    // Factory Overview
+    // Space Monitoring
     {
-        slug: 'factory_overview:view',
-        subject: 'factory_overview',
+        slug: 'space_monitoring:view',
+        subject: 'space_monitoring',
         action: 'view',
-        routes: ['/admin/factory-overview'],
-        menuKey: 'factory-overview',
-        description: 'View factory overview',
+        routes: ['/admin/space-monitoring'],
+        menuKey: 'space-monitoring',
+        description: 'View space monitoring',
     },
 
     // Machine List
@@ -621,13 +621,22 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Decline task review',
     },
-    // Space Monitoring
+    // Floor Map
     {
-        slug: 'space_monitoring:view',
-        subject: 'space_monitoring',
+        slug: 'floor_map:view',
+        subject: 'floor_map',
         action: 'view',
-        routes: [],
-        description: 'View space monitoring',
+        routes: ['/admin/floor-map/status'],
+        menuKey: 'floor-map-status',
+        description: 'View floor map',
+    },
+    {
+        slug: 'floor_map:update',
+        subject: 'floor_map',
+        action: 'update',
+        routes: ['/admin/floor-map'],
+        menuKey: 'floor-map-config',
+        description: 'Update floor map',
     },
     // Standard Step
     {
@@ -665,160 +674,6 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         action: 'restore',
         routes: [],
         description: 'Restore user',
-    },
-
-    // Incident Report (Maintenance)
-    {
-        slug: 'incident_report:view',
-        subject: 'incident_report',
-        action: 'view',
-        routes: ['/maintenance/incidents'],
-        menuKey: 'incident-reports',
-        description: 'View incident reports',
-    },
-    {
-        slug: 'incident_report:create',
-        subject: 'incident_report',
-        action: 'create',
-        routes: [],
-        description: 'Create incident report',
-    },
-    {
-        slug: 'incident_report:update',
-        subject: 'incident_report',
-        action: 'update',
-        routes: [],
-        description: 'Update incident report',
-    },
-    {
-        slug: 'incident_report:delete',
-        subject: 'incident_report',
-        action: 'delete',
-        routes: [],
-        description: 'Delete incident report',
-    },
-    // Error Group
-    {
-        slug: 'error_group:view',
-        subject: 'error_group',
-        action: 'view',
-        routes: ['/admin/categories/errorGroup'],
-        menuKey: 'errorGroup',
-        description: 'View error groups',
-    },
-    {
-        slug: 'error_group:create',
-        subject: 'error_group',
-        action: 'create',
-        routes: [],
-        description: 'Create error group',
-    },
-    {
-        slug: 'error_group:update',
-        subject: 'error_group',
-        action: 'update',
-        routes: [],
-        description: 'Update error group',
-    },
-    {
-        slug: 'error_group:delete',
-        subject: 'error_group',
-        action: 'delete',
-        routes: [],
-        description: 'Delete error group',
-    },
-
-    // Error Detail
-    {
-        slug: 'error_detail:view',
-        subject: 'error_detail',
-        action: 'view',
-        routes: ['/admin/categories/errorDetail'],
-        menuKey: 'errorDetail',
-        description: 'View error details',
-    },
-    {
-        slug: 'error_detail:create',
-        subject: 'error_detail',
-        action: 'create',
-        routes: [],
-        description: 'Create error detail',
-    },
-    {
-        slug: 'error_detail:update',
-        subject: 'error_detail',
-        action: 'update',
-        routes: [],
-        description: 'Update error detail',
-    },
-    {
-        slug: 'error_detail:delete',
-        subject: 'error_detail',
-        action: 'delete',
-        routes: [],
-        description: 'Delete error detail',
-    },
-
-    // Production Plan
-    {
-        slug: 'production_plan:view',
-        subject: 'production_plan',
-        action: 'view',
-        routes: ['/admin/categories/productionPlan'],
-        menuKey: 'productionPlan',
-        description: 'View production plans',
-    },
-    {
-        slug: 'production_plan:create',
-        subject: 'production_plan',
-        action: 'create',
-        routes: [],
-        description: 'Create production plan',
-    },
-    {
-        slug: 'production_plan:update',
-        subject: 'production_plan',
-        action: 'update',
-        routes: [],
-        description: 'Update production plan',
-    },
-    {
-        slug: 'production_plan:delete',
-        subject: 'production_plan',
-        action: 'delete',
-        routes: [],
-        description: 'Delete production plan',
-    },
-
-    // Mold Code
-    {
-        slug: 'mold_code:view',
-        subject: 'mold_code',
-        action: 'view',
-        routes: ['/admin/categories/moldCode'],
-        menuKey: 'moldCode',
-        description: 'View mold codes',
-    },
-    {
-        slug: 'mold_code:create',
-        subject: 'mold_code',
-        action: 'create',
-        routes: [],
-        description: 'Create mold code',
-    },
-    {
-        slug: 'mold_code:update',
-        subject: 'mold_code',
-        action: 'update',
-        routes: [],
-        description: 'Update mold code',
-    },
-    {
-        slug: 'mold_code:delete',
-        subject: 'mold_code',
-        action: 'delete',
-        routes: [],
-        description: 'Delete mold code',
     },
 ];
 

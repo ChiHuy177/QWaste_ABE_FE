@@ -38,7 +38,7 @@ const DetailPanelRouterComponent: React.FC<DetailPanelRouterProps> = ({
 
     if (!selectedNode) {
         return (
-            <Card bordered={false}>
+            <Card variant="borderless">
                 <Text type="secondary">{t('orderManagement.form.plan.selectNodeHint')}</Text>
             </Card>
         );

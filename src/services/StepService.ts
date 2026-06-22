@@ -2,14 +2,14 @@ import { StepDTO, CreateStepRequest, UpdateStepRequest } from '@/types/Step';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
-export class StepService {
+export class StandardStepService {
     /**
      * GET All Steps
      */
     static async getAllSteps(): Promise<StepDTO[]> {
         const response = await NetworkService.requestJson<StepDTO[]>({
             method: 'GET',
-            url: ENDPOINTS.STEPS.BASE,
+            url: ENDPOINTS.STANDARD_STEPS.BASE,
         });
         return response.result as StepDTO[];
     }
@@ -20,7 +20,7 @@ export class StepService {
     static async createStep(data: CreateStepRequest): Promise<StepDTO> {
         const response = await NetworkService.requestJson<StepDTO>({
             method: 'POST',
-            url: ENDPOINTS.STEPS.BASE,
+            url: ENDPOINTS.STANDARD_STEPS.BASE,
             data,
         });
         return response.result as StepDTO;
@@ -32,7 +32,7 @@ export class StepService {
     static async updateStep(data: UpdateStepRequest): Promise<StepDTO> {
         const response = await NetworkService.requestJson<StepDTO>({
             method: 'PUT',
-            url: ENDPOINTS.STEPS.BASE,
+            url: ENDPOINTS.STANDARD_STEPS.BASE,
             data,
         });
         return response.result as StepDTO;
@@ -44,7 +44,7 @@ export class StepService {
     static async getStepById(id: number): Promise<StepDTO> {
         const response = await NetworkService.requestJson<StepDTO>({
             method: 'GET',
-            url: ENDPOINTS.STEPS.DETAIL(id),
+            url: ENDPOINTS.STANDARD_STEPS.DETAIL(id),
         });
         return response.result as StepDTO;
     }
@@ -55,7 +55,7 @@ export class StepService {
     static async deleteStep(id: number): Promise<void> {
         await NetworkService.requestJson<void>({
             method: 'DELETE',
-            url: ENDPOINTS.STEPS.DETAIL(id),
+            url: ENDPOINTS.STANDARD_STEPS.DETAIL(id),
         });
     }
 }

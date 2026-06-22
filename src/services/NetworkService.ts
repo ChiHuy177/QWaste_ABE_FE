@@ -7,13 +7,35 @@ interface RequestOptions {
     data?: any;
     headers?: any;
     cancelToken?: string;
+    skipAuthHandling?: boolean;
 }
 
 const pendingRequests = new Map<string, AbortController>();
 
+export interface DownloadResult {
+    blob: Blob;
+    fileName: string | null;
+}
+
+const parseFileNameFromContentDisposition = (contentDisposition?: string): string | null => {
+    if (!contentDisposition) return null;
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match) {
+        try {
+            return decodeURIComponent(utf8Match[1].trim());
+        } catch {
+            // fall through to plain filename
+        }
+    }
+
+    const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+    return plainMatch ? plainMatch[1].trim() : null;
+};
+
 export class NetworkService {
     static async requestJson<T = any>(opts: RequestOptions): Promise<ApiResponse<T>> {
-        const { method, url, data, headers, cancelToken } = opts;
+        const { method, url, data, headers, cancelToken, skipAuthHandling } = opts;
 
         let abortSignal;
 
@@ -31,10 +53,11 @@ export class NetworkService {
             url,
             headers: {
                 Accept: 'application/json',
-                'Content-Type': 'application/json; charset=UTF-8',
+                'Content-Type': 'application/json',
                 ...headers,
             },
             signal: abortSignal,
+            skipAuthHandling,
         };
 
         if (method === 'GET' || method === 'DELETE') {
@@ -54,7 +77,12 @@ export class NetworkService {
     }
 
     static async requestBlob(opts: RequestOptions): Promise<Blob> {
-        const { method, url, data, headers, cancelToken } = opts;
+        const { blob } = await NetworkService.requestDownload(opts);
+        return blob;
+    }
+
+    static async requestDownload(opts: RequestOptions): Promise<DownloadResult> {
+        const { method, url, data, headers, cancelToken, skipAuthHandling } = opts;
 
         let abortSignal;
 
@@ -71,11 +99,12 @@ export class NetworkService {
             method,
             url,
             headers: {
-                Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                // Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 ...headers,
             },
             responseType: 'blob',
             signal: abortSignal,
+            skipAuthHandling,
         };
 
         if (method === 'GET' || method === 'DELETE') {
@@ -86,7 +115,12 @@ export class NetworkService {
 
         try {
             const response = await apiClient(config);
-            return response.data;
+            return {
+                blob: response.data,
+                fileName: parseFileNameFromContentDisposition(
+                    response.headers?.['content-disposition']
+                ),
+            };
         } finally {
             if (cancelToken) {
                 pendingRequests.delete(cancelToken);

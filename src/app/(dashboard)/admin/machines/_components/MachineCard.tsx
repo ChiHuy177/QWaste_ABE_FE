@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Flex, Typography, theme } from 'antd';
+import { Card, Flex, Typography, Tag, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { theme } from 'antd';
 import { MachineOverview } from '@/types/Machine';
 
 const { Text } = Typography;
@@ -13,277 +14,531 @@ interface MachineCardProps {
 }
 
 const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
-    const { token } = theme.useToken();
     const { t } = useTranslation();
+    const { token } = theme.useToken();
 
-    const getStatusStyle = (status: string) => {
+    const getStatusConfig = (status: string) => {
         switch (status) {
             case 'RUNTIME':
                 return {
-                    background: token.colorSuccess,
-                    shadow: `0 4px 12px ${token.colorSuccessBorder}`,
+                    color: token.colorSuccess,
+                    text: t('machineManagement.statuses.running'),
+                    badge: 'success',
                 };
             case 'IDLE':
-            case 'TEMPORARY_STOP':
                 return {
-                    background: token.colorWarning,
-                    shadow: `0 4px 12px ${token.colorWarningBorder}`,
+                    color: token.colorWarning,
+                    text: t('machineManagement.statuses.idle'),
+                    badge: 'warning',
                 };
             case 'ERROR':
-            case 'WARNING':
                 return {
-                    background: token.colorError,
-                    shadow: `0 4px 12px ${token.colorErrorBorder}`,
+                    color: token.colorError,
+                    text: t('machineManagement.statuses.error'),
+                    badge: 'error',
                 };
-            case 'OPEN_DOOR':
+            case 'OFFLINE':
                 return {
-                    background: token.colorInfo,
-                    shadow: `0 4px 12px ${token.colorInfoBorder}`,
+                    color: token.colorTextDisabled,
+                    text: t('machineManagement.statuses.offline'),
+                    badge: 'default',
                 };
             case 'COMPLETE':
                 return {
-                    background: token.colorSuccess,
-                    shadow: `0 4px 12px ${token.colorSuccessBorder}`,
+                    color: token.colorSuccess,
+                    text: t('machineManagement.statuses.complete'),
+                    badge: 'success',
+                };
+            case 'TEMPORARY_STOP':
+                return {
+                    color: token.colorWarning,
+                    text: t('machineManagement.statuses.temporaryStop'),
+                    badge: 'warning',
+                };
+            case 'OPEN_DOOR':
+                return {
+                    color: token.colorInfo,
+                    text: t('machineManagement.statuses.openDoor'),
+                    badge: 'processing',
+                };
+            case 'WARNING':
+                return {
+                    color: '#faad14',
+                    text: t('machineManagement.statuses.warning'),
+                    badge: 'warning',
                 };
             default:
                 return {
-                    background: token.colorTextDisabled,
-                    shadow: `0 4px 12px ${token.colorBorder}`,
+                    color: token.colorTextDisabled,
+                    text: t('machineManagement.statuses.offline'),
+                    badge: 'default',
                 };
         }
     };
 
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'RUNTIME': return t('machineManagement.statuses.running');
-            case 'IDLE': return t('machineManagement.statuses.idle');
-            case 'ERROR': return t('machineManagement.statuses.error');
-            case 'OFFLINE': return t('machineManagement.statuses.offline');
-            case 'COMPLETE': return t('machineManagement.statuses.complete');
-            case 'TEMPORARY_STOP': return t('machineManagement.statuses.temporaryStop');
-            case 'OPEN_DOOR': return t('machineManagement.statuses.openDoor');
-            case 'WARNING': return t('machineManagement.statuses.warning');
-            default: return t('machineManagement.statuses.offline');
-        }
-    };
-
-    const formatTime = (seconds: number): string => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        return m > 0 ? `${h}h ${m}m` : `${h}h`;
-    };
-
-    const getRuntimeByStatus = (status: string): number => {
-        if (!machine.runtimeByStatus) return 0;
-        return (machine.runtimeByStatus as Record<string, number>)[status] || 0;
-    };
-
-    const onlineSeconds = Object.entries(machine.runtimeByStatus ?? {}).reduce(
-        (sum, [status, val]) => (status !== 'OFFLINE' ? sum + (val as number) : sum),
-        0
-    );
-    const offlineSeconds = getRuntimeByStatus('OFFLINE');
-
     const currentStatus = machine.currentStatus || 'OFFLINE';
-    const statusStyle = getStatusStyle(currentStatus);
-    const textColor = token.colorTextLightSolid;
+    const statusConfig = getStatusConfig(currentStatus);
 
-    const statRow = (label: string, value: string | number, bg?: string) => (
-        <Flex
-            align="center"
-            justify="space-between"
-            style={{
-                background: bg ?? 'rgba(255, 255, 255, 0.18)',
-                padding: '4px 8px',
-                borderRadius: 6,
-                backdropFilter: 'blur(10px)',
-            }}
-        >
-            <Text style={{ fontSize: 10, color: textColor, fontWeight: 500 }}>{label}</Text>
-            <Text style={{ fontSize: 11, color: textColor, fontWeight: 700 }}>{value}</Text>
-        </Flex>
-    );
+    const calculateTimeBreakdown = () => {
+        if (!machine.runtimeByStatus) {
+            return {
+                runtime: 0,
+                idleTime: 0,
+                errorTime: 0,
+                offlineSeconds: 0,
+            };
+        }
+
+        const runtimeSeconds = machine.runtimeByStatus.RUNTIME || 0;
+        const idleSeconds = machine.runtimeByStatus.IDLE || 0;
+        const errorSeconds = 0; // API doesn't provide ERROR status
+        const offlineSeconds = machine.runtimeByStatus.OFFLINE || 0;
+
+        const totalActiveSeconds = runtimeSeconds + idleSeconds + errorSeconds;
+
+        if (totalActiveSeconds === 0) {
+            return {
+                runtime: 0,
+                idleTime: 0,
+                errorTime: 0,
+                offlineSeconds,
+            };
+        }
+
+        return {
+            runtime: Math.round((runtimeSeconds / totalActiveSeconds) * 100),
+            idleTime: Math.round((idleSeconds / totalActiveSeconds) * 100),
+            errorTime: Math.round((errorSeconds / totalActiveSeconds) * 100),
+            offlineSeconds,
+        };
+    };
+
+    const timeBreakdown = calculateTimeBreakdown();
+
+    const calculateTotalMachineTime = () => {
+        if (!machine.runtimeByStatus) {
+            return { hours: 0, minutes: 0, seconds: 0 };
+        }
+
+        const totalRuntimeSeconds = machine.runtimeByStatus.RUNTIME || 0;
+
+        const hours = Math.floor(totalRuntimeSeconds / 3600);
+        const minutes = Math.floor((totalRuntimeSeconds % 3600) / 60);
+        const seconds = totalRuntimeSeconds % 60;
+
+        return { hours, minutes, seconds };
+    };
+
+    const machineTime = calculateTotalMachineTime();
+
+    const formatTime = (hours: number, minutes: number, seconds: number) => {
+        return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(
+            seconds
+        ).padStart(2, '0')}s`;
+    };
+
+    const formatOfflineTime = (totalSeconds: number) => {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return formatTime(hours, minutes, seconds);
+    };
 
     return (
-        <div
-            onClick={() => onCardClick?.(machine)}
+        <Card
+            hoverable
+            variant="borderless"
             style={{
-                height: '100%',
-                background: statusStyle.background,
                 borderRadius: 12,
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: statusStyle.shadow,
-                position: 'relative',
-                overflow: 'hidden',
+                boxShadow: token.boxShadowSecondary,
+                height: '100%',
             }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-                e.currentTarget.style.boxShadow = token.boxShadow;
+            styles={{
+                body: {
+                    padding: 16,
+                },
             }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = statusStyle.shadow;
-            }}
+            onClick={() => onCardClick?.(machine)}
         >
-            {/* Decorative corner accent */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: 44,
-                    height: 44,
-                    background: 'rgba(255, 255, 255, 0.12)',
-                    borderBottomLeftRadius: '100%',
-                    zIndex: 1,
-                }}
-            />
-
-            {/* Machine image */}
-            {/* <div
-                style={{
-                    width: '100%',
-                    height: 160,
-                    background: 'rgba(0, 0, 0, 0.15)',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    position: 'relative',
-                }}
-            >
-                <img
-                    src={machine.machineImage || '/images/machine-placeholder.png'}
-                    alt={machine.machineCode}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                    }}
-                />
-
-                <div
-                    style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)',
-                        padding: '20px 10px 8px',
-                        zIndex: 2,
-                    }}
-                >
-                    <Text
-                        strong
-                        style={{
-                            fontSize: 13,
-                            color: '#fff',
-                            display: 'block',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                        }}
-                    >
-                        {machine.machineName}
-                    </Text>
-                </div>
-            </div> */}
-
-            {/* Card body */}
+            {/* Card Header */}
             <Flex
-                vertical
-                gap={6}
+                justify="space-between"
+                align="flex-start"
+                gap={8}
                 style={{
-                    padding: '12px 12px 14px',
-                    flex: 1,
+                    marginBottom: 12,
                 }}
             >
-                {/* Status badge + machine name */}
-                <Flex justify="space-between" align="flex-start" gap={8}>
-                    <Flex vertical gap={2} style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <Tooltip title={machine.machineName} placement="topLeft">
                         <Text
                             strong
                             style={{
-                                fontSize: 14,
-                                color: textColor,
-                                lineHeight: 1.2,
-                                fontWeight: 700,
+                                fontSize: 15,
+                                color: token.colorPrimary,
+                                display: 'block',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
-                                textShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                                cursor: 'help',
                             }}
                         >
                             {machine.machineName}
                         </Text>
+                    </Tooltip>
+                    {machine.topic && (
                         <Text
                             style={{
-                                fontSize: 11,
-                                color: textColor,
-                                opacity: 0.8,
+                                fontSize: 12,
+                                color: token.colorTextSecondary,
+                                display: 'block',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
+                                marginTop: 2,
                             }}
                         >
-                            {machine.machineCode}
+                            {machine.topic}
                         </Text>
-                    </Flex>
-                    <div
-                        style={{
-                            background: 'rgba(255,255,255,0.22)',
-                            borderRadius: 6,
-                            padding: '2px 8px',
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Text style={{ fontSize: 10, color: textColor, fontWeight: 700 }}>
-                            {getStatusLabel(currentStatus)}
-                        </Text>
-                    </div>
-                </Flex>
+                    )}
+                </div>
+                <Tag
+                    color={statusConfig.color}
+                    style={{
+                        flexShrink: 0,
+                        margin: 0,
+                    }}
+                >
+                    <Text style={{ fontSize: 15, color: '#fff' }}>{statusConfig.text}</Text>
+                </Tag>
+            </Flex>
 
-                {/* Topic */}
-                {machine.topic && (
+            {/* Machine Image */}
+            <div
+                style={{
+                    width: '100%',
+                    height: 120,
+                    background: token.colorBgContainer,
+                    borderRadius: 8,
+                    marginBottom: 12,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <img
+                    src={machine.machineImage || '/images/machine-placeholder.png'}
+                    alt={machine.machineName}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                    }}
+                />
+            </div>
+
+            {/* Machine Info */}
+
+            {/*
+            <Space
+                orientation="vertical"
+                size={8}
+                style={{
+                    width: '100%',
+                    marginBottom: 12,
+                }}
+            >
+                <Flex
+                    align="center"
+                    gap={8}
+                    style={{
+                        marginTop: 10,
+                        padding: '8px 4px',
+                        background: '#8C8C8C10',
+                        borderRadius: 6,
+                    }}
+                >
+                    <UserOutlined style={{ fontSize: 14, color: token.colorPrimary }} />
                     <Text
                         style={{
-                            fontSize: 10,
-                            color: textColor,
-                            opacity: 0.7,
+                            fontSize: 13,
+                            fontWeight: 500,
+
+                            color: token.colorPrimary,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
                         }}
                     >
-                        {machine.topic}
+                        {machine.operatorName || t('machineManagement.emptyStates.noOperator')}
                     </Text>
-                )}
-
-                {/* Divider */}
-                <div
-                    style={{
-                        width: '100%',
-                        height: 1,
-                        background: 'rgba(255,255,255,0.2)',
-                        margin: '2px 0',
-                    }}
-                />
-
-                {/* Stats */}
-                <Flex vertical gap={4}>
-                    {statRow(t('factoryOverview.machine.online', 'Online'), formatTime(onlineSeconds))}
-                    {statRow(t('factoryOverview.machine.offline', 'Offline'), formatTime(offlineSeconds))}
-                    {statRow(t('factoryOverview.machine.operators', 'Operators'), machine.operatorCount ?? 0)}
-                    {statRow(t('factoryOverview.machine.production', 'Production'), machine.totalProductions ?? 0)}
                 </Flex>
+                <Flex
+                    align="center"
+                    gap={8}
+                    style={{
+                        marginTop: 10,
+                        padding: '8px 4px',
+                        background: '#8C8C8C10',
+                        borderRadius: 6,
+                    }}
+                >
+                    <Ruler size={14} color={token.colorPrimary} />
+                    <Text
+                        style={{
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: token.colorPrimary,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {machine.taskName || 'Task...'}
+                    </Text>
+                </Flex>
+            </Space>
+            */}
+
+            {/*
+            <Flex
+                justify="space-between"
+                align="center"
+                style={{
+                    padding: '8px 12px',
+                    background: 'rgba(82, 196, 26, 0.05)',
+                    borderRadius: 6,
+                    marginBottom: 12,
+                    border: '1px solid rgba(82, 196, 26, 0.2)',
+                }}
+            >
+                <Text style={{ fontSize: 12, color: token.colorPrimary, fontWeight: 500 }}>
+                    {t('machineManagement.stats.production')}
+                </Text>
+                <Text
+                    strong
+                    style={{ fontSize: 16, color: token.colorPrimary, fontFamily: 'monospace' }}
+                >
+                    {machine.productionCounter?.toLocaleString() || '0'}
+                </Text>
             </Flex>
-        </div>
+            */}
+
+            {/* Machine Time Section */}
+            <Card
+                size="small"
+                style={{
+                    marginBottom: 12,
+                    background: token.colorFillQuaternary,
+                    borderRadius: 8,
+                }}
+                styles={{
+                    body: { padding: 12 },
+                }}
+                variant="borderless"
+            >
+                <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
+                    <Text
+                        strong
+                        style={{
+                            fontSize: 12,
+                            color: token.colorPrimary,
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                        }}
+                    >
+                        {t('machineManagement.stats.machineTime')}
+                    </Text>
+                    <Text
+                        strong
+                        style={{
+                            fontSize: 14,
+                            color: token.colorPrimary,
+                        }}
+                    >
+                        {formatTime(machineTime.hours, machineTime.minutes, machineTime.seconds)}
+                    </Text>
+                </Flex>
+
+                {/* Multi-color Progress Bar - Không bao gồm OFFLINE */}
+                <div style={{ marginBottom: 10 }}>
+                    <Flex
+                        style={{
+                            width: '100%',
+                            height: 8,
+                            background: token.colorBorderSecondary,
+                            borderRadius: 4,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: `${timeBreakdown.runtime}%`,
+                                height: '100%',
+                                background: token.colorSuccess,
+                                transition: 'width 0.3s ease',
+                            }}
+                        />
+                        <div
+                            style={{
+                                width: `${timeBreakdown.idleTime}%`,
+                                height: '100%',
+                                background: token.colorWarning,
+                                transition: 'width 0.3s ease',
+                            }}
+                        />
+                        <div
+                            style={{
+                                width: `${timeBreakdown.errorTime}%`,
+                                height: '100%',
+                                background: token.colorError,
+                                transition: 'width 0.3s ease',
+                            }}
+                        />
+                    </Flex>
+                </div>
+
+                {/* Time Legend */}
+                <div>
+                    {/* Active Status Grid - Runtime, Idle, Error */}
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+                            gap: 10,
+                            padding: 4,
+                        }}
+                    >
+                        {[
+                            {
+                                color: token.colorSuccess,
+                                label: t('machineManagement.statuses.running'),
+                                value: timeBreakdown.runtime,
+                            },
+                            {
+                                color: token.colorWarning,
+                                label: t('machineManagement.statuses.idle'),
+                                value: timeBreakdown.idleTime,
+                            },
+                            {
+                                color: token.colorError,
+                                label: t('machineManagement.statuses.error'),
+                                value: timeBreakdown.errorTime,
+                            },
+                        ].map((item, index) => (
+                            <Flex key={index} align="center" gap={4} justify="space-between">
+                                <Flex align="center" gap={4} style={{ minWidth: 0, flex: 1 }}>
+                                    <div
+                                        style={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            background: item.color,
+                                            flexShrink: 0,
+                                        }}
+                                    />
+                                    <Text
+                                        style={{
+                                            fontSize: 10,
+                                            color: token.colorTextSecondary,
+                                            fontWeight: 500,
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        {item.label}
+                                    </Text>
+                                </Flex>
+                                <Text
+                                    strong
+                                    style={{
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        flexShrink: 0,
+                                        padding: '2px 5px',
+                                        background: `${item.color}20`,
+                                        color: item.color,
+                                        borderRadius: 4,
+                                        minWidth: '32px',
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    {item.value}%
+                                </Text>
+                            </Flex>
+                        ))}
+                    </div>
+
+                    {/* Offline Row - Full Width */}
+                    <Flex
+                        align="center"
+                        gap={8}
+                        justify="space-between"
+                        style={{
+                            marginTop: 10,
+                            padding: '8px 4px',
+                            background: token.colorFillQuaternary,
+                            borderRadius: 6,
+                        }}
+                    >
+                        <Flex align="center" gap={6}>
+                            <div
+                                style={{
+                                    width: 10,
+                                    height: 10,
+                                    borderRadius: '50%',
+                                    background: token.colorTextDisabled,
+                                    flexShrink: 0,
+                                }}
+                            />
+                            <Text
+                                style={{
+                                    fontSize: 11,
+                                    color: token.colorTextSecondary,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                {t('machineManagement.statuses.offline')}
+                            </Text>
+                        </Flex>
+                        <Text
+                            strong
+                            style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                background: token.colorFillQuaternary,
+                                color: token.colorTextDisabled,
+                                borderRadius: 4,
+                            }}
+                        >
+                            {formatOfflineTime(timeBreakdown.offlineSeconds)}
+                        </Text>
+                    </Flex>
+                </div>
+            </Card>
+
+            {/* Power Consumption */}
+            <Flex
+                justify="space-between"
+                align="center"
+                style={{
+                    padding: '10px 12px',
+                    background: 'var(--color-power-bg)',
+                    borderRadius: 8,
+                    borderTop: '2px solid var(--color-power)',
+                }}
+            >
+                <Text style={{ fontSize: 11, color: token.colorPrimary, fontWeight: 500 }}>
+                    {t('machineManagement.stats.powerConsumption')}
+                </Text>
+                <Text strong style={{ fontSize: 16, color: token.colorPrimary }}>
+                    {machine.currentEnergyConsumption} kW
+                </Text>
+            </Flex>
+        </Card>
     );
 };
 

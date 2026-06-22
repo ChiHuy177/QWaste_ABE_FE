@@ -1,5 +1,6 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
@@ -23,12 +24,8 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { Machine } from '@/types/Machine';
 import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
 import { MachineService } from '@/services/MachineService';
-import {
-    DemoMachineService,
-    DemoSpaceService,
-    USE_MOCK_FACTORY_OVERVIEW,
-} from '@/mockData/admin/factory';
 import { EntityFormModal } from '@/components/shared/FormModal';
+import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
 import { getMachineListFormFields } from './_components/machineListFormConfig';
 import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
@@ -40,11 +37,12 @@ import {
     mapSpaceTreeToTreeSelect,
     SpaceTreeSelect,
 } from '@/components/shared/filters/SpaceTreeSelect';
-import { SpaceService } from '@/services/SpaceService';
+import { SpaceService } from '@/services';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import MachineFilterInfo from '@/app/(dashboard)/admin/machines/_components/MachineFilterInfo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import { useUploadThing } from '@/utils/uploadthing';
 
 const { useBreakpoint } = Grid;
 const { Title } = Typography;
@@ -59,11 +57,10 @@ const machineQueryKeys = {
         size: number,
         sort: string | string[],
         search: string,
-        code: string | undefined,
         name: string | undefined,
         prop: string | undefined,
         topic: string | undefined
-    ) => ['machines', 'list', spaceId, page, size, sort, search, code, name, prop, topic] as const,
+    ) => ['machines', 'list', spaceId, page, size, sort, search, name, prop, topic] as const,
     detail: (machineId: string) => ['machines', 'detail', machineId] as const,
 };
 
@@ -72,20 +69,24 @@ const spaceQueryKeys = {
     tree: ['spaces', 'tree'] as const,
 };
 
-const activeMachineService = USE_MOCK_FACTORY_OVERVIEW ? DemoMachineService : MachineService;
-const activeSpaceService = USE_MOCK_FACTORY_OVERVIEW ? DemoSpaceService : SpaceService;
+const isLocalFile = (value: unknown): value is File => {
+    return typeof File !== 'undefined' && value instanceof File;
+};
 
-const MachineListPage = () => {
+const MachineListPageContent = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
         data: any | null;
     }>({ open: false, mode: 'create', data: null });
     const { t } = useTranslation();
+    const searchParams = useSearchParams();
+    const deepLinkConsumedRef = useRef(false);
     const queryClient = useQueryClient();
     const { checkPermission, checkPermissionSilent } = usePermissionCheck();
     const ability = useAbility();
     const { handleError } = useApiErrorHandler();
+    const { startUpload } = useUploadThing('imageUploader');
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormLoading, setIsFormLoading] = useState(false);
     const [confirmModalState, setConfirmModalState] = useState<{
@@ -114,12 +115,10 @@ const MachineListPage = () => {
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
 
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [tempMachineCode, setTempMachineCode] = useState('');
     const [tempMachineName, setTempMachineName] = useState('');
     const [tempPropertyCode, setTempPropertyCode] = useState('');
     const [tempMqttTopic, setTempMqttTopic] = useState('');
 
-    const [machineCodeFilter, setMachineCodeFilter] = useState<string | undefined>(undefined);
     const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
     const [propertyCodeFilter, setPropertyCodeFilter] = useState<string | undefined>(undefined);
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
@@ -164,18 +163,16 @@ const MachineListPage = () => {
             pageSize,
             sort,
             debouncedSearch,
-            machineCodeFilter,
             machineNameFilter,
             propertyCodeFilter,
             mqttTopicFilter
         ),
-        queryFn: async () => activeMachineService.getMachinesPaginated({
+        queryFn: async () => MachineService.getMachinesPaginated({
             page,
             size: pageSize,
             sort,
             search: debouncedSearch,
             spaceId: selectedSpaceId,
-            machineCode: machineCodeFilter,
             machineName: machineNameFilter,
             propertyCode: propertyCodeFilter,
             topic: mqttTopicFilter,
@@ -209,7 +206,7 @@ const MachineListPage = () => {
                 mode: 'edit',
                 data: {
                     ...machine,
-                    spaceId: machine.space.spaceId,
+                    spaceId: machine.space?.spaceId ?? undefined,
                 },
             });
             setIsFormLoading(true);
@@ -217,12 +214,15 @@ const MachineListPage = () => {
             try {
                 const detailData = await queryClient.fetchQuery({
                     queryKey: machineQueryKeys.detail(machine.machineId),
-                    queryFn: () => activeMachineService.getMachineById(machine.machineId),
+                    queryFn: () => MachineService.getMachineById(machine.machineId),
                 });
                 setModalState({
                     open: true,
                     mode: 'edit',
-                    data: detailData,
+                    data: {
+                        ...detailData,
+                        spaceId: detailData.space?.spaceId ?? undefined,
+                    },
                 });
             } catch (error: any) {
                 console.error('Error fetching machine details:', error);
@@ -236,7 +236,7 @@ const MachineListPage = () => {
     );
 
     const { mutateAsync: createMachine } = useMutation({
-        mutationFn: (data: MachineFormData) => activeMachineService.createMachine(data),
+        mutationFn: (data: MachineFormData) => MachineService.createMachine(data),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: machineQueryKeys.lists,
@@ -245,7 +245,7 @@ const MachineListPage = () => {
     });
 
     const { mutateAsync: updateMachine } = useMutation({
-        mutationFn: (data: MachineUpdateFormData) => activeMachineService.updateMachine(data),
+        mutationFn: (data: MachineUpdateFormData) => MachineService.updateMachine(data),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({
                 queryKey: machineQueryKeys.lists,
@@ -257,7 +257,7 @@ const MachineListPage = () => {
     });
 
     const { mutateAsync: deleteMachine } = useMutation({
-        mutationFn: (machineId: string) => activeMachineService.deleteMachine(machineId),
+        mutationFn: (machineId: string) => MachineService.deleteMachine(machineId),
         onSuccess: (_data, machineId) => {
             queryClient.invalidateQueries({
                 queryKey: machineQueryKeys.lists,
@@ -269,7 +269,7 @@ const MachineListPage = () => {
     });
 
     const { mutateAsync: restoreMachine } = useMutation({
-        mutationFn: (machineId: string) => activeMachineService.restoreMachine(machineId),
+        mutationFn: (machineId: string) => MachineService.restoreMachine(machineId),
         onSuccess: (_data, machineId) => {
             queryClient.invalidateQueries({
                 queryKey: machineQueryKeys.lists,
@@ -280,14 +280,14 @@ const MachineListPage = () => {
         },
     });
 
-    const levelThreeSpacesQuery = useQuery({
-        queryKey: spaceQueryKeys.levelWithChildren(3),
-        queryFn: () => activeSpaceService.getSpacesByLevelWithChildren(3),
+    const levelOneSpacesQuery = useQuery({
+        queryKey: spaceQueryKeys.levelWithChildren(1),
+        queryFn: () => SpaceService.getSpacesByLevelWithChildren(1),
     });
 
     const spacesTreeQuery = useQuery({
         queryKey: spaceQueryKeys.tree,
-        queryFn: () => activeSpaceService.getAllSpacesTree(),
+        queryFn: () => SpaceService.getAllSpacesTree(),
     });
 
     const spacesTree = spacesTreeQuery.data ?? [];
@@ -300,11 +300,32 @@ const MachineListPage = () => {
     useEffect(() => {
         if (selectedSpaceId !== undefined) return;
 
-        const firstSpace = levelThreeSpacesQuery.data?.[0];
+        const firstSpace = levelOneSpacesQuery.data?.[0];
         if (firstSpace) {
             setSelectedSpaceId(firstSpace.spaceId);
         }
-    }, [selectedSpaceId, levelThreeSpacesQuery.data]);
+    }, [selectedSpaceId, levelOneSpacesQuery.data]);
+
+    // Deep-link from floor-map: /admin/categories/machineList?createForSpaceId=123 filters the
+    // list to that space and opens the create modal with the space preselected. The param is
+    // consumed once (ref guard + URL cleanup) so refresh/back does not reopen the modal.
+    useEffect(() => {
+        if (deepLinkConsumedRef.current) return;
+
+        const createForSpaceIdParam = searchParams.get('createForSpaceId');
+        if (!createForSpaceIdParam) return;
+
+        deepLinkConsumedRef.current = true;
+        window.history.replaceState(null, '', window.location.pathname);
+
+        const createForSpaceId = Number(createForSpaceIdParam);
+        if (Number.isNaN(createForSpaceId) || !checkPermissionSilent('create', 'machine')) {
+            return;
+        }
+
+        setSelectedSpaceId(createForSpaceId);
+        setModalState({ open: true, mode: 'create', data: { spaceId: createForSpaceId } });
+    }, [checkPermissionSilent, searchParams]);
 
     useEffect(() => {
         if (machinesQuery.error) {
@@ -313,12 +334,12 @@ const MachineListPage = () => {
     }, [machinesQuery.error, handleError]);
 
     useEffect(() => {
-        if (levelThreeSpacesQuery.error || spacesTreeQuery.error) {
-            handleError(levelThreeSpacesQuery.error || spacesTreeQuery.error, {
+        if (levelOneSpacesQuery.error || spacesTreeQuery.error) {
+            handleError(levelOneSpacesQuery.error || spacesTreeQuery.error, {
                 fallbackKey: 'spaceManagement.fetchError',
             });
         }
-    }, [levelThreeSpacesQuery.error, spacesTreeQuery.error, handleError]);
+    }, [levelOneSpacesQuery.error, spacesTreeQuery.error, handleError]);
 
     const handleDeleteMachine = useCallback(
         (machine: Machine) => {
@@ -347,10 +368,6 @@ const MachineListPage = () => {
 
     const handleRestoreMachine = useCallback(
         async (machine: Machine) => {
-            if (!checkPermission('update', 'machine')) {
-                return;
-            }
-
             try {
                 const machineId = machine.machineId;
                 await restoreMachine(machineId);
@@ -360,7 +377,7 @@ const MachineListPage = () => {
                 handleError(error, { fallbackKey: 'machineListManagement.restoreError' });
             }
         },
-        [t, checkPermission, restoreMachine, handleError]
+        [t, restoreMachine, handleError]
     );
 
     const handleViewMachine = useCallback(
@@ -369,7 +386,7 @@ const MachineListPage = () => {
             try {
                 const detailData = await queryClient.fetchQuery({
                     queryKey: machineQueryKeys.detail(machine.machineId),
-                    queryFn: () => activeMachineService.getMachineById(machine.machineId),
+                    queryFn: () => MachineService.getMachineById(machine.machineId),
                 });
                 setViewModalState((prev) => ({ ...prev, data: detailData }));
             } catch (error) {
@@ -415,14 +432,6 @@ const MachineListPage = () => {
         setPage(0);
     };
 
-    const handleCreateMachine = useCallback(() => {
-        if (!checkPermission('create', 'machine')) {
-            return;
-        }
-
-        setModalState({ open: true, mode: 'create', data: null });
-    }, [checkPermission]);
-
     const handleSubmit = async (data: MachineFormData, mode: 'create' | 'edit') => {
         setConfirmModalState({
             open: true,
@@ -432,12 +441,33 @@ const MachineListPage = () => {
         throw new Error('CONFIRMATION_PENDING');
     };
 
+    const uploadMachineImageIfNeeded = async (value: unknown): Promise<string> => {
+        if (!value) return '';
+        if (!isLocalFile(value)) return String(value);
+
+        const shouldPreserveOriginal =
+            value.type === 'image/svg+xml' || value.name.toLowerCase().endsWith('.svg');
+        const uploadFile = shouldPreserveOriginal ? value : await compressImage(value);
+        const uploadResults = await startUpload([uploadFile]);
+        const uploadResult = uploadResults?.[0];
+        const imageUrl = uploadResult?.ufsUrl || uploadResult?.url;
+
+        if (!imageUrl) {
+            throw new Error('Image upload failed');
+        }
+
+        return imageUrl;
+    };
+
     const executeSubmit = async (data: MachineFormData, mode: 'create' | 'edit') => {
         try {
+            const machineImage = await uploadMachineImageIfNeeded((data as any).machineImage);
+            const submitValues = { ...data, machineImage };
+
             if (mode === 'create') {
-                await createMachine(data as MachineFormData);
+                await createMachine(submitValues as MachineFormData);
                 try {
-                    const spaceDetail = await activeSpaceService.getSpaceById(data.spaceId);
+                    const spaceDetail = await SpaceService.getSpaceById(submitValues.spaceId);
                     toast.success(
                         t('machineListManagement.form.createSuccessWithSpace', {
                             spaceName: spaceDetail.spaceName,
@@ -447,21 +477,21 @@ const MachineListPage = () => {
                     toast.success(t('machineListManagement.form.createSuccess'));
                 }
 
-                if (selectedSpaceId !== data.spaceId) {
-                    handleSpaceChange(data.spaceId);
+                if (selectedSpaceId !== submitValues.spaceId) {
+                    handleSpaceChange(submitValues.spaceId);
                     return;
                 }
             } else {
                 if (modalState.data?.machineId) {
                     const submitData = {
-                        ...data,
+                        ...submitValues,
                         machineId: modalState.data.machineId,
                     };
                     await updateMachine(submitData as MachineUpdateFormData);
                     toast.success(t('machineListManagement.updateSuccess'));
 
-                    if (selectedSpaceId !== data.spaceId) {
-                        handleSpaceChange(data.spaceId);
+                    if (selectedSpaceId !== submitValues.spaceId) {
+                        handleSpaceChange(submitValues.spaceId);
                         return;
                     }
                 }
@@ -481,7 +511,6 @@ const MachineListPage = () => {
     const handleConfirmAction = async () => {
         if (confirmModalState.pendingAction) {
             try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
                 await confirmModalState.pendingAction();
                 setModalState((prev) => ({ ...prev, open: false }));
                 setConfirmModalState({
@@ -507,50 +536,14 @@ const MachineListPage = () => {
         });
     };
 
-    const spaceFormOptions = useMemo(() => {
-        const options: { value: number; label: string }[] = [];
-
-        const collectOptions = (
-            spaces: SpaceWithChildrenResponse[],
-            parentPath: string = ''
-        ) => {
-            spaces.forEach((space) => {
-                const label = parentPath ? `${parentPath} / ${space.spaceName}` : space.spaceName;
-                options.push({ value: space.spaceId, label });
-                collectOptions(space.children ?? [], label);
-            });
-        };
-
-        collectOptions(spacesTree);
-
-        return options;
-    }, [spacesTree]);
-
-    const formFields = useMemo(() => {
-        const fields = getMachineListFormFields(t, modalState.mode);
-
-        if (!USE_MOCK_FACTORY_OVERVIEW) return fields;
-
-        return fields.map((field) =>
-            field.name === 'spaceId'
-                ? {
-                    ...field,
-                    type: 'select' as const,
-                    options: spaceFormOptions,
-                }
-                : field
-        );
-    }, [t, modalState.mode, spaceFormOptions]);
+    const formFields = useMemo(
+        () =>
+            getMachineListFormFields(t, modalState.mode),
+        [t, modalState.mode]
+    );
 
     const machineFilterFields: FilterField[] = useMemo(
         () => [
-            {
-                key: 'machineCode',
-                label: t('machineListManagement.table.headers.machineCode'),
-                placeholder: t('machineListManagement.filters.codePlaceholder'),
-                value: tempMachineCode,
-                onChange: setTempMachineCode,
-            },
             {
                 key: 'machineName',
                 label: t('machineListManagement.table.headers.machineName'),
@@ -573,7 +566,7 @@ const MachineListPage = () => {
                 onChange: setTempMqttTopic,
             },
         ],
-        [t, tempMachineCode, tempMachineName, tempPropertyCode, tempMqttTopic]
+        [t, tempMachineName, tempPropertyCode, tempMqttTopic]
     );
 
     const findSpacePath = (
@@ -598,11 +591,9 @@ const MachineListPage = () => {
     }, [selectedSpaceId, spacesTree]);
 
     const handleResetFilters = useCallback(() => {
-        setTempMachineCode('');
         setTempMachineName('');
         setTempPropertyCode('');
         setTempMqttTopic('');
-        setMachineCodeFilter(undefined);
         setMachineNameFilter(undefined);
         setPropertyCodeFilter(undefined);
         setMqttTopicFilter(undefined);
@@ -610,12 +601,11 @@ const MachineListPage = () => {
     }, []);
 
     const handleApplyFilters = useCallback(() => {
-        setMachineCodeFilter(tempMachineCode || undefined);
         setMachineNameFilter(tempMachineName || undefined);
         setPropertyCodeFilter(tempPropertyCode || undefined);
         setMqttTopicFilter(tempMqttTopic || undefined);
         setPage(0);
-    }, [tempMachineCode, tempMachineName, tempPropertyCode, tempMqttTopic]);
+    }, [tempMachineName, tempPropertyCode, tempMqttTopic]);
 
     return (
         <>
@@ -652,7 +642,9 @@ const MachineListPage = () => {
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 block={isMobile}
-                                onClick={handleCreateMachine}
+                                onClick={() =>
+                                    setModalState({ open: true, mode: 'create', data: null })
+                                }
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
                                 {t('machineListManagement.addMachine')}
@@ -693,11 +685,6 @@ const MachineListPage = () => {
                                 md={viewModalState.data.machineImage ? 18 : 24}
                             >
                                 <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
-                                    <Descriptions.Item
-                                        label={t('machineListManagement.table.headers.machineCode')}
-                                    >
-                                        {viewModalState.data.machineCode || '-'}
-                                    </Descriptions.Item>
                                     <Descriptions.Item
                                         label={t(
                                             'machineListManagement.table.headers.propertyCode'
@@ -862,7 +849,7 @@ const MachineListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 1520,
@@ -911,5 +898,12 @@ const MachineListPage = () => {
         </>
     );
 };
+
+// useSearchParams requires a Suspense boundary for static prerendering.
+const MachineListPage = () => (
+    <Suspense fallback={null}>
+        <MachineListPageContent />
+    </Suspense>
+);
 
 export default MachineListPage;

@@ -125,9 +125,9 @@ export const TaskDetailForm: React.FC<TaskDetailFormProps> = ({
                     <Text strong>{t('orderManagement.form.plan.taskDetails')}</Text>
                 </Space>
             }
-            bordered={false}
+            variant="borderless"
         >
-            <Space direction="vertical" size={20} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={20} style={{ width: '100%' }}>
                 {/* Hidden taskOrder field */}
                 <Form.Item
                     name={['orderDrawings', drawingIndex, 'orderSteps', stepIndex, 'tasks', taskIndex, 'taskOrder']}
@@ -312,7 +312,7 @@ export const TaskDetailForm: React.FC<TaskDetailFormProps> = ({
                                 style={{ marginBlock: 12 }}
                             />
                         ) : (
-                            <Space direction="vertical" size={10} style={{ width: '100%', marginTop: 12 }}>
+                            <Space orientation="vertical" size={10} style={{ width: '100%', marginTop: 12 }}>
                                 {reviews.map((review, index) => {
                                     const reviewedAt = formatReviewedAt(review.reviewedAt);
 
@@ -327,7 +327,7 @@ export const TaskDetailForm: React.FC<TaskDetailFormProps> = ({
                                             }}
                                         >
                                             <Flex justify="space-between" align="flex-start" gap={12} wrap="wrap">
-                                                <Space direction="vertical" size={2}>
+                                                <Space orientation="vertical" size={2}>
                                                     <Space size={6} wrap>
                                                         <Text strong>{review.operatorFullName}</Text>
                                                         <Text type="secondary" style={{ fontSize: 12 }}>
@@ -388,7 +388,7 @@ export const TaskDetailForm: React.FC<TaskDetailFormProps> = ({
                         border: `1px solid ${token.colorInfoBorder}`,
                     }}
                 >
-                    <Space direction="vertical" size={8}>
+                    <Space orientation="vertical" size={8}>
                         <Text strong style={{ fontSize: 13 }}>
                             {t('orderManagement.form.plan.taskSummary')}
                         </Text>

@@ -122,6 +122,10 @@ const LoginForm = React.memo(() => {
                 // Validate returnUrl to prevent open redirect (must be relative path)
                 const isValidReturnUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//');
                 if (isValidReturnUrl) {
+                    if (returnUrl === '/admin') {
+                        router.replace('/admin/space-monitoring');
+                        return;
+                    }
                     console.log('[LOGIN] Redirecting to saved returnUrl:', returnUrl);
                     router.replace(returnUrl);
                     return;
@@ -181,11 +185,14 @@ const LoginForm = React.memo(() => {
             // Navigation will be handled by useEffect when user state updates
         } catch (_err: unknown) {
             console.log(_err);
-            setFormErrors({
-                general:
-                    (_err as any).response?.data?.message ||
-                    'Có lỗi từ server. Vui lòng thử lại sau.',
-            });
+            const status = (_err as any).response?.status;
+            let errorKey = 'auth.errors.loginFailed';
+            if (status === 400) {
+                errorKey = 'auth.errors.incorrectCredentials';
+            } else if (status === 500) {
+                errorKey = 'auth.errors.serverError';
+            }
+            setFormErrors({ general: t(errorKey) });
             setLoginSuccess(false);
         } finally {
             setIsSubmitting(false);
@@ -323,7 +330,7 @@ const LoginForm = React.memo(() => {
                 {/* Success Message */}
                 {loginSuccess && (
                     <Alert
-                        message={t('common.loginSuccess')}
+                        title={t('common.loginSuccess')}
                         type="success"
                         showIcon
                         icon={<CheckCircleOutlined />}
@@ -336,7 +343,7 @@ const LoginForm = React.memo(() => {
                 {/* Error Message */}
                 {(formErrors.general || error) && !loginSuccess && (
                     <Alert
-                        message={formErrors.general || error}
+                        title={formErrors.general || error}
                         type="error"
                         showIcon
                         style={{

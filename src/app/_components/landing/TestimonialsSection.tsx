@@ -122,7 +122,7 @@ export default function TestimonialsSection() {
                         autoplay
                         autoplaySpeed={5000}
                         dots
-                        dotPosition="bottom"
+                        dotPlacement="bottom"
                         beforeChange={(_, next) => setCurrentSlide(next)}
                         effect="fade"
                     >

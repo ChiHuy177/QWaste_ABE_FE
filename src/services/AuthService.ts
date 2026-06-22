@@ -27,13 +27,9 @@ export class AuthService {
 
             this.storeAuthTokens(response.result);
 
-            console.log(response.result);
             return response.result as LoginResponse;
         } catch (error: AxiosError | any) {
-            console.error(
-                '[AUTH SERVICE] Login failed:',
-                error.response?.data?.message || error.message
-            );
+            console.log(error);
             throw error;
         }
     }
@@ -74,6 +70,7 @@ export class AuthService {
             const response = await NetworkService.requestJson({
                 method: 'POST',
                 url: ENDPOINTS.AUTH.REGISTER,
+                skipAuthHandling: true,
                 data,
             });
 

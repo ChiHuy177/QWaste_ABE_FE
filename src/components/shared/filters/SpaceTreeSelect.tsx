@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TreeSelect, TreeSelectProps, Tooltip } from 'antd';
 import { SpaceService } from '@/services/SpaceService';
-import { SpaceWithChildrenResponse } from '@/types/Space';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 export interface SpaceTreeSelectProps extends Omit<TreeSelectProps<any>, 'treeData'> {
     treeData?: any[];
+    autoSelectFirst?: boolean;
+    autoSelectFirstChild?: boolean;
+}
+
+export interface SpaceTreeNode {
+    spaceId: number;
+    spaceName: string;
+    children?: SpaceTreeNode[];
 }
 
 export const mapSpaceTreeToTreeSelect = (
-    nodes: SpaceWithChildrenResponse[],
+    nodes: SpaceTreeNode[],
     parentPathName: string = ''
 ): any[] => {
     return nodes.map((node) => {
@@ -51,14 +58,31 @@ export const mapSpaceTreeToTreeSelect = (
 let cachedTreeData: any[] | null = null;
 let fetchPromise: Promise<any[]> | null = null;
 
+const findFirstTreeValue = (
+    nodes: any[],
+    preferFirstChild = false
+): number | string | undefined => {
+    const firstNode = nodes[0];
+    if (!firstNode) return undefined;
+
+    if (preferFirstChild && firstNode.children && firstNode.children.length > 0) {
+        return firstNode.children[0].value;
+    }
+
+    return firstNode.value;
+};
+
 export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
     treeData: externalTreeData,
+    autoSelectFirst = false,
+    autoSelectFirstChild = false,
     dropdownStyle,
     styles,
     style,
     disabled,
     placeholder,
     value,
+    onChange,
     ...props
 }) => {
     const { t } = useTranslation();
@@ -122,6 +146,40 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
     // Remove undefined hacking. Force numeric cast to satisfy Ant Design strict equality `===` checks.
     const safeValue =
         value !== undefined && value !== null ? Number(value) : undefined;
+    const hasAutoSelectedRef = useRef(false);
+
+    useEffect(() => {
+        if (!autoSelectFirst || hasAutoSelectedRef.current || safeValue !== undefined) return;
+        if (isActuallyLoading || isDataEmpty) return;
+
+        const firstValue = findFirstTreeValue(displayData, autoSelectFirstChild);
+        if (firstValue === undefined) return;
+
+        hasAutoSelectedRef.current = true;
+        onChange?.(firstValue, [], {} as any);
+    }, [
+        autoSelectFirst,
+        autoSelectFirstChild,
+        displayData,
+        isActuallyLoading,
+        isDataEmpty,
+        onChange,
+        safeValue,
+    ]);
+
+    const stylesObj = typeof styles === 'function' ? {} : (styles ?? {});
+    const mergedStyles = {
+        ...stylesObj,
+        popup: {
+            ...stylesObj.popup,
+            root: {
+                maxHeight: 400,
+                overflow: 'auto',
+                ...dropdownStyle,
+                ...stylesObj.popup?.root,
+            },
+        },
+    };
 
     return (
         <TreeSelect
@@ -131,22 +189,11 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
             loading={isActuallyLoading}
             allowClear
             treeDefaultExpandAll={false}
-            showSearch
-            treeNodeFilterProp="label"
+            showSearch={{ treeNodeFilterProp: "label" }}
             treeNodeLabelProp="displayLabel"
-            styles={{
-                ...styles,
-                popup: {
-                    ...styles?.popup,
-                    root: {
-                        maxHeight: 400,
-                        overflow: 'auto',
-                        ...dropdownStyle,
-                        ...styles?.popup?.root,
-                    },
-                },
-            }}
+            styles={mergedStyles}
             {...props}
+            onChange={onChange}
             value={safeValue}
             disabled={disabled || isActuallyLoading || (!isActuallyLoading && isDataEmpty)}
         />

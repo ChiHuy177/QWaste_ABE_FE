@@ -63,17 +63,6 @@ export class SpaceLevelService {
     }
 
     /**
-     * GET Highest Space Level
-     */
-    static async getHighestSpaceLevel(): Promise<number> {
-        const response = await NetworkService.requestJson<number>({
-            method: 'GET',
-            url: ENDPOINTS.SPACE_LEVELS.HIGHEST,
-        });
-        return response.result as number;
-    }
-
-    /**
      * POST Create Space Level
      */
     static async createSpaceLevel(data: SpaceLevelCreationRequest): Promise<SpaceLevelDTO> {

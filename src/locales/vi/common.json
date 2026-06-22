@@ -48,6 +48,7 @@
         "submit": "Gửi",
         "total": "Tổng",
         "download": "Tải xuống",
+        "exportExcel": "Xuất Excel",
         "view": "Xem",
         "details": "Chi tiết",
         "settings": "Cài đặt",
@@ -216,7 +217,8 @@
             "pdf": {
                 "dragAndDrop": "Kéo thả PDF vào đây để tải lên",
                 "supportText": "Hỗ trợ tải lên một file PDF (Tối đa 10MB)",
-                "uploading": "Đang tải lên PDF..."
+                "uploading": "Đang tải lên PDF...",
+                "uploadFailed": "Tải PDF thất bại: {{error}}"
             }
         },
         "buttons": {
@@ -234,7 +236,11 @@
             "previous": "Trước đó",
             "continue": "Tiếp tục",
             "back": "Quay Lại"
-        }
+        },
+        "home": "Trang chủ",
+        "moveDown": "Di chuyển xuống",
+        "moveUp": "Di chuyển lên",
+        "saving": "Đang lưu..."
     },
     "auth": {
         "errors": {
@@ -250,7 +256,8 @@
             "networkErrorDuringLogin": "Lỗi mạng trong quá trình đăng nhập",
             "badRequest": "Yêu cầu không hợp lệ",
             "accessDenied": "Truy cập bị từ chối",
-            "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại"
+            "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại",
+            "incorrectCredentials": "Tên đăng nhập hoặc mật khẩu không đúng"
         },
         "messages": {
             "noTokenFound": "Không tìm thấy token trong phản hồi đăng nhập",
@@ -325,6 +332,9 @@
             "electric": "Công suất tiêu thụ điện",
             "factory": "Danh sách nhà máy",
             "factoryOverview": "Tổng quan nhà máy",
+            "floorMap": "Sơ đồ mặt bằng",
+            "floorMapStatus": "Trạng thái sơ đồ mặt bằng",
+            "floorMapConfig": "Cấu hình sơ đồ mặt bằng",
             "machineStaffing": "Danh sách nhân sự máy",
             "line": "Danh sách chuyền",
             "rbac": "Quản lý RBAC",
@@ -336,15 +346,7 @@
             "industryFilter": "Bộ lọc",
             "machineManagement": "Quản lý máy",
             "spaceConfiguration": "Cấu hình khu vực",
-            "staffOthers": "Nhân sự & Khác",
-            "maintenance": "Bảo trì",
-            "incidentReports": "Báo cáo sự cố",
-            "incidentOverview": "Danh Sách Sự Cố",
-            "factoryOperations": "Vận hành nhà máy",
-            "errorGroup": "Danh sách nhóm lỗi",
-            "errorDetail": "Danh sách chi tiết lỗi",
-            "productionPlan": "Danh sách kế hoạch sản xuất",
-            "moldCode": "Danh sách mã khuôn"
+            "staffOthers": "Nhân sự & Khác"
         },
         "tooltip": {
             "subItems": "Mục con"
@@ -431,6 +433,83 @@
         "title": "Truy Cập Bị Từ Chối",
         "description": "Bạn không có quyền truy cập trang này. Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là lỗi."
     },
+    "floorMap": {
+        "title": "Sơ đồ mặt bằng",
+        "viewTitle": "Trạng thái sơ đồ mặt bằng",
+        "filters": {
+            "selectSpace": "Chọn khu vực"
+        },
+        "actions": {
+            "place": "Đặt",
+            "removeFromMap": "Gỡ khỏi sơ đồ",
+            "saveChanges": "Lưu thay đổi",
+            "resetChanges": "Bỏ thay đổi",
+            "zoomIn": "Phóng to",
+            "zoomOut": "Thu nhỏ",
+            "fitView": "Vừa khung nhìn",
+            "fullscreen": "Toàn màn hình",
+            "exitFullscreen": "Thoát toàn màn hình"
+        },
+        "draft": {
+            "unsavedChanges": "{{count}} thay đổi chưa lưu"
+        },
+        "canvas": {
+            "dragHint": "Kéo máy từ danh sách vào sơ đồ • Lăn chuột để thu phóng"
+        },
+        "status": {
+            "placed": "Đã đặt",
+            "unplaced": "Chưa đặt",
+            "RUNTIME": "Đang chạy",
+            "IDLE": "Chờ",
+            "ERROR": "Lỗi",
+            "OFFLINE": "Ngoại tuyến",
+            "COMPLETE": "Hoàn thành",
+            "TEMPORARY_STOP": "Tạm dừng",
+            "OPEN_DOOR": "Mở cửa",
+            "WARNING": "Cảnh báo",
+            "UNKNOWN": "Không xác định"
+        },
+        "statusSummary": {
+            "totalMachines": "Tổng số máy",
+            "placedMachines": "Máy đã đặt",
+            "liveConnected": "Đang kết nối trực tiếp",
+            "liveDisconnected": "Mất kết nối trực tiếp",
+            "viewDetails": "Xem chi tiết"
+        },
+        "machines": {
+            "title": "Máy trong khu vực",
+            "summary": "{{placed}}/{{total}} máy đã đặt",
+            "collapseList": "Thu gọn danh sách",
+            "expandList": "Danh sách thiết bị",
+            "noMachinesInSpace": "Khu vực này chưa có máy nào",
+            "goToMachineList": "Đi tới Danh sách máy",
+            "searchPlaceholder": "Tìm theo mã máy hoặc khu vực",
+            "empty": "Không có máy phù hợp",
+            "stats": {
+                "total": "Tổng"
+            },
+            "filters": {
+                "all": "Tất cả",
+                "placed": "Đã đặt",
+                "unplaced": "Chưa đặt"
+            }
+        },
+        "empty": {
+            "title": "Chưa có sơ đồ mặt bằng",
+            "selectSpace": "Chọn khu vực để tải sơ đồ mặt bằng",
+            "noImage": "Khu vực này chưa có ảnh sơ đồ mặt bằng",
+            "goToSpaceConfig": "Cập nhật ảnh trong Danh sách khu vực"
+        },
+        "messages": {
+            "loadFailed": "Không thể tải sơ đồ mặt bằng",
+            "imageLoadFailed": "Không thể tải ảnh sơ đồ mặt bằng",
+            "positionSaved": "Đã lưu vị trí máy",
+            "positionsSaved": "Đã lưu thay đổi sơ đồ mặt bằng",
+            "positionSaveFailed": "Không thể lưu vị trí máy",
+            "positionRemoved": "Đã gỡ máy khỏi sơ đồ",
+            "positionRemoveFailed": "Không thể gỡ máy khỏi sơ đồ"
+        }
+    },
     "adminPage": {
         "title": "Bảng điều khiển Tổng quan",
         "actions": {
@@ -462,14 +541,17 @@
             "idle": "Chờ",
             "error": "Lỗi",
             "offline": "Ngoại tuyến",
-            "total": "TỔNG"
+            "total": "TỔNG",
+            "noData": "Không có dữ liệu máy"
         },
         "errorRanking": {
             "title": "Top Máy Lỗi Nhiều Nhất",
-            "total": "Tổng"
+            "total": "Tổng",
+            "noData": "Không có lỗi nào"
         },
         "mttrTrend": {
-            "title": "Thời Gian Sửa Lỗi Trung Bình"
+            "title": "Thời Gian Sửa Lỗi Trung Bình",
+            "noData": "Không có dữ liệu"
         },
         "zoneLineStatus": {
             "title": "Trạng thái Khu vực / Chuyền",
@@ -541,6 +623,78 @@
             "overallEfficiency": "Hiệu suất tổng thể",
             "resourceUtilization": "Tận dụng tài nguyên",
             "productionCapacityQuote": "Công suất sản xuất hiện đang được tối ưu cho mục tiêu Q3."
+        },
+        "activity": {
+            "errorSpike": "Số lỗi tăng trong ca hiện tại",
+            "qcQueue": "Hàng chờ QC cần được rà soát",
+            "staffCoverage": "Mức phủ nhân sự đang hoạt động"
+        },
+        "chart": {
+            "noData": "Không có dữ liệu"
+        },
+        "energy": {
+            "insight": "Theo dõi tiêu thụ điện theo thời gian thực để phát hiện bất thường.",
+            "title": "Tổng quan năng lượng",
+            "today": "Hôm nay"
+        },
+        "errorTimeline": {
+            "noData": "Không có dữ liệu lỗi",
+            "subtitle": "Số lượng lỗi",
+            "title": "Lịch sử lỗi theo thời gian",
+            "yAxis": "Số lỗi"
+        },
+        "production": {
+            "title": "Tổng quan sản xuất"
+        },
+        "operationalOverview": {
+            "dataState": {
+                "live": "Dữ liệu trực tiếp",
+                "mock": "Dữ liệu mẫu"
+            },
+            "productionHealth": {
+                "title": "Sức khỏe sản xuất",
+                "metrics": {
+                    "oee": {
+                        "label": "OEE hôm nay",
+                        "detail": "Mục tiêu 82%"
+                    },
+                    "output": {
+                        "label": "Sản lượng hôm nay",
+                        "detail": "86% kế hoạch ngày"
+                    },
+                    "qc-fail": {
+                        "label": "Tỷ lệ lỗi QC",
+                        "detail": "Dưới ngưỡng 4%"
+                    },
+                    "downtime": {
+                        "label": "Thời gian dừng",
+                        "detail": "2 máy bị ảnh hưởng"
+                    }
+                }
+            },
+            "priorityQueue": {
+                "title": "Hàng chờ ưu tiên",
+                "items": {
+                    "cnc-01-down": {
+                        "title": "CNC 01 đang chặn sản xuất",
+                        "detail": "Cảnh báo nhiệt độ trục chính, dừng 35 phút",
+                        "owner": "Bảo trì",
+                        "eta": "Ngay"
+                    },
+                    "ord-2026-014": {
+                        "title": "ORD-2026-014 gần đến hạn",
+                        "detail": "Bước lắp ráp vẫn đang thực hiện",
+                        "owner": "Sản xuất",
+                        "eta": "Còn 6 giờ"
+                    },
+                    "qc-queue": {
+                        "title": "7 task đang chờ QC",
+                        "detail": "Mục chờ lâu nhất: 42 phút",
+                        "owner": "Đội QC",
+                        "eta": "Hôm nay"
+                    }
+                }
+            }
         }
     },
     "oeeCards": {
@@ -946,7 +1100,6 @@
             "offlineNote": "Không tính vào tỷ lệ phần trăm",
             "totalActiveTime": "Tổng Thời Gian Hoạt Động",
             "excludingOffline": "Không bao gồm thời gian offline",
-            "machineCode": "Mã Máy",
             "propertyCode": "Mã Tài Sản",
             "power": "Công Suất",
             "measuredEnergy": "Năng Lượng Đo",
@@ -996,6 +1149,12 @@
                 "thisYear": "Năm nay",
                 "lastYear": "Năm trước"
             }
+        },
+        "actions": {
+            "addMachine": "Thêm máy"
+        },
+        "status": {
+            "running": "Đang chạy"
         }
     },
     "stepManagement": {
@@ -1038,7 +1197,8 @@
                 "stepNameRequired": "Tên bước là bắt buộc",
                 "maxLength": "Độ dài tối đa {{max}} ký tự",
                 "completionTimeMin": "Thời gian hoàn thành phải lớn hơn 0",
-                "defaultTimeRequired": "Thời gian hoàn thành là bắt buộc"
+                "defaultTimeRequired": "Thời gian hoàn thành là bắt buộc",
+                "defaultTimeMin": "Thời gian mặc định phải lớn hơn 0"
             },
             "buttons": {
                 "cancel": "Hủy",
@@ -1141,7 +1301,9 @@
                 "spaceName": "Tên khu vực",
                 "spaceCode": "Mã khu vực",
                 "level": "Cấp độ",
+                "floorPlanImageUrl": "URL ảnh sơ đồ mặt bằng",
                 "displayOrder": "Thứ tự hiển thị",
+                "description": "Mô tả",
                 "createdAt": "Ngày tạo",
                 "updatedAt": "Ngày cập nhật",
                 "actions": "Thao tác"
@@ -1173,13 +1335,21 @@
                 "code": "Mã khu vực",
                 "name": "Tên khu vực",
                 "order": "Thứ tự hiển thị",
+                "floorPlanImageUrl": "URL ảnh sơ đồ mặt bằng",
                 "description": "Mô tả"
             },
             "placeholders": {
                 "code": "Nhập mã khu vực",
                 "name": "Nhập tên khu vực",
                 "order": "Nhập thứ tự hiển thị",
+                "floorPlanImageUrl": "Tải lên ảnh sơ đồ mặt bằng",
                 "description": "Nhập mô tả chi tiết về khu vực"
+            },
+            "help": {
+                "floorPlanImageUrl": "Tải lên ảnh sơ đồ mặt bằng cho trang Floor Map."
+            },
+            "upload": {
+                "floorPlanImageUrlSupportText": "Hỗ trợ PNG/JPG tối đa 4MB, SVG tối đa 10MB"
             },
             "validation": {
                 "required": "Trường này là bắt buộc",
@@ -1187,6 +1357,7 @@
                 "maxLength": "Độ dài tối đa là {{max}} ký tự",
                 "noWhitespaceOnly": "Không được chỉ chứa khoảng trắng",
                 "codePattern": "Định dạng không hợp lệ (A-Z0-9_-)",
+                "url": "URL không hợp lệ",
                 "minValue": "Giá trị tối thiểu là {{min}}"
             },
             "buttons": {
@@ -1293,7 +1464,11 @@
             "rolesBreakdown": "Phân bổ Vai trò",
             "admins": "Quản trị viên",
             "qualityControl": "Kiểm soát Chất lượng",
-            "operators": "Nhân viên Vận hành"
+            "operators": "Nhân viên Vận hành",
+            "completedTasks": "Task hoàn thành",
+            "rejectedTasks": "Task bị từ chối",
+            "totalTasks": "Tổng task",
+            "waitingQC": "Chờ QC"
         },
         "search": {
             "title": "Tìm kiếm & Lọc",
@@ -1312,6 +1487,7 @@
                 "phone": "Số điện thoại",
                 "role": "Chức vụ",
                 "accessibleFactories": "Nhà máy",
+                "accessibleSpaces": "Khu vực",
                 "status": "Trạng thái",
                 "actions": "Thao tác"
             }
@@ -1362,7 +1538,8 @@
                 },
                 "group": "Nhóm",
                 "noGroup": "Chưa có nhóm",
-                "accessibleFactories": "Nhà máy được phép truy cập"
+                "accessibleFactories": "Nhà máy được phép truy cập",
+                "accessibleSpaces": "Khu vực được phép truy cập"
             },
             "placeholders": {
                 "fullName": "Nhập họ và tên",
@@ -1375,7 +1552,8 @@
                 "gender": "Chọn giới tính",
                 "group": "Chọn nhóm",
                 "role": "Chọn vai trò",
-                "accessibleFactories": "Chọn nhà máy nhân viên được phép truy cập"
+                "accessibleFactories": "Chọn nhà máy nhân viên được phép truy cập",
+                "accessibleSpaces": "Chọn khu vực nhân viên được phép truy cập"
             },
             "buttons": {
                 "create": "Tạo mới",
@@ -2071,6 +2249,11 @@
             "totalTime": "Tổng thời gian"
         },
         "filter": {
+            "all": "Tất cả",
+            "zones": "Xưởng",
+            "lines": "Chuyền",
+            "machines": "Máy",
+            "ops": "vận hành",
             "selectMachines": "Chọn máy",
             "selectAll": "Chọn tất cả",
             "selectNone": "Bỏ chọn",
@@ -2079,7 +2262,10 @@
             "quickSelect": "Chọn nhanh",
             "top10Highest": "Top 10 cao nhất",
             "top10Lowest": "Top 10 thấp nhất",
-            "middleGroup": "Nhóm giữa"
+            "middleGroup": "Nhóm giữa",
+            "noMatch": "Không có nhà máy phù hợp với bộ lọc",
+            "searchPlaceholder": "Tìm nhà máy...",
+            "selectPlaceholder": "Chọn nhà máy"
         },
         "table": {
             "title": {
@@ -2132,10 +2318,17 @@
             "Machines": "Máy",
             "machines": "máy",
             "lines": "Chuyền",
-            "line": "Chuyền"
+            "line": "Chuyền",
+            "linesLabel": "CHUYỀN",
+            "machinesInZoneLabel": "MÁY TRỰC TIẾP TRONG XƯỞNG",
+            "standaloneMachinesLabel": "MÁY KHÔNG THUỘC XƯỞNG",
+            "scrollHint": "cuộn",
+            "offline": "Ngoại tuyến"
         },
         "line": {
-            "title": "Chuyền"
+            "title": "Chuyền",
+            "viewMachinesLink": "Xem",
+            "collapse": "Thu gọn"
         },
         "machine": {
             "online": "Trực Tuyến",
@@ -2155,7 +2348,13 @@
             "title": "Phân tích thời gian",
             "timeAnalytics": "Phân tích thời gian",
             "back": "Quay lại"
-        }
+        },
+        "allFactories": "Tất cả nhà máy",
+        "emptyState": "Chưa có dữ liệu tổng quan nhà máy. Vui lòng chọn bộ lọc và thử lại.",
+        "factoryLabel": "Nhà máy",
+        "offlineTime": "Thời gian ngoại tuyến",
+        "onlineTime": "Thời gian trực tuyến",
+        "viewZones": "Xem các khu vực trong nhà máy này"
     },
     "taskBoard": {
         "title": "Bản nhiệm vụ",
@@ -2435,7 +2634,6 @@
         },
         "table": {
             "headers": {
-                "machineCode": "Mã máy",
                 "machineName": "Tên máy",
                 "zone": "Khu vực",
                 "productionTime": "Thời gian sản xuất",
@@ -2492,12 +2690,11 @@
                 "machineName": "Tên máy",
                 "machineType": "Loại máy",
                 "description": "Mô tả",
-                "space": "Danh sách khu vực",
+                "space": "Khu vực",
                 "topic": "Chủ đề",
                 "productionTime": "Thời gian sản xuất",
                 "zone": "Khu vực",
                 "machineImage": "Hình ảnh máy",
-                "machineCode": "Mã máy",
                 "propertyCode": "Mã tài sản",
                 "power": "Mức điện",
                 "line": "Danh sách chuyền",
@@ -2511,10 +2708,10 @@
                 "topic": "Nhập chủ đề",
                 "productionTime": "Nhập thời gian sản xuất",
                 "zone": "Chọn một khu vực",
-                "machineCode": "Nhập mã máy",
                 "propertyCode": "Nhập mã tài sản",
                 "power": "Nhập mức điện",
-                "line": "Chọn một băng chuyền"
+                "line": "Chọn một băng chuyền",
+                "machineImage": "Tải lên hình ảnh máy"
             },
             "validation": {
                 "required": "Trường này là bắt buộc",
@@ -2533,7 +2730,8 @@
                 "saving": "Đang lưu..."
             },
             "createSuccessWithSpace": "Tạo máy thành công tại {{spaceName}}",
-            "createError": "Không thể tạo danh sách máy. Vui lòng thử lại."
+            "createError": "Không thể tạo danh sách máy. Vui lòng thử lại.",
+            "createSuccess": "Tạo máy thành công"
         },
         "serverErrors": {
             "Machine already exists": "Máy đã tồn tại",
@@ -2749,7 +2947,11 @@
         "updateError": "Đã xảy ra lỗi khi cập nhật ảnh đại diện",
         "uploadError": "Tải lên thất bại: {error}",
         "uploadingMessage": "Đang tải lên ảnh đại diện...",
-        "preview": "Xem"
+        "preview": "Xem",
+        "errors": {
+            "fileTooLarge": "Ảnh phải nhỏ hơn 4MB",
+            "invalidType": "Chỉ được tải lên file ảnh"
+        }
     },
     "errors": {
         "general": "Đã xảy ra lỗi không mong muốn",
@@ -2927,11 +3129,7 @@
         "lineList": "Quản lý băng chuyền",
         "spaceLevelList": "Quản lý cấp độ khu vực",
         "spaceList": "Quản lý khu vực",
-        "industryFilterList": "Quản lý bộ lọc",
-        "errorGroupList": "Quản lý nhóm lỗi",
-        "errorDetailList": "Quản lý chi tiết lỗi",
-        "productionPlanList": "Quản lý kế hoạch sản xuất",
-        "moldCodeList": "Quản lý mã khuôn"
+        "industryFilterList": "Quản lý bộ lọc"
     },
     "addTaskForm": {
         "title": "Thêm Công việc Mới",
@@ -3225,7 +3423,8 @@
         },
         "actions": {
             "retryLoading": "Thử lại"
-        }
+        },
+        "error": "Không thể cập nhật cài đặt"
     },
     "preferenceSettings": {
         "appearance": {
@@ -3282,7 +3481,6 @@
         "addRecord": "Thêm Biên Chế",
         "table": {
             "headers": {
-                "machineCode": "Mã Máy",
                 "machineName": "Tên Máy",
                 "operatorCount": "Số Công Nhân",
                 "notes": "Ghi Chú",
@@ -3311,7 +3509,8 @@
                 "required": "Trường này là bắt buộc",
                 "machineRequired": "Vui lòng chọn máy",
                 "integerOnly": "Vui lòng nhập số nguyên",
-                "positiveOnly": "Vui lòng nhập số dương"
+                "positiveOnly": "Vui lòng nhập số dương",
+                "minValue": "Giá trị phải lớn hơn hoặc bằng {{min}}"
             },
             "buttons": {
                 "cancel": "Hủy",
@@ -3583,6 +3782,7 @@
             "phoneNumber": "Số điện thoại",
             "gender": "Giới tính",
             "address": "Địa chỉ",
+            "space": "Khu vực",
             "factory": "Nhà máy",
             "factories": "Chọn nhà máy"
         },
@@ -3595,6 +3795,7 @@
             "employeeCode": "Nhập mã nhân viên",
             "phoneNumber": "Nhập số điện thoại",
             "address": "Nhập địa chỉ của bạn",
+            "space": "Chọn khu vực",
             "factory": "Chọn nhà máy",
             "factories": "Chọn nhà máy"
         },
@@ -3616,6 +3817,7 @@
             "phoneNumberInvalid": "Số điện thoại không hợp lệ (10 số và bắt đầu bằng 0)",
             "genderRequired": "Vui lòng chọn giới tính",
             "addressRequired": "Địa chỉ là bắt buộc",
+            "spaceRequired": "Vui lòng chọn khu vực",
             "factoryRequired": "Vui lòng chọn nhà máy",
             "factoriesRequired": "Vui lòng chọn ít nhất một nhà máy"
         },
@@ -3647,6 +3849,7 @@
             "emailExists": "Email này đã được đăng ký",
             "usernameExists": "Tên đăng nhập đã tồn tại",
             "serverError": "Lỗi máy chủ. Vui lòng thử lại sau.",
+            "spaceLoadFailed": "Lỗi tải danh sách khu vực. Vui lòng thử lại.",
             "factoryLoadFailed": "Lỗi tải danh sách nhà máy. Vui lòng thử lại."
         },
         "info": {
@@ -3883,7 +4086,8 @@
             "deleteError": "Xóa người dùng thất bại",
             "updateError": "Cập nhật người dùng thất bại",
             "saveError": "Lưu người dùng thất bại",
-            "fetchError": "Tải danh sách người dùng thất bại"
+            "fetchError": "Tải danh sách người dùng thất bại",
+            "superAdminLocked": "Không thể cập nhật vai trò và quyền của tài khoản Super Admin"
         },
         "roleAssignment": {
             "title": "Gán Vai Trò ({{count}} đã chọn)",
@@ -4317,7 +4521,8 @@
                 "noWhitespaceOnly": "Không được chỉ chứa khoảng trắng",
                 "completionTimeMin": "Thời gian hoàn thành phải lớn hơn 0",
                 "pdfRequired": "Bản vẽ kỹ thuật (PDF) là bắt buộc",
-                "pdfLink": "Bản vẽ kỹ thuật (PDF) là bắt buộc"
+                "pdfLink": "Bản vẽ kỹ thuật (PDF) là bắt buộc",
+                "customerRequired": "Vui lòng chọn khách hàng"
             },
             "buttons": {
                 "cancel": "Hủy",
@@ -4365,8 +4570,12 @@
                 "stepNameRequired": "Tất cả các bước phải có tên",
                 "stepInvalid": "Một số bước có dữ liệu không hợp lệ. Vui lòng kiểm tra các trường màu đỏ.",
                 "stepTimeRequired": "Thời gian hoàn thành là bắt buộc",
-                "materialRequired": "Vật liệu là bắt buộc"
-            }
+                "materialRequired": "Vật liệu là bắt buộc",
+                "atLeastOneStep": "Cần ít nhất một bước sản xuất"
+            },
+            "createError": "Tạo bước tiêu chuẩn thất bại: {{error}}",
+            "createSuccess": "Tạo bước tiêu chuẩn thành công",
+            "fetchError": "Không thể tải danh sách bước tiêu chuẩn: {{error}}"
         },
         "dialogs": {
             "deleteConfirmation": {
@@ -4663,7 +4872,8 @@
                 "totalEstimatedLeadtime": "Thời gian gia công dự kiến",
                 "cancellationReason": "Lý do hủy đơn",
                 "penaltyAmount": "Tiền phạt vi phạm",
-                "attachments": "Tài liệu đính kèm"
+                "attachments": "Tài liệu đính kèm",
+                "actualQty": "Số lượng thực tế"
             },
             "drawing": {
                 "assignments": "Danh sách phân công",
@@ -4673,7 +4883,8 @@
                 "operator": "Thợ vận hành",
                 "machine": "Máy móc",
                 "empty": "Trống",
-                "noAssignments": "Chưa có phân công"
+                "noAssignments": "Chưa có phân công",
+                "noReviews": "Chưa có nhận xét"
             },
             "kanban": {
                 "locked": "Khóa",
@@ -4726,7 +4937,10 @@
             "document": "Tài liệu",
             "pdfLink": "Liên kết PDF",
             "viewDocument": "Xem tài liệu",
-            "viewPdfDocument": "Xem tài liệu PDF"
+            "viewPdfDocument": "Xem tài liệu PDF",
+            "clickToExpand": "Nhấn để mở",
+            "errorTag": "Lỗi",
+            "noDescription": "Chưa có mô tả"
         },
         "step": {
             "stepLabel": "BƯỚC",
@@ -4772,7 +4986,8 @@
             "operators": "thợ",
             "Operators": "Thợ",
             "minOneTask": "Phải có ít nhất 1 task",
-            "addTask": "Thêm Task"
+            "addTask": "Thêm Task",
+            "errorTag": "Lỗi"
         }
     },
     "operatorReview": {
@@ -4895,6 +5110,7 @@
         "tasks": "Nhiệm vụ",
         "task_review": "Đánh giá công việc",
         "space_monitoring": "Giám sát khu vực",
+        "floor_map": "Sơ đồ mặt bằng",
         "all": "Tất cả"
     },
     "operatorTasks": {
@@ -4962,740 +5178,5 @@
             }
         }
     },
-    "maintenance": {
-        "page": {
-            "title": "Báo cáo sự cố"
-        },
-        "stats": {
-            "totalReports": "Tổng báo cáo",
-            "open": "Đang mở",
-            "inProgress": "Đang xử lý",
-            "resolved": "Đã giải quyết",
-            "percentOfTotal": "{{percent}} trên tổng"
-        },
-        "status": {
-            "all": "Tất cả",
-            "open": "Đang mở",
-            "inProgress": "Đang xử lý",
-            "resolved": "Đã giải quyết"
-        },
-        "classification": {
-            "machine": "Máy",
-            "mold": "Khuôn",
-            "allTypes": "Tất cả loại"
-        },
-        "list": {
-            "title": "Báo cáo sự cố",
-            "subtitleTable": "{{count}} báo cáo",
-            "subtitleTable_plural": "{{count}} báo cáo",
-            "subtitleCard": "Tìm thấy {{count}} báo cáo",
-            "subtitleCard_plural": "Tìm thấy {{count}} báo cáo",
-            "refresh": "Làm mới",
-            "newReport": "Tạo báo cáo",
-            "searchPlaceholder": "Tìm kiếm báo cáo, máy, lỗi...",
-            "empty": "Không tìm thấy báo cáo sự cố",
-            "table": {
-                "reportNo": "Số báo cáo",
-                "machineMold": "Máy / Khuôn",
-                "errorGroup": "Nhóm lỗi",
-                "errorDetail": "Chi tiết lỗi",
-                "description": "Mô tả",
-                "status": "Trạng thái",
-                "reportedBy": "Người báo cáo",
-                "reportedAt": "Thời gian báo cáo"
-            },
-            "card": {
-                "errorGroup": "Nhóm lỗi",
-                "errorCode": "Mã lỗi",
-                "reported": "Báo cáo lúc",
-                "by": "Bởi",
-                "view": "Xem"
-            }
-        },
-        "detail": {
-            "edit": "Chỉnh sửa",
-            "viewImage": "Xem ảnh",
-            "sections": {
-                "incidentInfo": "Thông tin sự cố",
-                "machineDetails": "Chi tiết máy",
-                "moldDetails": "Chi tiết khuôn",
-                "errorClassification": "Phân loại lỗi",
-                "descriptionAnalysis": "Mô tả & Phân tích",
-                "attachment": "Tệp đính kèm",
-                "auditTrail": "Lịch sử thay đổi",
-                "errorInfo": "Thông tin lỗi",
-                "images": "Hình ảnh",
-                "assignedTechnician": "Kỹ thuật viên phụ trách",
-                "actions": "Thao tác"
-            },
-            "fields": {
-                "reportNo": "Số báo cáo",
-                "classification": "Phân loại",
-                "status": "Trạng thái",
-                "reportedBy": "Người báo cáo",
-                "reportedAt": "Thời gian báo cáo",
-                "resolvedAt": "Thời gian giải quyết",
-                "machineName": "Tên máy",
-                "moldName": "Tên khuôn",
-                "code": "Mã",
-                "errorGroup": "Nhóm lỗi",
-                "errorCode": "Mã lỗi",
-                "errorDetail": "Chi tiết lỗi",
-                "description": "Mô tả",
-                "rootCause": "Nguyên nhân gốc rễ",
-                "createdAt": "Ngày tạo",
-                "createdBy": "Người tạo",
-                "updatedAt": "Ngày cập nhật",
-                "updatedBy": "Người cập nhật"
-            },
-            "tabs": {
-                "overview": "Tổng quan",
-                "timeline": "Dòng thời gian",
-                "attachments": "Tệp đính kèm"
-            },
-            "images": {
-                "addMore": "Thêm ảnh",
-                "empty": "Không có ảnh đính kèm"
-            },
-            "rootCause": {
-                "pending": "Chưa xác định",
-                "analysisInProgress": "Đang phân tích nguyên nhân gốc rễ."
-            },
-            "technicianRole": "Kỹ thuật viên bảo trì",
-            "reassign": "Phân công lại",
-            "assignedAt": "Phân công lúc {{date}}",
-            "actions": {
-                "investigate": "Điều tra",
-                "resolve": "Giải quyết",
-                "more": "Thêm",
-                "closeReport": "Đóng báo cáo",
-                "reopen": "Mở lại",
-                "editReport": "Chỉnh sửa báo cáo"
-            },
-            "timeline": {
-                "statusChange": "Trạng thái: {{status}}",
-                "updatedBy": "Cập nhật bởi {{name}}",
-                "incidentReported": "Sự cố được báo cáo",
-                "reportedBy": "Báo cáo bởi {{name}}",
-                "reportCreated": "Báo cáo được tạo",
-                "by": "Bởi {{name}}"
-            },
-            "attachments": {
-                "imageLabel": "Ảnh {{number}}",
-                "empty": "Không có tệp đính kèm"
-            }
-        },
-        "form": {
-            "createTitle": "Tạo báo cáo sự cố",
-            "editTitle": "Chỉnh sửa báo cáo sự cố",
-            "createDescription": "Ghi nhận sự cố máy hoặc khuôn mới.",
-            "editDescription": "Cập nhật thông tin báo cáo sự cố.",
-            "fields": {
-                "classification": "Phân loại",
-                "machine": "Máy",
-                "mold": "Khuôn",
-                "errorGroup": "Nhóm lỗi",
-                "errorDetail": "Chi tiết lỗi",
-                "description": "Mô tả",
-                "rootCause": "Nguyên nhân gốc rễ",
-                "imageUrl": "Hình ảnh",
-                "status": "Trạng thái"
-            },
-            "placeholders": {
-                "selectMachine": "Chọn máy",
-                "selectMold": "Chọn khuôn",
-                "selectErrorGroup": "Chọn nhóm lỗi",
-                "selectErrorDetail": "Chọn chi tiết lỗi",
-                "selectErrorGroupFirst": "Chọn nhóm lỗi trước",
-                "description": "Mô tả sự cố đã xảy ra...",
-                "rootCause": "Mô tả nguyên nhân gốc rễ (không bắt buộc)..."
-            },
-            "upload": {
-                "dragOrClick": "Nhấp hoặc kéo ảnh vào đây để tải lên",
-                "supported": "Hỗ trợ JPG, PNG, GIF, WEBP (tối đa 5 MB)",
-                "remove": "Xóa ảnh"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo báo cáo",
-                "edit": "Lưu thay đổi",
-                "saving": "Đang lưu..."
-            }
-        },
-        "messages": {
-            "created": "Đã tạo báo cáo sự cố.",
-            "updated": "Đã cập nhật báo cáo sự cố.",
-            "deleted": "Đã xóa {{reportNumber}}."
-        },
-        "charts": {
-            "byErrorGroup": "Sự cố theo nhóm lỗi",
-            "overTime": "Sự cố theo thời gian",
-            "last7Days": "(7 ngày qua)",
-            "last6Months": "(6 tháng gần nhất)",
-            "noData": "Không có dữ liệu",
-            "total": "Tổng",
-            "open": "Đang mở",
-            "inProgress": "Đang xử lý",
-            "resolved": "Đã giải quyết",
-            "closed": "Đã đóng",
-            "incidents": "sự cố"
-        },
-        "alerts": {
-            "pageTitle": "Cảnh báo sự cố",
-            "stats": {
-                "total": "Tổng cảnh báo",
-                "critical": "Nghiêm trọng",
-                "high": "Cao",
-                "medium": "Trung bình"
-            },
-            "search": "Tìm máy, mã lỗi...",
-            "severity": {
-                "all": "Tất cả",
-                "critical": "Nghiêm trọng",
-                "high": "Cao",
-                "medium": "Trung bình"
-            },
-            "status": {
-                "all": "Tất cả",
-                "active": "Đang hoạt động",
-                "reported": "Đã báo cáo",
-                "resolved": "Đã giải quyết"
-            },
-            "table": {
-                "severity": "Mức độ",
-                "target": "Máy / Khuôn",
-                "error": "Lỗi",
-                "detectedAt": "Phát hiện",
-                "status": "Trạng thái"
-            },
-            "card": {
-                "detectedAt": "Phát hiện lúc",
-                "createReport": "Tạo báo cáo",
-                "dismiss": "Bỏ qua"
-            },
-            "section": {
-                "active": "Sự cố đang hoạt động",
-                "resolved": "Sự cố đã giải quyết"
-            },
-            "empty": {
-                "title": "Không có cảnh báo",
-                "desc": "Tất cả máy đang hoạt động bình thường.",
-                "noResolved": "Chưa có sự cố nào được giải quyết."
-            },
-            "messages": {
-                "dismissed": "Đã bỏ qua cảnh báo.",
-                "reportCreated": "Đã tạo báo cáo sự cố thành công."
-            }
-        },
-        "kanban": {
-            "priority": {
-                "normal": "Bình thường",
-                "critical": "Nghiêm trọng",
-                "high": "Cao",
-                "low": "Thấp"
-            },
-            "card": {
-                "reportedAt": "Báo cáo lúc {{date}}",
-                "resolvedAt": "Giải quyết lúc {{date}}"
-            },
-            "column": {
-                "noReports": "Không có báo cáo",
-                "showMore": "+ {{count}} báo cáo khác",
-                "showLess": "Thu gọn"
-            },
-            "actions": {
-                "delete": "Xóa"
-            },
-            "errorGroupManagement": {
-                "title": "Quản lý nhóm lỗi",
-                "addErrorGroup": "Thêm nhóm lỗi",
-                "searchPlaceholder": "Tìm theo tên nhóm...",
-                "fetchError": "Không thể tải danh sách nhóm lỗi",
-                "deleteSuccess": "Xóa nhóm lỗi thành công",
-                "deleteError": "Xóa nhóm lỗi thất bại",
-                "updateSuccess": "Cập nhật nhóm lỗi thành công",
-                "table": {
-                    "headers": {
-                        "id": "ID",
-                        "errorGroupName": "Tên nhóm",
-                        "description": "Mô tả",
-                        "status": "Trạng thái",
-                        "createdAt": "Ngày tạo",
-                        "updatedAt": "Ngày cập nhật",
-                        "actions": "Thao tác"
-                    }
-                },
-                "actions": {
-                    "viewDetails": "Xem chi tiết",
-                    "edit": "Chỉnh sửa",
-                    "delete": "Xóa"
-                },
-                "dialogs": {
-                    "deleteConfirmation": {
-                        "title": "Xóa nhóm lỗi",
-                        "description": "Bạn có chắc chắn muốn xóa nhóm lỗi này không?"
-                    }
-                },
-                "form": {
-                    "createTitle": "Tạo nhóm lỗi mới",
-                    "editTitle": "Chỉnh sửa nhóm lỗi",
-                    "createSuccess": "Tạo nhóm lỗi thành công",
-                    "createError": "Tạo nhóm lỗi thất bại",
-                    "fields": {
-                        "errorGroupName": "Tên nhóm",
-                        "description": "Mô tả",
-                        "status": "Trạng thái"
-                    },
-                    "placeholders": {
-                        "errorGroupName": "Nhập tên nhóm",
-                        "description": "Nhập mô tả nhóm",
-                        "status": "Chọn trạng thái"
-                    },
-                    "validation": {
-                        "required": "Trường này là bắt buộc",
-                        "minLength": "Độ dài tối thiểu là {{min}} ký tự",
-                        "maxLength": "Độ dài tối đa là {{max}} ký tự"
-                    },
-                    "buttons": {
-                        "cancel": "Hủy",
-                        "create": "Tạo",
-                        "save": "Lưu",
-                        "saving": "Đang lưu...",
-                        "close": "Đóng",
-                        "update": "Cập nhật"
-                    }
-                }
-            },
-            "errorDetailManagement": {
-                "title": "Quản lý chi tiết lỗi",
-                "addErrorDetail": "Thêm chi tiết lỗi",
-                "searchPlaceholder": "Tìm theo tên lỗi...",
-                "fetchError": "Không thể tải danh sách chi tiết lỗi",
-                "deleteSuccess": "Xóa chi tiết lỗi thành công",
-                "deleteError": "Xóa chi tiết lỗi thất bại",
-                "updateSuccess": "Cập nhật chi tiết lỗi thành công",
-                "table": {
-                    "headers": {
-                        "id": "ID",
-                        "errorName": "Tên lỗi",
-                        "description": "Mô tả",
-                        "status": "Trạng thái",
-                        "createdAt": "Ngày tạo",
-                        "updatedAt": "Ngày cập nhật",
-                        "actions": "Thao tác"
-                    }
-                },
-                "actions": {
-                    "viewDetails": "Xem chi tiết",
-                    "edit": "Chỉnh sửa",
-                    "delete": "Xóa"
-                },
-                "dialogs": {
-                    "deleteConfirmation": {
-                        "title": "Xóa chi tiết lỗi",
-                        "description": "Bạn có chắc chắn muốn xóa chi tiết lỗi này không?"
-                    }
-                },
-                "form": {
-                    "createTitle": "Tạo chi tiết lỗi mới",
-                    "editTitle": "Chỉnh sửa chi tiết lỗi",
-                    "createSuccess": "Tạo chi tiết lỗi thành công",
-                    "createError": "Tạo chi tiết lỗi thất bại",
-                    "fields": {
-                        "errorName": "Tên lỗi",
-                        "description": "Mô tả",
-                        "status": "Trạng thái"
-                    },
-                    "placeholders": {
-                        "errorName": "Nhập tên lỗi",
-                        "description": "Nhập mô tả lỗi",
-                        "status": "Chọn trạng thái"
-                    },
-                    "validation": {
-                        "required": "Trường này là bắt buộc",
-                        "minLength": "Độ dài tối thiểu là {{min}} ký tự",
-                        "maxLength": "Độ dài tối đa là {{max}} ký tự"
-                    },
-                    "buttons": {
-                        "cancel": "Hủy",
-                        "create": "Tạo",
-                        "save": "Lưu",
-                        "saving": "Đang lưu...",
-                        "close": "Đóng",
-                        "update": "Cập nhật"
-                    }
-                }
-            },
-            "productionPlanManagement": {
-                "title": "Quản lý kế hoạch sản xuất",
-                "addProductionPlan": "Thêm kế hoạch sản xuất",
-                "searchPlaceholder": "Tìm theo mã máy...",
-                "fetchError": "Không thể tải danh sách kế hoạch sản xuất",
-                "deleteSuccess": "Xóa kế hoạch sản xuất thành công",
-                "deleteError": "Xóa kế hoạch sản xuất thất bại",
-                "updateSuccess": "Cập nhật kế hoạch sản xuất thành công",
-                "table": {
-                    "headers": {
-                        "id": "Mã kế hoạch",
-                        "filterId": "Chu kỳ",
-                        "machineId": "Mã máy",
-                        "plannedQuantity": "Số lượng kế hoạch",
-                        "status": "Trạng thái",
-                        "createdAt": "Ngày tạo",
-                        "actions": "Thao tác"
-                    }
-                },
-                "actions": {
-                    "viewDetails": "Xem chi tiết",
-                    "edit": "Chỉnh sửa",
-                    "delete": "Xóa"
-                },
-                "dialogs": {
-                    "deleteConfirmation": {
-                        "title": "Xóa kế hoạch sản xuất",
-                        "description": "Bạn có chắc chắn muốn xóa kế hoạch sản xuất này không?"
-                    }
-                },
-                "form": {
-                    "createTitle": "Tạo kế hoạch sản xuất",
-                    "editTitle": "Chỉnh sửa kế hoạch sản xuất",
-                    "createSuccess": "Tạo kế hoạch sản xuất thành công",
-                    "createError": "Tạo kế hoạch sản xuất thất bại",
-                    "fields": {
-                        "filterId": "Chu kỳ",
-                        "machineId": "Mã máy",
-                        "plannedQuantity": "Số lượng kế hoạch",
-                        "status": "Trạng thái"
-                    },
-                    "placeholders": {
-                        "filterId": "Chọn chu kỳ (Ngày / Tuần)",
-                        "machineId": "Nhập mã máy",
-                        "plannedQuantity": "Nhập số lượng kế hoạch",
-                        "status": "Chọn trạng thái"
-                    },
-                    "validation": {
-                        "required": "Trường này là bắt buộc",
-                        "minValue": "Giá trị phải lớn hơn hoặc bằng {{min}}"
-                    },
-                    "buttons": {
-                        "cancel": "Hủy",
-                        "create": "Tạo",
-                        "save": "Lưu",
-                        "saving": "Đang lưu...",
-                        "close": "Đóng",
-                        "update": "Cập nhật"
-                    }
-                }
-            },
-            "moldCodeManagement": {
-                "title": "Quản lý mã khuôn",
-                "addMoldCode": "Thêm mã khuôn",
-                "searchPlaceholder": "Tìm theo tên mã khuôn...",
-                "fetchError": "Không thể tải danh sách mã khuôn",
-                "deleteSuccess": "Xóa mã khuôn thành công",
-                "deleteError": "Xóa mã khuôn thất bại",
-                "updateSuccess": "Cập nhật mã khuôn thành công",
-                "table": {
-                    "headers": {
-                        "id": "ID",
-                        "moldCodeName": "Mã khuôn",
-                        "description": "Mô tả",
-                        "status": "Trạng thái",
-                        "createdAt": "Ngày tạo",
-                        "updatedAt": "Ngày cập nhật",
-                        "actions": "Thao tác"
-                    }
-                },
-                "actions": {
-                    "viewDetails": "Xem chi tiết",
-                    "edit": "Chỉnh sửa",
-                    "delete": "Xóa"
-                },
-                "dialogs": {
-                    "deleteConfirmation": {
-                        "title": "Xóa mã khuôn",
-                        "description": "Bạn có chắc chắn muốn xóa mã khuôn này không?"
-                    }
-                },
-                "form": {
-                    "createTitle": "Tạo mã khuôn mới",
-                    "editTitle": "Chỉnh sửa mã khuôn",
-                    "createSuccess": "Tạo mã khuôn thành công",
-                    "createError": "Tạo mã khuôn thất bại",
-                    "fields": {
-                        "moldCodeName": "Mã khuôn",
-                        "description": "Mô tả",
-                        "status": "Trạng thái"
-                    },
-                    "placeholders": {
-                        "moldCodeName": "Nhập mã khuôn (VD: MLD-A001)",
-                        "description": "Nhập mô tả mã khuôn",
-                        "status": "Chọn trạng thái"
-                    },
-                    "validation": {
-                        "required": "Trường này là bắt buộc",
-                        "minLength": "Độ dài tối thiểu là {{min}} ký tự",
-                        "maxLength": "Độ dài tối đa là {{max}} ký tự"
-                    },
-                    "buttons": {
-                        "cancel": "Hủy",
-                        "create": "Tạo",
-                        "save": "Lưu",
-                        "saving": "Đang lưu...",
-                        "close": "Đóng",
-                        "update": "Cập nhật"
-                    }
-                }
-            }
-        }
-    },
-    "errorGroupManagement": {
-        "title": "Quản lý nhóm lỗi",
-        "addErrorGroup": "Thêm nhóm lỗi",
-        "searchPlaceholder": "Tìm theo tên nhóm...",
-        "fetchError": "Không thể tải danh sách nhóm lỗi",
-        "deleteSuccess": "Xóa nhóm lỗi thành công",
-        "deleteError": "Xóa nhóm lỗi thất bại",
-        "updateSuccess": "Cập nhật nhóm lỗi thành công",
-        "updateError": "Cập nhật nhóm lỗi thất bại",
-        "table": {
-            "headers": {
-                "id": "ID",
-                "errorGroupName": "Tên nhóm",
-                "description": "Mô tả",
-                "status": "Trạng thái",
-                "createdAt": "Ngày tạo",
-                "updatedAt": "Ngày cập nhật",
-                "actions": "Thao tác"
-            }
-        },
-        "actions": {
-            "viewDetails": "Xem chi tiết",
-            "edit": "Chỉnh sửa",
-            "delete": "Xóa"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Xóa nhóm lỗi",
-                "description": "Bạn có chắc chắn muốn xóa nhóm lỗi này không?"
-            }
-        },
-        "form": {
-            "createTitle": "Tạo nhóm lỗi mới",
-            "editTitle": "Chỉnh sửa nhóm lỗi",
-            "createSuccess": "Tạo nhóm lỗi thành công",
-            "createError": "Tạo nhóm lỗi thất bại",
-            "fields": {
-                "errorGroupName": "Tên nhóm",
-                "description": "Mô tả",
-                "status": "Trạng thái"
-            },
-            "placeholders": {
-                "errorGroupName": "Nhập tên nhóm",
-                "description": "Nhập mô tả nhóm",
-                "status": "Chọn trạng thái"
-            },
-            "validation": {
-                "required": "Trường này là bắt buộc",
-                "minLength": "Độ dài tối thiểu là {{min}} ký tự",
-                "maxLength": "Độ dài tối đa là {{max}} ký tự"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo",
-                "save": "Lưu",
-                "saving": "Đang lưu...",
-                "close": "Đóng",
-                "update": "Cập nhật"
-            }
-        }
-    },
-    "errorDetailManagement": {
-        "title": "Quản lý chi tiết lỗi",
-        "addErrorDetail": "Thêm chi tiết lỗi",
-        "searchPlaceholder": "Tìm theo tên lỗi...",
-        "fetchError": "Không thể tải danh sách chi tiết lỗi",
-        "deleteSuccess": "Xóa chi tiết lỗi thành công",
-        "deleteError": "Xóa chi tiết lỗi thất bại",
-        "updateSuccess": "Cập nhật chi tiết lỗi thành công",
-        "updateError": "Cập nhật chi tiết lỗi thất bại",
-        "table": {
-            "headers": {
-                "id": "ID",
-                "errorName": "Tên lỗi",
-                "description": "Mô tả",
-                "status": "Trạng thái",
-                "createdAt": "Ngày tạo",
-                "updatedAt": "Ngày cập nhật",
-                "actions": "Thao tác"
-            }
-        },
-        "actions": {
-            "viewDetails": "Xem chi tiết",
-            "edit": "Chỉnh sửa",
-            "delete": "Xóa"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Xóa chi tiết lỗi",
-                "description": "Bạn có chắc chắn muốn xóa chi tiết lỗi này không?"
-            }
-        },
-        "form": {
-            "createTitle": "Tạo chi tiết lỗi mới",
-            "editTitle": "Chỉnh sửa chi tiết lỗi",
-            "createSuccess": "Tạo chi tiết lỗi thành công",
-            "createError": "Tạo chi tiết lỗi thất bại",
-            "fields": {
-                "errorName": "Tên lỗi",
-                "description": "Mô tả",
-                "status": "Trạng thái"
-            },
-            "placeholders": {
-                "errorName": "Nhập tên lỗi",
-                "description": "Nhập mô tả lỗi",
-                "status": "Chọn trạng thái"
-            },
-            "validation": {
-                "required": "Trường này là bắt buộc",
-                "minLength": "Độ dài tối thiểu là {{min}} ký tự",
-                "maxLength": "Độ dài tối đa là {{max}} ký tự"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo",
-                "save": "Lưu",
-                "saving": "Đang lưu...",
-                "close": "Đóng",
-                "update": "Cập nhật"
-            }
-        }
-    },
-    "productionPlanManagement": {
-        "title": "Quản lý kế hoạch sản xuất",
-        "addProductionPlan": "Thêm kế hoạch sản xuất",
-        "searchPlaceholder": "Tìm theo mã máy...",
-        "fetchError": "Không thể tải danh sách kế hoạch sản xuất",
-        "deleteSuccess": "Xóa kế hoạch sản xuất thành công",
-        "deleteError": "Xóa kế hoạch sản xuất thất bại",
-        "updateSuccess": "Cập nhật kế hoạch sản xuất thành công",
-        "updateError": "Cập nhật kế hoạch sản xuất thất bại",
-        "table": {
-            "headers": {
-                "id": "Mã kế hoạch",
-                "filterId": "Chu kỳ",
-                "machineId": "Mã máy",
-                "plannedQuantity": "Số lượng kế hoạch",
-                "status": "Trạng thái",
-                "createdAt": "Ngày tạo",
-                "actions": "Thao tác"
-            }
-        },
-        "actions": {
-            "viewDetails": "Xem chi tiết",
-            "edit": "Chỉnh sửa",
-            "delete": "Xóa"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Xóa kế hoạch sản xuất",
-                "description": "Bạn có chắc chắn muốn xóa kế hoạch sản xuất này không?"
-            }
-        },
-        "form": {
-            "createTitle": "Tạo kế hoạch sản xuất",
-            "editTitle": "Chỉnh sửa kế hoạch sản xuất",
-            "createSuccess": "Tạo kế hoạch sản xuất thành công",
-            "createError": "Tạo kế hoạch sản xuất thất bại",
-            "filterOptions": {
-                "day": "Ngày",
-                "week": "Tuần"
-            },
-            "fields": {
-                "filterId": "Chu kỳ",
-                "machineId": "Mã máy",
-                "plannedQuantity": "Số lượng kế hoạch",
-                "status": "Trạng thái"
-            },
-            "placeholders": {
-                "filterId": "Chọn chu kỳ (Ngày / Tuần)",
-                "machineId": "Nhập mã máy",
-                "plannedQuantity": "Nhập số lượng kế hoạch",
-                "status": "Chọn trạng thái"
-            },
-            "validation": {
-                "required": "Trường này là bắt buộc",
-                "minValue": "Giá trị phải lớn hơn hoặc bằng {{min}}"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo",
-                "save": "Lưu",
-                "saving": "Đang lưu...",
-                "close": "Đóng",
-                "update": "Cập nhật"
-            }
-        }
-    },
-    "moldCodeManagement": {
-        "title": "Quản lý mã khuôn",
-        "addMoldCode": "Thêm mã khuôn",
-        "searchPlaceholder": "Tìm theo tên mã khuôn...",
-        "fetchError": "Không thể tải danh sách mã khuôn",
-        "deleteSuccess": "Xóa mã khuôn thành công",
-        "deleteError": "Xóa mã khuôn thất bại",
-        "updateSuccess": "Cập nhật mã khuôn thành công",
-        "updateError": "Cập nhật mã khuôn thất bại",
-        "table": {
-            "headers": {
-                "id": "ID",
-                "moldCodeName": "Mã khuôn",
-                "description": "Mô tả",
-                "status": "Trạng thái",
-                "createdAt": "Ngày tạo",
-                "updatedAt": "Ngày cập nhật",
-                "actions": "Thao tác"
-            }
-        },
-        "actions": {
-            "viewDetails": "Xem chi tiết",
-            "edit": "Chỉnh sửa",
-            "delete": "Xóa"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Xóa mã khuôn",
-                "description": "Bạn có chắc chắn muốn xóa mã khuôn này không?"
-            }
-        },
-        "form": {
-            "createTitle": "Tạo mã khuôn mới",
-            "editTitle": "Chỉnh sửa mã khuôn",
-            "createSuccess": "Tạo mã khuôn thành công",
-            "createError": "Tạo mã khuôn thất bại",
-            "fields": {
-                "moldCodeName": "Mã khuôn",
-                "description": "Mô tả",
-                "status": "Trạng thái"
-            },
-            "placeholders": {
-                "moldCodeName": "Nhập mã khuôn (VD: MLD-A001)",
-                "description": "Nhập mô tả mã khuôn",
-                "status": "Chọn trạng thái"
-            },
-            "validation": {
-                "required": "Trường này là bắt buộc",
-                "minLength": "Độ dài tối thiểu là {{min}} ký tự",
-                "maxLength": "Độ dài tối đa là {{max}} ký tự"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo",
-                "save": "Lưu",
-                "saving": "Đang lưu...",
-                "close": "Đóng",
-                "update": "Cập nhật"
-            }
-        }
-    }
+    "stepTemplates": "Các bước làm"
 }

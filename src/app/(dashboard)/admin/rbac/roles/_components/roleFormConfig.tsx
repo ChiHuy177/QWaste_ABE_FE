@@ -10,7 +10,6 @@ export const getRoleFormFields = (t: any, mode: 'create' | 'edit'): FormFieldCon
             type: 'text',
             placeholder: t('roleManagement.form.roleName.placeholder'),
             required: true,
-            disabled: mode === 'edit',
             rules: [
                 {
                     required: true,

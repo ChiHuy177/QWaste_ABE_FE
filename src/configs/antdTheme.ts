@@ -10,12 +10,12 @@ export const statusColors = {
         },
         idle: {
             base: '#A96500',
-            bg: 'rgba(169, 101, 0, 0.16)',
+            bg: '#fffbe6',
             border: 'rgba(169, 101, 0, 0.42)',
         },
         error: {
             base: '#B42318',
-            bg: 'rgba(180, 35, 24, 0.13)',
+            bg: '#fff1f0',
             border: 'rgba(180, 35, 24, 0.38)',
         },
         offline: {
@@ -26,19 +26,19 @@ export const statusColors = {
     },
     dark: {
         runtime: {
-            base: '#7FD6A7',
-            bg: 'rgba(127, 214, 167, 0.18)',
-            border: 'rgba(127, 214, 167, 0.42)',
+            base: '#5FAE85',
+            bg: 'rgba(95, 174, 133, 0.16)',
+            border: 'rgba(95, 174, 133, 0.4)',
         },
         idle: {
-            base: '#F2B84B',
-            bg: 'rgba(242, 184, 75, 0.18)',
-            border: 'rgba(242, 184, 75, 0.44)',
+            base: '#D9A03F',
+            bg: 'rgba(217, 160, 63, 0.16)',
+            border: 'rgba(217, 160, 63, 0.4)',
         },
         error: {
-            base: '#FF8A80',
-            bg: 'rgba(255, 138, 128, 0.18)',
-            border: 'rgba(255, 138, 128, 0.42)',
+            base: '#E06B62',
+            bg: 'rgba(224, 107, 98, 0.16)',
+            border: 'rgba(224, 107, 98, 0.4)',
         },
         offline: {
             base: '#6B6B6B',
@@ -228,19 +228,20 @@ export const lightTheme: ThemeConfig = {
 
 export const darkTheme: ThemeConfig = {
     token: {
-        colorPrimary: '#4F9CF5',
+        colorPrimary: '#3D7DD2',
         colorSuccess: D_SUCCESS,
         colorWarning: D_WARNING,
         colorError: D_ERROR,
-        colorInfo: '#4F9CF5',
-        colorInfoBg: '#173A60',
-        colorInfoBorder: '#6AAAF2',
+        colorInfo: '#3D7DD2',
+        colorInfoBg: '#16304D',
+        colorInfoBorder: '#4E83C4',
         colorSuccessBg: D_SUCCESS_BG,
         colorSuccessBorder: D_SUCCESS_BD,
         colorWarningBg: D_WARNING_BG,
         colorWarningBorder: D_WARNING_BD,
         colorErrorBg: D_ERROR_BG,
         colorErrorBorder: D_ERROR_BD,
+        colorPrimaryBg: '#15273F',
 
         colorText: 'rgba(255, 255, 255, 0.85)',
         colorTextSecondary: 'rgba(255, 255, 255, 0.65)',
@@ -307,10 +308,10 @@ export const darkTheme: ThemeConfig = {
         },
         Menu: {
             itemBg: 'transparent',
-            itemSelectedBg: '#4F9CF5',
+            itemSelectedBg: '#3D7DD2',
             itemSelectedColor: '#ffffff',
-            itemHoverBg: 'rgba(79, 156, 245, 0.12)',
-            itemHoverColor: '#4F9CF5',
+            itemHoverBg: 'rgba(61, 125, 210, 0.14)',
+            itemHoverColor: '#6FA3DC',
             subMenuItemBg: 'transparent',
         },
         Layout: {
@@ -322,7 +323,7 @@ export const darkTheme: ThemeConfig = {
             footerPadding: '12px 24px',
         },
         Typography: {
-            colorTextHeading: '#4F9CF5',
+            colorTextHeading: '#6FA3DC',
             titleMarginBottom: 0,
             titleMarginTop: 0,
         },
@@ -350,7 +351,7 @@ export const darkTheme: ThemeConfig = {
             colorError: D_ERROR,
         },
         Progress: {
-            defaultColor: '#4F9CF5',
+            defaultColor: '#3D7DD2',
             remainingColor: 'rgba(255, 255, 255, 0.08)',
         },
         Alert: {
@@ -360,8 +361,8 @@ export const darkTheme: ThemeConfig = {
             colorWarningBorder: D_WARNING_BD,
             colorErrorBg: D_ERROR_BG,
             colorErrorBorder: D_ERROR_BD,
-            colorInfoBg: 'rgba(79, 156, 245, 0.18)',
-            colorInfoBorder: 'rgba(79, 156, 245, 0.42)',
+            colorInfoBg: 'rgba(61, 125, 210, 0.18)',
+            colorInfoBorder: 'rgba(61, 125, 210, 0.45)',
         },
         Message: {
             contentBg: '#282828',
@@ -372,7 +373,7 @@ export const darkTheme: ThemeConfig = {
             colorSuccess: D_SUCCESS,
             colorWarning: D_WARNING,
             colorError: D_ERROR,
-            colorInfo: '#4F9CF5',
+            colorInfo: '#3D7DD2',
         },
     },
 };

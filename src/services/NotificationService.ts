@@ -11,49 +11,28 @@ import i18n from '../../i18n';
 const formatKeyArgs = (template: string, args: unknown[] = []) =>
     template.replace(/\{(\d+)\}/g, (_, index: string) => String(args[Number(index)] ?? ''));
 
-const resolveNotificationText = (
-    value: string | undefined,
-    key: string | undefined,
-    args: unknown[] | undefined,
-    fallback = ''
-) => {
-    const trimmedValue = value?.trim();
-    if (trimmedValue) return trimmedValue;
-    if (!key) return fallback;
-
-    const translated = i18n.t(key, { defaultValue: fallback });
-    return formatKeyArgs(String(translated), args);
-};
-
-const normalizeNotification = (item: NotificationApiItem): Notification => {
-    const titleKey = item.titleKey ?? item.title_key;
-    const titleArgs = item.titleArgs ?? item.title_args;
-    const contentKey = item.contentKey ?? item.content_key;
-    const contentArgs = item.contentArgs ?? item.content_args;
-    const content = item.content ?? item.message ?? item.body ?? item.description;
-
-    return {
-        notificationId: item.notificationId ?? item.id ?? Date.now(),
-        title: resolveNotificationText(
-            item.title,
-            titleKey,
-            titleArgs,
-            String(i18n.t('notifications.title', { defaultValue: 'Notification' }))
-        ),
-        content: resolveNotificationText(content, contentKey, contentArgs),
-        isRead: item.isRead ?? item.is_read ?? item.read ?? false,
-        createdAt: item.createdAt ?? item.created_at ?? item.timestamp ?? new Date().toISOString(),
-        payload: item.payload ?? {},
-    };
-};
+const normalizeNotification = (item: NotificationApiItem): Notification => ({
+    notificationId: item.notificationId,
+    title: formatKeyArgs(
+        String(i18n.t(item.titleKey, { defaultValue: item.titleKey })),
+        item.titleArgs
+    ),
+    content: formatKeyArgs(
+        String(i18n.t(item.contentKey, { defaultValue: item.contentKey })),
+        item.contentArgs
+    ),
+    isRead: item.isRead,
+    createdAt: item.createdAt,
+    payload: item.payload ?? {},
+});
 
 const normalizeNotificationResponse = (
     response: NotificationApiResponse | undefined
 ): NotificationResponse => ({
     notifications: (response?.notifications ?? []).map(normalizeNotification),
-    lastCreatedAt: response?.lastCreatedAt ?? response?.last_created_at ?? '',
-    lastNotificationId: response?.lastNotificationId ?? response?.last_notification_id ?? 0,
-    hasNext: response?.hasNext ?? response?.has_next ?? false,
+    lastCreatedAt: response?.lastCreatedAt ?? '',
+    lastNotificationId: response?.lastNotificationId ?? 0,
+    hasNext: response?.hasNext ?? false,
 });
 
 export class NotificationService {
@@ -65,7 +44,7 @@ export class NotificationService {
         let url = `${ENDPOINTS.NOTIFICATIONS.BASE}?limit=${limit}`;
 
         if (lastCreatedAt) {
-            url += `&lastCreatedAt=${lastCreatedAt}`;
+            url += `&lastCreatedAt=${encodeURIComponent(lastCreatedAt)}`;
         }
 
         if (lastId > 0) {

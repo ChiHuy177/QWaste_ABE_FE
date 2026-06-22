@@ -6,7 +6,6 @@ import { OrderService } from '@/services';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { mapPlanDataToFormValues } from '../utils/mappers';
-import { DemoOrderService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
 
 interface UseOrderPlanDataProps {
     isEditing: boolean;
@@ -49,9 +48,7 @@ export const useOrderPlanData = ({
 
             setIsLoadingPlanData(true);
             try {
-                const planData = USE_MOCK_ORDERS
-                    ? await DemoOrderService.getOrderPlanForEdit(selectedOrderId)
-                    : await OrderService.getOrderPlanForEdit(selectedOrderId);
+                const planData = await OrderService.getOrderPlanForEdit(selectedOrderId);
                 const mappedDrawings = mapPlanDataToFormValues(planData);
 
                 planForm.setFieldsValue({

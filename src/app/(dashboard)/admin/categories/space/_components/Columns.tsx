@@ -57,7 +57,7 @@ export const getSpaceTableColumns = ({
                             {childCount > 0 && (
                                 <Tag
                                     color="blue"
-                                    bordered={false}
+                                    variant="filled"
                                     style={{
                                         flexShrink: 0,
                                         borderRadius: 10,
@@ -94,7 +94,7 @@ export const getSpaceTableColumns = ({
                 const textColor = spaceLevelTextColors[level as keyof typeof spaceLevelTextColors];
 
                 return (
-                    <Tag color={color} style={{ color: textColor }}>
+                    <Tag color={color} variant="solid" style={{ color: textColor }}>
                         {levelName} (L{level})
                     </Tag>
                 );

@@ -74,8 +74,7 @@ export const getStepTableColumns = (props?: StepTableColumnProps): ColumnsType<S
             align: 'center',
             render: (checked: boolean) => (
                 <Tag
-                    color={checked ? 'blue' : 'default'}
-                    bordered={false}
+                    color={checked ? 'blue' : 'default'} variant="filled"
                     style={{ minWidth: 60, textAlign: 'center' }}
                 >
                     {(checked ? t('common.yes') : t('common.no')).toUpperCase()}

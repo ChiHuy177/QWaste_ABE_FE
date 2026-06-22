@@ -128,7 +128,7 @@ function TaskCardContent({
                 }}
             />
             <Flex align="flex-start" justify="space-between" gap={10} style={{ marginBottom: 10 }}>
-                <Space direction="vertical" size={2} style={{ minWidth: 0 }}>
+                <Space orientation="vertical" size={2} style={{ minWidth: 0 }}>
                     <Text code style={{ fontSize: 12 }}>
                         {task.code}
                     </Text>
@@ -141,7 +141,7 @@ function TaskCardContent({
                 </Tag>
             </Flex>
 
-            <Space direction="vertical" size={7} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={7} style={{ width: '100%' }}>
                 <Flex align="center" gap={8}>
                     <div
                         style={{

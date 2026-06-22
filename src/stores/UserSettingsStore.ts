@@ -1,63 +1,29 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { DemoUserSettingService, USE_MOCK_USERS } from '@/mockData/admin/users';
-import { UserService } from '@/services/UserService';
-import { UserSettingService } from '@/services/UserSettingService';
+import { createSlice, PayloadAction, Dispatch } from '@reduxjs/toolkit';
 import { UserProfile, UserSettings } from '@/types/User';
-import type { AppDispatch, RootState } from './configureStore';
+import { UserService, UserSettingService } from '@/services';
 
-type UserReferencesUpdate = {
-    preferences?: Partial<UserProfile['preferences']>;
-};
-
-const updateUserReferences = async (
-    payload: UserReferencesUpdate,
-    userId?: string
-): Promise<unknown> => {
-    if (USE_MOCK_USERS) {
-        return DemoUserSettingService.updateReferences(payload, userId);
-    }
-
-    return UserSettingService.updateReferences(payload as unknown as string[]);
-};
-
-const requestPasswordVerification = async (
-    currentPassword: string,
-    userId?: string
-): Promise<string> => {
-    if (USE_MOCK_USERS) {
-        return DemoUserSettingService.changePasswordVerifycation(currentPassword, userId);
-    }
-
-    return UserService.changePasswordVerifycation(currentPassword);
-};
-
-const changePasswordWithCode = async (
-    otpCode: string,
-    newPassword: string,
-    confirmPassword: string,
-    userId?: string
-): Promise<string> => {
-    if (USE_MOCK_USERS) {
-        return DemoUserSettingService.changePasswordWithCode(
-            otpCode,
-            newPassword,
-            confirmPassword,
-            userId
-        );
-    }
-
-    return UserService.changePasswordWithCode(otpCode, newPassword, confirmPassword);
-};
-
+/**
+ * User Settings Store State Interface
+ */
 export interface IUserSettingsStoreState {
+    // Profile state
     profile: UserProfile | null;
+
+    // Settings state
     settings: UserSettings | null;
+
+    // Password state
     isRequestingOTP: boolean;
     isVerifying: boolean;
+
+    // Common state
     isLoading: boolean;
     error: string | null;
 }
 
+/**
+ * Initial State
+ */
 const initialState: IUserSettingsStoreState = {
     profile: null,
     settings: null,
@@ -67,48 +33,54 @@ const initialState: IUserSettingsStoreState = {
     error: null,
 };
 
+/**
+ * Create User Settings Slice
+ */
 const slice = createSlice({
     name: 'userSettings',
     initialState,
     reducers: {
+        // Profile reducers
         setProfile: (state, action: PayloadAction<UserProfile>) => {
             state.profile = action.payload;
         },
 
         updateProfileOptimistic: (state, action: PayloadAction<Partial<UserProfile>>) => {
-            if (!state.profile) return;
-
-            state.profile = {
-                ...state.profile,
-                ...action.payload,
-            };
+            if (state.profile) {
+                state.profile = {
+                    ...state.profile,
+                    ...action.payload,
+                };
+            }
         },
 
         updateAvatarOptimistic: (state, action: PayloadAction<string>) => {
-            if (!state.profile) return;
-
-            state.profile = {
-                ...state.profile,
-                preferences: {
-                    ...state.profile.preferences,
-                    avatarUrl: action.payload,
-                },
-            };
+            if (state.profile) {
+                state.profile = {
+                    ...state.profile,
+                    preferences: {
+                        ...state.profile.preferences,
+                        avatarUrl: action.payload,
+                    },
+                };
+            }
         },
 
+        // Settings reducers
         setSettings: (state, action: PayloadAction<UserSettings>) => {
             state.settings = action.payload;
         },
 
         updateSettingsOptimistic: (state, action: PayloadAction<Partial<UserSettings>>) => {
-            if (!state.settings) return;
-
-            state.settings = {
-                ...state.settings,
-                ...action.payload,
-            };
+            if (state.settings) {
+                state.settings = {
+                    ...state.settings,
+                    ...action.payload,
+                };
+            }
         },
 
+        // Password reducers
         setRequestingOTP: (state, action: PayloadAction<boolean>) => {
             state.isRequestingOTP = action.payload;
         },
@@ -117,6 +89,7 @@ const slice = createSlice({
             state.isVerifying = action.payload;
         },
 
+        // Common reducers
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
@@ -125,101 +98,126 @@ const slice = createSlice({
             state.error = action.payload;
         },
 
+        // Reset state
         resetUserSettings: () => initialState,
     },
 });
 
+/**
+ * Export reducer
+ */
 export const { reducer } = slice;
 
+/**
+ * Action Creators (Async Thunks)
+ */
 export const userSettingsActions = {
+    /**
+     * Set profile
+     */
     setProfile: slice.actions.setProfile,
 
-    updateAvatar:
-        (avatarUrl: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
-            const previousProfile = getState().userSettings.profile;
+    /**
+     * Update avatar
+     */
+    updateAvatar: (avatarUrl: string) => async (dispatch: Dispatch, getState: any) => {
+        const previousProfile = getState().userSettings.profile;
 
-            if (!previousProfile) {
-                return { success: false, error: 'No profile found' };
-            }
+        if (!previousProfile) {
+            return { success: false, error: 'No profile found' };
+        }
 
-            dispatch(slice.actions.updateAvatarOptimistic(avatarUrl));
+        // Optimistic update
+        dispatch(slice.actions.updateAvatarOptimistic(avatarUrl));
 
-            const avatarPayload: UserReferencesUpdate = {
-                preferences: {
-                    avatarUrl,
-                },
-            };
+        const avatarPayload: any = {
+            preferences: {
+                avatarUrl: avatarUrl,
+            },
+        };
 
-            try {
-                await updateUserReferences(avatarPayload, previousProfile.userId);
-                return { success: true };
-            } catch {
-                dispatch(slice.actions.setProfile(previousProfile));
-                return { success: false, error: 'Failed to update avatar' };
-            }
-        },
+        try {
+            await UserSettingService.updateReferences(avatarPayload);
+            return { success: true };
+        } catch (error) {
+            // Rollback on error
+            dispatch(slice.actions.setProfile(previousProfile));
+            return { success: false, error: 'Failed to update avatar' };
+        }
+    },
 
+    /**
+     * Set settings
+     */
     setSettings: slice.actions.setSettings,
 
+    /**
+     * Update settings
+     */
     updateSettings:
-        (updates: Partial<UserSettings>) =>
-        async (dispatch: AppDispatch, getState: () => RootState) => {
+        (updates: Partial<UserSettings>) => async (dispatch: Dispatch, getState: any) => {
             const previousSettings = getState().userSettings.settings;
 
             if (!previousSettings) {
                 return { success: false, error: 'No settings found' };
             }
 
+            // Optimistic update
             dispatch(slice.actions.updateSettingsOptimistic(updates));
 
-            const preferences: Partial<UserProfile['preferences']> = {};
-            if (updates.theme) preferences.theme = updates.theme;
-            if (updates.language) preferences.language = updates.language;
+            const payload: any = { preferences: {} };
+            if (updates.theme) payload.preferences.theme = updates.theme;
+            if (updates.language) payload.preferences.language = updates.language;
 
             try {
-                await updateUserReferences({ preferences }, previousSettings.accountId);
+                await UserSettingService.updateReferences(payload);
                 return { success: true };
-            } catch {
+            } catch (error) {
+                // Rollback on error
                 dispatch(slice.actions.setSettings(previousSettings));
                 return { success: false, error: 'Failed to update settings' };
             }
         },
 
-    requestOTP:
-        (currentPassword: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
-            dispatch(slice.actions.setRequestingOTP(true));
-            dispatch(slice.actions.setError(null));
+    /**
+     * Request OTP for password change
+     */
+    requestOTP: (currentPassword: string) => async (dispatch: Dispatch) => {
+        dispatch(slice.actions.setRequestingOTP(true));
+        dispatch(slice.actions.setError(null));
 
-            try {
-                const userId = getState().userSettings.profile?.userId;
-                await requestPasswordVerification(currentPassword, userId);
-                return { success: true };
-            } catch {
-                dispatch(slice.actions.setError('Failed to request OTP'));
-                return { success: false, error: 'Co loi xay ra' };
-            } finally {
-                dispatch(slice.actions.setRequestingOTP(false));
-            }
-        },
+        try {
+            await UserService.changePasswordVerifycation(currentPassword);
+            dispatch(slice.actions.setRequestingOTP(false));
+            return { success: true };
+        } catch (error) {
+            dispatch(slice.actions.setRequestingOTP(false));
+            dispatch(slice.actions.setError('Failed to request OTP'));
+            return { success: false, error: 'Có lỗi xảy ra' };
+        }
+    },
 
+    /**
+     * Verify OTP and change password
+     */
     verifyOTP:
         (otpCode: string, newPassword: string, confirmPassword: string) =>
-        async (dispatch: AppDispatch, getState: () => RootState) => {
+        async (dispatch: Dispatch) => {
             dispatch(slice.actions.setVerifying(true));
             dispatch(slice.actions.setError(null));
 
             try {
-                const userId = getState().userSettings.profile?.userId;
-                await changePasswordWithCode(otpCode, newPassword, confirmPassword, userId);
-                return { success: true };
-            } catch {
-                dispatch(slice.actions.setError('Failed to verify OTP'));
-                return { success: false, error: 'Co loi xay ra' };
-            } finally {
+                await UserService.changePasswordWithCode(otpCode, newPassword, confirmPassword);
                 dispatch(slice.actions.setVerifying(false));
+                return { success: true };
+            } catch (error) {
+                dispatch(slice.actions.setVerifying(false));
+                dispatch(slice.actions.setError('Failed to verify OTP'));
+                return { success: false, error: 'Có lỗi xảy ra' };
             }
         },
 
+    // Re-export sync actions
     setLoading: slice.actions.setLoading,
     setError: slice.actions.setError,
     resetUserSettings: slice.actions.resetUserSettings,

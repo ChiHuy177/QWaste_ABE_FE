@@ -49,13 +49,13 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
     const { token } = useToken();
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* OVERVIEW STATISTICS (EDIT MODE) */}
             {isEditMode && currentOrder && <OrderOverviewStats currentOrder={currentOrder} />}
 
             {/* THÔNG TIN ĐƠN HÀNG — orderCode + orderName + orderPriority */}
             <div>
-                <Divider orientation="left" orientationMargin={0}>
+                <Divider titlePlacement="left" styles={{ content: { margin: 0 } }}>
                     <Text strong style={{ fontSize: 15 }}>
                         {t('orderManagement.form.sections.orderInfo')}
                     </Text>
@@ -106,7 +106,7 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
 
             {/* THÔNG TIN KHÁCH HÀNG — required fields */}
             <div>
-                <Divider orientation="left" orientationMargin={0}>
+                <Divider titlePlacement="left" styles={{ content: { margin: 0 } }}>
                     <Text strong style={{ fontSize: 15 }}>
                         {t('orderManagement.form.sections.customerInfo')}
                     </Text>

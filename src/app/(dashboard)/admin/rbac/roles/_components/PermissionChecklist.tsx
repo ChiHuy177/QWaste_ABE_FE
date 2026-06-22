@@ -3,12 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Checkbox, Collapse, Space, Button, Typography, Spin, Tag, Alert, Form } from 'antd';
 import type { CollapseProps } from 'antd';
 import { Permission } from '@/types/Permission';
-import { PermissionService } from '@/services/PermissionService';
-import { DemoPermissionService, USE_MOCK_RBAC } from '@/mockData/admin/rbac';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { PermissionService } from '@/services';
 
 const { Text } = Typography;
-const activePermissionService = USE_MOCK_RBAC ? DemoPermissionService : PermissionService;
 
 const getActionColor = (action: string): string => {
     switch (action) {
@@ -55,21 +52,20 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
     const selectedPermissions = value;
     const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
     const [loading, setLoading] = useState(true);
-    const { handleError } = useApiErrorHandler();
 
     useEffect(() => {
         const fetchPermissions = async () => {
             try {
-                const data = await activePermissionService.getAllPermissions();
+                const data = await PermissionService.getAllPermissions();
                 setAllPermissions(data);
             } catch (error) {
-                handleError(error, { fallbackKey: 'permissionManagement.messages.fetchError' });
+                console.error('Error fetching permissions:', error);
             } finally {
                 setLoading(false);
             }
         };
         fetchPermissions();
-    }, [handleError]);
+    }, []);
 
     const groupedPermissions = useMemo(() => {
         const subjects = Array.from(
@@ -159,7 +155,7 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
                     </Space>
                 ),
                 children: (
-                    <Space direction="vertical" style={{ width: '100%', paddingLeft: 24 }}>
+                    <Space orientation="vertical" style={{ width: '100%', paddingLeft: 24 }}>
                         {permissions.map((permission) => (
                             <Checkbox
                                 key={permission.permissionId}
@@ -194,7 +190,7 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
     if (loading) {
         return (
             <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: '32px 16px' }}>
-                <Spin tip={t('common.loading')}>
+                <Spin description={t('common.loading')}>
                     <div />
                 </Spin>
             </div>
@@ -213,7 +209,7 @@ export const PermissionChecklist: React.FC<PermissionChecklistProps> = ({
             {hasError && (
                 <Alert
                     type="error"
-                    message={errors?.[0] || t('roleManagement.form.permissions.required')}
+                    title={errors?.[0] || t('roleManagement.form.permissions.required')}
                     showIcon
                     style={{ marginBottom: 12 }}
                 />

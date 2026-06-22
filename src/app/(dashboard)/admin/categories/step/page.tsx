@@ -1,12 +1,11 @@
 'use client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StepService } from '@/services/StepService';
-import { DemoStepService, USE_MOCK_ORDERS } from '@/mockData/admin/orders';
+import { StandardStepService } from '@/services/StepService';
 import { toast } from 'sonner';
 import { Button, Card, Table, Grid, Spin, Typography, Modal, Descriptions, Tag } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { StepDTO, CreateStepRequest, UpdateStepRequest } from '@/types/Step';
 import { getStepTableColumns, StepTableColumnProps } from './_components/Columns';
@@ -18,9 +17,16 @@ import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+
+dayjs.extend(duration);
+
+const formatDuration = (seconds: number) => {
+    const d = dayjs.duration(seconds, 'seconds');
+    return `${d.minutes()}m ${d.seconds()}s`;
+};
 
 const { useBreakpoint } = Grid;
-const activeStepService = USE_MOCK_ORDERS ? DemoStepService : StepService;
 
 const StepListPage = () => {
     const [modalState, setModalState] = useState<{
@@ -64,28 +70,24 @@ const StepListPage = () => {
     const fetchStepData = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await activeStepService.getAllSteps();
+            const response = await StandardStepService.getAllSteps();
             // Sort conceptually by name or creation time, though no built-in order field exists
             response.sort((a, b) => a.stepName.localeCompare(b.stepName));
             setStepData(response);
         } catch (error) {
-            handleError(error, { fallbackKey: 'stepManagement.fetchError' });
+            toast.error(t('stepManagement.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [handleError]);
+    }, [t]);
 
     const handleCreateStep = useCallback(async () => {
-        if (!checkPermission('create', 'step')) {
-            return;
-        }
-
         setModalState({
             open: true,
             mode: 'create',
             data: { requiresQc: false },
         });
-    }, [checkPermission]);
+    }, []);
 
     const handleEditStep = useCallback(
         async (step: StepDTO) => {
@@ -101,7 +103,7 @@ const StepListPage = () => {
             setIsFormLoading(true);
 
             try {
-                const detailData = await activeStepService.getStepById(step.standardStepId);
+                const detailData = await StandardStepService.getStepById(step.standardStepId);
                 setModalState({
                     open: true,
                     mode: 'edit',
@@ -128,9 +130,9 @@ const StepListPage = () => {
                 type: 'delete',
                 pendingAction: async () => {
                     try {
-                        await activeStepService.deleteStep(step.standardStepId);
+                        await StandardStepService.deleteStep(step.standardStepId);
                         toast.success(t('stepManagement.deleteSuccess'));
-                        await fetchStepData();
+                        fetchStepData();
                     } catch (error: any) {
                         console.error('Error deleting step:', error);
                         handleError(error, {
@@ -148,7 +150,7 @@ const StepListPage = () => {
         async (step: StepDTO) => {
             setViewModalState({ open: true, loading: true, data: null });
             try {
-                const detailData = await activeStepService.getStepById(step.standardStepId);
+                const detailData = await StandardStepService.getStepById(step.standardStepId);
                 setViewModalState({ open: true, loading: false, data: detailData });
             } catch (error: any) {
                 console.error('Error fetching step details:', error);
@@ -208,7 +210,7 @@ const StepListPage = () => {
                     defaultCompletionTimeSeconds: data.defaultCompletionTimeSeconds,
                     materialName: data.materialName || null,
                 };
-                await activeStepService.createStep(payload);
+                await StandardStepService.createStep(payload);
                 toast.success(t('stepManagement.form.createSuccess'));
             } else {
                 if (modalState.data?.standardStepId) {
@@ -220,11 +222,11 @@ const StepListPage = () => {
                         defaultCompletionTimeSeconds: data.defaultCompletionTimeSeconds,
                         materialName: data.materialName || null,
                     };
-                    await activeStepService.updateStep(submitData);
+                    await StandardStepService.updateStep(submitData);
                     toast.success(t('stepManagement.form.updateSuccess'));
                 }
             }
-            await fetchStepData();
+            fetchStepData();
         } catch (error: any) {
             console.error('Error submitting step:', error);
             handleError(error, {
@@ -248,7 +250,7 @@ const StepListPage = () => {
                     type: 'create',
                     pendingAction: null,
                 });
-            } catch {
+            } catch (error) {
                 setConfirmModalState({
                     open: false,
                     type: 'create',
@@ -326,8 +328,7 @@ const StepListPage = () => {
                             </Descriptions.Item>
                             <Descriptions.Item label={t('stepManagement.table.headers.requiresQc')}>
                                 <Tag
-                                    color={viewModalState.data.requiresQc ? 'blue' : 'default'}
-                                    bordered={false}
+                                    color={viewModalState.data.requiresQc ? 'blue' : 'default'} variant="filled"
                                     style={{ minWidth: 60, textAlign: 'center' }}
                                 >
                                     {(viewModalState.data.requiresQc
@@ -392,12 +393,12 @@ const StepListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                bodyStyle={{
+                styles={{ body: {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     overflowY: isMobile ? 'auto' : 'hidden',
-                }}
+                } }}
             >
                 {stepData === null ? (
                     <div

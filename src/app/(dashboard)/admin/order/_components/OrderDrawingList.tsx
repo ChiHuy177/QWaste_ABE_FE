@@ -530,12 +530,12 @@ const SortableDrawingItem: React.FC<SortableDrawingItemProps> = ({
                                     return (
                                         <Space size={8}>
                                             {productionType && (
-                                                <Tag bordered={false} color="blue" style={{ fontSize: 11 }}>
+                                                <Tag variant="filled" color="blue" style={{ fontSize: 11 }}>
                                                     {productionType === 'BATCH' ? t('orderManagement.list.table.batch') : t('orderManagement.list.table.single')}
                                                 </Tag>
                                             )}
                                             {orderSteps && orderSteps.length > 0 && (
-                                                <Tag bordered={false} style={{ fontSize: 11 }}>
+                                                <Tag variant="filled" style={{ fontSize: 11 }}>
                                                     {orderSteps.length} {t('orderManagement.drawing.expectedSteps')}
                                                 </Tag>
                                             )}
@@ -566,7 +566,7 @@ const SortableDrawingItem: React.FC<SortableDrawingItemProps> = ({
                     borderRadius: '0 0 12px 12px',
                     display: isExpanded ? 'block' : 'none'
                 }}>
-                    <Space direction="vertical" size={20} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={20} style={{ width: '100%' }}>
                         <>
                             {/* Drawing Code Selection */}
                             <Row gutter={16}>
@@ -605,15 +605,15 @@ const SortableDrawingItem: React.FC<SortableDrawingItemProps> = ({
                                     >
                                         <Select
                                             placeholder={t('orderManagement.drawing.selectPlaceholder')}
-                                            showSearch
+                                            showSearch={{ optionFilterProp: 'label' }}
                                             size="large"
-                                            optionFilterProp="label"
+
                                             optionRender={(option) => {
                                                 const template = templates.find(
                                                     (t) => t.drawingCodeId === option.value
                                                 );
                                                 return (
-                                                    <Space direction="vertical" size={4}>
+                                                    <Space orientation="vertical" size={4}>
                                                         <Text strong>{template?.drawingCode}</Text>
                                                         <Text type="secondary" style={{ fontSize: 12 }}>
                                                             {template?.drawingCodeName}
@@ -742,19 +742,19 @@ const SortableDrawingItem: React.FC<SortableDrawingItemProps> = ({
                                             }}>
                                                 <Row gutter={[16, 16]}>
                                                     <Col xs={24} sm={12} md={8}>
-                                                        <Space direction="vertical" size={2}>
+                                                        <Space orientation="vertical" size={2}>
                                                             <Text type="secondary" style={{ fontSize: 12 }}>{t('orderManagement.drawing.ofCustomer', { defaultValue: 'Of Customer' })}</Text>
                                                             <Text strong>{drawingInfo.ofCustomer || 'N/A'}</Text>
                                                         </Space>
                                                     </Col>
                                                     <Col xs={24} sm={12} md={8}>
-                                                        <Space direction="vertical" size={2}>
+                                                        <Space orientation="vertical" size={2}>
                                                             <Text type="secondary" style={{ fontSize: 12 }}>{t('orderManagement.drawing.version', { defaultValue: 'Version' })}</Text>
                                                             <Text strong>{drawingInfo.versionNumber || 'N/A'}</Text>
                                                         </Space>
                                                     </Col>
                                                     <Col xs={24} sm={12} md={8}>
-                                                        <Space direction="vertical" size={2}>
+                                                        <Space orientation="vertical" size={2}>
                                                             <Text type="secondary" style={{ fontSize: 12 }}>{t('orderManagement.drawing.totalExpectedTime', { defaultValue: 'Total Expected Time' })}</Text>
                                                             <Text strong style={{ color: token.colorPrimary }}>
                                                                 {formatDuration(displayedTimeSeconds)}
@@ -762,14 +762,14 @@ const SortableDrawingItem: React.FC<SortableDrawingItemProps> = ({
                                                         </Space>
                                                     </Col>
                                                     <Col span={24}>
-                                                        <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                                                        <Space orientation="vertical" size={2} style={{ width: '100%' }}>
                                                             <Text type="secondary" style={{ fontSize: 12 }}>{t('orderManagement.drawing.description', { defaultValue: 'Description' })}</Text>
                                                             <Text>{drawingInfo.description || <Text type="secondary" italic>{t('orderManagement.drawing.noDescription', { defaultValue: 'No description provided' })}</Text>}</Text>
                                                         </Space>
                                                     </Col>
                                                     {drawingInfo.pdfLink && (
                                                         <Col span={24}>
-                                                            <Space direction="vertical" size={2}>
+                                                            <Space orientation="vertical" size={2}>
                                                                 <Text type="secondary" style={{ fontSize: 12 }}>{t('orderManagement.drawing.document', { defaultValue: 'Drawing Document' })}</Text>
                                                                 <Button
                                                                     type="link"
