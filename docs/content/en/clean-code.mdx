@@ -25,22 +25,27 @@ A component should read in this order:
 Example:
 
 ```tsx
-interface OrderStatusBadgeProps {
-  status: OrderStatus
-}
-
-export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const color = getOrderStatusColor(status)
-  const label = getOrderStatusLabel(status)
-
-  return <Tag color={color}>{label}</Tag>
+interface StatusBadgeProps {
+
+  color: string
+
+  label: string
+
+}
+
+
+
+export function StatusBadge({ color, label }: StatusBadgeProps) {
+
+  return <Tag color={color}>{label}</Tag>
+
 }
 ```
 
 Avoid:
 
 - A component that calls APIs, transforms data, and renders a large modal at the same time.
-- Passing an entire `order` object when only `order.status` is needed.
+- Passing an entire `machine` object when only `machine.status` is needed.
 - Defining child components inside parent components.
 - Large inline objects/arrays/functions passed to memoized components.
 - `condition && <Component />` when `condition` can be a number or empty string.
@@ -83,7 +88,7 @@ Good:
 ```ts
 function useOrderFilters() {
   const [keyword, setKeyword] = useState('')
-  const [status, setStatus] = useState<OrderStatus | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
 
   const query = useMemo(
     () => ({ keyword: keyword.trim(), status }),
@@ -249,7 +254,7 @@ Do not `catch` and only `console.error` when the UI needs to know the action fai
 | --- | --- |
 | Component | `PascalCase`: `OrderDetailDrawer` |
 | Hook | `useSomething`: `useOrderFormData` |
-| Service | `{Domain}Service`: `OrderService` |
+| Service | `{Domain}Service`: `MachineService` |
 | Response type | `{Domain}Response`, `{Domain}SummaryResponse` |
 | Request type | `{Domain}CreationRequest`, `{Domain}UpdationRequest` |
 | Boolean | `is`, `has`, `can`, `should`: `isLoading`, `canEdit` |

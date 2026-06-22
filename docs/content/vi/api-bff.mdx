@@ -65,8 +65,7 @@ Các nhóm chính:
 - `AUTH`
 - `USERS`
 - `ORDERS`
-- `TASKS`
-- `TASK_REVIEWS`
+- `TASKS`
 - `FACTORY`
 - `SPACES`
 - `MACHINE`
@@ -78,7 +77,7 @@ Các nhóm chính:
 Khi thêm endpoint mới, dùng helper dạng function nếu URL có param:
 
 ```ts
-OPERATOR_REVIEW: (orderId: string) => `/api/orders/v1/${orderId}/operatorReview`
+DETAIL: (id: string) => `/api/machines/v1/${id}`
 ```
 
 ## Thêm service method mới
@@ -86,13 +85,13 @@ OPERATOR_REVIEW: (orderId: string) => `/api/orders/v1/${orderId}/operatorReview`
 Ví dụ thêm API confirm order:
 
 ```ts
-static async getOperatorReviewForm(orderId: string): Promise<OrderOperatorReviewResponse> {
-  const response = await NetworkService.requestJson<OrderOperatorReviewResponse>({
+static async getMachineById(machineId: string): Promise<Machine> {
+  const response = await NetworkService.requestJson<Machine>({
     method: 'GET',
-    url: ENDPOINTS.ORDERS.OPERATOR_REVIEW(orderId)
+    url: ENDPOINTS.MACHINE.DETAIL(machineId)
   })
 
-  return response.result as OrderOperatorReviewResponse
+  return response.result as Machine
 }
 ```
 

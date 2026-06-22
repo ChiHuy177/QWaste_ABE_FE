@@ -5,7 +5,6 @@ import { Action, Subject, AppAbility } from './caslAbility';
 export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionRule[]): AppAbility {
     const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
     const normalizedRoles = roles.map((role) => role.toLowerCase());
-    const hasOperatorRole = normalizedRoles.some((role) => role === 'operator' || role === 'op');
 
     if (permissions && permissions.length > 0) {
         const hasManageAll = permissions.some(
@@ -18,10 +17,6 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
             permissions.forEach((rule) => {
                 can(rule.action, rule.subject, rule.conditions);
             });
-        }
-
-        if (hasOperatorRole) {
-            can('view', 'operator_reviews');
         }
 
         return build();
@@ -60,7 +55,6 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
                     'energy',
                     'machine_monitoring',
                     'machine_operator_history',
-                    'task_review',
                     'space_monitoring',
                     'floor_map',
                     'standard_step',
@@ -69,17 +63,6 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
                 can('view', 'machine_overview');
                 // All 40 permissions are usually granted via API,
                 // but this fallback ensures they have basic view access.
-                break;
-
-            case 'operator':
-            case 'op':
-            case 'qc_staff':
-            case 'qc':
-            case 'maintenance':
-                can(['confirm', 'decline'], 'task_review');
-                if (normalizedRole === 'operator' || normalizedRole === 'op') {
-                    can('view', 'operator_reviews');
-                }
                 break;
 
             case 'client':

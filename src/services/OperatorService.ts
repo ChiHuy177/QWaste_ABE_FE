@@ -1,4 +1,3 @@
-// import { Operator } from '@/types/Order';
 // import { mockOperators, getOperatorById } from '@/data/mockData';
 
 // // Simulated API delay

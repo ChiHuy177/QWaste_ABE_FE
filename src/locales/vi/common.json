@@ -333,7 +333,7 @@
             "floorMapConfig": "Cấu hình sơ đồ mặt bằng",
             "machineStaffing": "Danh sách nhân sự máy",
             "line": "Danh sách chuyền",
-            "rbac": "Quản lý RBAC",
+            "rbac": "Quản lý quyền truy cập",
             "rbacPermissions": "Quyền hạn",
             "rbacRoles": "Vai trò",
             "rbacUsers": "Người dùng",
@@ -4248,57 +4248,6 @@
             }
         }
     },
-    "operatorReview": {
-        "drawer": {
-            "title": "Đánh giá Công việc",
-            "subtitle": "Đánh giá và xác nhận các công việc được giao cho bạn",
-            "submitAll": "Gửi Tất cả Đánh giá",
-            "cancel": "Hủy",
-            "order": "Đơn hàng",
-            "priority": "Độ ưu tiên",
-            "expectedStart": "Ngày Bắt Đầu Dự Kiến",
-            "code": "Mã Đơn",
-            "reviewDecision": "Quyết định Đánh giá",
-            "confirm": "Xác nhận",
-            "decline": "Từ chối",
-            "readyForProduction": "Sẵn sàng sản xuất",
-            "declineReason": "Lý do Từ chối",
-            "required": "Bắt buộc",
-            "comments": "Ghi chú",
-            "provideDetails": "Cung cấp thêm thông tin...",
-            "pleaseSelectReason": "Vui lòng chọn lý do từ chối",
-            "tasksNeedReview": "{{count}} công việc cần bạn đánh giá",
-            "allTasksReviewed": "Đã đánh giá tất cả công việc",
-            "loadingData": "Đang tải dữ liệu đánh giá...",
-            "noData": "Không tìm thấy dữ liệu",
-            "qty": "SL",
-            "unassigned": "Chưa giao",
-            "reEvaluate": "Đánh giá lại",
-            "confirmDecline": "Xác nhận từ chối"
-        },
-        "page": {
-            "title": "Đánh giá của Tôi",
-            "subtitle": "Quản lý và xác nhận các công việc sản xuất được giao",
-            "pendingReviews": "Chờ Đánh giá",
-            "waitingForConfirmation": "Đang chờ bạn xác nhận",
-            "confirmedTasks": "Đã Xác nhận",
-            "readyForProduction": "Sẵn sàng sản xuất",
-            "declinedTasks": "Đã Từ chối",
-            "needReassignment": "Cần phân công lại",
-            "searchPlaceholder": "Tìm kiếm theo tên hoặc mã đơn hàng",
-            "columns": {
-                "orderName": "Tên Đơn hàng",
-                "code": "Mã Đơn",
-                "priority": "Độ ưu tiên",
-                "expectedStart": "Bắt đầu dự kiến",
-                "tasks": "Số công việc",
-                "action": "Thao tác"
-            },
-            "reviewAction": "Đánh giá",
-            "operator": "Người vận hành",
-            "totalOrders": "Tổng đơn hàng"
-        }
-    },
     "managerReview": {
         "drawer": {
             "title": "Đánh giá của Quản lý",
@@ -4357,7 +4306,6 @@
         "machine_monitoring": "Giám sát máy",
         "machine_operator_history": "Lịch sử vận hành máy",
         "profile": "Hồ sơ cá nhân",
-        "operator_reviews": "Đánh giá Vận hành",
         "qc_dashboard": "Dashboard QC",
         "manager_reviews": "Đánh giá Quản lý",
         "user": "Người dùng",
@@ -4366,7 +4314,6 @@
         "order": "Đơn hàng",
         "process": "Quy trình",
         "tasks": "Nhiệm vụ",
-        "task_review": "Đánh giá công việc",
         "space_monitoring": "Giám sát khu vực",
         "floor_map": "Sơ đồ mặt bằng",
         "all": "Tất cả"

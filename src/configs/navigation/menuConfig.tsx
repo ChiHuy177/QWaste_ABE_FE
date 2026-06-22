@@ -67,14 +67,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         action: 'view',
     },
     {
-        key: 'operator-reviews',
-        route: '/operator/my-reviews',
-        i18nKey: 'operatorReview.page.title',
-        icon: <CheckSquareOutlined />,
-        subject: 'operator_reviews',
-        action: 'view',
-    },
-    {
         key: 'settings',
         route: '/admin/setting',
         i18nKey: 'sidebar.navigation.settings',

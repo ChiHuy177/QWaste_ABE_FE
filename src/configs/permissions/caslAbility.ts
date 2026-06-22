@@ -39,8 +39,6 @@ export type Subject =
     | 'machine_operator_history'
     // Settings
     | 'profile'
-    // Operator
-    | 'operator_reviews'
     // QC
     | 'qc_dashboard'
     // Manager
@@ -56,7 +54,6 @@ export type Subject =
     | 'staff'
     // Tasks Management
     | 'tasks'
-    | 'task_review'
     // Space
     | 'space_monitoring'
     | 'floor_map'

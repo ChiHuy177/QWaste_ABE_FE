@@ -8,7 +8,6 @@ export * from './Notification';
 export * from './Factory';
 export * from './Register';
 export * from './Space';
-export * from './Order';
 export * from './Task';
 export * from './DrawingCode';
 export * from './Step';

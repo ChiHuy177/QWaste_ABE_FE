@@ -116,13 +116,19 @@ Quy ước service:
 Ví dụ:
 
 ```ts
-static async getOrderById(orderId: string): Promise<OrderResponse> {
-  const response = await NetworkService.requestJson<OrderResponse>({
-    method: 'GET',
-    url: ENDPOINTS.ORDERS.DETAIL(orderId)
-  })
-
-  return response.result as OrderResponse
+static async getMachineById(machineId: string): Promise<Machine> {
+
+  const response = await NetworkService.requestJson<Machine>({
+
+    method: 'GET',
+
+    url: ENDPOINTS.MACHINE.DETAIL(machineId)
+
+  })
+
+
+
+  return response.result as Machine
 }
 ```
 

@@ -1840,7 +1840,6 @@
             "machine_monitoring": "机器监控",
             "machine_operator_history": "操作员历史记录",
             "profile": "个人资料",
-            "operator_reviews": "操作员审核",
             "qc_dashboard": "QC仪表板",
             "manager_reviews": "经理审核",
             "user": "用户",
@@ -1849,7 +1848,6 @@
             "order": "订单",
             "process": "流程",
             "tasks": "任务",
-            "task_review": "任务审核",
             "space_monitoring": "空间监控",
             "all": "全部"
         }

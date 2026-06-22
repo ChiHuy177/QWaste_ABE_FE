@@ -1,4 +1,3 @@
-// import { Order, Task, CNCTask } from '@/types/Order';
 // import { DrawingCode } from '@/types/DrawingCode';
 
 // // Enhanced types for process optimization

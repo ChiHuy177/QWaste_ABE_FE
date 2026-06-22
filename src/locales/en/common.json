@@ -342,7 +342,7 @@
             "floorMapConfig": "Floor Map Config",
             "machineStaffing": "Machine Staffing",
             "line": "Line List",
-            "rbac": "RBAC Management",
+            "rbac": "Access Control Management",
             "rbacPermissions": "Permissions",
             "rbacRoles": "Roles",
             "rbacUsers": "Users",
@@ -4198,57 +4198,6 @@
             }
         }
     },
-    "operatorReview": {
-        "drawer": {
-            "title": "Task Review",
-            "subtitle": "Review and confirm production tasks assigned to you",
-            "submitAll": "Submit All Reviews",
-            "cancel": "Cancel",
-            "order": "Order",
-            "priority": "Priority",
-            "expectedStart": "Expected Start",
-            "code": "Code",
-            "reviewDecision": "Review Decision",
-            "confirm": "Confirm",
-            "decline": "Decline",
-            "readyForProduction": "Ready for production",
-            "declineReason": "Decline Reason",
-            "required": "Required",
-            "comments": "Comments",
-            "provideDetails": "Provide details...",
-            "pleaseSelectReason": "Please select a decline reason",
-            "tasksNeedReview": "{{count}} tasks need your review decision",
-            "allTasksReviewed": "All tasks reviewed",
-            "loadingData": "Loading review data...",
-            "noData": "No data found",
-            "qty": "Qty",
-            "unassigned": "Unassigned",
-            "reEvaluate": "Re-evaluate",
-            "confirmDecline": "Confirm Decline"
-        },
-        "page": {
-            "title": "My Reviews",
-            "subtitle": "Manage and confirm your assigned production tasks",
-            "pendingReviews": "Pending Reviews",
-            "waitingForConfirmation": "Waiting for your confirmation",
-            "confirmedTasks": "Confirmed Tasks",
-            "readyForProduction": "Ready for production",
-            "declinedTasks": "Declined Tasks",
-            "needReassignment": "Need reassignment",
-            "searchPlaceholder": "Search by order name or code",
-            "columns": {
-                "orderName": "Order Name",
-                "code": "Code",
-                "priority": "Priority",
-                "expectedStart": "Expected Start",
-                "tasks": "Tasks",
-                "action": "Action"
-            },
-            "reviewAction": "Review",
-            "operator": "Operator",
-            "totalOrders": "Total Orders"
-        }
-    },
     "managerReview": {
         "drawer": {
             "title": "Manager Review",
@@ -4307,7 +4256,6 @@
         "machine_monitoring": "Machine Monitoring",
         "machine_operator_history": "Machine Operator History",
         "profile": "Profile",
-        "operator_reviews": "Operator Reviews",
         "qc_dashboard": "QC Dashboard",
         "manager_reviews": "Manager Reviews",
         "user": "User",
@@ -4316,7 +4264,6 @@
         "order": "Order",
         "process": "Process",
         "tasks": "Tasks",
-        "task_review": "Task Review",
         "space_monitoring": "Space Monitoring",
         "floor_map": "Floor Map",
         "all": "All",

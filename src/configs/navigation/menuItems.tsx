@@ -4,7 +4,6 @@ import {
     SettingOutlined,
     SafetyOutlined,
     ProjectOutlined,
-    CheckSquareOutlined,
     AppstoreOutlined,
     PartitionOutlined,
 } from '@ant-design/icons';
@@ -145,22 +144,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             label: t('sidebar.navigation.catalog'),
             children: categoryItems,
         });
-    }
-
-    // if (ability.can('view', 'tasks')) {
-    //     items.push(
-    //         createMenuItem('/admin/tasks', t('sidebar.navigation.tasks'), <CheckSquareOutlined />)
-    //     );
-    // }
-
-    if (ability.can('view', 'operator_reviews')) {
-        items.push(
-            createMenuItem(
-                '/operator/my-reviews',
-                t('operatorReview.page.title'),
-                <CheckSquareOutlined />
-            )
-        );
     }
 
     const rbacItems: MenuItem[] = [];

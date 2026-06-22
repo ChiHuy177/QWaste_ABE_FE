@@ -86,7 +86,7 @@ export const drawingCodeActions = {
         dispatch(slice.actions.setLoading(true));
         dispatch(slice.actions.setSelectedCategory(category));
         try {
-            // Fallback to client-side filtering as per existing logic in OrderStore
+            // Fallback to client-side filtering when backend search is unavailable.
             const data = await DrawingCodeService.getAllDrawingCode();
             dispatch(slice.actions.setDrawingCodes(data as DrawingCode[]));
         } catch (error: any) {

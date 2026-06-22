@@ -25,22 +25,27 @@ Component nên đọc được theo thứ tự:
 Ví dụ:
 
 ```tsx
-interface OrderStatusBadgeProps {
-  status: OrderStatus
-}
-
-export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const color = getOrderStatusColor(status)
-  const label = getOrderStatusLabel(status)
-
-  return <Tag color={color}>{label}</Tag>
+interface StatusBadgeProps {
+
+  color: string
+
+  label: string
+
+}
+
+
+
+export function StatusBadge({ color, label }: StatusBadgeProps) {
+
+  return <Tag color={color}>{label}</Tag>
+
 }
 ```
 
 Tránh:
 
 - Component vừa gọi API vừa transform data vừa render modal lớn.
-- Component nhận props quá rộng như toàn bộ `order` nếu chỉ cần `order.status`.
+- Component nhận props quá rộng như toàn bộ `machine` nếu chỉ cần `machine.status`.
 - Định nghĩa component con bên trong component cha.
 - Inline object/array/function lớn truyền xuống component memoized.
 - Render điều kiện bằng `condition && <Component />` khi `condition` có thể là số hoặc chuỗi rỗng.
@@ -83,7 +88,7 @@ Tốt:
 ```ts
 function useOrderFilters() {
   const [keyword, setKeyword] = useState('')
-  const [status, setStatus] = useState<OrderStatus | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
 
   const query = useMemo(
     () => ({ keyword: keyword.trim(), status }),
@@ -249,7 +254,7 @@ Không `catch` rồi chỉ `console.error` nếu UI cần biết thao tác thấ
 | --- | --- |
 | Component | `PascalCase`: `OrderDetailDrawer` |
 | Hook | `useSomething`: `useOrderFormData` |
-| Service | `{Domain}Service`: `OrderService` |
+| Service | `{Domain}Service`: `MachineService` |
 | Type response | `{Domain}Response`, `{Domain}SummaryResponse` |
 | Type request | `{Domain}CreationRequest`, `{Domain}UpdationRequest` |
 | Boolean | `is`, `has`, `can`, `should`: `isLoading`, `canEdit` |

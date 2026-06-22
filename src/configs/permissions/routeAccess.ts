@@ -87,12 +87,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Operator
-    '/operator/my-reviews': {
-        subject: 'operator_reviews',
-        action: 'view',
-    },
-
     // Manager
     '/manager/review-dashboard': {
         subject: 'manager_reviews',
@@ -121,7 +115,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
 const DEFAULT_ROUTE_PRIORITY: string[] = [
     '/admin/space-monitoring',
     '/admin/machines',
-    '/operator/my-reviews',
     '/qc',
     '/admin/categories/machineList',
     '/admin/categories/spaceLevel',

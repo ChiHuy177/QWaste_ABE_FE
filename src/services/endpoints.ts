@@ -30,9 +30,7 @@ const BASE_PATHS = {
     PERMISSIONS: `${API}/permissions/${V1}`,
     ROLES: `${API}/roles/${V1}`,
     INDUSTRY_FILTERS: `${API}/industryFilters/${V1}`,
-    ORDERS: `${API}/orders/${V1}`,
     SHIFT_BREAK_PERIODS: `${API}/shiftBreakPeriods/${V1}`,
-    TASK_REVIEWS: `${API}/taskReviews/${V1}`,
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
 } as const;
@@ -165,23 +163,12 @@ export const ENDPOINTS = {
         PRIMARY: `${BASE_PATHS.INDUSTRY_FILTERS}/primary`,
         SHIFTS: `${BASE_PATHS.INDUSTRY_FILTERS}/shifts`,
     },
-    ORDERS: {
-        MY_REVIEWING_ORDERS: `${BASE_PATHS.ORDERS}/myReviewingOrders`,
-        OPERATOR_REVIEW: (orderId: string) => `${BASE_PATHS.ORDERS}/${orderId}/operatorReview`,
-    },
     SHIFT_BREAK_PERIOD: {
         BASE: BASE_PATHS.SHIFT_BREAK_PERIODS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SHIFT_BREAK_PERIODS, id),
         FORSHIFT: (id: PathParam) => `${BASE_PATHS.SHIFT_BREAK_PERIODS}/forShift/${id}`,
     },
-    TASK_REVIEWS: {
-        CONFIRM: (id: PathParam) => `${BASE_PATHS.TASK_REVIEWS}/${id}/confirm`,
-        DECLINE: (id: PathParam) => `${BASE_PATHS.TASK_REVIEWS}/${id}/decline`,
-    },
     UTILS: {
-        ENUMS: {
-            TASK_DECLINE_REASONS: `${BASE_PATHS.UTILS}/enums/taskDeclineReasons`,
-        },
         SPACE_LEVELS: {
             HIGHEST: `${BASE_PATHS.UTILS}/spaceLevels/highest`,
         },

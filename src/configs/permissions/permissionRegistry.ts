@@ -528,21 +528,6 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Update sensitive machine info',
     },
-    // Task Review
-    {
-        slug: 'task_review:confirm',
-        subject: 'task_review',
-        action: 'confirm',
-        routes: [],
-        description: 'Confirm task review',
-    },
-    {
-        slug: 'task_review:decline',
-        subject: 'task_review',
-        action: 'decline',
-        routes: [],
-        description: 'Decline task review',
-    },
     // Floor Map
     {
         slug: 'floor_map:view',
