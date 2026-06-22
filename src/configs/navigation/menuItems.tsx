@@ -4,7 +4,6 @@ import {
     SettingOutlined,
     SafetyOutlined,
     ProjectOutlined,
-    TeamOutlined,
     CheckSquareOutlined,
     AppstoreOutlined,
     PartitionOutlined,
@@ -146,16 +145,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             label: t('sidebar.navigation.catalog'),
             children: categoryItems,
         });
-    }
-
-    if (ability.can('view', 'process')) {
-        items.push(
-            createMenuItem('/admin/process', t('sidebar.navigation.process'), <ProjectOutlined />)
-        );
-    }
-
-    if (ability.can('view', 'staff')) {
-        items.push(createMenuItem('/admin/staff', t('sidebar.navigation.staff'), <TeamOutlined />));
     }
 
     // if (ability.can('view', 'tasks')) {

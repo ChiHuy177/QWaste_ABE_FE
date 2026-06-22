@@ -4,7 +4,6 @@ import {
     SettingOutlined,
     SafetyOutlined,
     ProjectOutlined,
-    TeamOutlined,
     CheckSquareOutlined,
     AppstoreOutlined,
 } from '@ant-design/icons';
@@ -57,14 +56,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         i18nKey: 'sidebar.navigation.process',
         icon: <ProjectOutlined />,
         subject: 'process',
-        action: 'view',
-    },
-    {
-        key: 'staff',
-        route: '/admin/staff',
-        i18nKey: 'sidebar.navigation.staff',
-        icon: <TeamOutlined />,
-        subject: 'staff',
         action: 'view',
     },
     {

@@ -119,12 +119,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Staff Management
-    '/admin/staff': {
-        subject: 'staff',
-        action: 'view',
-    },
-
     // Tasks Management
     '/admin/tasks': {
         subject: 'tasks',
