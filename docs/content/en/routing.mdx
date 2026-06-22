@@ -1,0 +1,63 @@
+# Routes & screens
+
+Main application routes live in `src/app`. The dashboard sidebar is generated from `src/configs/navigation/menuItems.tsx` and depends on the current user's CASL ability.
+
+## Public routes
+
+| URL | Screen |
+| --- | --- |
+| `/` | Landing page |
+| `/login` | Login |
+| `/register` | Register |
+
+`AuthContext` treats these routes as public and skips `/api/users/v1/me` during initialization.
+
+## Dashboard routes
+
+| URL | Role |
+| --- | --- |
+| `/admin` | Operational overview |
+| `/admin/space-monitoring` | Factory, zone, line, and machine space monitoring |
+| `/admin/machines` | Machine list and statuses |
+| `/admin/order` | Production order management |
+| `/admin/staff` | Staff task management |
+| `/admin/setting` | Account settings |
+| `/operator/tasks` | Operator task board |
+| `/operator/my-reviews` | Operator review list |
+
+## Catalog routes
+
+| URL | Domain |
+| --- | --- |
+| `/admin/categories/machineList` | Machines |
+| `/admin/categories/spaceLevel` | Space levels |
+| `/admin/categories/space` | Space tree |
+| `/admin/categories/staffList` | Staff |
+| `/admin/categories/step` | Standard steps |
+| `/admin/categories/industryFilter` | Shifts and production time windows |
+| `/admin/categories/drawingCode` | Drawing codes and step builder |
+
+Some routes are defined in `routeAccess.ts` but are not shown in the menu because the menu item is commented out or the page is not complete yet.
+
+## RBAC routes
+
+| URL | Feature |
+| --- | --- |
+| `/admin/rbac/permissions` | Permission management |
+| `/admin/rbac/roles` | Role management |
+| `/admin/rbac/users` | User role and custom permission assignment |
+
+## Add a new screen
+
+1. Create `page.tsx` under `src/app/(dashboard)/...`.
+2. Put large page-specific components in a sibling `_components` folder.
+3. Add endpoints to `src/services/endpoints.ts` if the screen needs new APIs.
+4. Add a service method under `src/services`.
+5. Add permission subject/action if the route needs access control.
+6. Update `ROUTE_ACCESS` in `src/configs/permissions/routeAccess.ts`.
+7. Add a sidebar item in `src/configs/navigation/menuItems.tsx` if needed.
+8. Update this documentation.
+
+## Route component convention
+
+Components used by a single page should live in that route's `_components` folder. Components reused by several modules should move to `src/components/shared`.

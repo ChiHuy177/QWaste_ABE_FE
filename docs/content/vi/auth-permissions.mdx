@@ -1,0 +1,89 @@
+# Xác thực & phân quyền
+
+Qwaste v2 dùng cookie httpOnly qua BFF cho xác thực và CASL để kiểm soát quyền truy cập route/màn hình.
+
+## Login
+
+Luồng đăng nhập:
+
+```txt
+LoginForm
+  -> AuthContext.login
+  -> AuthService.login
+  -> POST /api/bff/api/authentication/v1/login
+  -> BFF nhận token từ backend
+  -> BFF set bff_access_token httpOnly cookie
+  -> UserService.getMe
+  -> hydrate user settings + permissions
+```
+
+Client không đọc access token trực tiếp. Token được BFF gắn vào `Authorization` header khi forward request.
+
+## Khởi tạo phiên
+
+`AuthContext` kiểm tra route hiện tại:
+
+| Route | Hành vi |
+| --- | --- |
+| `/`, `/login`, `/register` | Không gọi `getMe` |
+| Dashboard route | Gọi `/api/users/v1/me` để xác thực user |
+
+Nếu session hết hạn, `apiClient` dispatch event `sessionExpired`; error handler toàn cục xử lý redirect về login.
+
+## Ability
+
+`src/configs/permissions/defineAbility.ts` tạo ability theo thứ tự ưu tiên:
+
+1. Nếu backend trả custom permissions, dùng permissions đó.
+2. Nếu có `manage all`, user có toàn quyền.
+3. Nếu không có custom permissions, fallback theo role.
+4. Operator luôn được cấp view cho dashboard/review operator khi role là `operator` hoặc `op`.
+
+Ví dụ permission rule:
+
+```ts
+{
+  action: 'view',
+  subject: 'order'
+}
+```
+
+## Route access
+
+`src/configs/permissions/routeAccess.ts` map route sang `subject` và `action`.
+
+```ts
+'/admin/order': {
+  subject: 'order',
+  action: 'view'
+}
+```
+
+Khi user truy cập route, app kiểm tra:
+
+```ts
+ability.can(action, subject)
+```
+
+Nếu route không có config và không nằm trong public routes, mặc định bị chặn.
+
+## Sidebar
+
+Sidebar ở `src/configs/navigation/menuItems.tsx` chỉ render item khi ability phù hợp.
+
+```ts
+if (ability.can('view', 'order')) {
+  items.push(createMenuItem('/admin/order', t('sidebar.navigation.order')))
+}
+```
+
+Vì vậy khi thêm route mới, phải cập nhật cả `ROUTE_ACCESS` và menu nếu muốn user nhìn thấy màn hình.
+
+## Checklist khi thêm quyền mới
+
+1. Thêm subject/action vào type CASL nếu cần.
+2. Backend trả permission mới cho user/role.
+3. Cập nhật `defineAbility.ts` nếu cần fallback theo role.
+4. Cập nhật `routeAccess.ts`.
+5. Cập nhật menu hoặc component guard.
+6. Test bằng user có quyền và user không có quyền.

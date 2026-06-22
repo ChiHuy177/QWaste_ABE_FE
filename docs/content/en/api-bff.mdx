@@ -1,0 +1,103 @@
+# API & BFF
+
+Qwaste v2 uses a Next.js BFF route to avoid exposing access tokens to browser JavaScript. The client calls `/api/bff/*`, the BFF reads the token from an httpOnly cookie, and forwards the request to the backend.
+
+## Request flow
+
+```txt
+React component
+  -> Domain service
+  -> NetworkService
+  -> apiClient baseURL "/api/bff"
+  -> src/app/api/bff/[...path]/route.ts
+  -> NEXT_PUBLIC_API_BASE_URL
+  -> Backend
+```
+
+Example client URL:
+
+```txt
+/api/bff/api/users/v1/me
+```
+
+Forwarded backend URL:
+
+```txt
+${NEXT_PUBLIC_API_BASE_URL}/api/users/v1/me
+```
+
+## apiClient
+
+`src/services/apiClient.ts` creates the Axios instance:
+
+```ts
+const apiClient = axios.create({
+  baseURL: '/api/bff',
+  timeout: 30000,
+  withCredentials: true
+})
+```
+
+The interceptor handles:
+
+| Status | Behavior |
+| --- | --- |
+| `401` | Call refresh endpoint and retry the original request if refresh succeeds |
+| `403` | Dispatch `forbidden_access` for global permission UI |
+| Refresh failure | Dispatch `sessionExpired` |
+
+## Token cookie
+
+`src/lib/server-auth.ts` defines the cookie:
+
+| Cookie | Role |
+| --- | --- |
+| `bff_access_token` | Access token set by the BFF, `HttpOnly`, `SameSite=Lax`, 1 hour max age |
+
+The backend refresh token cookie is forwarded by the BFF through the `Set-Cookie` response header.
+
+## Endpoint registry
+
+All backend endpoints should be declared in `src/services/endpoints.ts`.
+
+Main groups:
+
+- `AUTH`
+- `USERS`
+- `ORDERS`
+- `TASKS`
+- `TASK_REVIEWS`
+- `FACTORY`
+- `SPACES`
+- `MACHINE`
+- `ENERGY`
+- `NOTIFICATIONS`
+- `ROLE`
+- `PERMISSION`
+
+Use a function when the URL has parameters:
+
+```ts
+DETAIL: (id: string) => `/api/orders/v1/${id}`
+```
+
+## Add a service method
+
+Example:
+
+```ts
+static async confirmOrder(orderId: string): Promise<string> {
+  const response = await NetworkService.requestJson<void>({
+    method: 'PUT',
+    url: ENDPOINTS.ORDERS.CONFIRM(orderId)
+  })
+
+  return response.message as string
+}
+```
+
+Services should focus on API contracts. UI state such as loading, modals, toasts, and filters should stay in hooks or components.
+
+## Upload
+
+Upload routes live in `src/app/api/uploadthing`. Upload components use helpers from `src/utils/uploadthing.ts` and the UploadThing config.

@@ -1,0 +1,106 @@
+# Module nghiệp vụ
+
+Trang này tóm tắt các module chính trong Qwaste v2 và vị trí code liên quan.
+
+## Admin overview
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/admin/page.tsx` | Trang tổng quan admin |
+| `src/app/(dashboard)/admin/_components` | Cards, charts, panels |
+
+Màn hình này hiển thị snapshot vận hành, trạng thái máy, phân bố lỗi và trend lỗi.
+
+## Space monitoring
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/admin/space-monitoring/page.tsx` | Page chính |
+| `_components/FactoryCardsGrid.tsx` | Grid nhà máy |
+| `_components/SpaceOverviewGrid.tsx` | Cây không gian |
+| `_components/MachineCardGrid.tsx` | Danh sách máy |
+| `_components/ErrorAnalyticsModal.tsx` | Phân tích lỗi |
+
+Module này phụ thuộc nhiều vào cấu trúc không gian: factory, zone, line, space, machine.
+
+## Machine monitoring
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/admin/machines/page.tsx` | Màn hình máy |
+| `MachineCard.tsx` | Card trạng thái máy |
+| `MachineTimelineModal.tsx` | Timeline hoạt động/lỗi |
+| `MachineService.ts` | API máy |
+
+Các chart monitoring lấy endpoint từ nhóm `SPACES.MONITORING` và `MACHINE`.
+
+## Energy
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/admin/electric/page.tsx` | Màn hình điện năng |
+| `ElectricService` | API dữ liệu điện |
+| `useEnergyWebSocket` | Update realtime công suất |
+
+Realtime energy subscribe topic theo zone hoặc toàn bộ zones. Xem thêm [Realtime WebSocket](/vi/realtime).
+
+## Order management
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/admin/order/page.tsx` | Danh sách order |
+| `OrderForm/` | Form tạo/sửa order nhiều bước |
+| `OrderDetailDrawer.tsx` | Drawer chi tiết |
+| `ManagerReviewDrawer.tsx` | Review của manager |
+| `OrderService.ts` | API order |
+
+Order form có các phần chính:
+
+| Phần | Vai trò |
+| --- | --- |
+| Basic info | Thông tin đơn hàng |
+| Drawing config | Chọn drawing code và cấu hình bước |
+| Plan tree | Cây drawing -> step -> task |
+| Review | Kiểm tra trước khi submit |
+
+Các API quan trọng:
+
+- `GET /api/orders/v1`
+- `POST /api/orders/v1`
+- `PUT /api/orders/v1/info`
+- `PUT /api/orders/v1/plan`
+- `PUT /api/orders/v1/{id}/confirm`
+- `GET /api/orders/v1/{id}/planForEdit`
+- `GET /api/orders/v1/{id}/export`
+
+## Operator tasks
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/operator/tasks/page.tsx` | Board tác vụ operator |
+| `OperatorTaskBoard.tsx` | Kanban board |
+| `TaskColumn.tsx` | Cột trạng thái |
+| `TaskCard.tsx` | Card task |
+| `useKanbanTasks.ts` | Hook xử lý dữ liệu task |
+
+Module này dùng kanban để operator theo dõi và thao tác task theo trạng thái.
+
+## Operator reviews
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app/(dashboard)/operator/my-reviews/page.tsx` | Danh sách order cần review |
+| `[orderId]/page.tsx` | Chi tiết review |
+| `OperatorReviewDrawer.tsx` | Drawer review |
+
+API review nằm trong `OrderService` và endpoint `TASK_REVIEWS`.
+
+## RBAC
+
+| Vị trí | Nội dung |
+| --- | --- |
+| `/admin/rbac/users` | Quản lý user, role, custom permissions |
+| `/admin/rbac/roles` | Quản lý role |
+| `/admin/rbac/permissions` | Quản lý permission |
+
+RBAC ảnh hưởng trực tiếp tới `AbilityContext`, `routeAccess.ts` và sidebar.

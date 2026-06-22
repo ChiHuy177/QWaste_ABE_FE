@@ -1,0 +1,75 @@
+# Writing docs
+
+The docs site lives in `docs` and uses Nextra 4 with Next.js App Router.
+
+## Structure
+
+```txt
+docs/
+├── app/[lang]/layout.jsx
+├── app/[lang]/[[...mdxPath]]/page.jsx
+├── content/
+│   ├── vi/
+│   │   ├── index.mdx
+│   │   └── _meta.js
+│   └── en/
+│       ├── index.mdx
+│       └── _meta.js
+├── mdx-components.jsx
+└── next.config.mjs
+```
+
+## Add a page
+
+Create the same file for both locales:
+
+```txt
+docs/content/vi/new-page.mdx
+docs/content/en/new-page.mdx
+```
+
+Then update `_meta.js`:
+
+```js
+export default {
+  index: 'Introduction',
+  'new-page': 'New page'
+}
+```
+
+## Internal links
+
+Use locale-prefixed URLs to avoid switching to the wrong locale:
+
+```md
+[API & BFF](/en/api-bff)
+```
+
+Vietnamese pages should use:
+
+```md
+[API & BFF](/vi/api-bff)
+```
+
+## Search
+
+The docs site uses Pagefind. The search index is generated after build:
+
+```bash
+cd docs
+npm run build
+```
+
+Search may not return results during dev mode until the index exists.
+
+## Dependency note
+
+`docs/package.json` pins `zod` through `overrides`. Do not remove that override until the Nextra build has been verified.
+
+## Update checklist
+
+1. The content matches the current code.
+2. Both `vi` and `en` pages are present.
+3. `_meta.js` sidebar order is updated.
+4. Internal links use `/vi` or `/en`.
+5. Build docs when changing page structure significantly.

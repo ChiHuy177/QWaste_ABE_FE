@@ -1,0 +1,55 @@
+# Qwaste v2
+
+Qwaste v2 là ứng dụng web quản trị vận hành nhà máy, tập trung vào quản lý máy móc, không gian sản xuất, lệnh sản xuất, tác vụ vận hành, giám sát năng lượng và phân quyền người dùng.
+
+Tài liệu này dành cho developer và người vận hành kỹ thuật của dự án. Nội dung ưu tiên cách chạy dự án, cấu trúc code, luồng dữ liệu, các module chính và quy ước khi mở rộng tính năng.
+
+## Công nghệ chính
+
+| Nhóm | Công nghệ |
+| --- | --- |
+| Framework | Next.js App Router |
+| UI | React, Ant Design, lucide-react |
+| State | Redux Toolkit, React Context |
+| Data fetching | Axios, service layer, BFF route |
+| Form | React Hook Form, Zod, Ant Design Form |
+| Realtime | SockJS, STOMP |
+| Phân quyền | CASL ability |
+| i18n | i18next, react-i18next |
+| Test | Jest, Testing Library |
+| Deploy | Docker, Docker Compose, GitHub Actions |
+
+## Đọc từ đâu
+
+- [Cài đặt & chạy local](/vi/guide): môi trường, lệnh npm, biến môi trường.
+- [Kiến trúc](/vi/architecture): cách tổ chức App Router, provider, service, store.
+- [Cấu trúc dự án](/vi/structure): quy ước folder, module, import và vị trí đặt code.
+- [Clean code](/vi/clean-code): nguyên tắc viết component, hook, service, state và review code.
+- [Endpoint → UI](/vi/data-flow): cách đi từ endpoint, service, store tới page/component.
+- [API & BFF](/vi/api-bff): luồng gọi backend qua `/api/bff` và cookie httpOnly.
+- [Xác thực & phân quyền](/vi/auth-permissions): login, refresh token, route guard, CASL.
+- [Module nghiệp vụ](/vi/modules): dashboard, space monitoring, order, operator task, RBAC.
+- [Realtime WebSocket](/vi/realtime): kết nối STOMP, topic theo role và năng lượng.
+
+## Cấu trúc repo liên quan
+
+```txt
+.
+├── src/                    # Source chính của Qwaste frontend
+│   ├── app/                # Next.js App Router
+│   ├── components/         # Shared UI components
+│   ├── configs/            # Branding, theme, navigation, permissions
+│   ├── contexts/           # Auth, ability, error, websocket
+│   ├── hooks/              # Shared hooks
+│   ├── services/           # Service layer gọi API
+│   ├── stores/             # Redux stores
+│   └── types/              # TypeScript domain types
+├── docs/                   # Nextra docs site
+├── scripts/                # Deployment scripts
+├── Dockerfile
+└── docker-compose.yml
+```
+
+## Nguyên tắc cập nhật docs
+
+Khi thay đổi route, service endpoint, quyền truy cập hoặc workflow nghiệp vụ, hãy cập nhật docs tương ứng trong `docs/content/vi` và `docs/content/en`.

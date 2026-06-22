@@ -1,0 +1,113 @@
+# Testing & deployment
+
+This page summarizes the Qwaste v2 test, build, and deployment commands.
+
+## Test
+
+Run all tests:
+
+```bash
+npm test
+```
+
+Watch mode:
+
+```bash
+npm run test:watch
+```
+
+Coverage:
+
+```bash
+npm run test:coverage
+```
+
+Existing tests include:
+
+- `src/utils/calculateElectricBill.test.ts`
+- `src/configs/permissions/permissionParser.test.ts`
+- `src/components/shared/filters/DynamicSpaceFilter.test.tsx`
+- `src/app/(dashboard)/admin/space-monitoring/_tests`
+
+## Lint
+
+Check lint:
+
+```bash
+npm run lint:check
+```
+
+Auto-fix supported lint issues:
+
+```bash
+npm run lint
+```
+
+## Production build
+
+```bash
+npm run build
+npm run start
+```
+
+Run a production build before merging large route, Next.js config, or dependency changes.
+
+## Docker local
+
+```bash
+npm run docker:build
+npm run docker:run
+```
+
+Docker Compose:
+
+```bash
+npm run docker:dev
+```
+
+Production profile with Nginx:
+
+```bash
+npm run docker:prod
+```
+
+## Local deploy script
+
+Windows PowerShell:
+
+```powershell
+npm run deploy:local
+```
+
+Unix/Linux script when available:
+
+```bash
+./scripts/deploy-local.sh
+```
+
+## CI/CD
+
+The root README describes the GitHub Actions pipeline:
+
+| Stage | Content |
+| --- | --- |
+| Test & build | Install dependencies, lint, build |
+| Docker build & push | Build image and push to DockerHub |
+| Deployment | Notifications, health checks, rollback guidance |
+
+Required DockerHub secrets:
+
+```txt
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+## Pre-deploy checklist
+
+1. `npm run lint:check`
+2. `npm test`
+3. `npm run build`
+4. Check environment variables and deployment secrets.
+5. Confirm `NEXT_PUBLIC_API_BASE_URL` points to the correct backend.
+6. Set `BFF_COOKIE_SECURE=true` when running behind HTTPS.
+7. Check login, refresh token, WebSocket, and at least one core business flow.

@@ -1,0 +1,101 @@
+# Realtime WebSocket
+
+Qwaste v2 uses SockJS + STOMP for realtime backend messages.
+
+## Main pieces
+
+| File | Role |
+| --- | --- |
+| `src/contexts/WebSocketContext.tsx` | Connects WebSocket after the user is authenticated |
+| `src/services/WebSocketService.ts` | Singleton for STOMP client, reconnect, subscriptions |
+| `src/hooks/useWebSocket.ts` | Energy realtime hook |
+| `src/types/WebSocket.ts` | Message and error code types |
+| `src/app/api/bff/ws-token/route.ts` | Reads access token from httpOnly cookie for WebSocket |
+
+## Connection flow
+
+```txt
+AuthContext confirms the user is logged in
+  -> WebSocketProvider creates WebSocketService
+  -> GET /api/bff/ws-token
+  -> receive access token from httpOnly cookie
+  -> SockJS connects to ${NEXT_PUBLIC_API_BASE_URL}/ws?token=...
+  -> STOMP onConnect
+  -> subscribe role topics
+```
+
+Because the access token is httpOnly, browser JavaScript cannot read it directly. `/api/bff/ws-token` bridges that gap for the WebSocket connection.
+
+## Role topics
+
+After connecting, `WebSocketProvider` subscribes by user role:
+
+```txt
+/topic/role/{ROLE}
+```
+
+Examples:
+
+```txt
+/topic/role/ADMIN
+/topic/role/OPERATOR
+```
+
+Received messages dispatch a browser event:
+
+```ts
+window.dispatchEvent(
+  new CustomEvent('wsRoleBroadcast', {
+    detail: { role: backendRole, message: msg }
+  })
+)
+```
+
+## Energy topics
+
+`useEnergyWebSocket` subscribes by filter:
+
+| Condition | Topic |
+| --- | --- |
+| No zone selected | `/topic/energy/zones` |
+| `selectedZoneId` provided | `/topic/energy/zone/{selectedZoneId}` |
+
+Handled message types:
+
+- `ZONES_CURRENT_POWER`
+- `ZONES_FULL_POWER`
+- `MACHINES_CURRENT_POWER`
+- `MACHINES_FULL_POWER`
+
+## Reconnect
+
+`WebSocketService` reconnects with exponential backoff:
+
+| Setting | Value |
+| --- | --- |
+| Max attempts | `5` |
+| Initial delay | `2000ms` |
+| Max delay | `30000ms` |
+| Heartbeat incoming/outgoing | `4000ms` |
+
+On fatal authentication errors, the service stops reconnecting and dispatches `sessionExpired`.
+
+## Add a new subscription
+
+Create a domain-specific hook:
+
+```ts
+const { wsService, isConnected } = useWebSocketContext()
+
+useEffect(() => {
+  if (!isConnected) return
+
+  const unsubscribe = wsService.subscribe('/topic/example', (message) => {
+    // update local state or store
+  })
+
+  return unsubscribe
+}, [isConnected, wsService])
+```
+
+Always clean up subscriptions when the component unmounts or a filter changes.

@@ -1,0 +1,101 @@
+# Realtime WebSocket
+
+Qwaste v2 dùng SockJS + STOMP để nhận dữ liệu realtime từ backend.
+
+## Thành phần chính
+
+| File | Vai trò |
+| --- | --- |
+| `src/contexts/WebSocketContext.tsx` | Kết nối WebSocket khi user đã đăng nhập |
+| `src/services/WebSocketService.ts` | Singleton quản lý STOMP client, reconnect, subscribe |
+| `src/hooks/useWebSocket.ts` | Hook energy realtime |
+| `src/types/WebSocket.ts` | Type message và error code |
+| `src/app/api/bff/ws-token/route.ts` | Endpoint lấy access token từ cookie httpOnly cho WebSocket |
+
+## Luồng kết nối
+
+```txt
+AuthContext xác nhận user đã đăng nhập
+  -> WebSocketProvider tạo WebSocketService
+  -> GET /api/bff/ws-token
+  -> nhận access token từ httpOnly cookie
+  -> SockJS kết nối ${NEXT_PUBLIC_API_BASE_URL}/ws?token=...
+  -> STOMP onConnect
+  -> subscribe topic theo role
+```
+
+Do access token là httpOnly cookie, JavaScript không thể đọc trực tiếp. Endpoint `/api/bff/ws-token` là cầu nối để WebSocket lấy token khi cần mở kết nối.
+
+## Topic theo role
+
+Sau khi kết nối, `WebSocketProvider` subscribe topic theo role của user:
+
+```txt
+/topic/role/{ROLE}
+```
+
+Ví dụ:
+
+```txt
+/topic/role/ADMIN
+/topic/role/OPERATOR
+```
+
+Message nhận được sẽ dispatch event browser:
+
+```ts
+window.dispatchEvent(
+  new CustomEvent('wsRoleBroadcast', {
+    detail: { role: backendRole, message: msg }
+  })
+)
+```
+
+## Energy topics
+
+`useEnergyWebSocket` subscribe theo filter:
+
+| Điều kiện | Topic |
+| --- | --- |
+| Không chọn zone | `/topic/energy/zones` |
+| Có `selectedZoneId` | `/topic/energy/zone/{selectedZoneId}` |
+
+Các message type đang xử lý:
+
+- `ZONES_CURRENT_POWER`
+- `ZONES_FULL_POWER`
+- `MACHINES_CURRENT_POWER`
+- `MACHINES_FULL_POWER`
+
+## Reconnect
+
+`WebSocketService` tự reconnect bằng exponential backoff:
+
+| Cấu hình | Giá trị |
+| --- | --- |
+| Số lần thử tối đa | `5` |
+| Delay ban đầu | `2000ms` |
+| Delay tối đa | `30000ms` |
+| Heartbeat incoming/outgoing | `4000ms` |
+
+Nếu gặp lỗi xác thực nghiêm trọng, service dừng reconnect và dispatch `sessionExpired`.
+
+## Thêm subscription mới
+
+Tạo hook riêng cho domain:
+
+```ts
+const { wsService, isConnected } = useWebSocketContext()
+
+useEffect(() => {
+  if (!isConnected) return
+
+  const unsubscribe = wsService.subscribe('/topic/example', (message) => {
+    // update local state hoặc store
+  })
+
+  return unsubscribe
+}, [isConnected, wsService])
+```
+
+Luôn cleanup subscription khi component unmount hoặc filter thay đổi.

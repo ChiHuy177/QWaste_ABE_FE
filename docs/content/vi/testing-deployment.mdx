@@ -1,0 +1,113 @@
+# Test & deploy
+
+Trang này tóm tắt các lệnh kiểm tra, build và deploy của Qwaste v2.
+
+## Test
+
+Chạy toàn bộ test:
+
+```bash
+npm test
+```
+
+Chạy watch mode:
+
+```bash
+npm run test:watch
+```
+
+Chạy coverage:
+
+```bash
+npm run test:coverage
+```
+
+Các test hiện có nằm rải rác cạnh domain, ví dụ:
+
+- `src/utils/calculateElectricBill.test.ts`
+- `src/configs/permissions/permissionParser.test.ts`
+- `src/components/shared/filters/DynamicSpaceFilter.test.tsx`
+- `src/app/(dashboard)/admin/space-monitoring/_tests`
+
+## Lint
+
+Kiểm tra lint:
+
+```bash
+npm run lint:check
+```
+
+Tự fix lỗi lint có thể fix:
+
+```bash
+npm run lint
+```
+
+## Build production
+
+```bash
+npm run build
+npm run start
+```
+
+Build production nên được chạy trước khi merge các thay đổi lớn ở route, config Next.js hoặc dependency.
+
+## Docker local
+
+```bash
+npm run docker:build
+npm run docker:run
+```
+
+Docker Compose:
+
+```bash
+npm run docker:dev
+```
+
+Production profile với Nginx:
+
+```bash
+npm run docker:prod
+```
+
+## Deploy local script
+
+Windows PowerShell:
+
+```powershell
+npm run deploy:local
+```
+
+Script Unix/Linux nếu có môi trường phù hợp:
+
+```bash
+./scripts/deploy-local.sh
+```
+
+## CI/CD
+
+README root mô tả pipeline GitHub Actions:
+
+| Stage | Nội dung |
+| --- | --- |
+| Test & build | Cài dependency, lint, build |
+| Docker build & push | Build image và push DockerHub |
+| Deployment | Thông báo, health check, hướng dẫn rollback |
+
+Các secret DockerHub cần có trên GitHub:
+
+```txt
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+## Checklist trước khi deploy
+
+1. `npm run lint:check`
+2. `npm test`
+3. `npm run build`
+4. Kiểm tra `.env` hoặc secret môi trường.
+5. Kiểm tra `NEXT_PUBLIC_API_BASE_URL` trỏ đúng backend.
+6. Nếu chạy HTTPS, đặt `BFF_COOKIE_SECURE=true`.
+7. Kiểm tra login, refresh token, WebSocket và ít nhất một flow nghiệp vụ chính.

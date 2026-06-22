@@ -1,0 +1,75 @@
+# Viết docs
+
+Docs site nằm trong thư mục `docs` và dùng Nextra 4 với Next.js App Router.
+
+## Cấu trúc
+
+```txt
+docs/
+├── app/[lang]/layout.jsx
+├── app/[lang]/[[...mdxPath]]/page.jsx
+├── content/
+│   ├── vi/
+│   │   ├── index.mdx
+│   │   └── _meta.js
+│   └── en/
+│       ├── index.mdx
+│       └── _meta.js
+├── mdx-components.jsx
+└── next.config.mjs
+```
+
+## Thêm trang mới
+
+Tạo file cùng tên ở cả hai ngôn ngữ:
+
+```txt
+docs/content/vi/new-page.mdx
+docs/content/en/new-page.mdx
+```
+
+Sau đó thêm vào `_meta.js`:
+
+```js
+export default {
+  index: 'Tổng quan',
+  'new-page': 'Tên trang mới'
+}
+```
+
+## Link nội bộ
+
+Dùng URL có prefix ngôn ngữ để tránh nhảy sai locale:
+
+```md
+[API & BFF](/vi/api-bff)
+```
+
+Với bản tiếng Anh:
+
+```md
+[API & BFF](/en/api-bff)
+```
+
+## Search
+
+Docs dùng Pagefind. Search index được tạo sau build:
+
+```bash
+cd docs
+npm run build
+```
+
+Trong dev mode, nếu search chưa có kết quả thì đây là hành vi bình thường.
+
+## Lưu ý dependency
+
+`docs/package.json` đang pin `zod` bằng `overrides`. Không xóa override này nếu chưa kiểm tra lại build Nextra.
+
+## Checklist cập nhật docs
+
+1. Nội dung có đúng với code hiện tại không.
+2. Có thêm trang tương ứng cho `vi` và `en` không.
+3. `_meta.js` đã cập nhật thứ tự sidebar chưa.
+4. Link nội bộ có đúng prefix `/vi` hoặc `/en` không.
+5. Chạy build docs nếu thay đổi cấu trúc nhiều.

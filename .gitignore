@@ -44,7 +44,8 @@ next-env.d.ts
 .claude
 
 # document (nextra)
-document/.next/
-document/out/
-document/build/
-document/node_modules/
+docs/.next/
+docs/out/
+docs/build/
+docs/node_modules/
+docs/public/_pagefind/

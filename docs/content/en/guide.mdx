@@ -1,0 +1,106 @@
+# Local setup
+
+This page explains how to run the Qwaste v2 application and the docs site locally.
+
+## Requirements
+
+- Node.js 18 or newer.
+- npm.
+- Docker if you need the production image or docker-compose.
+- A reachable backend API for `NEXT_PUBLIC_API_BASE_URL`.
+
+## Run the main application
+
+From the repository root:
+
+```bash
+npm install
+npm run dev
+```
+
+The application runs at:
+
+```txt
+http://localhost:3000
+```
+
+Common scripts:
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Next.js dev server |
+| `npm run build` | Build for production |
+| `npm run start` | Start the production server after build |
+| `npm run lint:check` | Run ESLint checks |
+| `npm test` | Run Jest |
+| `npm run test:coverage` | Run tests with coverage |
+
+## Environment variables
+
+Create `.env.local` at the repository root if it does not exist.
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+BFF_COOKIE_SECURE=false
+```
+
+| Variable | Role |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Backend base URL. The BFF forwards requests to it and WebSocket uses `${NEXT_PUBLIC_API_BASE_URL}/ws`. |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | API key for Google Maps autocomplete/loader features. |
+| `BFF_COOKIE_SECURE` | Set to `true` when running behind HTTPS so the access token cookie is marked `Secure`. |
+
+Do not commit `.env.local`.
+
+## Run the docs site
+
+The docs site is a separate sub project in `docs`.
+
+```bash
+cd docs
+npm install
+npm run dev
+```
+
+The docs site runs at:
+
+```txt
+http://localhost:3000/en
+```
+
+If port `3000` is already used by the main app, run docs on another port:
+
+```bash
+npx next dev -p 3001 --turbopack
+```
+
+## Docker
+
+Build and run the production container:
+
+```bash
+npm run docker:build
+npm run docker:run
+```
+
+Docker Compose:
+
+```bash
+npm run docker:dev
+```
+
+Production profile with Nginx:
+
+```bash
+npm run docker:prod
+```
+
+## Common issues
+
+| Symptom | What to check |
+| --- | --- |
+| Login returns 401 | Check backend URL, cookies, and `/api/authentication/v1/login`. |
+| Redirected back to `/login` after login | Check `/api/users/v1/me` and the `bff_access_token` cookie. |
+| WebSocket does not connect | Check `NEXT_PUBLIC_API_BASE_URL`, `/ws`, and `/api/bff/ws-token`. |
+| Docs search does not work in dev | Pagefind indexes after build. Run `npm run build` inside `docs`. |

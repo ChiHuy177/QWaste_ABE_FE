@@ -1,0 +1,651 @@
+# Endpoint → Service → Store → UI
+
+Trang này mô tả workflow chuẩn khi thêm một tính năng có API trong Qwaste v2. Luồng hiện tại của dự án là:
+
+```txt
+Backend endpoint
+  -> src/services/endpoints.ts
+  -> src/services/{Domain}Service.ts
+  -> src/stores/{Domain}Store.ts
+  -> page/component dùng useAppDispatch + useAppSelector
+```
+
+Không phải tính năng nào cũng cần Redux store. Nếu data chỉ dùng trong một component hoặc một page đơn giản, có thể gọi service trong hook local. Nhưng khi data được chia sẻ nhiều component/màn hình, có loading/error/realtime hoặc cần action dùng lại, nên đi qua store.
+
+## Khi nào dùng store
+
+| Trường hợp | Nên dùng |
+| --- | --- |
+| Danh sách dùng ở nhiều component trong cùng module | Store hoặc hook module-local |
+| Data cần đồng bộ với WebSocket | Store |
+| Page có nhiều action: fetch, create, update, delete, export | Store |
+| Chỉ một dropdown nhỏ dùng một lần | Service trong hook local |
+| Form state tạm thời | Local state hoặc form library |
+| Modal open/close chỉ thuộc một component | Local state |
+
+Trong Qwaste hiện có các store như `OrderStore`, `MachineStore`, `NotificationStore`, `FactoryOverviewStore`, `DrawingCodeStore`.
+
+## Bước 1: Định nghĩa type
+
+Tạo hoặc cập nhật file trong `src/types`.
+
+```ts
+// src/types/Example.ts
+export interface ExampleResponse {
+  exampleId: string
+  exampleCode: string
+  exampleName: string
+  status: 'ACTIVE' | 'INACTIVE'
+  createdTime: number
+}
+
+export interface ExampleCreationRequest {
+  exampleCode: string
+  exampleName: string
+}
+
+export interface ExampleUpdationRequest extends ExampleCreationRequest {
+  exampleId: string
+}
+```
+
+Quy ước:
+
+- Type response phản ánh data backend trả về.
+- Type request phản ánh payload gửi lên backend.
+- Không dùng `any` cho API mới.
+- Nếu UI chỉ dùng vài field, vẫn nên type rõ các field đó.
+
+Nếu type cần export tập trung, thêm vào `src/types/index.ts`.
+
+## Bước 2: Thêm endpoint
+
+Thêm endpoint vào `src/services/endpoints.ts`.
+
+```ts
+type PathParam = string | number
+
+const WITH_PARAM = (base: string, param: PathParam): string => `${base}/${param}`
+
+export const ENDPOINTS = {
+  EXAMPLES: {
+    BASE: '/api/examples/v1',
+    DETAIL: (id: PathParam) => WITH_PARAM('/api/examples/v1', id),
+    RESTORE: (id: PathParam) => `/api/examples/v1/${id}/restoring`,
+    PICKING: '/api/examples/v1/picking'
+  }
+} as const
+```
+
+Quy ước:
+
+| Loại endpoint | Tên nên dùng |
+| --- | --- |
+| List/create | `BASE` |
+| Detail/update/delete | `DETAIL(id)` |
+| Restore | `RESTORE(id)` |
+| Dropdown/select | `PICKING` |
+| Custom action | `CONFIRM(id)`, `CANCEL(id)`, `EXPORT(id)` |
+
+Không hard-code endpoint trong component hoặc store. Store gọi service, service dùng `ENDPOINTS`.
+
+## Bước 3: Tạo service
+
+Tạo `src/services/ExampleService.ts`.
+
+```ts
+import { ENDPOINTS } from './endpoints'
+import { NetworkService } from './NetworkService'
+import {
+  ExampleCreationRequest,
+  ExampleResponse,
+  ExampleUpdationRequest
+} from '@/types/Example'
+
+export class ExampleService {
+  static async getAllExamples(): Promise<ExampleResponse[]> {
+    const response = await NetworkService.requestJson<ExampleResponse[]>({
+      method: 'GET',
+      url: ENDPOINTS.EXAMPLES.BASE
+    })
+
+    return response.result as ExampleResponse[]
+  }
+
+  static async getExampleById(exampleId: string): Promise<ExampleResponse> {
+    const response = await NetworkService.requestJson<ExampleResponse>({
+      method: 'GET',
+      url: ENDPOINTS.EXAMPLES.DETAIL(exampleId)
+    })
+
+    return response.result as ExampleResponse
+  }
+
+  static async createExample(payload: ExampleCreationRequest): Promise<ExampleResponse> {
+    const response = await NetworkService.requestJson<ExampleResponse>({
+      method: 'POST',
+      url: ENDPOINTS.EXAMPLES.BASE,
+      data: payload
+    })
+
+    return response.result as ExampleResponse
+  }
+
+  static async updateExample(payload: ExampleUpdationRequest): Promise<ExampleResponse> {
+    const response = await NetworkService.requestJson<ExampleResponse>({
+      method: 'PUT',
+      url: ENDPOINTS.EXAMPLES.DETAIL(payload.exampleId),
+      data: payload
+    })
+
+    return response.result as ExampleResponse
+  }
+
+  static async deleteExample(exampleId: string): Promise<void> {
+    await NetworkService.requestJson<void>({
+      method: 'DELETE',
+      url: ENDPOINTS.EXAMPLES.DETAIL(exampleId)
+    })
+  }
+}
+```
+
+Service chỉ làm việc với API contract:
+
+- Không gọi `toast`.
+- Không mở/đóng modal.
+- Không đọc Redux state.
+- Không điều hướng route.
+- Không gọi `apiClient` trực tiếp từ UI.
+
+Nếu muốn import từ barrel `@/services`, thêm export vào `src/services/index.ts`.
+
+```ts
+export { ExampleService } from './ExampleService'
+```
+
+## Bước 4: Tạo store
+
+Tạo `src/stores/ExampleStore.ts` nếu data cần dùng qua nhiều component hoặc cần action dùng lại.
+
+```ts
+import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit'
+import { ExampleService } from '@/services/ExampleService'
+import {
+  ExampleCreationRequest,
+  ExampleResponse,
+  ExampleUpdationRequest
+} from '@/types/Example'
+
+export interface IExampleStoreState {
+  examples: ExampleResponse[]
+  currentExample: ExampleResponse | null
+  isLoading: boolean
+  isSubmitting: boolean
+  error: string | null
+
+  // UI state của module, chỉ để ở store nếu nhiều component cùng cần
+  isFormOpen: boolean
+  selectedExampleId: string | null
+}
+
+const initialState: IExampleStoreState = {
+  examples: [],
+  currentExample: null,
+  isLoading: false,
+  isSubmitting: false,
+  error: null,
+  isFormOpen: false,
+  selectedExampleId: null
+}
+
+const slice = createSlice({
+  name: 'example',
+  initialState,
+  reducers: {
+    setExamples: (state, action: PayloadAction<ExampleResponse[]>) => {
+      state.examples = action.payload
+    },
+    setCurrentExample: (state, action: PayloadAction<ExampleResponse | null>) => {
+      state.currentExample = action.payload
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload
+      if (action.payload) state.error = null
+    },
+    setSubmitting: (state, action: PayloadAction<boolean>) => {
+      state.isSubmitting = action.payload
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload
+    },
+    setFormOpen: (state, action: PayloadAction<boolean>) => {
+      state.isFormOpen = action.payload
+    },
+    setSelectedExampleId: (state, action: PayloadAction<string | null>) => {
+      state.selectedExampleId = action.payload
+    },
+    resetState: () => initialState
+  }
+})
+
+export const { reducer } = slice
+
+const getErrorMessage = (error: any, fallback: string) => {
+  return error?.response?.data?.message || error?.message || fallback
+}
+
+export const exampleActions = {
+  fetchExamples: () => async (dispatch: Dispatch) => {
+    dispatch(slice.actions.setLoading(true))
+
+    try {
+      const data = await ExampleService.getAllExamples()
+      dispatch(slice.actions.setExamples(data))
+    } catch (error: any) {
+      dispatch(slice.actions.setError(getErrorMessage(error, 'Failed to fetch examples')))
+    } finally {
+      dispatch(slice.actions.setLoading(false))
+    }
+  },
+
+  fetchExampleDetail: (exampleId: string) => async (dispatch: Dispatch) => {
+    dispatch(slice.actions.setLoading(true))
+
+    try {
+      const data = await ExampleService.getExampleById(exampleId)
+      dispatch(slice.actions.setCurrentExample(data))
+    } catch (error: any) {
+      dispatch(slice.actions.setError(getErrorMessage(error, 'Failed to fetch example detail')))
+    } finally {
+      dispatch(slice.actions.setLoading(false))
+    }
+  },
+
+  createExample: (payload: ExampleCreationRequest) => async (dispatch: any) => {
+    dispatch(slice.actions.setSubmitting(true))
+
+    try {
+      await ExampleService.createExample(payload)
+      dispatch(exampleActions.fetchExamples())
+      dispatch(slice.actions.setFormOpen(false))
+      return { success: true }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to create example')
+      dispatch(slice.actions.setError(message))
+      return { success: false, error: message }
+    } finally {
+      dispatch(slice.actions.setSubmitting(false))
+    }
+  },
+
+  updateExample: (payload: ExampleUpdationRequest) => async (dispatch: any) => {
+    dispatch(slice.actions.setSubmitting(true))
+
+    try {
+      const updated = await ExampleService.updateExample(payload)
+      dispatch(exampleActions.fetchExamples())
+      dispatch(slice.actions.setCurrentExample(updated))
+      dispatch(slice.actions.setFormOpen(false))
+      return { success: true }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to update example')
+      dispatch(slice.actions.setError(message))
+      return { success: false, error: message }
+    } finally {
+      dispatch(slice.actions.setSubmitting(false))
+    }
+  },
+
+  deleteExample: (exampleId: string) => async (dispatch: any) => {
+    dispatch(slice.actions.setSubmitting(true))
+
+    try {
+      await ExampleService.deleteExample(exampleId)
+      dispatch(exampleActions.fetchExamples())
+      return { success: true }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to delete example')
+      dispatch(slice.actions.setError(message))
+      return { success: false, error: message }
+    } finally {
+      dispatch(slice.actions.setSubmitting(false))
+    }
+  },
+
+  openForm: (exampleId?: string) => (dispatch: Dispatch) => {
+    dispatch(slice.actions.setSelectedExampleId(exampleId || null))
+    dispatch(slice.actions.setFormOpen(true))
+  },
+
+  closeForm: () => (dispatch: Dispatch) => {
+    dispatch(slice.actions.setFormOpen(false))
+    dispatch(slice.actions.setSelectedExampleId(null))
+  },
+
+  clearError: () => slice.actions.setError(null),
+  resetState: slice.actions.resetState
+}
+```
+
+Store trong dự án hiện thường gồm:
+
+| Nhóm state | Ví dụ |
+| --- | --- |
+| Data | `examples`, `currentExample` |
+| Loading | `isLoading`, `isSubmitting` |
+| Error | `error` |
+| UI module-wide | `isFormOpen`, `selectedExampleId` |
+| Realtime updater | `updateExampleRealtime` nếu cần WebSocket |
+
+## Bước 5: Đăng ký reducer và action
+
+Cập nhật `src/stores/index.ts`.
+
+```ts
+import * as exampleStore from './ExampleStore'
+
+export interface AppState {
+  example: exampleStore.IExampleStoreState
+}
+
+export const reducers: any = {
+  example: exampleStore.reducer
+}
+
+export { exampleActions } from './ExampleStore'
+```
+
+Trong file thực tế, không xóa reducer hiện có. Chỉ thêm `example` vào `AppState`, `reducers` và export action.
+
+`src/stores/configureStore.ts` sẽ tự nhận reducer mới vì nó import `reducers` từ `src/stores/index.ts`.
+
+## Bước 6: Dùng trong page
+
+Trong page hoặc component client:
+
+```tsx
+'use client'
+
+import { useEffect } from 'react'
+import { Button, Card, Spin, Alert } from 'antd'
+import { useAppDispatch, useAppSelector } from '@/stores/hook'
+import { exampleActions } from '@/stores'
+import { ExampleTable } from './_components/ExampleTable'
+import { ExampleForm } from './_components/ExampleForm'
+
+export default function ExamplePage() {
+  const dispatch = useAppDispatch()
+  const {
+    examples,
+    isLoading,
+    isSubmitting,
+    error,
+    isFormOpen,
+    selectedExampleId
+  } = useAppSelector((state) => state.example)
+
+  useEffect(() => {
+    dispatch(exampleActions.fetchExamples())
+  }, [dispatch])
+
+  const handleCreate = () => {
+    dispatch(exampleActions.openForm())
+  }
+
+  const handleEdit = (exampleId: string) => {
+    dispatch(exampleActions.openForm(exampleId))
+    dispatch(exampleActions.fetchExampleDetail(exampleId))
+  }
+
+  return (
+    <>
+      {error && (
+        <Alert
+          type="error"
+          message={error}
+          closable
+          onClose={() => dispatch(exampleActions.clearError())}
+        />
+      )}
+
+      <Card
+        title="Examples"
+        extra={<Button onClick={handleCreate}>Create</Button>}
+      >
+        <Spin spinning={isLoading}>
+          <ExampleTable
+            data={examples}
+            onEdit={handleEdit}
+            onDelete={(id) => dispatch(exampleActions.deleteExample(id))}
+          />
+        </Spin>
+      </Card>
+
+      <ExampleForm
+        open={isFormOpen}
+        exampleId={selectedExampleId}
+        submitting={isSubmitting}
+        onCancel={() => dispatch(exampleActions.closeForm())}
+      />
+    </>
+  )
+}
+```
+
+Page nên:
+
+- Dispatch fetch ban đầu trong `useEffect`.
+- Select đúng slice bằng `useAppSelector`.
+- Truyền data/action xuống component con qua props rõ ràng.
+- Không gọi `apiClient` trực tiếp.
+- Không tự duplicate loading/error nếu store đã quản lý.
+
+## Bước 7: Form submit
+
+Component form có thể dispatch action create/update.
+
+```tsx
+import { Form, Input, Modal } from 'antd'
+import { useAppDispatch } from '@/stores/hook'
+import { exampleActions } from '@/stores'
+import { ExampleCreationRequest } from '@/types/Example'
+
+interface ExampleFormProps {
+  open: boolean
+  exampleId: string | null
+  submitting: boolean
+  onCancel: () => void
+}
+
+export function ExampleForm({ open, exampleId, submitting, onCancel }: ExampleFormProps) {
+  const dispatch = useAppDispatch()
+  const [form] = Form.useForm<ExampleCreationRequest>()
+
+  const handleSubmit = async () => {
+    const values = await form.validateFields()
+
+    const result = exampleId
+      ? await dispatch(exampleActions.updateExample({ ...values, exampleId }))
+      : await dispatch(exampleActions.createExample(values))
+
+    if (result.success) {
+      form.resetFields()
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      title={exampleId ? 'Edit example' : 'Create example'}
+      confirmLoading={submitting}
+      onOk={handleSubmit}
+      onCancel={onCancel}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item name="exampleCode" label="Code" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="exampleName" label="Name" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
+  )
+}
+```
+
+Với form phức tạp như order, nên tách mapper:
+
+```ts
+const payload = mapExampleFormToCreationRequest(values)
+dispatch(exampleActions.createExample(payload))
+```
+
+## Bước 8: Selector và derived data
+
+Nếu derived data chỉ dùng trong một page, tính bằng `useMemo` trong page/component:
+
+```tsx
+const activeExamples = useMemo(
+  () => examples.filter((item) => item.status === 'ACTIVE'),
+  [examples]
+)
+```
+
+Nếu derived data cần đồng bộ trong store hoặc phụ thuộc realtime, có thể cập nhật trong reducer giống `MachineStore.setMachines` đang tính lại `stats`.
+
+```ts
+setMachines: (state, action: PayloadAction<MachineOverview[]>) => {
+  state.machines = action.payload
+  state.stats = calculateMachineStats(action.payload)
+}
+```
+
+Không lưu cả raw data và nhiều bản filter/sort nếu có thể tính lại rẻ trong UI.
+
+## Bước 9: Realtime update
+
+Nếu module nhận WebSocket, thêm reducer cập nhật từng item.
+
+```ts
+updateExampleRealtime: (
+  state,
+  action: PayloadAction<{ exampleId: string; status: ExampleResponse['status'] }>
+) => {
+  const item = state.examples.find((example) => example.exampleId === action.payload.exampleId)
+  if (item) {
+    item.status = action.payload.status
+  }
+
+  if (state.currentExample?.exampleId === action.payload.exampleId) {
+    state.currentExample.status = action.payload.status
+  }
+}
+```
+
+Expose action:
+
+```ts
+updateExampleRealtime: slice.actions.updateExampleRealtime
+```
+
+Trong component/hook subscribe WebSocket:
+
+```tsx
+useEffect(() => {
+  if (!wsConnected) return
+
+  const unsubscribe = wsService.subscribe('/topic/examples/status', (message) => {
+    dispatch(exampleActions.updateExampleRealtime(message.payload))
+  })
+
+  return unsubscribe
+}, [dispatch, wsConnected, wsService])
+```
+
+Luôn cleanup subscription khi unmount hoặc dependency thay đổi.
+
+## Error và loading convention
+
+Action async nên có dạng:
+
+```ts
+dispatch(setLoading(true))
+try {
+  const data = await Service.method()
+  dispatch(setData(data))
+  return { success: true }
+} catch (error) {
+  const message = getErrorMessage(error, fallback)
+  dispatch(setError(message))
+  return { success: false, error: message }
+} finally {
+  dispatch(setLoading(false))
+}
+```
+
+Quy ước:
+
+| Loại action | Return |
+| --- | --- |
+| Fetch data | Có thể không return hoặc return data nếu UI cần |
+| Submit/create/update/delete | Nên return `{ success, error? }` hoặc boolean |
+| UI open/close | Không cần async |
+| Export/download | Return boolean để UI biết thành công/thất bại |
+
+## Không cần store thì làm thế nào
+
+Nếu data chỉ dùng trong một page nhỏ:
+
+```tsx
+const [examples, setExamples] = useState<ExampleResponse[]>([])
+const [isLoading, setIsLoading] = useState(false)
+
+useEffect(() => {
+  let ignore = false
+
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const data = await ExampleService.getAllExamples()
+      if (!ignore) setExamples(data)
+    } finally {
+      if (!ignore) setIsLoading(false)
+    }
+  }
+
+  fetchData()
+
+  return () => {
+    ignore = true
+  }
+}, [])
+```
+
+Khi logic này bắt đầu được dùng ở nhiều component hoặc cần nhiều action, nâng lên hook hoặc store.
+
+## Checklist thêm API mới
+
+1. Thêm/kiểm tra type trong `src/types`.
+2. Thêm endpoint vào `src/services/endpoints.ts`.
+3. Thêm method trong `{Domain}Service`.
+4. Nếu cần Redux, tạo/cập nhật `{Domain}Store`.
+5. Đăng ký reducer/action trong `src/stores/index.ts`.
+6. Page dùng `useAppDispatch` và `useAppSelector`.
+7. Component con nhận data/action qua props.
+8. Form submit dispatch action, không gọi service trực tiếp nếu module đã có store.
+9. Loading/error được xử lý nhất quán.
+10. Cập nhật permission/menu/docs nếu route mới cần hiển thị.
+
+## Ví dụ thực tế trong repo
+
+| Flow | File |
+| --- | --- |
+| Machine endpoint | `src/services/endpoints.ts` nhóm `MACHINE` |
+| Machine service | `src/services/MachineService.ts` |
+| Machine store | `src/stores/MachineStore.ts` |
+| Machine page | `src/app/(dashboard)/admin/machines/page.tsx` |
+| Order service/store | `src/services/OrderService.ts`, `src/stores/OrderStore.ts` |
+| Store hook | `src/stores/hook.ts` |
+| Store registry | `src/stores/index.ts`, `src/stores/configureStore.ts` |

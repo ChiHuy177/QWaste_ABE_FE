@@ -1,0 +1,55 @@
+# Qwaste v2
+
+Qwaste v2 is a factory operations web application for machine management, production spaces, production orders, operator tasks, energy monitoring, notifications, and role-based access control.
+
+This documentation is intended for developers and technical operators working on the Qwaste frontend. It focuses on local setup, code structure, data flow, core modules, and extension conventions.
+
+## Main technologies
+
+| Area | Technology |
+| --- | --- |
+| Framework | Next.js App Router |
+| UI | React, Ant Design, lucide-react |
+| State | Redux Toolkit, React Context |
+| Data fetching | Axios, service layer, BFF route |
+| Forms | React Hook Form, Zod, Ant Design Form |
+| Realtime | SockJS, STOMP |
+| Authorization | CASL ability |
+| i18n | i18next, react-i18next |
+| Testing | Jest, Testing Library |
+| Deployment | Docker, Docker Compose, GitHub Actions |
+
+## Start here
+
+- [Local setup](/en/guide): npm scripts, environment variables, local services.
+- [Architecture](/en/architecture): App Router structure, providers, services, stores.
+- [Project structure](/en/structure): folder, module, import, and code placement conventions.
+- [Clean code](/en/clean-code): component, hook, service, state, and review guidelines.
+- [Endpoint → UI](/en/data-flow): how to wire endpoints, services, stores, and pages.
+- [API & BFF](/en/api-bff): backend calls through `/api/bff` and httpOnly cookies.
+- [Auth & permissions](/en/auth-permissions): login, refresh token, route guards, CASL.
+- [Product modules](/en/modules): dashboard, space monitoring, orders, operator tasks, RBAC.
+- [Realtime WebSocket](/en/realtime): STOMP connection, role topics, energy updates.
+
+## Relevant repo structure
+
+```txt
+.
+├── src/                    # Main Qwaste frontend source
+│   ├── app/                # Next.js App Router
+│   ├── components/         # Shared UI components
+│   ├── configs/            # Branding, theme, navigation, permissions
+│   ├── contexts/           # Auth, ability, error, websocket
+│   ├── hooks/              # Shared hooks
+│   ├── services/           # API service layer
+│   ├── stores/             # Redux stores
+│   └── types/              # TypeScript domain types
+├── docs/                   # Nextra docs site
+├── scripts/                # Deployment scripts
+├── Dockerfile
+└── docker-compose.yml
+```
+
+## Documentation rule
+
+When a route, service endpoint, permission rule, or business workflow changes, update the matching page in both `docs/content/vi` and `docs/content/en`.

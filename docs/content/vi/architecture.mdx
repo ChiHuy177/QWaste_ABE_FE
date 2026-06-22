@@ -1,0 +1,92 @@
+# Kiến trúc
+
+Qwaste v2 dùng Next.js App Router. Phần UI chính nằm trong `src/app`, còn các lớp chia sẻ như service, store, context, config và type được tách khỏi route để dễ tái sử dụng.
+
+## Luồng tổng quan
+
+```txt
+Page / Component
+  -> Hook hoặc Context
+  -> Service class
+  -> NetworkService / apiClient
+  -> /api/bff/*
+  -> Backend API
+```
+
+Client không gọi trực tiếp backend URL. Hầu hết request đi qua BFF route `/api/bff` để server-side proxy gắn token từ httpOnly cookie.
+
+## App Router
+
+Các nhóm route chính:
+
+| Thư mục | Vai trò |
+| --- | --- |
+| `src/app/page.tsx` | Landing page |
+| `src/app/(auth)` | Login, register |
+| `src/app/(dashboard)` | Khu vực yêu cầu đăng nhập |
+| `src/app/api/bff` | Proxy API tới backend |
+| `src/app/api/uploadthing` | Upload file qua UploadThing |
+
+Route group `(auth)` và `(dashboard)` giúp tổ chức code mà không làm xuất hiện tên group trong URL.
+
+## Provider stack
+
+Các provider quan trọng:
+
+| File | Vai trò |
+| --- | --- |
+| `src/provider/ReduxProvider.tsx` | Cung cấp Redux store |
+| `src/provider/ReactQueryProvider.tsx` | Cung cấp React Query client |
+| `src/contexts/AuthContext.tsx` | Quản lý phiên đăng nhập và thông tin user |
+| `src/contexts/AbilityContext.tsx` | Tạo CASL ability từ role/permission |
+| `src/contexts/ErrorContext.tsx` | Quản lý lỗi toàn cục |
+| `src/contexts/WebSocketContext.tsx` | Kết nối STOMP WebSocket sau khi user đăng nhập |
+
+Khi thêm provider mới, đặt gần phạm vi sử dụng nhất. Chỉ đưa lên root layout nếu nhiều màn hình thật sự cần dùng.
+
+## Service layer
+
+Service nằm trong `src/services`. Mỗi domain có một class riêng, ví dụ:
+
+| Service | Domain |
+| --- | --- |
+| `AuthService` | Login, logout, register, refresh |
+| `UserService` | User profile và user management |
+| `OrderService` | Lệnh sản xuất, drawing, review, export |
+| `MachineService` | Máy móc và trạng thái máy |
+| `FactoryService` | Nhà máy, overview, picking |
+| `EnergyService` | Dữ liệu tiêu thụ điện |
+| `NotificationService` | Thông báo |
+
+Endpoint tập trung tại `src/services/endpoints.ts`. Khi backend đổi URL, ưu tiên cập nhật file này trước, sau đó sửa service nếu contract response thay đổi.
+
+## State management
+
+Qwaste dùng kết hợp Redux Toolkit và Context:
+
+| Vị trí | Khi dùng |
+| --- | --- |
+| Redux store | Dữ liệu chia sẻ nhiều màn hình hoặc cần action/reducer rõ ràng |
+| React Context | Phiên đăng nhập, ability, websocket, error scope |
+| Local state | Form, modal, filter, UI state trong một màn hình |
+
+Không đưa state tạm thời của form vào Redux nếu chỉ một component tree sử dụng.
+
+## Shared components
+
+`src/components/shared` chứa các component dùng lại:
+
+- `FormModal`: modal form theo config.
+- `ConfirmModal`: xác nhận thao tác.
+- `SearchInput`: ô tìm kiếm chuẩn.
+- `filters`: filter không gian và filter nâng cao.
+- `notification`: dropdown/list thông báo.
+- `AnalyticsCharts`: biểu đồ runtime/monitoring.
+
+Khi thêm shared component, cần đảm bảo API props rõ ràng, không phụ thuộc ngầm vào một page cụ thể.
+
+## Đọc tiếp
+
+- [Cấu trúc dự án](/vi/structure): quy ước đặt file, chia module và import direction.
+- [Clean code](/vi/clean-code): guideline viết component, hook, service, state và checklist review.
+- [Endpoint → UI](/vi/data-flow): ví dụ end-to-end từ backend endpoint tới UI page.

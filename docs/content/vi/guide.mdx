@@ -1,0 +1,106 @@
+# Cài đặt & chạy local
+
+Trang này mô tả cách chạy ứng dụng Qwaste v2 và docs site trên máy local.
+
+## Yêu cầu
+
+- Node.js 18 trở lên.
+- npm.
+- Docker nếu cần chạy production image hoặc docker-compose.
+- Backend API khả dụng để frontend gọi qua `NEXT_PUBLIC_API_BASE_URL`.
+
+## Chạy ứng dụng chính
+
+Tại root repo:
+
+```bash
+npm install
+npm run dev
+```
+
+Ứng dụng chạy tại:
+
+```txt
+http://localhost:3000
+```
+
+Các script thường dùng:
+
+| Lệnh | Mục đích |
+| --- | --- |
+| `npm run dev` | Chạy Next.js dev server |
+| `npm run build` | Build production |
+| `npm run start` | Chạy production server sau khi build |
+| `npm run lint:check` | Kiểm tra ESLint |
+| `npm test` | Chạy Jest |
+| `npm run test:coverage` | Chạy test kèm coverage |
+
+## Biến môi trường
+
+Tạo file `.env.local` ở root repo nếu chưa có.
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+BFF_COOKIE_SECURE=false
+```
+
+| Biến | Vai trò |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL backend. BFF dùng biến này để forward request và WebSocket dùng để tạo `${NEXT_PUBLIC_API_BASE_URL}/ws`. |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | API key cho Google Maps autocomplete/loader nếu tính năng map được bật. |
+| `BFF_COOKIE_SECURE` | Đặt `true` khi chạy qua HTTPS để cookie access token có cờ `Secure`. |
+
+Không commit `.env.local` vì file này chứa cấu hình môi trường.
+
+## Chạy docs site
+
+Docs là sub project riêng trong thư mục `docs`.
+
+```bash
+cd docs
+npm install
+npm run dev
+```
+
+Docs chạy tại:
+
+```txt
+http://localhost:3000/vi
+```
+
+Nếu port `3000` đang được ứng dụng chính sử dụng, chạy docs với port khác:
+
+```bash
+npx next dev -p 3001 --turbopack
+```
+
+## Docker
+
+Build và chạy container production:
+
+```bash
+npm run docker:build
+npm run docker:run
+```
+
+Chạy bằng Docker Compose:
+
+```bash
+npm run docker:dev
+```
+
+Chạy profile production có Nginx:
+
+```bash
+npm run docker:prod
+```
+
+## Lỗi thường gặp
+
+| Hiện tượng | Cách kiểm tra |
+| --- | --- |
+| Login trả 401 | Kiểm tra backend URL, cookie, endpoint `/api/authentication/v1/login`. |
+| Sau login bị redirect về `/login` | Kiểm tra endpoint `/api/users/v1/me` và cookie `bff_access_token`. |
+| WebSocket không kết nối | Kiểm tra `NEXT_PUBLIC_API_BASE_URL`, endpoint `/ws`, và `/api/bff/ws-token`. |
+| Search trong docs không hoạt động ở dev | Pagefind chỉ index sau build docs. Chạy `npm run build` trong `docs`. |

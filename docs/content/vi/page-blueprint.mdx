@@ -1,0 +1,328 @@
+# Cách làm mẫu
+
+Trang này là hướng làm chuẩn khi build một page mới trong Qwaste v2. Mục tiêu là giúp mỗi page có cùng cách nghĩ: rõ route, rõ dữ liệu, rõ permission, rõ trạng thái UI và dễ bảo trì sau này.
+
+## Khi nhận yêu cầu
+
+Trước khi code, chốt các điểm sau:
+
+| Câu hỏi | Cần làm rõ |
+| --- | --- |
+| Page thuộc role nào? | Admin, operator, manager, QC hay public/auth. |
+| Route là gì? | Ví dụ `src/app/(dashboard)/admin/machines/page.tsx`. |
+| Dữ liệu chính là gì? | Entity, endpoint, DTO response, pagination, filter, sort. |
+| Người dùng thao tác gì? | View, create, edit, delete, approve, export, import, realtime update. |
+| Quyền nào được dùng? | Route access, menu visibility, button/action permission. |
+| Trạng thái UI nào cần có? | Loading, empty, error, no permission, disabled, optimistic/reload. |
+| Có phụ thuộc realtime không? | WebSocket topic, cách merge dữ liệu mới vào state hiện tại. |
+| Có cần đa ngôn ngữ không? | Text hiển thị phải nằm trong `src/locales/*/common.json`. |
+
+Nếu một điểm chưa rõ, ưu tiên làm rõ trước thay vì đoán luồng nghiệp vụ.
+
+## Luồng build đề xuất
+
+1. Tạo route và module boundary.
+2. Tạo hoặc cập nhật service/API contract.
+3. Dựng page shell và layout chính.
+4. Tách component theo vùng giao diện.
+5. Chọn Ant Design component đúng với bài toán.
+6. Tách state/data fetching khỏi UI phức tạp.
+7. Gắn permission và action guard.
+8. Hoàn thiện empty/loading/error states.
+9. Kiểm tra responsive, i18n, lint/type/test.
+
+## Cách prompt khi giao việc
+
+Khi nhờ AI hoặc giao task cho dev khác, prompt tốt phải mô tả đủ nghiệp vụ, vị trí code, dữ liệu và tiêu chí hoàn tất. Prompt không nên chỉ viết “làm page quản lý máy” vì người nhận sẽ phải đoán route, API, permission và UI state.
+
+Một prompt nên có cấu trúc:
+
+| Phần | Nội dung cần có |
+| --- | --- |
+| Mục tiêu | Page dùng để làm gì, người dùng nào dùng. |
+| Vị trí code | Route, file page, folder component liên quan. |
+| API/data | Endpoint, service đã có hoặc cần tạo, shape dữ liệu nếu biết. |
+| UI mong muốn | Table/grid/form/drawer/modal/filter/chart, component Ant Design ưu tiên. |
+| Permission | Ai được xem, ai được thao tác, action nào cần guard. |
+| Trạng thái | Loading, empty, error, disabled, submitting, no permission. |
+| Ràng buộc | Không phá pattern hiện có, dùng i18n, không hard-code text, không refactor ngoài phạm vi. |
+| Kiểm tra | Lệnh cần chạy hoặc flow cần tự test. |
+
+Prompt mẫu cho list page:
+
+```txt
+Build page admin quản lý machine type tại src/app/(dashboard)/admin/categories/machineType/page.tsx.
+Dùng Ant Design Table + SearchInput + Button + Modal/Form cho CRUD.
+API dùng MachineTypeService nếu đã có, nếu thiếu thì thêm hàm service mỏng quanh NetworkService.
+Cần search theo tên, pagination, loading/empty/error state, delete confirm.
+Gắn permission route/action theo pattern RBAC hiện có.
+Text UI đưa vào src/locales/vi|en|ch/common.json, không hard-code.
+Sau khi sửa chạy typecheck/lint liên quan và báo rõ phần chưa test được.
+```
+
+Prompt mẫu cho form workflow:
+
+```txt
+Tạo drawer form edit order info trong module admin/order.
+Form chỉ quản lý validation và payload; page/drawer cha gọi OrderService và reload dữ liệu.
+Disable submit khi đang lưu, giữ initialValues ổn định khi đổi selectedOrderId.
+Chỉ cho edit khi order còn Draft, các trạng thái khác hiển thị view-only.
+```
+
+Prompt mẫu cho refactor:
+
+```txt
+Refactor page này để tách component nhưng không đổi behavior.
+Giữ nguyên API call, permission, query params và text hiện tại.
+Tách phần filters, table và form drawer thành component con có props rõ ràng.
+Không đổi style ngoài phần cần thiết để tránh regression.
+```
+
+Nếu yêu cầu có API chưa rõ, prompt nên nói thẳng “hãy đọc service/endpoints hiện có trước, nếu thiếu thì đề xuất contract tối thiểu” thay vì tự bịa endpoint.
+
+## 1. Route và module boundary
+
+Đặt page đúng nhóm route:
+
+| Loại page | Vị trí thường dùng |
+| --- | --- |
+| Admin dashboard | `src/app/(dashboard)/admin/<module>/page.tsx` |
+| Operator | `src/app/(dashboard)/operator/<module>/page.tsx` |
+| Auth | `src/app/(auth)/<module>/page.tsx` |
+| API route/BFF | `src/app/api/<module>/route.ts` hoặc `src/app/api/bff/[...path]/route.ts` |
+
+Với page có nhiều UI con, tạo folder `_components` ngay cạnh page:
+
+```txt
+src/app/(dashboard)/admin/example/
+├── page.tsx
+└── _components/
+    ├── ExampleHeader.tsx
+    ├── ExampleFilters.tsx
+    ├── ExampleTable.tsx
+    └── ExampleFormDrawer.tsx
+```
+
+Nguyên tắc: `page.tsx` điều phối dữ liệu và workflow cấp page; component con nhận props rõ ràng, không tự ôm toàn bộ nghiệp vụ của page.
+
+## 2. Service và API contract
+
+Nếu page cần endpoint mới, thêm vào:
+
+| Nhu cầu | Vị trí |
+| --- | --- |
+| Endpoint constants | `src/services/endpoints.ts` |
+| Hàm gọi API | `src/services/<Entity>Service.ts` |
+| Type dùng chung | `src/types` hoặc file type gần module nếu chỉ dùng nội bộ |
+
+Service nên là lớp mỏng quanh `NetworkService`, nhận params đã rõ nghĩa và trả về type cụ thể. Tránh để component tự ghép URL, tự parse response hoặc tự biết quá nhiều về format backend.
+
+Ví dụ hướng tổ chức:
+
+```ts
+export class ExampleService {
+  static async getExamples(params: ExampleListParams): Promise<PaginatedResult<Example>> {
+    return NetworkService.requestJson({
+      method: 'GET',
+      url: ENDPOINTS.EXAMPLE.GET,
+      params
+    });
+  }
+}
+```
+
+## 3. Page shell
+
+Một page quản trị thường đi theo khung:
+
+| Vùng | Vai trò |
+| --- | --- |
+| Header | Tiêu đề, mô tả ngắn nếu cần, primary action. |
+| Filters | Search, select, date range, status, reset. |
+| Summary | Stats cards hoặc quick indicators nếu giúp ra quyết định. |
+| Content | Table, grid, board, tree, map hoặc chart chính. |
+| Detail/action | Drawer, modal, form, confirm dialog. |
+
+Không nhồi tất cả vào `page.tsx`. Khi một vùng có state/handler riêng hoặc JSX dài, tách thành component.
+
+## 4. Sử dụng Ant Design
+
+Qwaste dùng Ant Design làm bộ UI chính, nên khi build page mới hãy ưu tiên component có sẵn trước khi tự dựng UI. Mục tiêu là đồng nhất trải nghiệm, giảm CSS riêng và tận dụng sẵn accessibility/loading/empty state của component.
+
+## Chọn component
+
+| Nhu cầu | Component nên dùng |
+| --- | --- |
+| Danh sách có nhiều cột | `Table` |
+| CRUD nhanh | `Table` + `Modal`/`Drawer` + `Form` |
+| Form nhiều field | `Form`, `Input`, `Select`, `DatePicker`, `InputNumber`, `Switch`, `Checkbox` |
+| Bộ lọc | `Space`/`Flex`, `SearchInput`, `Select`, `DatePicker.RangePicker`, `Button` |
+| Xác nhận thao tác nguy hiểm | `Popconfirm` hoặc `Modal.confirm` |
+| Phản hồi thao tác | `message`, `notification`, `Alert` |
+| Thông tin ngắn | `Tag`, `Badge`, `Tooltip`, `Typography.Text` |
+| Chia nội dung | `Tabs`, `Segmented`, `Collapse` |
+| Cấu trúc cây | `Tree`, `TreeSelect` |
+| Upload file | `Upload` với controlled/uncontrolled mode rõ ràng |
+
+Chỉ tạo component custom khi Ant Design không giải quyết được layout/workflow, hoặc khi cần đóng gói pattern dùng lại nhiều lần như `SearchInput`.
+
+## Quy tắc dùng Table
+
+- Luôn có `rowKey` ổn định, ưu tiên id thật từ backend.
+- Pagination, sort, filter phải có một nguồn state rõ ràng.
+- Không filter local nếu dữ liệu đang phân trang từ server, trừ khi page chủ đích chỉ filter trên dữ liệu hiện có.
+- Cột action nên gom nút theo quyền: view/edit/delete/export.
+- Long text dùng `ellipsis`, `Tooltip` hoặc render ngắn để tránh vỡ layout.
+- Loading dùng prop `loading`; empty dùng `locale.emptyText` hoặc state riêng nếu cần action.
+
+## Quy tắc dùng Form
+
+- Form nhận `initialValues` từ parent và reset đúng lúc khi mở/đổi record.
+- Validate ở form, normalize payload trước khi submit.
+- Nút submit phải có loading/disabled khi đang lưu.
+- Field phụ thuộc nhau nên dùng `Form.useWatch` hoặc handler rõ ràng, tránh effect khó đoán.
+- Với edit mode/view-only mode, truyền `disabled` thống nhất thay vì disable từng field rời rạc.
+
+## Modal, Drawer và feedback
+
+| Pattern | Khi dùng |
+| --- | --- |
+| `Modal` | Form ngắn, confirm, thao tác không cần nhiều không gian. |
+| `Drawer` | Form dài, detail view, workflow cần giữ ngữ cảnh list phía sau. |
+| `Popconfirm` | Delete hoặc action nguy hiểm đơn giản trên từng row. |
+| `message` | Kết quả nhanh như tạo/sửa/xóa thành công. |
+| `notification`/`Alert` | Lỗi hoặc trạng thái cần người dùng đọc kỹ hơn. |
+
+Đóng modal/drawer sau khi mutation thành công. Nếu mutation lỗi, giữ form mở để người dùng sửa hoặc thử lại.
+
+## Select, DatePicker và remote data
+
+- Remote search trong `Select` phải tắt local filter bằng `filterOption={false}`.
+- Debounce search nếu mỗi lần nhập gọi API.
+- Dữ liệu option nên có loading state và empty state.
+- Date value cần thống nhất format giữa UI và API, không để component tự quyết định format backend.
+- Reset filter phải reset cả UI state lẫn query params/pagination liên quan.
+
+## Theme và styling
+
+Ưu tiên thứ tự:
+
+1. Token global trong `ConfigProvider`.
+2. Component token nếu chỉ đổi một nhóm component.
+3. `className`, `classNames` hoặc `styles` khi component hỗ trợ.
+4. CSS module/local style cho layout riêng của page.
+
+Tránh override global `.ant-*` rộng vì dễ ảnh hưởng page khác. Nếu cần style riêng, scope theo component/page cụ thể.
+
+Trước khi dùng prop lạ hoặc component ít dùng, kiểm tra docs chính thức/metadata của Ant Design. Không đoán tên prop và không dựa vào DOM nội bộ của `.ant-*`.
+
+## 5. Data fetching và state
+
+Ưu tiên phân loại state trước:
+
+| Loại state | Cách xử lý |
+| --- | --- |
+| Server state | Dùng service + query/mutation pattern đang có trong module. |
+| Filter/search/sort/page | Đặt tên rõ, debounce search nếu gọi API theo input. |
+| Form state | Để form component quản lý, page chỉ nhận submit/cancel/success. |
+| UI state | Modal open, selected row, active tab, expanded keys. |
+| Derived state | Tính bằng `useMemo` khi cần, không lưu trùng nếu có thể suy ra. |
+
+Với list page, cần thống nhất ít nhất:
+
+- `search`
+- `filters`
+- `pagination`
+- `sort`
+- `selectedItem`
+- `isCreateOpen` hoặc `isEditOpen`
+- `isSubmitting`
+
+Sau create/update/delete, reload đúng dữ liệu liên quan. Nếu dùng React Query, invalidate query key cụ thể thay vì reload toàn bộ page.
+
+## 6. Permission và route access
+
+Mỗi page dashboard cần kiểm tra 3 lớp:
+
+| Lớp | Cần kiểm tra |
+| --- | --- |
+| Route | `src/configs/permissions/routeAccess.ts` |
+| Menu | Permission registry/sidebar nếu route cần hiện trong menu |
+| Action | Button create/edit/delete/export/approve phải disable hoặc ẩn theo ability |
+
+Không chỉ chặn ở UI. Nếu backend yêu cầu permission, service call vẫn phải xử lý lỗi `403` rõ ràng để người dùng không bị kẹt ở trạng thái im lặng.
+
+## 7. UI states bắt buộc
+
+Trước khi xem là xong, page phải có:
+
+| State | Cách thể hiện |
+| --- | --- |
+| Loading lần đầu | Skeleton, spinner hoặc loading state của Ant Design component. |
+| Empty | Text/action phù hợp với filter hiện tại. |
+| Error | Message rõ, có retry nếu dữ liệu chính không tải được. |
+| Submitting | Disable nút submit và tránh double submit. |
+| No permission | Ẩn action hoặc show disabled state có lý do nếu cần. |
+| Long text | Cắt dòng/tooltip để không phá layout. |
+
+## 8. Form và validation
+
+Form nên đi theo một chiều:
+
+1. Page mở form với `mode`, `initialValues`, `disabled` nếu có.
+2. Form validate dữ liệu đầu vào.
+3. Form submit payload đã chuẩn hóa lên page.
+4. Page gọi service/mutation.
+5. Thành công thì đóng form, reload list/detail và hiện message.
+
+Không để form vừa gọi API, vừa tự đóng drawer, vừa reload list nếu page còn cần điều phối workflow khác. Chỉ để form tự gọi API khi nó là màn hình độc lập và không ảnh hưởng state bên ngoài.
+
+## 9. Realtime
+
+Với page dùng WebSocket:
+
+- Chỉ subscribe khi đủ điều kiện: có user, có selected entity, socket connected.
+- Cleanup subscription khi unmount hoặc khi dependency đổi.
+- Xác định rõ message realtime sẽ update item, append item hay invalidate query.
+- Không để message cũ ghi đè dữ liệu mới hơn từ request hiện tại.
+
+Nếu realtime chỉ là tối ưu trải nghiệm, vẫn cần fallback bằng refetch/polling hoặc refresh thủ công.
+
+## 10. i18n và text
+
+Text hiển thị trong app chính nên lấy từ `src/locales/*/common.json`. Khi thêm page mới:
+
+| Việc | File |
+| --- | --- |
+| Text tiếng Việt | `src/locales/vi/common.json` |
+| Text tiếng Anh | `src/locales/en/common.json` |
+| Text tiếng Trung nếu module đang hỗ trợ | `src/locales/ch/common.json` |
+
+Key nên đi theo domain của page, ví dụ `machineList.filters.searchPlaceholder`, không đặt key quá chung như `title2` hoặc `buttonText`.
+
+## 11. Checklist hoàn tất page
+
+Trước khi giao page, tự kiểm tra:
+
+- Route đúng và sidebar/menu mở đúng.
+- API call đúng endpoint, params, pagination, sort, filter.
+- Loading, empty, error, submitting đều có xử lý.
+- Ant Design component dùng đúng vai trò, không tự dựng UI khi component có sẵn đáp ứng được.
+- Create/update/delete không làm stale list/detail.
+- Permission route và action đã được gắn.
+- Text không hard-code nếu thuộc UI sản phẩm.
+- Layout không vỡ ở desktop hẹp và mobile/tablet nếu page có hỗ trợ.
+- Không có state trùng lặp hoặc effect chạy lặp vô hạn.
+- `npm run lint:check`, `npx tsc --noEmit` hoặc test liên quan chạy qua nếu phạm vi thay đổi đủ lớn.
+
+## Mẫu quyết định nhanh
+
+| Nếu page là... | Hướng build |
+| --- | --- |
+| CRUD list | Table + filters + drawer/modal form + delete confirm + pagination. |
+| Monitoring dashboard | Cards/charts + date/filter controls + clear loading/empty states. |
+| Realtime board | Columns/cards + WebSocket merge strategy + manual refresh fallback. |
+| Detail workflow | Header status + tabs/sections + action drawer/modal + audit/history nếu có. |
+| Configuration page | Form rõ nhóm field + save/reset + dirty state + validation. |
+
+Khi page bắt đầu vượt quá một màn hình code dài, tách theo workflow trước, không tách theo loại component một cách máy móc.

@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "antd": {
+      "source": "ant-design/antd-skill",
+      "sourceType": "github",
+      "skillPath": "skills/antd/SKILL.md",
+      "computedHash": "4295010f09f85855cab9e9de9ec7f96c14541474b4f3f9d6ef89006430931b94"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
