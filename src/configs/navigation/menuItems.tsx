@@ -3,8 +3,8 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ProjectOutlined,
     AppstoreOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -35,6 +35,16 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     if (ability.can('view', 'machine_overview') || ability.can('update', 'machine_overview')) {
         items.push(
             createMenuItem('/admin/machines', t('sidebar.navigation.machine'), <LaptopOutlined />)
+        );
+    }
+
+    if (ability.can('view', 'tasks')) {
+        items.push(
+            createMenuItem(
+                '/admin/production-plan',
+                t('sidebar.navigation.productionPlan'),
+                <CalendarOutlined />
+            )
         );
     }
 
