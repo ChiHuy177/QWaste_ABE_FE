@@ -57,6 +57,11 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             createMenuItem('/admin/categories/machineList', t('sidebar.navigation.machineList'))
         );
     }
+    if (ability.can('view', 'mold')) {
+        machineManagementItems.push(
+            createMenuItem('/admin/categories/mold', t('sidebar.navigation.mold'))
+        );
+    }
     // if (ability.can('view', 'machine_type')) {
     //     machineManagementItems.push(
     //         createMenuItem('/admin/categories/machineType', t('sidebar.navigation.machineType'))

@@ -3,6 +3,7 @@
 import { Notification } from '@/types/Notification';
 import { theme, Typography } from 'antd';
 import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/vi';
@@ -10,6 +11,9 @@ import 'dayjs/locale/vi';
 dayjs.extend(relativeTime);
 
 const { Text } = Typography;
+
+const formatKeyArgs = (template: string, args: unknown[] = []) =>
+    template.replace(/\{(\d+)\}/g, (_, index: string) => String(args[Number(index)] ?? ''));
 
 interface NotificationItemProps {
     notification: Notification;
@@ -23,6 +27,21 @@ export default function NotificationItem({
     onClick,
 }: NotificationItemProps) {
     const { token } = theme.useToken();
+    const { t, i18n } = useTranslation();
+
+    const title = notification.titleKey
+        ? formatKeyArgs(
+            String(t(notification.titleKey, { defaultValue: notification.title })),
+            notification.titleArgs
+        )
+        : notification.title;
+    const content = notification.contentKey
+        ? formatKeyArgs(
+            String(t(notification.contentKey, { defaultValue: notification.content })),
+            notification.contentArgs
+        )
+        : notification.content;
+    const relativeTimeLocale = i18n.language === 'vi' ? 'vi' : 'en';
 
     const handleClick = () => {
         if (!notification.isRead && onMarkAsRead) {
@@ -97,7 +116,7 @@ export default function NotificationItem({
                                 flex: 1,
                             }}
                         >
-                            {notification.title}
+                            {title}
                         </Text>
 
                         {notification.isRead && (
@@ -125,7 +144,7 @@ export default function NotificationItem({
                             marginBottom: 10,
                         }}
                     >
-                        {notification.content}
+                        {content}
                     </Text>
 
                     {/* Time */}
@@ -143,7 +162,7 @@ export default function NotificationItem({
                                 fontWeight: 500,
                             }}
                         >
-                            {dayjs(notification.createdAt).fromNow()}
+                            {dayjs(notification.createdAt).locale(relativeTimeLocale).fromNow()}
                         </Text>
                     </div>
                 </div>

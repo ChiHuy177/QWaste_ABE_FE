@@ -1,7 +1,11 @@
 export interface Notification {
     notificationId: number;
     title: string;
+    titleKey?: string;
+    titleArgs?: unknown[];
     content: string;
+    contentKey?: string;
+    contentArgs?: unknown[];
     isRead: boolean;
     createdAt: string;
     payload: Record<string, any>;

@@ -19,6 +19,7 @@ export type Subject =
     // Categories
     | 'machine_type'
     | 'machine'
+    | 'mold'
     | 'staffing'
     | 'factory'
     | 'space'

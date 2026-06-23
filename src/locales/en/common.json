@@ -335,6 +335,7 @@
             "machineType": "Machine Type List",
             "electric": "Electric overview",
             "machineList": "Machine List",
+            "mold": "Mold List",
             "factory": "Factory List",
             "factoryOverview": "Space Monitoring",
             "floorMap": "Floor Map",
@@ -1935,6 +1936,79 @@
             "createdBy": "Created By",
             "updatedAt": "Last Updated At",
             "updatedBy": "Last Updated By"
+        }
+    },
+    "moldManagement": {
+        "title": "Mold List",
+        "addMold": "Add Mold",
+        "searchPlaceholder": "Search by mold code or name",
+        "fetchError": "Failed to fetch mold list. Please try again.",
+        "deleteSuccess": "Mold deleted successfully",
+        "deleteError": "Failed to delete mold. Please try again.",
+        "updateSuccess": "Mold updated successfully",
+        "updateError": "Failed to update mold. Please try again.",
+        "moldType": {
+            "PRESS": "Press",
+            "COMPRESS": "Compress"
+        },
+        "status": {
+            "ACTIVE": "Active",
+            "MAINTENANCE": "Maintenance",
+            "RETIRED": "Retired"
+        },
+        "table": {
+            "headers": {
+                "moldCode": "Mold Code",
+                "moldName": "Mold Name",
+                "quantity": "Cavities",
+                "moldType": "Mold Type",
+                "status": "Status",
+                "description": "Description",
+                "createdAt": "Created At",
+                "updatedAt": "Updated At",
+                "actions": "Actions"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Delete Mold",
+                "description": "Are you sure you want to delete this mold? This action cannot be undone."
+            }
+        },
+        "form": {
+            "createTitle": "Create New Mold",
+            "editTitle": "Edit Mold",
+            "createDescription": "Fill in the form below to create a new mold.",
+            "editDescription": "Fill in the form below to edit the mold.",
+            "createSuccess": "Mold created successfully",
+            "createError": "Failed to create mold. Please try again.",
+            "fields": {
+                "moldCode": "Mold Code",
+                "moldName": "Mold Name",
+                "quantity": "Number of Cavities",
+                "moldType": "Mold Type",
+                "status": "Status",
+                "description": "Description"
+            },
+            "placeholders": {
+                "moldCode": "Enter mold code (e.g. KM001)",
+                "moldName": "Enter mold name",
+                "quantity": "Enter number of cavities",
+                "moldType": "Select mold type",
+                "status": "Select status",
+                "description": "Enter mold description (optional)"
+            },
+            "validation": {
+                "required": "This field is required",
+                "maxLength": "Maximum length is {{max}} characters",
+                "minQuantity": "Number of cavities must be at least {{min}}"
+            },
+            "buttons": {
+                "cancel": "Cancel",
+                "create": "Create",
+                "save": "Save Changes",
+                "saving": "Saving..."
+            }
         }
     },
     "machineListManagement": {
@@ -4038,6 +4112,12 @@
             "alarm_error": {
                 "title": "Machine Alarm",
                 "content": "Machine {0} has triggered an error alarm. Immediate inspection required."
+            }
+        },
+        "product": {
+            "queue_empty": {
+                "title": "Product Queue Empty",
+                "content": "The product queue is currently empty. Please add products to continue."
             }
         }
     },

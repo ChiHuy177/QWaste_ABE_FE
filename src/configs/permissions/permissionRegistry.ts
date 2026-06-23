@@ -179,6 +179,37 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Delete machine type',
     },
 
+    // Mold
+    {
+        slug: 'mold:view',
+        subject: 'mold',
+        action: 'view',
+        routes: ['/admin/categories/mold'],
+        menuKey: 'mold',
+        description: 'View mold list',
+    },
+    {
+        slug: 'mold:create',
+        subject: 'mold',
+        action: 'create',
+        routes: [],
+        description: 'Create mold',
+    },
+    {
+        slug: 'mold:update',
+        subject: 'mold',
+        action: 'update',
+        routes: [],
+        description: 'Update mold',
+    },
+    {
+        slug: 'mold:delete',
+        subject: 'mold',
+        action: 'delete',
+        routes: [],
+        description: 'Delete mold',
+    },
+
     // Staffing
     {
         slug: 'staffing:view',
