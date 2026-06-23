@@ -32,6 +32,7 @@ const BASE_PATHS = {
     SHIFT_BREAK_PERIODS: `${API}/shiftBreakPeriods/${V1}`,
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
+    MOLDS: `${API}/molds/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -168,6 +169,11 @@ export const ENDPOINTS = {
     EXCEL_EXPORT: {
         MACHINE_STATUS_LOG_REPORT_BY_FILTER: `${BASE_PATHS.EXCEL_EXPORT}/machineStatusLogReport/byFilter`,
         MACHINE_STATUS_LOG_REPORT_BY_DATE_RANGE: `${BASE_PATHS.EXCEL_EXPORT}/machineStatusLogReport/byDateRange`,
+    },
+    MOLDS: {
+        BASE: BASE_PATHS.MOLDS,
+        ALL: `${BASE_PATHS.MOLDS}/all`,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
     },
 } as const;
 
