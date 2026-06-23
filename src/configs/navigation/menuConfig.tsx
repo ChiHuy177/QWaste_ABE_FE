@@ -6,6 +6,7 @@ import {
     ProjectOutlined,
     CheckSquareOutlined,
     AppstoreOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import type { Action, Subject } from '@/configs/permissions/caslAbility';
 
@@ -63,6 +64,14 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         route: '/admin/tasks',
         i18nKey: 'sidebar.navigation.tasks',
         icon: <CheckSquareOutlined />,
+        subject: 'tasks',
+        action: 'view',
+    },
+    {
+        key: 'production-plan',
+        route: '/admin/production-plan',
+        i18nKey: 'sidebar.navigation.productionPlan',
+        icon: <CalendarOutlined />,
         subject: 'tasks',
         action: 'view',
     },
