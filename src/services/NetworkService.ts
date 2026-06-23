@@ -10,6 +10,14 @@ interface RequestOptions {
     skipAuthHandling?: boolean;
 }
 
+interface FormDataRequestOptions {
+    method: 'POST' | 'PUT' | 'PATCH';
+    url: string;
+    data: FormData;
+    cancelToken?: string;
+    skipAuthHandling?: boolean;
+}
+
 const pendingRequests = new Map<string, AbortController>();
 
 export interface DownloadResult {
@@ -65,6 +73,40 @@ export class NetworkService {
         } else {
             config.data = data || {};
         }
+
+        try {
+            const response = await apiClient(config);
+            return response.data;
+        } finally {
+            if (cancelToken) {
+                pendingRequests.delete(cancelToken);
+            }
+        }
+    }
+
+    static async requestFormData<T = any>(opts: FormDataRequestOptions): Promise<ApiResponse<T>> {
+        const { method, url, data, cancelToken, skipAuthHandling } = opts;
+
+        let abortSignal;
+
+        if (cancelToken) {
+            if (pendingRequests.has(cancelToken)) {
+                pendingRequests.get(cancelToken)?.abort();
+            }
+            const controller = new AbortController();
+            pendingRequests.set(cancelToken, controller);
+            abortSignal = controller.signal;
+        }
+
+        const config: any = {
+            method,
+            url,
+            // Không set Content-Type — axios tự gắn multipart/form-data + boundary
+            headers: { Accept: 'application/json' },
+            data,
+            signal: abortSignal,
+            skipAuthHandling,
+        };
 
         try {
             const response = await apiClient(config);
