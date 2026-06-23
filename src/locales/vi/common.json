@@ -3794,6 +3794,12 @@
                 "title": "Cảnh Báo Máy",
                 "content": "Máy {0} đã kích hoạt cảnh báo lỗi. Cần kiểm tra ngay."
             }
+        },
+        "product": {
+            "queue_empty": {
+                "title": "Hàng đợi sản phẩm trống",
+                "content": "Hàng đợi sản phẩm hiện đang trống. Vui lòng thêm sản phẩm để tiếp tục."
+            }
         }
     },
     "notifications": {

@@ -4111,6 +4111,12 @@
                 "title": "Machine Alarm",
                 "content": "Machine {0} has triggered an error alarm. Immediate inspection required."
             }
+        },
+        "product": {
+            "queue_empty": {
+                "title": "Product Queue Empty",
+                "content": "The product queue is currently empty. Please add products to continue."
+            }
         }
     },
     "notifications": {

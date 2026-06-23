@@ -17,10 +17,14 @@ const normalizeNotification = (item: NotificationApiItem): Notification => ({
         String(i18n.t(item.titleKey, { defaultValue: item.titleKey })),
         item.titleArgs
     ),
+    titleKey: item.titleKey,
+    titleArgs: item.titleArgs,
     content: formatKeyArgs(
         String(i18n.t(item.contentKey, { defaultValue: item.contentKey })),
         item.contentArgs
     ),
+    contentKey: item.contentKey,
+    contentArgs: item.contentArgs,
     isRead: item.isRead,
     createdAt: item.createdAt,
     payload: item.payload ?? {},
