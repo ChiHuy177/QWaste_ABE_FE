@@ -324,6 +324,7 @@
             "zone": "Danh sách khu vực",
             "machineType": "Danh sách loại máy",
             "machineList": "Danh sách máy",
+            "mold": "Danh sách Khuôn",
             "electric": "Công suất tiêu thụ điện",
             "factory": "Danh sách nhà máy",
             "factoryOverview": "Tổng quan nhà máy",
@@ -2581,6 +2582,79 @@
             "updatedBy": "Người Cập Nhật Cuối"
         }
     },
+    "moldManagement": {
+        "title": "Danh Sách Khuôn",
+        "addMold": "Thêm Khuôn",
+        "searchPlaceholder": "Tìm theo mã hoặc tên khuôn",
+        "fetchError": "Không thể tải danh sách khuôn. Vui lòng thử lại.",
+        "deleteSuccess": "Xóa khuôn thành công",
+        "deleteError": "Không thể xóa khuôn. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật khuôn thành công",
+        "updateError": "Không thể cập nhật khuôn. Vui lòng thử lại.",
+        "moldType": {
+            "PRESS": "Ép",
+            "COMPRESS": "Nén"
+        },
+        "status": {
+            "ACTIVE": "Hoạt động",
+            "MAINTENANCE": "Bảo trì",
+            "RETIRED": "Ngừng dùng"
+        },
+        "table": {
+            "headers": {
+                "moldCode": "Mã Khuôn",
+                "moldName": "Tên Khuôn",
+                "quantity": "Số Lỗ",
+                "moldType": "Loại Khuôn",
+                "status": "Trạng Thái",
+                "description": "Mô Tả",
+                "createdAt": "Ngày Tạo",
+                "updatedAt": "Ngày Cập Nhật",
+                "actions": "Thao Tác"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Xóa Khuôn",
+                "description": "Bạn có chắc chắn muốn xóa khuôn này? Hành động này không thể hoàn tác."
+            }
+        },
+        "form": {
+            "createTitle": "Tạo Khuôn Mới",
+            "editTitle": "Chỉnh Sửa Khuôn",
+            "createDescription": "Điền thông tin vào form bên dưới để tạo khuôn mới.",
+            "editDescription": "Điền thông tin vào form bên dưới để chỉnh sửa khuôn.",
+            "createSuccess": "Tạo khuôn thành công",
+            "createError": "Không thể tạo khuôn. Vui lòng thử lại.",
+            "fields": {
+                "moldCode": "Mã Khuôn",
+                "moldName": "Tên Khuôn",
+                "quantity": "Số Lỗ Khuôn",
+                "moldType": "Loại Khuôn",
+                "status": "Trạng Thái",
+                "description": "Mô Tả"
+            },
+            "placeholders": {
+                "moldCode": "Nhập mã khuôn (vd: KM001)",
+                "moldName": "Nhập tên khuôn",
+                "quantity": "Nhập số lỗ khuôn",
+                "moldType": "Chọn loại khuôn",
+                "status": "Chọn trạng thái",
+                "description": "Nhập mô tả khuôn (tùy chọn)"
+            },
+            "validation": {
+                "required": "Trường này là bắt buộc",
+                "maxLength": "Độ dài tối đa là {{max}} ký tự",
+                "minQuantity": "Số lỗ khuôn phải lớn hơn hoặc bằng {{min}}"
+            },
+            "buttons": {
+                "cancel": "Hủy",
+                "create": "Tạo Mới",
+                "save": "Lưu Thay Đổi",
+                "saving": "Đang lưu..."
+            }
+        }
+    },
     "machineListManagement": {
         "title": "Quản lý danh sách máy",
         "addMachine": "Thêm máy",
@@ -3092,6 +3166,7 @@
         "machineTypeList": "Quản Lý Loại Máy",
         "operator": "Nhân viên",
         "machineList": "Danh sách máy",
+        "moldList": "Danh sách Khuôn",
         "processManagement": "Quản lý quy trình",
         "history": "Lịch sử",
         "settings": "Cài đặt",
