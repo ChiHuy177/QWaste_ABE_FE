@@ -1,9 +1,19 @@
 import { SpaceWithChildrenResponse } from '@/types/Space';
-import { Button, Space, Tag, Popconfirm, Tooltip } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Tag, Tooltip } from 'antd';
+import type { MenuProps } from 'antd';
+import {
+    DeleteOutlined,
+    EditOutlined,
+    EllipsisOutlined,
+    EyeOutlined,
+    PlusOutlined,
+} from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
 import { spaceLevelColors, spaceLevelTextColors } from '@/configs/antdTheme';
 
+
+const ACTION_BUTTON_SIZE = 34;
+const ACTION_BUTTON_GAP = 8;
 
 export interface SpaceTableColumnProps {
     onView: (space: SpaceWithChildrenResponse) => void;
@@ -14,7 +24,6 @@ export interface SpaceTableColumnProps {
     isMobile: boolean;
     t: (key: string, options?: any) => string;
     ability: any;
-    themeToken: any;
 }
 
 export const getSpaceTableColumns = ({
@@ -26,8 +35,33 @@ export const getSpaceTableColumns = ({
     isMobile,
     t,
     ability,
-    themeToken,
 }: SpaceTableColumnProps): ColumnsType<SpaceWithChildrenResponse> => {
+    const canCreateSpace = ability.can('create', 'space');
+    const canUpdateSpace = ability.can('update', 'space');
+    const canDeleteSpace = ability.can('delete', 'space');
+    const hasOverflowActions = canCreateSpace || canDeleteSpace;
+    const visibleActionCount =
+        1 + (canUpdateSpace ? 1 : 0) + (hasOverflowActions ? 1 : 0);
+    const actionColumnWidth =
+        visibleActionCount * ACTION_BUTTON_SIZE
+        + (visibleActionCount - 1) * ACTION_BUTTON_GAP
+        + 32;
+    const actionButtonStyle = {
+        width: ACTION_BUTTON_SIZE,
+        height: ACTION_BUTTON_SIZE,
+        padding: 0,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    };
+    const actionSlotStyle = {
+        width: ACTION_BUTTON_SIZE,
+        height: ACTION_BUTTON_SIZE,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    };
+
     return [
         {
             title: t('spaceManagement.table.headers.spaceName'),
@@ -113,90 +147,115 @@ export const getSpaceTableColumns = ({
             key: 'actions',
             align: 'center',
             ...(isMobile ? {} : { fixed: 'right' }),
-            width: isMobile ? 140 : 180,
+            width: isMobile ? actionColumnWidth : Math.max(actionColumnWidth, 180),
+            onCell: () => ({
+                style: {
+                    whiteSpace: 'nowrap',
+                },
+            }),
             render: (_, record: SpaceWithChildrenResponse) => {
                 const isMaxLevel = record.spaceLevel?.spaceLevel >= maxSpaceLevel;
+                const hasChildren = !!record.children && record.children.length > 0;
+                const overflowItems: MenuProps['items'] = [
+                    ...(canCreateSpace
+                        ? [
+                            {
+                                key: 'add-child',
+                                icon: <PlusOutlined />,
+                                label: t('spaceManagement.actions.create'),
+                                disabled: isMaxLevel,
+                            },
+                        ]
+                        : []),
+                    ...(canCreateSpace && canDeleteSpace ? [{ type: 'divider' as const }] : []),
+                    ...(canDeleteSpace
+                        ? [
+                            {
+                                key: 'delete',
+                                danger: true,
+                                icon: <DeleteOutlined />,
+                                label: hasChildren
+                                    ? t('spaceManagement.errors.cannotDeleteHasChildren')
+                                    : t('spaceManagement.actions.delete'),
+                                disabled: hasChildren,
+                            },
+                        ]
+                        : []),
+                ];
 
                 return (
-                    <Space size="small">
-                        <Tooltip title={t('common.view')}>
-                            <Button
-                                type="default"
-                                icon={<EyeOutlined />}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onView(record);
-                                }}
-                                aria-label={t('common.view')}
-                            />
-                        </Tooltip>
-                        {/* Add Child Button (Invisible if at deepest level) */}
-                        {!isMaxLevel && ability.can('create', 'space') && (
-                            <Tooltip title={t('spaceManagement.actions.create')}>
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: `repeat(${visibleActionCount}, ${ACTION_BUTTON_SIZE}px)`,
+                            gap: ACTION_BUTTON_GAP,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <span style={actionSlotStyle}>
+                            <Tooltip title={t('common.view')}>
                                 <Button
-                                    type="primary"
-                                    icon={<PlusOutlined />}
+                                    type="default"
+                                    icon={<EyeOutlined />}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        onAddChild(record);
+                                        onView(record);
                                     }}
-                                    style={{
-                                        backgroundColor: themeToken.colorSuccess,
-                                        borderColor: themeToken.colorSuccess,
-                                    }}
+                                    aria-label={t('common.view')}
+                                    style={actionButtonStyle}
                                 />
                             </Tooltip>
-                        )}
+                        </span>
 
-                        {/* Edit Button */}
-                        {ability.can('update', 'space') && (
-                            <Tooltip title={t('spaceManagement.actions.edit')}>
-                                <Button
-                                    type="primary"
-                                    icon={<EditOutlined />}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onEdit(record);
-                                    }}
-                                />
-                            </Tooltip>
-                        )}
-
-                        {/* Delete Button */}
-                        {ability.can('delete', 'space') && (
-                            <Popconfirm
-                                title={t('spaceManagement.dialogs.deleteConfirmation.title')}
-                                description={t(
-                                    'spaceManagement.dialogs.deleteConfirmation.description'
-                                )}
-                                onConfirm={(e) => {
-                                    e?.stopPropagation();
-                                    onDelete(record);
-                                }}
-                                onCancel={(e) => e?.stopPropagation()}
-                                okText={t('common.yes')}
-                                cancelText={t('common.no')}
-                                okButtonProps={{ danger: true }}
-                                disabled={record.children && record.children.length > 0}
-                            >
-                                <Tooltip
-                                    title={
-                                        record.children && record.children.length > 0
-                                            ? t('spaceManagement.errors.cannotDeleteHasChildren')
-                                            : t('spaceManagement.actions.delete')
-                                    }
-                                >
+                        {canUpdateSpace && (
+                            <span style={actionSlotStyle}>
+                                <Tooltip title={t('spaceManagement.actions.edit')}>
                                     <Button
-                                        danger
                                         type="primary"
-                                        icon={<DeleteOutlined />}
-                                        onClick={(e) => e.stopPropagation()}
-                                        disabled={record.children && record.children.length > 0}
+                                        icon={<EditOutlined />}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEdit(record);
+                                        }}
+                                        style={actionButtonStyle}
                                     />
                                 </Tooltip>
-                            </Popconfirm>
+                            </span>
                         )}
-                    </Space>
+
+                        {hasOverflowActions && (
+                            <span style={actionSlotStyle}>
+                                <Tooltip title={t('common.moreActions', { defaultValue: 'More actions' })}>
+                                    <Dropdown
+                                        trigger={['click']}
+                                        menu={{
+                                            items: overflowItems,
+                                            onClick: ({ key, domEvent }) => {
+                                                domEvent.stopPropagation();
+
+                                                if (key === 'add-child' && !isMaxLevel) {
+                                                    onAddChild(record);
+                                                }
+
+                                                if (key === 'delete' && !hasChildren) {
+                                                    onDelete(record);
+                                                }
+                                            },
+                                        }}
+                                    >
+                                        <Button
+                                            type="default"
+                                            icon={<EllipsisOutlined />}
+                                            onClick={(e) => e.stopPropagation()}
+                                            aria-label={t('common.moreActions', { defaultValue: 'More actions' })}
+                                            style={actionButtonStyle}
+                                        />
+                                    </Dropdown>
+                                </Tooltip>
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },

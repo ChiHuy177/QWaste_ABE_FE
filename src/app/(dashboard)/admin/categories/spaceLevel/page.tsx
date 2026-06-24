@@ -19,7 +19,7 @@ import {
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { FilterOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { FilterOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import {
     SpaceLevelDTO,
@@ -34,6 +34,7 @@ import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
@@ -439,9 +440,18 @@ const SpaceLevelListPage = () => {
         setSpaceLevelNameFilter(values.spaceLevelName?.trim() || undefined);
         setPage(0);
     }, []);
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('spaceLevelManagement.title')}
                 loading={loading}
@@ -587,6 +597,7 @@ const SpaceLevelListPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
@@ -594,24 +605,17 @@ const SpaceLevelListPage = () => {
                 styles={{
                     body: {
                         flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                        overflowY: isMobile ? 'auto' : 'hidden',
                     }
                 }}
             >
-                {spaceLevelsQuery.isLoading ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<SpaceLevelDTO>
                         columns={columns}
                         dataSource={filteredData}
@@ -622,6 +626,7 @@ const SpaceLevelListPage = () => {
                             current: page + 1,
                             pageSize: pageSize,
                             total: totalElements,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
@@ -630,11 +635,12 @@ const SpaceLevelListPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? undefined : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<SpaceLevelFormData>
@@ -671,7 +677,7 @@ const SpaceLevelListPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

@@ -19,7 +19,7 @@ import {
     Image,
 } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { LoadingOutlined, PlusOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
+import { PlusOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import {
     SpaceWithChildrenResponse,
@@ -35,6 +35,7 @@ import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUploadThing } from '@/utils/uploadthing';
@@ -309,7 +310,6 @@ const SpaceListPage = () => {
             isMobile,
             t,
             ability,
-            themeToken,
         }),
         [
             handleViewSpace,
@@ -320,7 +320,6 @@ const SpaceListPage = () => {
             isMobile,
             t,
             ability,
-            themeToken,
         ]
     );
 
@@ -469,9 +468,18 @@ const SpaceListPage = () => {
     };
 
     const formFields = useMemo(() => getSpaceFormFields(t, modalState.mode), [t, modalState.mode]);
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('spaceManagement.title')}
                 loading={loading}
@@ -662,26 +670,25 @@ const SpaceListPage = () => {
             </Modal>
 
             <Card
-                style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                styles={{ body: {
+                style={{
                     flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    overflowY: isMobile ? 'auto' : 'hidden',
+                }}
+                styles={{ body: {
+                    flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
                 } }}
             >
-                {spaceLevels.length === 0 && loading ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<SpaceWithChildrenResponse>
                         columns={columns}
                         dataSource={filteredData}
@@ -689,6 +696,7 @@ const SpaceListPage = () => {
                         rowKey="spaceId"
                         pagination={{
                             defaultPageSize: 10,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
@@ -736,11 +744,12 @@ const SpaceListPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? undefined : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<any>
@@ -786,7 +795,7 @@ const SpaceListPage = () => {
                 }
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

@@ -95,11 +95,11 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             createMenuItem('/admin/categories/space', t('sidebar.navigation.space'))
         );
     }
-    if (ability.can('update', 'floor_map')) {
-        spaceConfigurationItems.push(
-            createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
-        );
-    }
+    // if (ability.can('update', 'floor_map')) {
+    //     spaceConfigurationItems.push(
+    //         createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
+    //     );
+    // }
     if (spaceConfigurationItems.length > 0) {
         categoryItems.push({
             key: 'space_configuration',

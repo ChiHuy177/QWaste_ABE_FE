@@ -34,6 +34,10 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'staff',
         action: 'view',
     },
+    '/admin/categories/space': {
+        subject: 'space',
+        action: 'view',
+    },
     '/admin/categories/spaceLevel': {
         subject: 'space_level',
         action: 'view',

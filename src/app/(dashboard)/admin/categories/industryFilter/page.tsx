@@ -15,7 +15,7 @@ import {
     Tabs,
 } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { IndustryFilter, IndustryFilterFormData } from '@/types/IndustryFilter';
 import {
@@ -29,6 +29,7 @@ import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import ShiftBreaksContent from './_components/ShiftBreaksContent';
 
@@ -271,9 +272,18 @@ const IndustryFilterListPage = () => {
         () => getIndustryFilterFormFields(t, modalState.mode),
         [t, modalState.mode]
     );
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('industryFilterManagement.title')}
                 loading={loading}
@@ -507,6 +517,7 @@ const IndustryFilterListPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
@@ -514,24 +525,18 @@ const IndustryFilterListPage = () => {
                 styles={{
                     body: {
                         flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
                         paddingBottom: 0,
                     },
                 }}
             >
-                {industryFilterData === null ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<IndustryFilter>
                         columns={columns}
                         dataSource={filteredIndustryFilterData}
@@ -539,6 +544,7 @@ const IndustryFilterListPage = () => {
                         rowKey={(record) => record.filterId}
                         pagination={{
                             defaultPageSize: 10,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
@@ -549,12 +555,13 @@ const IndustryFilterListPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? 'calc(100vh - 280px)' : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         sticky
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<IndustryFilterFormData>
@@ -601,7 +608,7 @@ const IndustryFilterListPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

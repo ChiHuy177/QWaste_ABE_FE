@@ -7,9 +7,9 @@ import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
 import { toast } from 'sonner';
 import { getStaffTableColumns, StaffTableColumnProps } from './_components/Columns';
-import { Card, Table, Grid, Spin, Button } from 'antd';
+import { Card, Table, Grid, Button } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { PlusOutlined, LoadingOutlined, UserOutlined } from '@ant-design/icons';
+import { PlusOutlined, UserOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
@@ -17,6 +17,7 @@ import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { SelectOption } from '@/types/Common';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { CategoryViewModal } from '../_components/CategoryViewModal';
 
 const { useBreakpoint } = Grid;
@@ -292,9 +293,18 @@ const StaffListPage = () => {
             }),
         [t, modalState.mode, factoryOptions, factoryLoading]
     );
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             {/* Desktop Header */}
             <ResponsivePageHeader
                 title={t('staffManagement.title')}
@@ -348,29 +358,24 @@ const StaffListPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                 }}
                 styles={{ body: {
                     flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
                 } }}
             >
-                {staffData === null ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<UserProfile>
                         columns={columns}
                         dataSource={filteredStaffData}
@@ -378,6 +383,7 @@ const StaffListPage = () => {
                         rowKey={(record) => record.userId}
                         pagination={{
                             pageSize: 10,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
@@ -388,12 +394,13 @@ const StaffListPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? 'calc(100vh - 280px)' : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         sticky
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<StaffFormData>
@@ -486,7 +493,7 @@ const StaffListPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

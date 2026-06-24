@@ -17,6 +17,7 @@ import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 
 const { useBreakpoint } = Grid;
@@ -230,9 +231,18 @@ const MachineTypeListPage = () => {
         () => getMachineTypeFormFields(t, modalState.mode),
         [t, modalState.mode]
     );
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('machineTypeManagement.title')}
                 icon={<ToolOutlined />}
@@ -358,37 +368,47 @@ const MachineTypeListPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                 }}
                 styles={{ body: {
                     flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
                 } }}
             >
-                <Table<MachineType>
-                    columns={columns}
-                    dataSource={filteredMachineTypeData}
-                    rowSelection={rowSelection}
-                    loading={loading}
-                    rowKey={(record) => record.machineTypeId}
-                    pagination={{
-                        defaultPageSize: 10,
-                        showSizeChanger: true,
-                        showTotal: (total, range) =>
-                            `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
-                                'common.items'
-                            )}`,
-                        pageSizeOptions: ['10', '20', '50', '100'],
-                        position: ['bottomCenter'],
-                    }}
-                    scroll={{ x: 'max-content', y: 'calc(100vh - 420px)' }}
-                    sticky
-                    bordered
-                />
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
+                    <Table<MachineType>
+                        columns={columns}
+                        dataSource={filteredMachineTypeData}
+                        rowSelection={rowSelection}
+                        loading={loading}
+                        rowKey={(record) => record.machineTypeId}
+                        pagination={{
+                            defaultPageSize: 10,
+                            hideOnSinglePage: false,
+                            showSizeChanger: true,
+                            showTotal: (total, range) =>
+                                `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
+                                    'common.items'
+                                )}`,
+                            pageSizeOptions: ['10', '20', '50', '100'],
+                            position: ['bottomCenter'],
+                        }}
+                        scroll={{ x: 'max-content', y: tableScrollY }}
+                        style={{ height: '100%' }}
+                        sticky
+                        bordered
+                    />
+                </div>
             </Card>
 
             <EntityFormModal<MachineTypeFormData>
@@ -424,7 +444,7 @@ const MachineTypeListPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

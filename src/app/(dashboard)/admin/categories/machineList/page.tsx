@@ -21,7 +21,7 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { FilterOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { FilterOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Machine } from '@/types/Machine';
 import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
@@ -34,6 +34,7 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { SpaceWithChildrenResponse } from '@/types/Space';
 import {
     mapSpaceTreeToTreeSelect,
@@ -121,6 +122,7 @@ const MachineListPageContent = () => {
     const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
     const [propertyCodeFilter, setPropertyCodeFilter] = useState<string | undefined>(undefined);
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     const activeFilterCount = [machineNameFilter, propertyCodeFilter, mqttTopicFilter].filter(Boolean).length;
 
@@ -603,7 +605,15 @@ const MachineListPageContent = () => {
     }, []);
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('machineListManagement.title')}
                 loading={loading}
@@ -832,6 +842,7 @@ const MachineListPageContent = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
@@ -839,24 +850,22 @@ const MachineListPageContent = () => {
                 styles={{
                     body: {
                         flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
                         paddingBottom: 0,
                     }
                 }}
             >
-                {machinesQuery.isLoading ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                    }}
+                >
                     <Table<Machine>
                         columns={columns}
                         dataSource={filteredMachineData}
@@ -867,6 +876,7 @@ const MachineListPageContent = () => {
                             current: page + 1,
                             pageSize: pageSize,
                             total: totalElements,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
@@ -877,12 +887,13 @@ const MachineListPageContent = () => {
                         }}
                         scroll={{
                             x: 1520,
-                            y: isMobile ? 'calc(100vh - 280px)' : 'calc(109vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         sticky
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<MachineFormData>
@@ -919,7 +930,7 @@ const MachineListPageContent = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

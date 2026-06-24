@@ -24,6 +24,7 @@ import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
@@ -331,9 +332,18 @@ const MoldListPage = () => {
         ],
         [t, moldCodeFilter, moldNameFilter]
     );
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('moldManagement.title')}
                 loading={isLoading}
@@ -490,28 +500,27 @@ const MoldListPage = () => {
             </Modal>
 
             <Card
-                style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                style={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
                 styles={{
                     body: {
                         flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                        overflowY: isMobile ? 'auto' : 'hidden',
                     },
                 }}
             >
-                {moldsQuery.isLoading ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<Mold>
                         columns={columns}
                         dataSource={moldData}
@@ -522,6 +531,7 @@ const MoldListPage = () => {
                             current: page + 1,
                             pageSize,
                             total: totalElements,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
@@ -529,11 +539,12 @@ const MoldListPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? undefined : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<MoldFormData>
@@ -569,7 +580,7 @@ const MoldListPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 
