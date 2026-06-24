@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
+    Badge,
     Button,
     Card,
     Descriptions,
+    Flex,
     Grid,
     Modal,
     Spin,
@@ -16,7 +18,7 @@ import {
 } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { FilterOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -26,7 +28,9 @@ import { Can, useAbility } from '@/contexts/AbilityContext';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
-import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import FilterDrawer from '@/components/shared/filters/FilterDrawer';
+
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { MoldService } from '@/services/MoldService';
 import { Mold, MoldFormData, MoldStatus, MoldType } from '@/types/Mold';
@@ -98,10 +102,10 @@ const MoldListPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [tempMoldCode, setTempMoldCode] = useState('');
-    const [tempMoldName, setTempMoldName] = useState('');
     const [moldCodeFilter, setMoldCodeFilter] = useState<string | undefined>(undefined);
     const [moldNameFilter, setMoldNameFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [moldCodeFilter, moldNameFilter].filter(Boolean).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -280,15 +284,13 @@ const MoldListPage = () => {
         setConfirmModalState({ open: false, type: 'create', pendingAction: null });
     };
 
-    const handleApplyFilters = useCallback(() => {
-        setMoldCodeFilter(tempMoldCode.trim() || undefined);
-        setMoldNameFilter(tempMoldName.trim() || undefined);
+    const handleApplyFilters = useCallback((values: Record<string, string>) => {
+        setMoldCodeFilter(values.moldCode?.trim() || undefined);
+        setMoldNameFilter(values.moldName?.trim() || undefined);
         setPage(0);
-    }, [tempMoldCode, tempMoldName]);
+    }, []);
 
     const handleResetFilters = useCallback(() => {
-        setTempMoldCode('');
-        setTempMoldName('');
         setMoldCodeFilter(undefined);
         setMoldNameFilter(undefined);
         setPage(0);
@@ -316,20 +318,18 @@ const MoldListPage = () => {
                 key: 'moldCode',
                 label: t('moldManagement.table.headers.moldCode'),
                 placeholder: t('moldManagement.form.placeholders.moldCode'),
-                value: tempMoldCode,
-                onChange: setTempMoldCode,
+                value: moldCodeFilter ?? '',
                 colProps: { xs: 24, sm: 12 },
             },
             {
                 key: 'moldName',
                 label: t('moldManagement.table.headers.moldName'),
                 placeholder: t('moldManagement.form.placeholders.moldName'),
-                value: tempMoldName,
-                onChange: setTempMoldName,
+                value: moldNameFilter ?? '',
                 colProps: { xs: 24, sm: 12 },
             },
         ],
-        [t, tempMoldCode, tempMoldName]
+        [t, moldCodeFilter, moldNameFilter]
     );
 
     return (
@@ -344,10 +344,25 @@ const MoldListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
-                            showFilterIcon
-                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
-                            isFilterActive={showAdvancedFilters}
                         />
+                        <FilterDrawer
+                            open={showAdvancedFilters}
+                            onClose={() => setShowAdvancedFilters(false)}
+                            fields={filterFields}
+                            onReset={handleResetFilters}
+                            onApply={handleApplyFilters}
+                            resetLabel={t('common.reset')}
+                            applyLabel={t('common.search')}
+                            title={t('common.advancedFilters')}
+                        >
+                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
+                                <Button
+                                    icon={<FilterOutlined />}
+                                    type={showAdvancedFilters ? 'primary' : 'default'}
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                />
+                            </Badge>
+                        </FilterDrawer>
                         <Can I="create" a="mold">
                             <Button
                                 type="primary"
@@ -363,14 +378,29 @@ const MoldListPage = () => {
                 }
             />
 
-            {showAdvancedFilters && (
-                <AdvancedFilterPanel
-                    fields={filterFields}
-                    onReset={handleResetFilters}
-                    onApply={handleApplyFilters}
-                    resetLabel={t('common.reset')}
-                    applyLabel={t('common.search')}
-                />
+            {activeFilterCount > 0 && (
+                <Flex gap={8} align="center" wrap style={{ marginBottom: 12 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        <FilterOutlined style={{ marginRight: 4 }} />
+                        {t('common.activeFilters')}:
+                    </Typography.Text>
+                    {moldCodeFilter && (
+                        <Tag
+                            closable
+                            onClose={() => { setMoldCodeFilter(undefined); setPage(0); }}
+                        >
+                            {t('moldManagement.table.headers.moldCode')}: {moldCodeFilter}
+                        </Tag>
+                    )}
+                    {moldNameFilter && (
+                        <Tag
+                            closable
+                            onClose={() => { setMoldNameFilter(undefined); setPage(0); }}
+                        >
+                            {t('moldManagement.table.headers.moldName')}: {moldNameFilter}
+                        </Tag>
+                    )}
+                </Flex>
             )}
 
             <Modal

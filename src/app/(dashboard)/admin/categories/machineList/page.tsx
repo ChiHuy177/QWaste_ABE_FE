@@ -4,8 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
+    Badge,
     Button,
     Card,
+    Flex,
     Table,
     Grid,
     Spin,
@@ -19,7 +21,7 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { FilterOutlined, PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Machine } from '@/types/Machine';
 import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
@@ -41,7 +43,8 @@ import { SpaceService } from '@/services';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import MachineFilterInfo from '@/app/(dashboard)/admin/machines/_components/MachineFilterInfo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import FilterDrawer from '@/components/shared/filters/FilterDrawer';
 import { useUploadThing } from '@/utils/uploadthing';
 
 const { useBreakpoint } = Grid;
@@ -115,13 +118,11 @@ const MachineListPageContent = () => {
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
 
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [tempMachineName, setTempMachineName] = useState('');
-    const [tempPropertyCode, setTempPropertyCode] = useState('');
-    const [tempMqttTopic, setTempMqttTopic] = useState('');
-
     const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
     const [propertyCodeFilter, setPropertyCodeFilter] = useState<string | undefined>(undefined);
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [machineNameFilter, propertyCodeFilter, mqttTopicFilter].filter(Boolean).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -548,25 +549,22 @@ const MachineListPageContent = () => {
                 key: 'machineName',
                 label: t('machineListManagement.table.headers.machineName'),
                 placeholder: t('machineListManagement.filters.namePlaceholder'),
-                value: tempMachineName,
-                onChange: setTempMachineName,
+                value: machineNameFilter ?? '',
             },
             {
                 key: 'propertyCode',
                 label: t('machineListManagement.table.headers.propertyCode'),
                 placeholder: t('machineListManagement.filters.propertyPlaceholder'),
-                value: tempPropertyCode,
-                onChange: setTempPropertyCode,
+                value: propertyCodeFilter ?? '',
             },
             {
                 key: 'mqttTopic',
                 label: t('machineListManagement.form.fields.topic'),
                 placeholder: t('machineListManagement.filters.topicPlaceholder'),
-                value: tempMqttTopic,
-                onChange: setTempMqttTopic,
+                value: mqttTopicFilter ?? '',
             },
         ],
-        [t, tempMachineName, tempPropertyCode, tempMqttTopic]
+        [t, machineNameFilter, propertyCodeFilter, mqttTopicFilter]
     );
 
     const findSpacePath = (
@@ -591,21 +589,18 @@ const MachineListPageContent = () => {
     }, [selectedSpaceId, spacesTree]);
 
     const handleResetFilters = useCallback(() => {
-        setTempMachineName('');
-        setTempPropertyCode('');
-        setTempMqttTopic('');
         setMachineNameFilter(undefined);
         setPropertyCodeFilter(undefined);
         setMqttTopicFilter(undefined);
         setPage(0);
     }, []);
 
-    const handleApplyFilters = useCallback(() => {
-        setMachineNameFilter(tempMachineName || undefined);
-        setPropertyCodeFilter(tempPropertyCode || undefined);
-        setMqttTopicFilter(tempMqttTopic || undefined);
+    const handleApplyFilters = useCallback((values: Record<string, string>) => {
+        setMachineNameFilter(values.machineName?.trim() || undefined);
+        setPropertyCodeFilter(values.propertyCode?.trim() || undefined);
+        setMqttTopicFilter(values.mqttTopic?.trim() || undefined);
         setPage(0);
-    }, [tempMachineName, tempPropertyCode, tempMqttTopic]);
+    }, []);
 
     return (
         <>
@@ -626,10 +621,25 @@ const MachineListPageContent = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
-                            showFilterIcon={true}
-                            onFilterClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                            isFilterActive={showAdvancedFilters}
                         />
+                        <FilterDrawer
+                            open={showAdvancedFilters}
+                            onClose={() => setShowAdvancedFilters(false)}
+                            fields={machineFilterFields}
+                            onReset={handleResetFilters}
+                            onApply={handleApplyFilters}
+                            resetLabel={t('common.reset')}
+                            applyLabel={t('common.search')}
+                            title={t('common.advancedFilters')}
+                        >
+                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
+                                <Button
+                                    icon={<FilterOutlined />}
+                                    type={showAdvancedFilters ? 'primary' : 'default'}
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                />
+                            </Badge>
+                        </FilterDrawer>
 
                         <SpaceTreeSelect
                             value={selectedSpaceId}
@@ -795,14 +805,28 @@ const MachineListPageContent = () => {
                 isFiltered={searchTerm.trim().length > 0}
             />
 
-            {showAdvancedFilters && (
-                <AdvancedFilterPanel
-                    fields={machineFilterFields}
-                    onReset={handleResetFilters}
-                    onApply={handleApplyFilters}
-                    resetLabel={t('common.reset')}
-                    applyLabel={t('common.search')}
-                />
+            {activeFilterCount > 0 && (
+                <Flex gap={8} align="center" wrap style={{ marginBottom: 12 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        <FilterOutlined style={{ marginRight: 4 }} />
+                        {t('common.activeFilters')}:
+                    </Typography.Text>
+                    {machineNameFilter && (
+                        <Tag closable onClose={() => { setMachineNameFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.table.headers.machineName')}: {machineNameFilter}
+                        </Tag>
+                    )}
+                    {propertyCodeFilter && (
+                        <Tag closable onClose={() => { setPropertyCodeFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.table.headers.propertyCode')}: {propertyCodeFilter}
+                        </Tag>
+                    )}
+                    {mqttTopicFilter && (
+                        <Tag closable onClose={() => { setMqttTopicFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.form.fields.topic')}: {mqttTopicFilter}
+                        </Tag>
+                    )}
+                </Flex>
             )}
 
             <Card

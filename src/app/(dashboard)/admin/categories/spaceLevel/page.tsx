@@ -4,19 +4,22 @@ import { useTranslation } from 'react-i18next';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
 import { toast } from 'sonner';
 import {
+    Badge,
     Button,
     Card,
+    Flex,
     Table,
     Grid,
     Spin,
     Modal,
     Descriptions,
+    Tag,
     Typography,
 } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { FilterOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import {
     SpaceLevelDTO,
@@ -33,7 +36,8 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import FilterDrawer from '@/components/shared/filters/FilterDrawer';
 import { UtilsService } from '@/services/UtilsService';
 
 const { useBreakpoint } = Grid;
@@ -101,11 +105,10 @@ const SpaceLevelListPage = () => {
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
 
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [tempSpaceLevel, setTempSpaceLevel] = useState('');
-    const [tempSpaceLevelName, setTempSpaceLevelName] = useState('');
-
     const [spaceLevelFilter, setSpaceLevelFilter] = useState<number | undefined>(undefined);
     const [spaceLevelNameFilter, setSpaceLevelNameFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [spaceLevelFilter, spaceLevelNameFilter].filter(Boolean).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -410,38 +413,32 @@ const SpaceLevelListPage = () => {
                 key: 'spaceLevel',
                 label: t('spaceLevelManagement.table.headers.spaceLevel'),
                 placeholder: t('spaceLevelManagement.form.placeholders.level'),
-                value: tempSpaceLevel,
-                onChange: setTempSpaceLevel,
+                value: spaceLevelFilter !== undefined ? String(spaceLevelFilter) : '',
                 colProps: { xs: 24, sm: 12, md: 12 },
             },
             {
                 key: 'spaceLevelName',
                 label: t('spaceLevelManagement.table.headers.spaceLevelName'),
                 placeholder: t('spaceLevelManagement.form.placeholders.levelName'),
-                value: tempSpaceLevelName,
-                onChange: setTempSpaceLevelName,
+                value: spaceLevelNameFilter ?? '',
                 colProps: { xs: 24, sm: 12, md: 12 },
             },
         ],
-        [t, tempSpaceLevel, tempSpaceLevelName]
+        [t, spaceLevelFilter, spaceLevelNameFilter]
     );
 
     const handleResetFilters = useCallback(() => {
-        setTempSpaceLevel('');
-        setTempSpaceLevelName('');
         setSpaceLevelFilter(undefined);
         setSpaceLevelNameFilter(undefined);
         setPage(0);
     }, []);
 
-    const handleApplyFilters = useCallback(() => {
-        const levelNum = tempSpaceLevel.trim()
-            ? Number(tempSpaceLevel.trim())
-            : undefined;
-        setSpaceLevelFilter(isNaN(Number(levelNum)) ? undefined : levelNum);
-        setSpaceLevelNameFilter(tempSpaceLevelName.trim() || undefined);
+    const handleApplyFilters = useCallback((values: Record<string, string>) => {
+        const levelNum = values.spaceLevel?.trim() ? Number(values.spaceLevel.trim()) : undefined;
+        setSpaceLevelFilter(levelNum !== undefined && !isNaN(levelNum) ? levelNum : undefined);
+        setSpaceLevelNameFilter(values.spaceLevelName?.trim() || undefined);
         setPage(0);
-    }, [tempSpaceLevel, tempSpaceLevelName]);
+    }, []);
 
     return (
         <>
@@ -457,10 +454,25 @@ const SpaceLevelListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
-                            showFilterIcon={true}
-                            onFilterClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                            isFilterActive={showAdvancedFilters}
                         />
+                        <FilterDrawer
+                            open={showAdvancedFilters}
+                            onClose={() => setShowAdvancedFilters(false)}
+                            fields={spaceLevelFilterFields}
+                            onReset={handleResetFilters}
+                            onApply={handleApplyFilters}
+                            resetLabel={t('common.reset')}
+                            applyLabel={t('common.search')}
+                            title={t('common.advancedFilters')}
+                        >
+                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
+                                <Button
+                                    icon={<FilterOutlined />}
+                                    type={showAdvancedFilters ? 'primary' : 'default'}
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                />
+                            </Badge>
+                        </FilterDrawer>
                         <Can I="create" a="space_level">
                             <Button
                                 type="primary"
@@ -547,14 +559,29 @@ const SpaceLevelListPage = () => {
                     <div>{t('common.notAvailable')}</div>
                 )}
             </Modal>
-            {showAdvancedFilters && (
-                <AdvancedFilterPanel
-                    fields={spaceLevelFilterFields}
-                    onReset={handleResetFilters}
-                    onApply={handleApplyFilters}
-                    resetLabel={t('common.reset')}
-                    applyLabel={t('common.search')}
-                />
+            {activeFilterCount > 0 && (
+                <Flex gap={8} align="center" wrap style={{ marginBottom: 12 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        <FilterOutlined style={{ marginRight: 4 }} />
+                        {t('common.activeFilters')}:
+                    </Typography.Text>
+                    {spaceLevelFilter !== undefined && (
+                        <Tag
+                            closable
+                            onClose={() => { setSpaceLevelFilter(undefined); setPage(0); }}
+                        >
+                            {t('spaceLevelManagement.table.headers.spaceLevel')}: {spaceLevelFilter}
+                        </Tag>
+                    )}
+                    {spaceLevelNameFilter && (
+                        <Tag
+                            closable
+                            onClose={() => { setSpaceLevelNameFilter(undefined); setPage(0); }}
+                        >
+                            {t('spaceLevelManagement.table.headers.spaceLevelName')}: {spaceLevelNameFilter}
+                        </Tag>
+                    )}
+                </Flex>
             )}
 
             <Card
