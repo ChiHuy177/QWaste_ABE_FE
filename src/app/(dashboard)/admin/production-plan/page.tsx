@@ -457,7 +457,6 @@ export default function ProductionPlanPage() {
                         <WeeklyTable
                             lines={lines}
                             todayIndex={todayIndex}
-                            onAdd={openCreateModal}
                             onEdit={openEditModal}
                             onDelete={setDeleteState}
                             onReorder={handleReorderProducts}

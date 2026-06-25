@@ -344,6 +344,53 @@ th.stickyName {
     padding: 16px;
 }
 
+.weeklySheetTable {
+    overflow: hidden;
+    border: 1px solid var(--plan-color-border);
+    border-radius: 8px;
+    background: var(--plan-color-bg-container);
+}
+
+.weeklySheetTable :global(.ant-table) {
+    font-size: 13px;
+    background: var(--plan-color-bg-container);
+}
+
+.weeklySheetTable :global(.ant-table-container) {
+    border-inline-start: 0 !important;
+}
+
+.weeklySheetTable :global(.ant-table-thead > tr > th) {
+    height: 42px;
+    padding: 6px 8px !important;
+    background: color-mix(in srgb, var(--plan-color-bg-muted) 58%, var(--plan-color-bg-container)) !important;
+    color: var(--plan-color-text) !important;
+    border-color: var(--plan-color-border) !important;
+    text-align: center !important;
+    line-height: 1.2;
+}
+
+.weeklySheetTable :global(.ant-table-tbody > tr > td) {
+    height: 34px;
+    border-color: var(--plan-color-border) !important;
+    color: var(--plan-color-text);
+}
+
+.weeklySheetTable :global(.ant-table-tbody > tr:hover > td) {
+    background: color-mix(in srgb, var(--plan-color-bg-muted) 42%, var(--plan-color-bg-container)) !important;
+}
+
+.weeklySheetTable :global(.ant-table-tbody > tr > td.ant-table-cell-fix-left) {
+    background: var(--plan-color-bg-container) !important;
+}
+
+.weeklySheetTable .weeklyTotalRow > :global(td) {
+    background: color-mix(in srgb, var(--plan-color-primary) 7%, var(--plan-color-bg-container)) !important;
+    border-top: 2px solid var(--plan-color-border) !important;
+    font-weight: 700;
+    font-size: 14px;
+}
+
 @media (max-width: 768px) {
     .planTable {
         min-width: 860px;
