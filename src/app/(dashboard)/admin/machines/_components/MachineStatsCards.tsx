@@ -28,33 +28,33 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
       label: t('machineManagement.stats.totalRun'),
       value: stats.totalRun,
       icon: PlayCircleOutlined,
-      color: token.colorPrimary, // #00409C
-      borderColor: '#52C41A',
-      backgroundColor: '#F6FFED',
+      color: token.colorPrimary,
+      borderColor: token.colorSuccess,
+      backgroundColor: token.colorSuccessBg,
     },
     {
       label: t('machineManagement.stats.totalIdle'),
       value: stats.totalIdle,
       icon: PauseCircleOutlined,
-      color: token.colorPrimary, // #00409C
-      borderColor: '#D46B08',
-      backgroundColor: '#FFFAF5',
+      color: token.colorPrimary,
+      borderColor: token.colorWarning,
+      backgroundColor: token.colorWarningBg,
     },
     {
       label: t('machineManagement.stats.totalError'),
       value: stats.totalError,
       icon: CloseCircleOutlined,
-      color: token.colorPrimary, // #00409C
-      borderColor: '#CF1322',
-      backgroundColor: '#FFF5F5',
+      color: token.colorPrimary,
+      borderColor: token.colorError,
+      backgroundColor: token.colorErrorBg,
     },
     {
       label: t('machineManagement.stats.totalEmpty'),
       value: stats.totalEmpty,
       icon: StopOutlined,
-      color: token.colorPrimary, // #00409C
-      borderColor: '#595959',
-      backgroundColor: '#FAFAFA',
+      color: token.colorPrimary,
+      borderColor: token.colorTextDisabled,
+      backgroundColor: token.colorFillQuaternary,
     },
   ];
 

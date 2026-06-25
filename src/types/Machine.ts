@@ -67,6 +67,7 @@ export interface MachineLog {
 export interface MachineOverview {
     machineId: string;
     machineName: string;
+    machineCode?: string;
     propertyCode?: string;
     power?: number;
     status: 'running' | 'idle' | 'error' | 'empty';
@@ -117,6 +118,7 @@ export type ZoneFilter = 'all' | 'zone1' | 'zone2' | 'zone3';
 export interface MachineWithStatusLogsSummary {
     machineId: string;
     machineName: string;
+    machineCode: string;
     propertyCode: string;
     power: number;
     machineDisplayOrder: number;

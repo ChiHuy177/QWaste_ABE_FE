@@ -11,14 +11,13 @@ import {
 } from '@ant-design/icons';
 import { Tabs, Card, Button, Skeleton, Alert, Space, theme } from 'antd';
 import { useTheme } from '@/hooks/useTheme';
-import { AccountSettings } from './AccountSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { PreferenceSettings } from './PreferenceSettings';
 import { UserProfile, UserSettings } from '@/types/User';
 import { useTranslation } from 'react-i18next';
 import { ProfileSetting } from './ProfileSetting';
 
-const DEFAULT_TAB = 'account';
+const DEFAULT_TAB = 'profile';
 
 interface SettingsPageProps {
     userProfile: UserProfile | null;
@@ -161,11 +160,6 @@ export function SettingsPage({
     const SETTINGS_TABS = useMemo(
         () =>
             [
-                {
-                    key: 'account',
-                    label: t('settingsPage.tabs.account.label'),
-                    description: t('settingsPage.tabs.account.description'),
-                },
                 {
                     key: 'profile',
                     label: t('settingsPage.tabs.profile.label'),
@@ -319,51 +313,10 @@ export function SettingsPage({
     const tabItems = useMemo(
         () => [
             {
-                key: 'account',
-                label: (
-                    <span>
-                        <UserOutlined />
-                        <span style={{ marginLeft: 8 }}>
-                            {t('settingsPage.tabs.account.label')}
-                        </span>
-                    </span>
-                ),
-                children: (
-                    <div style={{ padding: '24px 0' }}>
-                        <div style={{ marginBottom: 24 }}>
-                            <h2
-                                style={{
-                                    fontSize: 18,
-                                    fontWeight: 600,
-                                    marginBottom: 8,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                }}
-                            >
-                                <UserOutlined />
-                                {t('settingsPage.sections.accountInformation.title')}
-                            </h2>
-                            <p style={{ fontSize: 14, color: token.colorTextSecondary }}>
-                                {t('settingsPage.sections.accountInformation.description')}
-                            </p>
-                        </div>
-                        {userProfile && userSettings && (
-                            <AccountSettings
-                                profile={userProfile}
-                                settings={userSettings}
-                                onUpdateProfile={handleProfileUpdate}
-                                onUpdateSettings={handleSettingsUpdate}
-                            />
-                        )}
-                    </div>
-                ),
-            },
-            {
                 key: 'profile',
                 label: (
                     <span>
-                        <SolutionOutlined />
+                        <UserOutlined />
                         <span style={{ marginLeft: 8 }}>
                             {t('settingsPage.tabs.profile.label')}
                         </span>
