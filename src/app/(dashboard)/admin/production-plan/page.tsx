@@ -25,11 +25,13 @@ import {
     RightOutlined,
     SearchOutlined,
     TableOutlined,
+    UploadOutlined,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import DailyTable from './_components/DailyTable';
+import ImportModal from './_components/ImportModal';
 import WeeklyTable from './_components/WeeklyTable';
 import PlanFormModal from './_components/PlanFormModal';
 import {
@@ -71,6 +73,7 @@ export default function ProductionPlanPage() {
     const [deleteState, setDeleteState] = useState<ProductPosition | null>(null);
     const [machineFilter, setMachineFilter] = useState('');
     const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
+    const [importModalOpen, setImportModalOpen] = useState(false);
 
     const selectedDateValue = useMemo(() => selectedDate.toDate(), [selectedDate]);
     const todayIndex = useMemo(() => getTodayScheduleIndex(selectedDateValue), [selectedDateValue]);
@@ -306,6 +309,12 @@ export default function ProductionPlanPage() {
                 ]}
             />
             <Button
+                icon={<UploadOutlined />}
+                onClick={() => setImportModalOpen(true)}
+            >
+                Import
+            </Button>
+            <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => openCreateModal(0)}
@@ -476,6 +485,11 @@ export default function ProductionPlanPage() {
                     onSubmit={handleSubmit}
                 />
             )}
+
+            <ImportModal
+                open={importModalOpen}
+                onClose={() => setImportModalOpen(false)}
+            />
 
             <Modal
                 title="Xóa mã hàng"

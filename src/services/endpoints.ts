@@ -33,6 +33,7 @@ const BASE_PATHS = {
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
     MOLDS: `${API}/molds/${V1}`,
+    PLANS: `${API}/plans/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -174,6 +175,10 @@ export const ENDPOINTS = {
         BASE: BASE_PATHS.MOLDS,
         ALL: `${BASE_PATHS.MOLDS}/all`,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
+    },
+    PLANS: {
+        BASE: BASE_PATHS.PLANS,
+        IMPORT: `${BASE_PATHS.PLANS}/import`,
     },
 } as const;
 

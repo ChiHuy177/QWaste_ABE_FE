@@ -15,3 +15,4 @@ export * from './SpaceService';
 export * from './UtilsService';
 export * from './StepService';
 export * from './ExcelExportService';
+export * from './ProductionPlanService';
