@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Button, Empty, Table, Tooltip } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Button, Empty, Pagination, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import {
@@ -27,8 +27,15 @@ type DailyProductRow = ProductionProduct & {
     lineIndex: number;
     lineName: string;
     productIndex: number;
-    machineGroupRowIndex: number;
-    machineGroupSize: number;
+};
+
+type GroupHeaderRow = {
+    type: 'group-header';
+    groupKey: string;
+    machine: string;
+    lineName: string;
+    lineIndex: number;
+    groupSize: number;
 };
 
 type ProductFlatRow = DailyProductRow & {
@@ -46,7 +53,7 @@ type TotalFlatRow = {
     totalPcs: number;
 };
 
-type FlatRow = ProductFlatRow | TotalFlatRow;
+type FlatRow = GroupHeaderRow | ProductFlatRow | TotalFlatRow;
 
 interface MachineGroup {
     key: string;
@@ -98,16 +105,9 @@ export default function DailyTable({
                     return;
                 }
 
-                const currentProducts = groupedProducts.get(product.machine) ?? [];
-                currentProducts.push({
-                    ...product,
-                    lineIndex,
-                    lineName: line.name,
-                    productIndex,
-                    machineGroupRowIndex: currentProducts.length,
-                    machineGroupSize: 0,
-                });
-                groupedProducts.set(product.machine, currentProducts);
+                const current = groupedProducts.get(product.machine) ?? [];
+                current.push({ ...product, lineIndex, lineName: line.name, productIndex });
+                groupedProducts.set(product.machine, current);
             });
 
             groupedProducts.forEach((products, machine) => {
@@ -116,11 +116,7 @@ export default function DailyTable({
                     lineIndex,
                     lineName: line.name,
                     machine,
-                    products: products.map((product, machineGroupRowIndex) => ({
-                        ...product,
-                        machineGroupRowIndex,
-                        machineGroupSize: products.length,
-                    })),
+                    products,
                 });
             });
         });
@@ -128,12 +124,24 @@ export default function DailyTable({
         return groups;
     }, [lines, normalizedMachineFilter, todayIndex]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [machineGroups.length]);
+
+    const paginatedGroups = useMemo(
+        () => machineGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [machineGroups, currentPage, pageSize]
+    );
+
     const { flatRows, sortableKeys, productGroupMap } = useMemo(() => {
         const rows: FlatRow[] = [];
         const keys: string[] = [];
         const groupMap = new Map<string, { groupKey: string; lineIndex: number }>();
 
-        machineGroups.forEach((group) => {
+        paginatedGroups.forEach((group) => {
             const totalCases = group.products.reduce(
                 (sum, p) => sum + p.schedule[todayIndex],
                 0
@@ -142,6 +150,17 @@ export default function DailyTable({
                 (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
                 0
             );
+
+            // Anchor row: holds the machine rowspan cell, not draggable.
+            // groupSize + 2 = 1 (this row) + groupSize (products) + 1 (total).
+            rows.push({
+                type: 'group-header',
+                groupKey: group.key,
+                machine: group.machine,
+                lineName: group.lineName,
+                lineIndex: group.lineIndex,
+                groupSize: group.products.length,
+            });
 
             group.products.forEach((product) => {
                 rows.push({ ...product, type: 'product', groupKey: group.key });
@@ -161,7 +180,11 @@ export default function DailyTable({
         });
 
         return { flatRows: rows, sortableKeys: keys, productGroupMap: groupMap };
-    }, [machineGroups, todayIndex]);
+    }, [paginatedGroups, todayIndex]);
+
+    // Returns the onCell override that hides a cell inside the anchor (group-header) row.
+    const anchorCell = (record: FlatRow) =>
+        record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
 
     const columns = useMemo<ColumnsType<FlatRow>>(
         () => [
@@ -185,14 +208,15 @@ export default function DailyTable({
                         fixed: 'left',
                         className: styles.dailySheetMachineColumn,
                         onCell: (record) => {
-                            if (record.type === 'total') return { rowSpan: 0 };
-                            if (record.machineGroupRowIndex === 0) {
-                                return { rowSpan: record.machineGroupSize + 1 };
+                            // Anchor row: machine cell spans itself + all products + total row.
+                            if (record.type === 'group-header') {
+                                return { rowSpan: record.groupSize + 2 };
                             }
+                            // All other rows: hidden (covered by the anchor row's rowspan).
                             return { rowSpan: 0 };
                         },
                         render: (_, record) => {
-                            if (record.type !== 'product') return null;
+                            if (record.type !== 'group-header') return null;
                             return (
                                 <div className={styles.dailySheetMachineCell}>
                                     <strong>{record.machine}</strong>
@@ -210,6 +234,7 @@ export default function DailyTable({
                         key: 'sort',
                         width: 48,
                         align: 'center',
+                        onCell: anchorCell,
                         render: (_, record) =>
                             record.type === 'product' ? <DragHandle /> : null,
                     },
@@ -223,8 +248,10 @@ export default function DailyTable({
                         key: 'code',
                         width: 120,
                         fixed: 'left',
+                        onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total') return <strong>Total</strong>;
+                            if (record.type === 'group-header') return null;
                             return <strong>{record.code}</strong>;
                         },
                     },
@@ -232,6 +259,7 @@ export default function DailyTable({
                         title: 'Tên hàng',
                         key: 'name',
                         width: 380,
+                        onCell: anchorCell,
                         render: (_, record) =>
                             record.type === 'product' ? record.name : null,
                     },
@@ -244,6 +272,7 @@ export default function DailyTable({
                         ),
                         key: 'mold',
                         width: 100,
+                        onCell: anchorCell,
                         render: (_, record) =>
                             record.type === 'product' ? record.mold : null,
                     },
@@ -257,6 +286,7 @@ export default function DailyTable({
                         key: 'pcsMultiplier',
                         width: 100,
                         align: 'right',
+                        onCell: anchorCell,
                         render: (_, record) =>
                             record.type === 'product' ? record.pcsMultiplier : null,
                     },
@@ -269,6 +299,7 @@ export default function DailyTable({
                         ),
                         key: 'time',
                         width: 120,
+                        onCell: anchorCell,
                         render: (_, record) =>
                             record.type === 'product' ? record.time : null,
                     },
@@ -282,10 +313,11 @@ export default function DailyTable({
                         key: 'caseQuantity',
                         width: 100,
                         align: 'right',
+                        onCell: anchorCell,
                         render: (_, record) => {
-                            if (record.type === 'total') {
+                            if (record.type === 'total')
                                 return record.totalCases.toLocaleString('vi-VN');
-                            }
+                            if (record.type === 'group-header') return null;
                             return record.schedule[todayIndex];
                         },
                     },
@@ -300,12 +332,20 @@ export default function DailyTable({
                         width: 100,
                         align: 'right',
                         className: styles.dailySheetPcsColumn,
+                        onCell: (record) => ({
+                            ...anchorCell(record),
+                            className:
+                                record.type === 'group-header'
+                                    ? styles.dailyGroupAnchorCell
+                                    : styles.dailySheetPcsColumn,
+                        }),
                         render: (_, record) => {
                             if (record.type === 'total') {
                                 return (
                                     <strong>{record.totalPcs.toLocaleString('vi-VN')}</strong>
                                 );
                             }
+                            if (record.type === 'group-header') return null;
                             return (
                                 <strong>
                                     {(
@@ -320,6 +360,7 @@ export default function DailyTable({
                         key: 'actions',
                         width: 92,
                         align: 'right',
+                        onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type !== 'product') return null;
                             return (
@@ -375,41 +416,58 @@ export default function DailyTable({
     }
 
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext items={sortableKeys} strategy={verticalListSortingStrategy}>
-                <Table<FlatRow>
-                    className={`${styles.planAntTable} ${styles.dailySheetTable}`}
-                    components={{
-                        body: {
-                            row: SmartTableRow,
-                        },
-                    }}
-                    columns={columns}
-                    dataSource={flatRows}
-                    rowKey={(record) =>
-                        record.type === 'product'
-                            ? record.code
-                            : `${record.groupKey}-total`
-                    }
-                    rowClassName={(record) =>
-                        record.type === 'total' ? styles.dailySheetTotalRow : ''
-                    }
-                    onRow={(record) =>
+        <>
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={handleDragEnd}
+            >
+                <SortableContext items={sortableKeys} strategy={verticalListSortingStrategy}>
+                    <Table<FlatRow>
+                        className={`${styles.planAntTable} ${styles.dailySheetTable}`}
+                        components={{
+                            body: {
+                                row: SmartTableRow,
+                            },
+                        }}
+                        columns={columns}
+                        dataSource={flatRows}
+                        rowKey={(record) => {
+                            if (record.type === 'product') return record.code;
+                            if (record.type === 'total') return `${record.groupKey}-total`;
+                            return `${record.groupKey}-header`;
+                        }}
+                        rowClassName={(record) =>
+                            record.type === 'total' ? styles.dailySheetTotalRow : ''
+                        }
+                        onRow={(record) =>
                         ({
                             'data-row-type': record.type,
                         } as React.HTMLAttributes<HTMLTableRowElement>)
-                    }
-                    pagination={false}
-                    bordered
-                    size="small"
-                    scroll={{ x: 1330 }}
+                        }
+                        pagination={false}
+                        bordered
+                        size="small"
+                        scroll={{ x: 1330 }}
+                    />
+                </SortableContext>
+            </DndContext>
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+                <Pagination
+                    current={currentPage}
+                    pageSize={pageSize}
+                    total={machineGroups.length}
+                    onChange={(page, size) => {
+                        setCurrentPage(page);
+                        setPageSize(size);
+                    }}
+                    showSizeChanger
+                    pageSizeOptions={['3', '5', '10']}
+                    showTotal={(total) => `Tổng ${total} nhóm máy`}
+                    hideOnSinglePage
                 />
-            </SortableContext>
-        </DndContext>
+            </div>
+        </>
     );
 }

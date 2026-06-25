@@ -359,7 +359,7 @@ const MachinesPage: React.FC = () => {
 
             {isInitialLoading ? (
                 <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                    <Spin size="large" tip={t('common.loading')} />
+                    <Spin size="large" description={t('common.loading')} />
                 </div>
             ) : (
                 <>

@@ -20,7 +20,9 @@ import {
     AppstoreOutlined,
     CalendarOutlined,
     InboxOutlined,
+    LeftOutlined,
     PlusOutlined,
+    RightOutlined,
     SearchOutlined,
     TableOutlined,
 } from '@ant-design/icons';
@@ -411,9 +413,23 @@ export default function ProductionPlanPage() {
                             <Text strong>
                                 {activeView === 'daily' ? 'Bảng ngày' : 'Bảng tuần'}
                             </Text>
+                            {activeView === 'daily' && (
+                                <Button
+                                    size="small"
+                                    icon={<LeftOutlined />}
+                                    onClick={() => setSelectedDate((d) => d.subtract(1, 'day'))}
+                                />
+                            )}
                             <Tag color={activeView === 'daily' ? 'blue' : 'geekblue'}>
                                 {headerLabel}
                             </Tag>
+                            {activeView === 'daily' && (
+                                <Button
+                                    size="small"
+                                    icon={<RightOutlined />}
+                                    onClick={() => setSelectedDate((d) => d.add(1, 'day'))}
+                                />
+                            )}
                         </Flex>
                         <div className={styles.panelMeta}>
                             {summary.totalLines} chuyền / {summary.totalProducts} mã hàng

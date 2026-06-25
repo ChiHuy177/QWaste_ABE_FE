@@ -39,7 +39,7 @@ interface SmartTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
 }
 
 export const SmartTableRow = ({ 'data-row-type': rowType, ...props }: SmartTableRowProps) => {
-    if (rowType === 'total') {
+    if (rowType === 'total' || rowType === 'group-header') {
         return <tr {...props} />;
     }
     return <DraggableTableRow {...props} />;

@@ -66,6 +66,16 @@
     gap: 14px;
 }
 
+/* Cells inside the invisible anchor (group-header) row that holds machine rowspan cell */
+.dailyGroupAnchorCell {
+    padding: 0 !important;
+    height: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    line-height: 0;
+    pointer-events: none;
+}
+
 .dailySheetTable {
     overflow: hidden;
     border: 1px solid var(--plan-color-border);
@@ -100,7 +110,6 @@
 
 .dailySheetTable :global(.ant-table-tbody > tr > td) {
     height: 34px;
-    padding: 6px 8px !important;
     border-color: var(--plan-color-border) !important;
     color: var(--plan-color-text);
 }
