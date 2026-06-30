@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Empty, Pagination, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import {
     closestCenter,
+    CollisionDetection,
     DndContext,
     DragEndEvent,
     KeyboardSensor,
@@ -181,6 +182,20 @@ export default function DailyTable({
 
         return { flatRows: rows, sortableKeys: keys, productGroupMap: groupMap };
     }, [paginatedGroups, todayIndex]);
+
+    const sameGroupCollisionDetection = useCallback<CollisionDetection>(
+        (args) => {
+            const activeGroupKey = productGroupMap.get(String(args.active.id))?.groupKey;
+            if (!activeGroupKey) return [];
+
+            const sameGroupContainers = args.droppableContainers.filter(
+                (c) => productGroupMap.get(String(c.id))?.groupKey === activeGroupKey
+            );
+
+            return closestCenter({ ...args, droppableContainers: sameGroupContainers });
+        },
+        [productGroupMap]
+    );
 
     // Returns the onCell override that hides a cell inside the anchor (group-header) row.
     const anchorCell = (record: FlatRow) =>
@@ -419,7 +434,7 @@ export default function DailyTable({
         <>
             <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
+                collisionDetection={sameGroupCollisionDetection}
                 modifiers={[restrictToVerticalAxis]}
                 onDragEnd={handleDragEnd}
             >

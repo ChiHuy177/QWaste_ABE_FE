@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Button, Empty, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import {
     closestCenter,
+    CollisionDetection,
     DndContext,
     DragEndEvent,
     KeyboardSensor,
@@ -162,6 +163,20 @@ export default function WeeklyTable({
 
         return { flatRows: rows, sortableKeys: keys, productGroupMap: groupMap };
     }, [machineGroups]);
+
+    const sameGroupCollisionDetection = useCallback<CollisionDetection>(
+        (args) => {
+            const activeGroupKey = productGroupMap.get(String(args.active.id))?.groupKey;
+            if (!activeGroupKey) return [];
+
+            const sameGroupContainers = args.droppableContainers.filter(
+                (c) => productGroupMap.get(String(c.id))?.groupKey === activeGroupKey
+            );
+
+            return closestCenter({ ...args, droppableContainers: sameGroupContainers });
+        },
+        [productGroupMap]
+    );
 
     const anchorCell = (record: FlatRow) =>
         record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
@@ -378,7 +393,7 @@ export default function WeeklyTable({
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={sameGroupCollisionDetection}
             modifiers={[restrictToVerticalAxis]}
             onDragEnd={handleDragEnd}
         >
