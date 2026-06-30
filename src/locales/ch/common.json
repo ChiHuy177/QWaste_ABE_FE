@@ -1731,6 +1731,181 @@
             "all": "全部"
         }
     },
+    "productionPlan": {
+        "title": "生产计划",
+        "headerTitle": "生产计划 - {{label}}",
+        "days": {
+            "week": "周",
+            "today": "今天",
+            "short": {
+                "monday": "周一",
+                "tuesday": "周二",
+                "wednesday": "周三",
+                "thursday": "周四",
+                "friday": "周五",
+                "saturday": "周六",
+                "sunday": "周日"
+            },
+            "full": {
+                "monday": "星期一",
+                "tuesday": "星期二",
+                "wednesday": "星期三",
+                "thursday": "星期四",
+                "friday": "星期五",
+                "saturday": "星期六",
+                "sunday": "星期日"
+            }
+        },
+        "summary": {
+            "lines": "生产线",
+            "products": "产品编码",
+            "dailyCases": "今日箱数",
+            "weeklyCases": "本周箱数"
+        },
+        "filters": {
+            "machinePlaceholder": "按机器搜索"
+        },
+        "views": {
+            "daily": "日",
+            "weekly": "周"
+        },
+        "actions": {
+            "import": "导入",
+            "addProduct": "新增产品编码",
+            "transfer": "转移",
+            "transferMachine": "转移机器",
+            "transferSchedule": "转移计划"
+        },
+        "panel": {
+            "dailyTable": "日表",
+            "weeklyTable": "周表",
+            "meta": "{{lines}} 条生产线 / {{products}} 个产品编码",
+            "cases": "{{count}} 箱"
+        },
+        "units": {
+            "cases": "箱",
+            "pcs": "件",
+            "pcsPerCase": "件/箱"
+        },
+        "table": {
+            "total": "合计",
+            "emptyDaily": "所选日期没有生产计划",
+            "emptyFiltered": "没有符合筛选条件的产品编码",
+            "headers": {
+                "date": "日期",
+                "line": "生产线",
+                "machine": "机器",
+                "codeVi": "编码",
+                "productName": "产品名称",
+                "mold": "模具",
+                "average": "平均",
+                "avgShort": "平均",
+                "time": "时间"
+            },
+            "pagination": {
+                "machineGroups": "共 {{total}} 个机器组"
+            }
+        },
+        "formModal": {
+            "createTitle": "新增计划",
+            "editTitle": "编辑计划"
+        },
+        "form": {
+            "sections": {
+                "productInfo": "产品信息",
+                "schedule": "7天计划（箱）"
+            },
+            "fields": {
+                "code": {
+                    "label": "编码",
+                    "placeholder": "例如：P-1001",
+                    "required": "请输入编码"
+                },
+                "name": {
+                    "label": "产品名称",
+                    "placeholder": "产品名称",
+                    "required": "请输入产品名称"
+                },
+                "machine": {
+                    "label": "机器",
+                    "placeholder": "例如：CNC-01",
+                    "required": "请输入机器"
+                },
+                "mold": {
+                    "label": "模具",
+                    "placeholder": "例如：M-12A",
+                    "required": "请输入模具编码"
+                },
+                "time": {
+                    "label": "时间",
+                    "placeholder": "08:00 - 10:30",
+                    "required": "请输入时间"
+                },
+                "pcsMultiplier": {
+                    "label": "件 / 箱",
+                    "required": "请输入系数"
+                }
+            },
+            "summary": {
+                "totalCasesWeek": "每周总箱数",
+                "totalPcsWeek": "每周总件数"
+            }
+        },
+        "deleteModal": {
+            "title": "删除产品编码",
+            "messagePrefix": "确定要从计划中删除",
+            "fallbackProduct": "此产品编码",
+            "messageSuffix": "吗？"
+        },
+        "transferMachine": {
+            "title": "转移机器 - {{code}}",
+            "applyDate": "应用日期",
+            "currentMachine": "当前机器",
+            "newMachine": "新机器",
+            "newMachinePlaceholder": "选择新机器...",
+            "machineNotFound": "未找到机器",
+            "duplicateMachine": "所选机器与当前机器相同",
+            "applyOnlySelectedDay": "仅应用于 {{day}}。本周其他日期不变。"
+        },
+        "transferSchedule": {
+            "title": "转移计划 - {{code}}",
+            "noQuantityToday": "今天没有可转移的产量",
+            "from": "从",
+            "day": "日期",
+            "caseQuantity": "箱数",
+            "to": "到",
+            "newDay": "新日期",
+            "newDayPlaceholder": "选择日期...",
+            "newMachine": "新机器",
+            "newMachinePlaceholder": "选择机器...",
+            "caseCount": "{{count}} 箱",
+            "targetAlreadyHasPrefix": "目标日期已有",
+            "targetAlreadyHasMiddle": "将变为",
+            "targetAlreadyHasSuffix": "箱。"
+        },
+        "import": {
+            "title": "导入生产计划",
+            "upload": "上传",
+            "hint": "包含生产计划的 Excel 文件 - 最大 10MB",
+            "columns": {
+                "date": "日期",
+                "reason": "原因",
+                "row": "行",
+                "column": "列",
+                "error": "错误"
+            },
+            "result": {
+                "inserted": "已导入",
+                "records": "{{count}} 条记录",
+                "importedDays": "已导入日期",
+                "deferredDays": "延期日期",
+                "note": "备注",
+                "requiresConfirmation": "需要确认 - sessionToken:",
+                "skippedDays": "跳过日期（{{count}}）",
+                "errors": "错误（{{count}}）"
+            }
+        }
+    },
     "stepManagement": {
         "title": "工序管理",
         "addStep": "添加工序",

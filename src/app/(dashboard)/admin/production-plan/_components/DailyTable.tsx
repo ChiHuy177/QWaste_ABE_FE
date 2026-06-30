@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Empty, Pagination, Table, Tooltip } from 'antd';
+import { Button, Dropdown, Empty, Pagination, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, MoreOutlined, ScheduleOutlined, SwapOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import {
     closestCenter,
     CollisionDetection,
@@ -22,6 +23,7 @@ import {
 } from '@dnd-kit/sortable';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
 import { ProductionLine, ProductionProduct, ProductPosition } from './types';
+import { getEffectiveMachine } from '../utils/planUtils';
 import styles from './ProductionPlanTable.module.css';
 
 type DailyProductRow = ProductionProduct & {
@@ -72,6 +74,8 @@ interface DailyTableProps {
     onEdit: (position: ProductPosition) => void;
     onDelete: (position: ProductPosition) => void;
     onReorder: (lineIndex: number, activeCode: string, overCode: string) => void;
+    onTransferMachine?: (position: ProductPosition) => void;
+    onTransferSchedule?: (position: ProductPosition) => void;
 }
 
 export default function DailyTable({
@@ -82,7 +86,10 @@ export default function DailyTable({
     onEdit,
     onDelete,
     onReorder,
+    onTransferMachine,
+    onTransferSchedule,
 }: DailyTableProps) {
+    const { t } = useTranslation();
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -99,16 +106,17 @@ export default function DailyTable({
 
             line.products.forEach((product, productIndex) => {
                 if (product.schedule[todayIndex] <= 0) return;
+                const effectiveMachine = getEffectiveMachine(product, todayIndex);
                 if (
                     normalizedMachineFilter &&
-                    !product.machine.toLowerCase().includes(normalizedMachineFilter)
+                    !effectiveMachine.toLowerCase().includes(normalizedMachineFilter)
                 ) {
                     return;
                 }
 
-                const current = groupedProducts.get(product.machine) ?? [];
+                const current = groupedProducts.get(effectiveMachine) ?? [];
                 current.push({ ...product, lineIndex, lineName: line.name, productIndex });
-                groupedProducts.set(product.machine, current);
+                groupedProducts.set(effectiveMachine, current);
             });
 
             groupedProducts.forEach((products, machine) => {
@@ -206,15 +214,15 @@ export default function DailyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>Ngày (date)</span>
-                        <span>Chuyền (Line)</span>
+                        <span>{t('productionPlan.table.headers.date')} (date)</span>
+                        <span>{t('productionPlan.table.headers.line')}</span>
                     </div>
                 ),
                 children: [
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Máy</span>
+                                <span>{t('productionPlan.table.headers.machine')}</span>
                                 <span>(Machine)</span>
                             </div>
                         ),
@@ -256,7 +264,7 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Mã</span>
+                                <span>{t('productionPlan.table.headers.codeVi')}</span>
                                 <span>Code</span>
                             </div>
                         ),
@@ -265,13 +273,13 @@ export default function DailyTable({
                         fixed: 'left',
                         onCell: anchorCell,
                         render: (_, record) => {
-                            if (record.type === 'total') return <strong>Total</strong>;
+                            if (record.type === 'total') return <strong>{t('productionPlan.table.total')}</strong>;
                             if (record.type === 'group-header') return null;
                             return <strong>{record.code}</strong>;
                         },
                     },
                     {
-                        title: 'Tên hàng',
+                        title: t('productionPlan.table.headers.productName'),
                         key: 'name',
                         width: 380,
                         onCell: anchorCell,
@@ -281,8 +289,8 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Mã</span>
-                                <span>khuôn</span>
+                                <span>{t('productionPlan.table.headers.codeVi')}</span>
+                                <span>{t('productionPlan.table.headers.mold')}</span>
                             </div>
                         ),
                         key: 'mold',
@@ -294,7 +302,7 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Trung bình</span>
+                                <span>{t('productionPlan.table.headers.average')}</span>
                                 <span>Average</span>
                             </div>
                         ),
@@ -308,7 +316,7 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Thời gian</span>
+                                <span>{t('productionPlan.table.headers.time')}</span>
                                 <span>Time</span>
                             </div>
                         ),
@@ -321,7 +329,7 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Thùng</span>
+                                <span>{t('productionPlan.units.cases')}</span>
                                 <span>(case)</span>
                             </div>
                         ),
@@ -339,7 +347,7 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>Cái</span>
+                                <span>{t('productionPlan.units.pcs')}</span>
                                 <span>(pcs)</span>
                             </div>
                         ),
@@ -373,38 +381,54 @@ export default function DailyTable({
                     {
                         title: '',
                         key: 'actions',
-                        width: 92,
+                        width: 120,
                         align: 'right',
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type !== 'product') return null;
+                            const position = {
+                                lineIndex: record.lineIndex,
+                                productIndex: record.productIndex,
+                            };
                             return (
                                 <div className={styles.actions}>
-                                    <Tooltip title="Sửa">
+                                    <Tooltip title={t('common.edit')}>
                                         <Button
                                             type="text"
                                             icon={<EditOutlined />}
-                                            onClick={() =>
-                                                onEdit({
-                                                    lineIndex: record.lineIndex,
-                                                    productIndex: record.productIndex,
-                                                })
-                                            }
+                                            onClick={() => onEdit(position)}
                                         />
                                     </Tooltip>
-                                    <Tooltip title="Xóa">
+                                    <Tooltip title={t('common.delete')}>
                                         <Button
                                             danger
                                             type="text"
                                             icon={<DeleteOutlined />}
-                                            onClick={() =>
-                                                onDelete({
-                                                    lineIndex: record.lineIndex,
-                                                    productIndex: record.productIndex,
-                                                })
-                                            }
+                                            onClick={() => onDelete(position)}
                                         />
                                     </Tooltip>
+                                    <Dropdown
+                                        trigger={['click']}
+                                        placement="bottomRight"
+                                        menu={{
+                                            items: [
+                                                {
+                                                    key: 'transfer-machine',
+                                                    label: t('productionPlan.actions.transferMachine'),
+                                                    icon: <SwapOutlined />,
+                                                    onClick: () => onTransferMachine?.(position),
+                                                },
+                                                {
+                                                    key: 'transfer-schedule',
+                                                    label: t('productionPlan.actions.transferSchedule'),
+                                                    icon: <ScheduleOutlined />,
+                                                    onClick: () => onTransferSchedule?.(position),
+                                                },
+                                            ],
+                                        }}
+                                    >
+                                        <Button type="text" icon={<MoreOutlined />} />
+                                    </Dropdown>
                                 </div>
                             );
                         },
@@ -412,7 +436,7 @@ export default function DailyTable({
                 ],
             },
         ],
-        [dateLabel, onDelete, onEdit, todayIndex]
+        [dateLabel, onDelete, onEdit, onTransferMachine, onTransferSchedule, t, todayIndex]
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -427,7 +451,7 @@ export default function DailyTable({
     };
 
     if (machineGroups.length === 0) {
-        return <Empty description="Không có kế hoạch sản xuất cho ngày đã chọn" />;
+        return <Empty description={t('productionPlan.table.emptyDaily')} />;
     }
 
     return (
@@ -479,7 +503,9 @@ export default function DailyTable({
                     }}
                     showSizeChanger
                     pageSizeOptions={['3', '5', '10']}
-                    showTotal={(total) => `Tổng ${total} nhóm máy`}
+                    showTotal={(total) =>
+                        t('productionPlan.table.pagination.machineGroups', { total })
+                    }
                     hideOnSinglePage
                 />
             </div>

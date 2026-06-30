@@ -34,19 +34,26 @@ import DailyTable from './_components/DailyTable';
 import ImportModal from './_components/ImportModal';
 import WeeklyTable from './_components/WeeklyTable';
 import PlanFormModal from './_components/PlanFormModal';
+import TransferMachineModal from './_components/TransferMachineModal';
+import TransferScheduleModal from './_components/TransferScheduleModal';
 import {
     formatDailyLabel,
     formatWeeklyLabel,
     getTodayScheduleIndex,
-} from './_components/dateUtils';
-import { initialProductionPlan } from './_components/mockData';
+    WEEK_DAY_KEYS,
+} from './utils/dateUtils';
+import { initialProductionPlan } from './utils/mockData';
 import {
     PlanModalState,
     ProductionLine,
     ProductionProduct,
     ProductPosition,
+    TransferMachineModalState,
+    TransferScheduleModalState,
 } from './_components/types';
+import { getAllMachineNames, getEffectiveMachine } from './utils/planUtils';
 import styles from './_components/ProductionPlanTable.module.css';
+import { useTranslation } from 'react-i18next';
 
 type ActiveView = 'daily' | 'weekly';
 
@@ -64,23 +71,30 @@ const moveArrayItem = <T,>(items: T[], fromIndex: number, toIndex: number) => {
 
 export default function ProductionPlanPage() {
     const { token } = theme.useToken();
+    const { t } = useTranslation();
 
-    usePageTitle('Kế hoạch sản xuất');
+    usePageTitle(t('productionPlan.title'));
 
     const [activeView, setActiveView] = useState<ActiveView>('daily');
     const [lines, setLines] = useState<ProductionLine[]>(initialProductionPlan);
     const [modalState, setModalState] = useState<PlanModalState>({ open: false });
     const [deleteState, setDeleteState] = useState<ProductPosition | null>(null);
+    const [transferMachineState, setTransferMachineState] = useState<TransferMachineModalState>({ open: false });
+    const [transferScheduleState, setTransferScheduleState] = useState<TransferScheduleModalState>({ open: false });
     const [machineFilter, setMachineFilter] = useState('');
     const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
     const [importModalOpen, setImportModalOpen] = useState(false);
 
     const selectedDateValue = useMemo(() => selectedDate.toDate(), [selectedDate]);
     const todayIndex = useMemo(() => getTodayScheduleIndex(selectedDateValue), [selectedDateValue]);
+    const fullWeekDays = useMemo(
+        () => WEEK_DAY_KEYS.map((dayKey) => t(`productionPlan.days.full.${dayKey}`)),
+        [t]
+    );
     const headerLabel =
         activeView === 'daily'
-            ? formatDailyLabel(selectedDateValue)
-            : formatWeeklyLabel(selectedDateValue);
+            ? formatDailyLabel(selectedDateValue, fullWeekDays)
+            : formatWeeklyLabel(selectedDateValue, t('productionPlan.days.week'));
 
     const selectedProduct = useMemo(() => {
         if (!modalState.open || modalState.mode !== 'edit' || modalState.productIndex == null) {
@@ -90,6 +104,18 @@ export default function ProductionPlanPage() {
         return lines[modalState.lineIndex]?.products[modalState.productIndex];
     }, [lines, modalState]);
 
+    const allMachineNames = useMemo(() => getAllMachineNames(lines), [lines]);
+
+    const transferMachineProduct = useMemo(() => {
+        if (!transferMachineState.open) return null;
+        return lines[transferMachineState.lineIndex]?.products[transferMachineState.productIndex] ?? null;
+    }, [lines, transferMachineState]);
+
+    const transferScheduleProduct = useMemo(() => {
+        if (!transferScheduleState.open) return null;
+        return lines[transferScheduleState.lineIndex]?.products[transferScheduleState.productIndex] ?? null;
+    }, [lines, transferScheduleState]);
+
     const summary = useMemo(() => {
         const normalizedMachineFilter = machineFilter.trim().toLowerCase();
         const visibleLines = lines
@@ -98,7 +124,9 @@ export default function ProductionPlanPage() {
                 products: line.products.filter(
                     (product) =>
                         !normalizedMachineFilter ||
-                        product.machine.toLowerCase().includes(normalizedMachineFilter)
+                        getEffectiveMachine(product, todayIndex)
+                            .toLowerCase()
+                            .includes(normalizedMachineFilter)
                 ),
             }))
             .filter((line) => line.products.length > 0);
@@ -130,35 +158,35 @@ export default function ProductionPlanPage() {
     const summaryCards = useMemo(
         () => [
             {
-                label: 'Chuyền',
+                label: t('productionPlan.summary.lines'),
                 value: summary.totalLines,
                 icon: ApartmentOutlined,
                 borderColor: token.colorPrimary,
                 backgroundColor: token.colorInfoBg,
             },
             {
-                label: 'Mã hàng',
+                label: t('productionPlan.summary.products'),
                 value: summary.totalProducts,
                 icon: AppstoreOutlined,
                 borderColor: token.colorSuccess,
                 backgroundColor: token.colorSuccessBg,
             },
             {
-                label: 'Thùng hôm nay',
+                label: t('productionPlan.summary.dailyCases'),
                 value: summary.dailyCases,
                 icon: InboxOutlined,
                 borderColor: token.colorWarning,
                 backgroundColor: token.colorWarningBg,
             },
             {
-                label: 'Thùng trong tuần',
+                label: t('productionPlan.summary.weeklyCases'),
                 value: summary.weeklyCases,
                 icon: CalendarOutlined,
                 borderColor: token.colorInfo,
                 backgroundColor: token.colorPrimaryBg,
             },
         ],
-        [summary, token]
+        [summary, t, token]
     );
 
     const planThemeVars = useMemo(
@@ -212,9 +240,10 @@ export default function ProductionPlanPage() {
 
                     return {
                         ...line,
-                        products: line.products.map((currentProduct, productIndex) =>
-                            productIndex === modalState.productIndex ? product : currentProduct
-                        ),
+                        products: line.products.map((currentProduct, productIndex) => {
+                            if (productIndex !== modalState.productIndex) return currentProduct;
+                            return { ...product, machineOverrides: currentProduct.machineOverrides };
+                        }),
                     };
                 })
             );
@@ -240,6 +269,71 @@ export default function ProductionPlanPage() {
         );
         setDeleteState(null);
     }, [deleteState]);
+
+    const openTransferMachineModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
+        setTransferMachineState({ open: true, lineIndex, productIndex });
+    }, []);
+
+    const openTransferScheduleModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
+        setTransferScheduleState({ open: true, lineIndex, productIndex });
+    }, []);
+
+    const handleTransferMachine = useCallback(
+        (newMachine: string) => {
+            if (!transferMachineState.open) return;
+            const { lineIndex, productIndex } = transferMachineState;
+
+            setLines((currentLines) =>
+                currentLines.map((line, li) => {
+                    if (li !== lineIndex) return line;
+                    return {
+                        ...line,
+                        products: line.products.map((product, pi) => {
+                            if (pi !== productIndex) return product;
+                            const overrides = [...(product.machineOverrides ?? new Array(7).fill(undefined))];
+                            overrides[todayIndex] = newMachine;
+                            return { ...product, machineOverrides: overrides };
+                        }),
+                    };
+                })
+            );
+            setTransferMachineState({ open: false });
+        },
+        [transferMachineState, todayIndex]
+    );
+
+    const handleTransferSchedule = useCallback(
+        (newDayIndex: number, newMachine: string) => {
+            if (!transferScheduleState.open) return;
+            const { lineIndex, productIndex } = transferScheduleState;
+
+            setLines((currentLines) =>
+                currentLines.map((line, li) => {
+                    if (li !== lineIndex) return line;
+                    return {
+                        ...line,
+                        products: line.products.map((product, pi) => {
+                            if (pi !== productIndex) return product;
+                            const transferredQty = product.schedule[todayIndex];
+                            if (transferredQty <= 0) return product;
+
+                            const newSchedule = [...product.schedule] as typeof product.schedule;
+                            newSchedule[todayIndex] = 0;
+                            newSchedule[newDayIndex] = (newSchedule[newDayIndex] ?? 0) + transferredQty;
+
+                            const overrides = [...(product.machineOverrides ?? new Array(7).fill(undefined))];
+                            overrides[todayIndex] = undefined;
+                            overrides[newDayIndex] = newMachine;
+
+                            return { ...product, schedule: newSchedule, machineOverrides: overrides };
+                        }),
+                    };
+                })
+            );
+            setTransferScheduleState({ open: false });
+        },
+        [transferScheduleState, todayIndex]
+    );
 
     const handleReorderProducts = useCallback(
         (lineIndex: number, activeCode: string, overCode: string) => {
@@ -273,7 +367,7 @@ export default function ProductionPlanPage() {
     const headerActions = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Input
-                placeholder="Tìm theo máy"
+                placeholder={t('productionPlan.filters.machinePlaceholder')}
                 prefix={<SearchOutlined />}
                 value={machineFilter}
                 onChange={(event) => setMachineFilter(event.target.value)}
@@ -297,12 +391,12 @@ export default function ProductionPlanPage() {
                 onChange={setActiveView}
                 options={[
                     {
-                        label: 'Ngày',
+                        label: t('productionPlan.views.daily'),
                         value: 'daily',
                         icon: <CalendarOutlined />,
                     },
                     {
-                        label: 'Tuần',
+                        label: t('productionPlan.views.weekly'),
                         value: 'weekly',
                         icon: <TableOutlined />,
                     },
@@ -312,7 +406,7 @@ export default function ProductionPlanPage() {
                 icon={<UploadOutlined />}
                 onClick={() => setImportModalOpen(true)}
             >
-                Import
+                {t('productionPlan.actions.import')}
             </Button>
             <Button
                 type="primary"
@@ -320,7 +414,7 @@ export default function ProductionPlanPage() {
                 onClick={() => openCreateModal(0)}
                 disabled={lines.length === 0}
             >
-                Thêm mã hàng
+                {t('productionPlan.actions.addProduct')}
             </Button>
         </div>
     );
@@ -328,12 +422,12 @@ export default function ProductionPlanPage() {
     return (
         <>
             <ResponsivePageHeader
-                title={`Kế hoạch sản xuất - ${headerLabel}`}
+                title={t('productionPlan.headerTitle', { label: headerLabel })}
                 rightContent={headerActions}
                 mobileMenuItems={[
                     {
                         key: 'add-product',
-                        label: 'Thêm mã hàng',
+                        label: t('productionPlan.actions.addProduct'),
                         icon: <PlusOutlined />,
                         onClick: () => openCreateModal(0),
                     },
@@ -420,7 +514,9 @@ export default function ProductionPlanPage() {
                     <div>
                         <Flex align="center" gap={8} wrap="wrap">
                             <Text strong>
-                                {activeView === 'daily' ? 'Bảng ngày' : 'Bảng tuần'}
+                                {activeView === 'daily'
+                                    ? t('productionPlan.panel.dailyTable')
+                                    : t('productionPlan.panel.weeklyTable')}
                             </Text>
                             {activeView === 'daily' && (
                                 <Button
@@ -441,13 +537,20 @@ export default function ProductionPlanPage() {
                             )}
                         </Flex>
                         <div className={styles.panelMeta}>
-                            {summary.totalLines} chuyền / {summary.totalProducts} mã hàng
+                            {t('productionPlan.panel.meta', {
+                                lines: summary.totalLines,
+                                products: summary.totalProducts,
+                            })}
                         </div>
                     </div>
                     <Text type="secondary">
                         {activeView === 'daily'
-                            ? `${formatNumber(summary.dailyCases)} thùng`
-                            : `${formatNumber(summary.weeklyCases)} thùng`}
+                            ? t('productionPlan.panel.cases', {
+                                count: formatNumber(summary.dailyCases),
+                            })
+                            : t('productionPlan.panel.cases', {
+                                count: formatNumber(summary.weeklyCases),
+                            })}
                     </Text>
                 </div>
 
@@ -460,6 +563,8 @@ export default function ProductionPlanPage() {
                             onEdit={openEditModal}
                             onDelete={setDeleteState}
                             onReorder={handleReorderProducts}
+                            onTransferMachine={openTransferMachineModal}
+                            onTransferSchedule={openTransferScheduleModal}
                             machineFilter={machineFilter}
                         />
                     ) : (
@@ -491,17 +596,38 @@ export default function ProductionPlanPage() {
                 onClose={() => setImportModalOpen(false)}
             />
 
+            <TransferMachineModal
+                open={transferMachineState.open}
+                product={transferMachineProduct}
+                todayIndex={todayIndex}
+                machineOptions={allMachineNames}
+                onCancel={() => setTransferMachineState({ open: false })}
+                onConfirm={handleTransferMachine}
+            />
+
+            <TransferScheduleModal
+                open={transferScheduleState.open}
+                product={transferScheduleProduct}
+                todayIndex={todayIndex}
+                machineOptions={allMachineNames}
+                onCancel={() => setTransferScheduleState({ open: false })}
+                onConfirm={handleTransferSchedule}
+            />
+
             <Modal
-                title="Xóa mã hàng"
+                title={t('productionPlan.deleteModal.title')}
                 open={deleteState != null}
-                okText="Xóa"
-                cancelText="Hủy"
+                okText={t('common.delete')}
+                cancelText={t('common.cancel')}
                 okButtonProps={{ danger: true }}
                 onOk={confirmDelete}
                 onCancel={() => setDeleteState(null)}
             >
-                Bạn có chắc chắn muốn xóa{' '}
-                <strong>{pendingDeleteProduct?.code ?? 'mã hàng này'}</strong> khỏi kế hoạch?
+                {t('productionPlan.deleteModal.messagePrefix')}{' '}
+                <strong>
+                    {pendingDeleteProduct?.code ?? t('productionPlan.deleteModal.fallbackProduct')}
+                </strong>{' '}
+                {t('productionPlan.deleteModal.messageSuffix')}
             </Modal>
         </>
     );

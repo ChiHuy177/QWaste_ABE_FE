@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { Button, Empty, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import {
     closestCenter,
     CollisionDetection,
@@ -20,7 +21,7 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { WEEK_DAYS } from './dateUtils';
+import { WEEK_DAY_KEYS } from '../utils/dateUtils';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
 import { ProductionLine, ProductionProduct, ProductPosition } from './types';
 import styles from './ProductionPlanTable.module.css';
@@ -82,6 +83,7 @@ export default function WeeklyTable({
     onDelete,
     onReorder,
 }: WeeklyTableProps) {
+    const { t } = useTranslation();
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -89,6 +91,10 @@ export default function WeeklyTable({
         })
     );
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
+    const weekDayLabels = useMemo(
+        () => WEEK_DAY_KEYS.map((dayKey) => t(`productionPlan.days.short.${dayKey}`)),
+        [t]
+    );
 
     const machineGroups = useMemo<MachineGroup[]>(() => {
         const groups: MachineGroup[] = [];
@@ -130,7 +136,7 @@ export default function WeeklyTable({
         const groupMap = new Map<string, { groupKey: string; lineIndex: number }>();
 
         machineGroups.forEach((group) => {
-            const totalPerDay = WEEK_DAYS.map((_, i) =>
+            const totalPerDay = weekDayLabels.map((_, i) =>
                 group.products.reduce((sum, p) => sum + p.schedule[i], 0)
             );
             const grandTotal = totalPerDay.reduce((sum, d) => sum + d, 0);
@@ -162,7 +168,7 @@ export default function WeeklyTable({
         });
 
         return { flatRows: rows, sortableKeys: keys, productGroupMap: groupMap };
-    }, [machineGroups]);
+    }, [machineGroups, weekDayLabels]);
 
     const sameGroupCollisionDetection = useCallback<CollisionDetection>(
         (args) => {
@@ -186,7 +192,7 @@ export default function WeeklyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>Máy</span>
+                        <span>{t('productionPlan.table.headers.machine')}</span>
                         <span>(Machine)</span>
                     </div>
                 ),
@@ -224,7 +230,7 @@ export default function WeeklyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>Mã</span>
+                        <span>{t('productionPlan.table.headers.codeVi')}</span>
                         <span>Code</span>
                     </div>
                 ),
@@ -233,13 +239,13 @@ export default function WeeklyTable({
                 fixed: 'left',
                 onCell: anchorCell,
                 render: (_, record) => {
-                    if (record.type === 'total') return <strong>Total</strong>;
+                    if (record.type === 'total') return <strong>{t('productionPlan.table.total')}</strong>;
                     if (record.type === 'group-header') return null;
                     return <strong>{record.code}</strong>;
                 },
             },
             {
-                title: 'Tên hàng',
+                title: t('productionPlan.table.headers.productName'),
                 key: 'name',
                 width: 200,
                 onCell: anchorCell,
@@ -249,8 +255,8 @@ export default function WeeklyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>Mã</span>
-                        <span>khuôn</span>
+                        <span>{t('productionPlan.table.headers.codeVi')}</span>
+                        <span>{t('productionPlan.table.headers.mold')}</span>
                     </div>
                 ),
                 key: 'mold',
@@ -262,8 +268,8 @@ export default function WeeklyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>T.bình</span>
-                        <span>(cái/thùng)</span>
+                        <span>{t('productionPlan.table.headers.avgShort')}</span>
+                        <span>({t('productionPlan.units.pcsPerCase')})</span>
                     </div>
                 ),
                 key: 'pcsMultiplier',
@@ -276,7 +282,7 @@ export default function WeeklyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>Thời gian</span>
+                        <span>{t('productionPlan.table.headers.time')}</span>
                         <span>Time</span>
                     </div>
                 ),
@@ -286,7 +292,7 @@ export default function WeeklyTable({
                 render: (_, record) =>
                     record.type === 'product' ? record.time : null,
             },
-            ...WEEK_DAYS.map((day, index) => ({
+            ...weekDayLabels.map((day, index) => ({
                 title: day,
                 key: day,
                 width: 86,
@@ -316,8 +322,8 @@ export default function WeeklyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>Tổng</span>
-                        <span>thùng</span>
+                        <span>{t('common.total')}</span>
+                        <span>{t('productionPlan.units.cases')}</span>
                     </div>
                 ),
                 key: 'grandTotal',
@@ -342,7 +348,7 @@ export default function WeeklyTable({
                     if (record.type !== 'product') return null;
                     return (
                         <div className={styles.actions}>
-                            <Tooltip title="Sửa">
+                            <Tooltip title={t('common.edit')}>
                                 <Button
                                     type="text"
                                     icon={<EditOutlined />}
@@ -354,7 +360,7 @@ export default function WeeklyTable({
                                     }
                                 />
                             </Tooltip>
-                            <Tooltip title="Xóa">
+                            <Tooltip title={t('common.delete')}>
                                 <Button
                                     danger
                                     type="text"
@@ -372,7 +378,7 @@ export default function WeeklyTable({
                 },
             },
         ],
-        [onDelete, onEdit, todayIndex]
+        [onDelete, onEdit, t, todayIndex, weekDayLabels]
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -387,7 +393,7 @@ export default function WeeklyTable({
     };
 
     if (machineGroups.length === 0) {
-        return <Empty description="Không có mã hàng phù hợp với bộ lọc" />;
+        return <Empty description={t('productionPlan.table.emptyFiltered')} />;
     }
 
     return (

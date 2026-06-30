@@ -378,6 +378,181 @@
             "cancelText": "Hủy"
         }
     },
+    "productionPlan": {
+        "title": "Kế hoạch sản xuất",
+        "headerTitle": "Kế hoạch sản xuất - {{label}}",
+        "days": {
+            "week": "Tuần",
+            "today": "Hôm nay",
+            "short": {
+                "monday": "T2",
+                "tuesday": "T3",
+                "wednesday": "T4",
+                "thursday": "T5",
+                "friday": "T6",
+                "saturday": "T7",
+                "sunday": "CN"
+            },
+            "full": {
+                "monday": "Thứ 2",
+                "tuesday": "Thứ 3",
+                "wednesday": "Thứ 4",
+                "thursday": "Thứ 5",
+                "friday": "Thứ 6",
+                "saturday": "Thứ 7",
+                "sunday": "Chủ nhật"
+            }
+        },
+        "summary": {
+            "lines": "Chuyền",
+            "products": "Mã hàng",
+            "dailyCases": "Thùng hôm nay",
+            "weeklyCases": "Thùng trong tuần"
+        },
+        "filters": {
+            "machinePlaceholder": "Tìm theo máy"
+        },
+        "views": {
+            "daily": "Ngày",
+            "weekly": "Tuần"
+        },
+        "actions": {
+            "import": "Import",
+            "addProduct": "Thêm mã hàng",
+            "transfer": "Chuyển",
+            "transferMachine": "Chuyển máy",
+            "transferSchedule": "Chuyển lịch"
+        },
+        "panel": {
+            "dailyTable": "Bảng ngày",
+            "weeklyTable": "Bảng tuần",
+            "meta": "{{lines}} chuyền / {{products}} mã hàng",
+            "cases": "{{count}} thùng"
+        },
+        "units": {
+            "cases": "Thùng",
+            "pcs": "Cái",
+            "pcsPerCase": "cái/thùng"
+        },
+        "table": {
+            "total": "Tổng",
+            "emptyDaily": "Không có kế hoạch sản xuất cho ngày đã chọn",
+            "emptyFiltered": "Không có mã hàng phù hợp với bộ lọc",
+            "headers": {
+                "date": "Ngày",
+                "line": "Chuyền (Line)",
+                "machine": "Máy",
+                "codeVi": "Mã",
+                "productName": "Tên hàng",
+                "mold": "khuôn",
+                "average": "Trung bình",
+                "avgShort": "T.bình",
+                "time": "Thời gian"
+            },
+            "pagination": {
+                "machineGroups": "Tổng {{total}} nhóm máy"
+            }
+        },
+        "formModal": {
+            "createTitle": "Thêm kế hoạch",
+            "editTitle": "Chỉnh sửa kế hoạch"
+        },
+        "form": {
+            "sections": {
+                "productInfo": "Thông tin sản phẩm",
+                "schedule": "Kế hoạch 7 ngày (thùng)"
+            },
+            "fields": {
+                "code": {
+                    "label": "Mã Code",
+                    "placeholder": "VD: P-1001",
+                    "required": "Vui lòng nhập mã code"
+                },
+                "name": {
+                    "label": "Tên hàng",
+                    "placeholder": "Tên sản phẩm",
+                    "required": "Vui lòng nhập tên hàng"
+                },
+                "machine": {
+                    "label": "Máy",
+                    "placeholder": "VD: CNC-01",
+                    "required": "Vui lòng nhập máy"
+                },
+                "mold": {
+                    "label": "Khuôn",
+                    "placeholder": "VD: M-12A",
+                    "required": "Vui lòng nhập mã khuôn"
+                },
+                "time": {
+                    "label": "Thời gian",
+                    "placeholder": "08:00 - 10:30",
+                    "required": "Vui lòng nhập thời gian"
+                },
+                "pcsMultiplier": {
+                    "label": "Cái / thùng",
+                    "required": "Vui lòng nhập hệ số"
+                }
+            },
+            "summary": {
+                "totalCasesWeek": "Tổng thùng / tuần",
+                "totalPcsWeek": "Tổng cái / tuần"
+            }
+        },
+        "deleteModal": {
+            "title": "Xóa mã hàng",
+            "messagePrefix": "Bạn có chắc chắn muốn xóa",
+            "fallbackProduct": "mã hàng này",
+            "messageSuffix": "khỏi kế hoạch?"
+        },
+        "transferMachine": {
+            "title": "Chuyển máy - {{code}}",
+            "applyDate": "Ngày áp dụng",
+            "currentMachine": "Máy hiện tại",
+            "newMachine": "Máy mới",
+            "newMachinePlaceholder": "Chọn máy mới...",
+            "machineNotFound": "Không tìm thấy máy",
+            "duplicateMachine": "Máy được chọn trùng với máy hiện tại",
+            "applyOnlySelectedDay": "Chỉ áp dụng cho {{day}}. Các ngày khác trong tuần không thay đổi."
+        },
+        "transferSchedule": {
+            "title": "Chuyển lịch - {{code}}",
+            "noQuantityToday": "Không có sản lượng để chuyển hôm nay",
+            "from": "Từ",
+            "day": "Ngày",
+            "caseQuantity": "Số thùng",
+            "to": "Đến",
+            "newDay": "Ngày mới",
+            "newDayPlaceholder": "Chọn ngày...",
+            "newMachine": "Máy mới",
+            "newMachinePlaceholder": "Chọn máy...",
+            "caseCount": "{{count}} thùng",
+            "targetAlreadyHasPrefix": "Ngày đích đã có",
+            "targetAlreadyHasMiddle": "sẽ thành",
+            "targetAlreadyHasSuffix": "thùng sau khi chuyển."
+        },
+        "import": {
+            "title": "Import kế hoạch sản xuất",
+            "upload": "Tải lên",
+            "hint": "File Excel chứa kế hoạch sản xuất - tối đa 10MB",
+            "columns": {
+                "date": "Ngày",
+                "reason": "Lý do",
+                "row": "Dòng",
+                "column": "Cột",
+                "error": "Lỗi"
+            },
+            "result": {
+                "inserted": "Đã nhập",
+                "records": "{{count}} bản ghi",
+                "importedDays": "Ngày đã nhập",
+                "deferredDays": "Ngày hoãn",
+                "note": "Lưu ý",
+                "requiresConfirmation": "Cần xác nhận - sessionToken:",
+                "skippedDays": "Ngày bị bỏ qua ({{count}})",
+                "errors": "Lỗi ({{count}})"
+            }
+        }
+    },
     "notFound": {
         "title": "Không Tìm Thấy Trang",
         "description": "Trang bạn đang tìm kiếm không tồn tại hoặc đã được chuyển đến vị trí khác.",

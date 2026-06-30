@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Col, Form, Input, InputNumber, Modal, Row } from 'antd';
-import { WEEK_DAYS } from './dateUtils';
+import { Form, Modal, Tag } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { ProductionProduct, Schedule } from './types';
+import ProductForm from './ProductForm';
 
 interface PlanFormModalProps {
     open: boolean;
@@ -43,10 +44,10 @@ export default function PlanFormModal({
     onSubmit,
 }: PlanFormModalProps) {
     const [form] = Form.useForm<PlanFormValues>();
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!open) return;
-
         form.setFieldsValue(initialData ?? createEmptyValues());
     }, [form, initialData, open]);
 
@@ -58,19 +59,37 @@ export default function PlanFormModal({
             mold: values.mold.trim(),
             time: values.time.trim(),
             pcsMultiplier: values.pcsMultiplier,
-            schedule: values.schedule.map((quantity) => quantity ?? 0) as Schedule,
+            schedule: values.schedule.map((q) => q ?? 0) as Schedule,
         });
     };
 
+    const title = (
+        <span>
+            {mode === 'create'
+                ? t('productionPlan.formModal.createTitle')
+                : t('productionPlan.formModal.editTitle')}
+            {lineName && (
+                <Tag color="blue" style={{ marginLeft: 8, fontWeight: 400, fontSize: 12 }}>
+                    {lineName}
+                </Tag>
+            )}
+            {mode === 'edit' && initialData?.code && (
+                <Tag color="processing" style={{ marginLeft: 4, fontWeight: 400, fontSize: 12 }}>
+                    {initialData.code}
+                </Tag>
+            )}
+        </span>
+    );
+
     return (
         <Modal
-            title={mode === 'create' ? `Thêm kế hoạch - ${lineName}` : 'Sửa kế hoạch'}
+            title={title}
             open={open}
             onCancel={onCancel}
             onOk={() => form.submit()}
-            okText="Lưu"
-            cancelText="Hủy"
-            width={760}
+            okText={t('common.save')}
+            cancelText={t('common.cancel')}
+            width={800}
             destroyOnHidden
         >
             <Form<PlanFormValues>
@@ -79,77 +98,7 @@ export default function PlanFormModal({
                 requiredMark={false}
                 onFinish={handleFinish}
             >
-                <Row gutter={16}>
-                    <Col xs={24} md={8}>
-                        <Form.Item
-                            name="code"
-                            label="Mã Code"
-                            rules={[{ required: true, message: 'Vui lòng nhập mã code' }]}
-                        >
-                            <Input placeholder="VD: P-1001" />
-                        </Form.Item>
-                    </Col>
-                    <Col xs={24} md={16}>
-                        <Form.Item
-                            name="name"
-                            label="Tên hàng"
-                            rules={[{ required: true, message: 'Vui lòng nhập tên hàng' }]}
-                        >
-                            <Input placeholder="Tên sản phẩm" />
-                        </Form.Item>
-                    </Col>
-                    <Col xs={24} md={8}>
-                        <Form.Item
-                            name="machine"
-                            label="Máy"
-                            rules={[{ required: true, message: 'Vui lòng nhập máy' }]}
-                        >
-                            <Input placeholder="VD: CNC-01" />
-                        </Form.Item>
-                    </Col>
-                    <Col xs={24} md={8}>
-                        <Form.Item
-                            name="mold"
-                            label="Khuôn"
-                            rules={[{ required: true, message: 'Vui lòng nhập mã khuôn' }]}
-                        >
-                            <Input placeholder="VD: M-12A" />
-                        </Form.Item>
-                    </Col>
-                    <Col xs={24} md={8}>
-                        <Form.Item
-                            name="time"
-                            label="Thời gian"
-                            rules={[{ required: true, message: 'Vui lòng nhập thời gian' }]}
-                        >
-                            <Input placeholder="08:00 - 10:30" />
-                        </Form.Item>
-                    </Col>
-                    <Col xs={24} md={8}>
-                        <Form.Item
-                            name="pcsMultiplier"
-                            label="Cái / thùng"
-                            rules={[{ required: true, message: 'Vui lòng nhập hệ số' }]}
-                        >
-                            <InputNumber min={1} precision={0} style={{ width: '100%' }} />
-                        </Form.Item>
-                    </Col>
-                </Row>
-
-                <div style={{ fontWeight: 600, marginBottom: 10 }}>Kế hoạch 7 ngày</div>
-                <Row gutter={[12, 12]}>
-                    {WEEK_DAYS.map((day, index) => (
-                        <Col xs={12} sm={8} md={6} flex="1 1 96px" key={day}>
-                            <Form.Item
-                                name={['schedule', index]}
-                                label={day}
-                                rules={[{ required: true, message: 'Nhập số thùng' }]}
-                            >
-                                <InputNumber min={0} precision={0} style={{ width: '100%' }} />
-                            </Form.Item>
-                        </Col>
-                    ))}
-                </Row>
+                <ProductForm form={form} mode={mode} />
             </Form>
         </Modal>
     );

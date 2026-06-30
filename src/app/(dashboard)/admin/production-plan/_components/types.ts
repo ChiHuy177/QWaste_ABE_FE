@@ -4,6 +4,7 @@ export interface ProductionProduct {
     code: string;
     name: string;
     machine: string;
+    machineOverrides?: (string | undefined)[];
     mold: string;
     time: string;
     pcsMultiplier: number;
@@ -20,6 +21,14 @@ export interface ProductPosition {
     lineIndex: number;
     productIndex: number;
 }
+
+export type TransferMachineModalState =
+    | { open: false }
+    | { open: true; lineIndex: number; productIndex: number };
+
+export type TransferScheduleModalState =
+    | { open: false }
+    | { open: true; lineIndex: number; productIndex: number };
 
 export type PlanModalState =
     | {

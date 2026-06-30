@@ -2,6 +2,7 @@
 
 import { Button, Descriptions, Modal, Table, Tag, Typography } from 'antd';
 import { UploadOutlined, WarningOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { ExcelUpload } from '@/components/shared/ExcelUpload/ExcelUpload';
 import { useExcelUpload } from '@/hooks/useExcelUpload';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
@@ -15,6 +16,7 @@ interface ImportModalProps {
 }
 
 export default function ImportModal({ open, onClose }: ImportModalProps) {
+    const { t } = useTranslation();
     const { file, loading, result, setFile, submit, reset } = useExcelUpload<ImportResult>({
         uploadFn: (f) => ProductionPlanService.importFromFile(f),
     });
@@ -25,10 +27,10 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
     };
 
     const footer = result ? (
-        <Button onClick={handleClose}>Đóng</Button>
+        <Button onClick={handleClose}>{t('common.close')}</Button>
     ) : (
         <>
-            <Button onClick={handleClose}>Hủy</Button>
+            <Button onClick={handleClose}>{t('common.cancel')}</Button>
             <Button
                 type="primary"
                 icon={<UploadOutlined />}
@@ -36,14 +38,14 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
                 disabled={!file}
                 onClick={submit}
             >
-                Tải lên
+                {t('productionPlan.import.upload')}
             </Button>
         </>
     );
 
     return (
         <Modal
-            title="Import kế hoạch sản xuất"
+            title={t('productionPlan.import.title')}
             open={open}
             onCancel={handleClose}
             footer={footer}
@@ -56,7 +58,7 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
                 <ExcelUpload
                     onFileSelect={setFile}
                     disabled={loading}
-                    hint="File Excel chứa kế hoạch sản xuất — tối đa 10MB"
+                    hint={t('productionPlan.import.hint')}
                 />
             )}
         </Modal>
@@ -64,43 +66,48 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
 }
 
 function ImportResultView({ result }: { result: ImportResult }) {
+    const { t } = useTranslation();
     const skippedColumns = [
-        { title: 'Ngày', dataIndex: 'date', key: 'date', width: 130 },
-        { title: 'Lý do', dataIndex: 'reason', key: 'reason' },
+        { title: t('productionPlan.import.columns.date'), dataIndex: 'date', key: 'date', width: 130 },
+        { title: t('productionPlan.import.columns.reason'), dataIndex: 'reason', key: 'reason' },
     ];
 
     const errorColumns = [
-        { title: 'Dòng', dataIndex: 'rowIndex', key: 'rowIndex', width: 60 },
-        { title: 'Ngày', dataIndex: 'dayLabel', key: 'dayLabel', width: 80 },
-        { title: 'Cột', dataIndex: 'column', key: 'column', width: 100 },
-        { title: 'Lỗi', dataIndex: 'message', key: 'message' },
+        { title: t('productionPlan.import.columns.row'), dataIndex: 'rowIndex', key: 'rowIndex', width: 60 },
+        { title: t('productionPlan.import.columns.date'), dataIndex: 'dayLabel', key: 'dayLabel', width: 80 },
+        { title: t('productionPlan.import.columns.column'), dataIndex: 'column', key: 'column', width: 100 },
+        { title: t('productionPlan.import.columns.error'), dataIndex: 'message', key: 'message' },
     ];
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Descriptions bordered size="small" column={1}>
-                <Descriptions.Item label="Đã nhập">
-                    <Text strong>{result.totalInserted} bản ghi</Text>
+                <Descriptions.Item label={t('productionPlan.import.result.inserted')}>
+                    <Text strong>
+                        {t('productionPlan.import.result.records', {
+                            count: result.totalInserted,
+                        })}
+                    </Text>
                 </Descriptions.Item>
-                <Descriptions.Item label="Ngày đã nhập">
+                <Descriptions.Item label={t('productionPlan.import.result.importedDays')}>
                     {result.importedDays.length > 0 ? (
                         result.importedDays.map((d) => <Tag key={d}>{d}</Tag>)
                     ) : (
-                        <Text type="secondary">—</Text>
+                        <Text type="secondary">-</Text>
                     )}
                 </Descriptions.Item>
                 {result.deferredDays.length > 0 && (
-                    <Descriptions.Item label="Ngày hoãn">
+                    <Descriptions.Item label={t('productionPlan.import.result.deferredDays')}>
                         {result.deferredDays.map((d) => (
                             <Tag key={d} color="warning">{d}</Tag>
                         ))}
                     </Descriptions.Item>
                 )}
                 {result.requiresConfirmation && (
-                    <Descriptions.Item label="Lưu ý">
+                    <Descriptions.Item label={t('productionPlan.import.result.note')}>
                         <Text type="warning">
-                            <WarningOutlined /> Cần xác nhận — sessionToken:{' '}
-                            <Text code>{result.sessionToken.slice(0, 12)}…</Text>
+                            <WarningOutlined /> {t('productionPlan.import.result.requiresConfirmation')}{' '}
+                            <Text code>{result.sessionToken.slice(0, 12)}...</Text>
                         </Text>
                     </Descriptions.Item>
                 )}
@@ -109,7 +116,9 @@ function ImportResultView({ result }: { result: ImportResult }) {
             {result.skippedDays.length > 0 && (
                 <div>
                     <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                        Ngày bị bỏ qua ({result.skippedDays.length})
+                        {t('productionPlan.import.result.skippedDays', {
+                            count: result.skippedDays.length,
+                        })}
                     </Text>
                     <Table<SkippedDay>
                         size="small"
@@ -124,7 +133,9 @@ function ImportResultView({ result }: { result: ImportResult }) {
             {result.errors.length > 0 && (
                 <div>
                     <Text strong type="danger" style={{ display: 'block', marginBottom: 8 }}>
-                        Lỗi ({result.errors.length})
+                        {t('productionPlan.import.result.errors', {
+                            count: result.errors.length,
+                        })}
                     </Text>
                     <Table<ImportRowError>
                         size="small"

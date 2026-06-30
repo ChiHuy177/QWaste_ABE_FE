@@ -387,6 +387,181 @@
             "cancelText": "Cancel"
         }
     },
+    "productionPlan": {
+        "title": "Production Plan",
+        "headerTitle": "Production Plan - {{label}}",
+        "days": {
+            "week": "Week",
+            "today": "Today",
+            "short": {
+                "monday": "Mon",
+                "tuesday": "Tue",
+                "wednesday": "Wed",
+                "thursday": "Thu",
+                "friday": "Fri",
+                "saturday": "Sat",
+                "sunday": "Sun"
+            },
+            "full": {
+                "monday": "Monday",
+                "tuesday": "Tuesday",
+                "wednesday": "Wednesday",
+                "thursday": "Thursday",
+                "friday": "Friday",
+                "saturday": "Saturday",
+                "sunday": "Sunday"
+            }
+        },
+        "summary": {
+            "lines": "Lines",
+            "products": "Product codes",
+            "dailyCases": "Cases today",
+            "weeklyCases": "Cases this week"
+        },
+        "filters": {
+            "machinePlaceholder": "Search by machine"
+        },
+        "views": {
+            "daily": "Day",
+            "weekly": "Week"
+        },
+        "actions": {
+            "import": "Import",
+            "addProduct": "Add product code",
+            "transfer": "Transfer",
+            "transferMachine": "Transfer machine",
+            "transferSchedule": "Transfer schedule"
+        },
+        "panel": {
+            "dailyTable": "Daily table",
+            "weeklyTable": "Weekly table",
+            "meta": "{{lines}} lines / {{products}} product codes",
+            "cases": "{{count}} cases"
+        },
+        "units": {
+            "cases": "Cases",
+            "pcs": "Pcs",
+            "pcsPerCase": "pcs/case"
+        },
+        "table": {
+            "total": "Total",
+            "emptyDaily": "No production plan for the selected day",
+            "emptyFiltered": "No product codes match the filter",
+            "headers": {
+                "date": "Date",
+                "line": "Line",
+                "machine": "Machine",
+                "codeVi": "Code",
+                "productName": "Product name",
+                "mold": "mold",
+                "average": "Average",
+                "avgShort": "Avg.",
+                "time": "Time"
+            },
+            "pagination": {
+                "machineGroups": "Total {{total}} machine groups"
+            }
+        },
+        "formModal": {
+            "createTitle": "Add plan",
+            "editTitle": "Edit plan"
+        },
+        "form": {
+            "sections": {
+                "productInfo": "Product information",
+                "schedule": "7-day plan (cases)"
+            },
+            "fields": {
+                "code": {
+                    "label": "Code",
+                    "placeholder": "Example: P-1001",
+                    "required": "Please enter a code"
+                },
+                "name": {
+                    "label": "Product name",
+                    "placeholder": "Product name",
+                    "required": "Please enter a product name"
+                },
+                "machine": {
+                    "label": "Machine",
+                    "placeholder": "Example: CNC-01",
+                    "required": "Please enter a machine"
+                },
+                "mold": {
+                    "label": "Mold",
+                    "placeholder": "Example: M-12A",
+                    "required": "Please enter a mold code"
+                },
+                "time": {
+                    "label": "Time",
+                    "placeholder": "08:00 - 10:30",
+                    "required": "Please enter a time"
+                },
+                "pcsMultiplier": {
+                    "label": "Pcs / case",
+                    "required": "Please enter a multiplier"
+                }
+            },
+            "summary": {
+                "totalCasesWeek": "Total cases / week",
+                "totalPcsWeek": "Total pcs / week"
+            }
+        },
+        "deleteModal": {
+            "title": "Delete product code",
+            "messagePrefix": "Are you sure you want to delete",
+            "fallbackProduct": "this product code",
+            "messageSuffix": "from the plan?"
+        },
+        "transferMachine": {
+            "title": "Transfer machine - {{code}}",
+            "applyDate": "Apply date",
+            "currentMachine": "Current machine",
+            "newMachine": "New machine",
+            "newMachinePlaceholder": "Select a new machine...",
+            "machineNotFound": "No machine found",
+            "duplicateMachine": "The selected machine matches the current machine",
+            "applyOnlySelectedDay": "Only applies to {{day}}. Other days in the week will not change."
+        },
+        "transferSchedule": {
+            "title": "Transfer schedule - {{code}}",
+            "noQuantityToday": "There is no quantity to transfer today",
+            "from": "From",
+            "day": "Day",
+            "caseQuantity": "Case quantity",
+            "to": "To",
+            "newDay": "New day",
+            "newDayPlaceholder": "Select a day...",
+            "newMachine": "New machine",
+            "newMachinePlaceholder": "Select a machine...",
+            "caseCount": "{{count}} cases",
+            "targetAlreadyHasPrefix": "The target day already has",
+            "targetAlreadyHasMiddle": "it will become",
+            "targetAlreadyHasSuffix": "cases after transfer."
+        },
+        "import": {
+            "title": "Import production plan",
+            "upload": "Upload",
+            "hint": "Excel file containing the production plan - maximum 10MB",
+            "columns": {
+                "date": "Date",
+                "reason": "Reason",
+                "row": "Row",
+                "column": "Column",
+                "error": "Error"
+            },
+            "result": {
+                "inserted": "Imported",
+                "records": "{{count}} records",
+                "importedDays": "Imported days",
+                "deferredDays": "Deferred days",
+                "note": "Note",
+                "requiresConfirmation": "Confirmation required - sessionToken:",
+                "skippedDays": "Skipped days ({{count}})",
+                "errors": "Errors ({{count}})"
+            }
+        }
+    },
     "notFound": {
         "title": "Page Not Found",
         "description": "The page you're looking for doesn't exist or has been moved to another location.",
