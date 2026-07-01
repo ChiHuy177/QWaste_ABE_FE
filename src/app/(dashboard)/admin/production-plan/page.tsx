@@ -610,6 +610,7 @@ export default function ProductionPlanPage() {
                 product={transferScheduleProduct}
                 todayIndex={todayIndex}
                 machineOptions={allMachineNames}
+                lines={lines}
                 onCancel={() => setTransferScheduleState({ open: false })}
                 onConfirm={handleTransferSchedule}
             />

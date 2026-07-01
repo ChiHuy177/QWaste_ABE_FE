@@ -88,7 +88,11 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                             title="Total Actual"
                             value={totalActual}
                             suffix={`/ ${totalPlan} pcs`}
-                            valueStyle={{ fontSize: 22, fontWeight: 700 }}
+                            styles={{
+                                content: {
+                                    fontSize: 22, fontWeight: 700
+                                }
+                            }}
                         />
                         <div style={{ textAlign: 'right' }}>
                             <Progress
@@ -99,8 +103,8 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                                     overallPct >= 80
                                         ? token.colorSuccess
                                         : overallPct >= 50
-                                        ? token.colorWarning
-                                        : token.colorError
+                                            ? token.colorWarning
+                                            : token.colorError
                                 }
                             />
                         </div>
@@ -135,8 +139,8 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                                         pct >= 80
                                             ? token.colorSuccess
                                             : pct >= 50
-                                            ? token.colorWarning
-                                            : token.colorError
+                                                ? token.colorWarning
+                                                : token.colorError
                                     }
                                     style={{ marginBottom: 0 }}
                                 />

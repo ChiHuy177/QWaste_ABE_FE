@@ -33,6 +33,7 @@ export const initialProductionPlan: ProductionLine[] = [
                 time: '10:00 - 12:00',
                 pcsMultiplier: 4,
                 schedule: [200, 200, 200, 200, 200, 100, 0],
+                status: 'PAUSE',
             },
             {
                 code: 'P-1004',

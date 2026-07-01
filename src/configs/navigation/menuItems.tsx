@@ -38,14 +38,30 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
         );
     }
 
+    const productionPlanItems: MenuItem[] = [];
     if (ability.can('view', 'tasks')) {
-        items.push(
+        productionPlanItems.push(
             createMenuItem(
                 '/admin/production-plan',
-                t('sidebar.navigation.productionPlan'),
-                <CalendarOutlined />
+                t('sidebar.navigation.productionPlan')
             )
         );
+    }
+    if (ability.can('view', 'production_monitor')) {
+        productionPlanItems.push(
+            createMenuItem(
+                '/admin/production-plan/monitor',
+                t('sidebar.navigation.productionMonitor')
+            )
+        );
+    }
+    if (productionPlanItems.length > 0) {
+        items.push({
+            key: 'production_plan_group',
+            icon: <CalendarOutlined />,
+            label: t('sidebar.navigation.productionPlan'),
+            children: productionPlanItems,
+        });
     }
 
     const categoryItems: MenuItem[] = [];

@@ -113,6 +113,10 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'tasks',
         action: 'view',
     },
+    '/admin/production-plan/monitor': {
+        subject: 'production_monitor',
+        action: 'view',
+    },
 };
 
 const DEFAULT_ROUTE_PRIORITY: string[] = [

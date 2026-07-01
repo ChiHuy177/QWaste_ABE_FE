@@ -2018,5 +2018,13 @@
             "selectDate": "选择日期",
             "timePeriod": "时间段"
         }
+    },
+    "sidebar": {
+        "navigation": {
+            "productionMonitor": "生产监控"
+        }
+    },
+    "permissionSubjects": {
+        "production_monitor": "生产监控"
     }
 }

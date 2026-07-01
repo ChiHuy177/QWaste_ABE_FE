@@ -1,5 +1,7 @@
 export type Schedule = [number, number, number, number, number, number, number];
 
+export type ProductionStatus = 'TODO' | 'IN_PROGRESS' | 'PAUSE' | 'COMPLETE';
+
 export interface ProductionProduct {
     code: string;
     name: string;
@@ -9,6 +11,14 @@ export interface ProductionProduct {
     time: string;
     pcsMultiplier: number;
     schedule: Schedule;
+    status?: ProductionStatus;
+}
+
+export interface ProductionStatusUpdate {
+    code: string;
+    machine: string;
+    status: ProductionStatus;
+    timestamp: string;
 }
 
 export interface ProductionLine {

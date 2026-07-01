@@ -54,6 +54,7 @@ export type Subject =
     | 'staff'
     // Tasks Management
     | 'tasks'
+    | 'production_monitor'
     // Space
     | 'space_monitoring'
     | 'floor_map'
