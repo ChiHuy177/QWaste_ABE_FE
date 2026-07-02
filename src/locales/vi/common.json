@@ -572,6 +572,7 @@
             "disconnected": "Mất kết nối",
             "lastSync": "Đồng bộ lúc: {{time}}",
             "emptyGroup": "Không có mã hàng nào ở trạng thái này",
+            "needsAction": "⚠ Cần xử lý",
             "status": {
                 "TODO": "Chờ làm",
                 "IN_PROGRESS": "Đang chạy",

@@ -21,10 +21,10 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { WEEK_DAY_KEYS } from '../utils/dateUtils';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
 import { ProductionLine, ProductionProduct, ProductPosition } from './types';
 import styles from './ProductionPlanTable.module.css';
+import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
 
 type WeeklyProductRow = ProductionProduct & {
     lineIndex: number;

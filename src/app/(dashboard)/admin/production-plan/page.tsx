@@ -41,8 +41,8 @@ import {
     formatWeeklyLabel,
     getTodayScheduleIndex,
     WEEK_DAY_KEYS,
-} from './utils/dateUtils';
-import { initialProductionPlan } from './utils/mockData';
+} from './_utils/dateUtils';
+import { initialProductionPlan } from './_utils/mockData';
 import {
     PlanModalState,
     ProductionLine,
@@ -51,7 +51,7 @@ import {
     TransferMachineModalState,
     TransferScheduleModalState,
 } from './_components/types';
-import { getAllMachineNames, getEffectiveMachine } from './utils/planUtils';
+import { getAllMachineNames, getEffectiveMachine } from './_utils/planUtils';
 import styles from './_components/ProductionPlanTable.module.css';
 import { useTranslation } from 'react-i18next';
 
@@ -79,8 +79,12 @@ export default function ProductionPlanPage() {
     const [lines, setLines] = useState<ProductionLine[]>(initialProductionPlan);
     const [modalState, setModalState] = useState<PlanModalState>({ open: false });
     const [deleteState, setDeleteState] = useState<ProductPosition | null>(null);
-    const [transferMachineState, setTransferMachineState] = useState<TransferMachineModalState>({ open: false });
-    const [transferScheduleState, setTransferScheduleState] = useState<TransferScheduleModalState>({ open: false });
+    const [transferMachineState, setTransferMachineState] = useState<TransferMachineModalState>({
+        open: false,
+    });
+    const [transferScheduleState, setTransferScheduleState] = useState<TransferScheduleModalState>({
+        open: false,
+    });
     const [machineFilter, setMachineFilter] = useState('');
     const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
     const [importModalOpen, setImportModalOpen] = useState(false);
@@ -108,12 +112,18 @@ export default function ProductionPlanPage() {
 
     const transferMachineProduct = useMemo(() => {
         if (!transferMachineState.open) return null;
-        return lines[transferMachineState.lineIndex]?.products[transferMachineState.productIndex] ?? null;
+        return (
+            lines[transferMachineState.lineIndex]?.products[transferMachineState.productIndex] ??
+            null
+        );
     }, [lines, transferMachineState]);
 
     const transferScheduleProduct = useMemo(() => {
         if (!transferScheduleState.open) return null;
-        return lines[transferScheduleState.lineIndex]?.products[transferScheduleState.productIndex] ?? null;
+        return (
+            lines[transferScheduleState.lineIndex]?.products[transferScheduleState.productIndex] ??
+            null
+        );
     }, [lines, transferScheduleState]);
 
     const summary = useMemo(() => {
@@ -146,7 +156,8 @@ export default function ProductionPlanPage() {
                 sum +
                 line.products.reduce(
                     (lineSum, product) =>
-                        lineSum + product.schedule.reduce((daySum, quantity) => daySum + quantity, 0),
+                        lineSum +
+                        product.schedule.reduce((daySum, quantity) => daySum + quantity, 0),
                     0
                 ),
             0
@@ -242,7 +253,10 @@ export default function ProductionPlanPage() {
                         ...line,
                         products: line.products.map((currentProduct, productIndex) => {
                             if (productIndex !== modalState.productIndex) return currentProduct;
-                            return { ...product, machineOverrides: currentProduct.machineOverrides };
+                            return {
+                                ...product,
+                                machineOverrides: currentProduct.machineOverrides,
+                            };
                         }),
                     };
                 })
@@ -274,9 +288,12 @@ export default function ProductionPlanPage() {
         setTransferMachineState({ open: true, lineIndex, productIndex });
     }, []);
 
-    const openTransferScheduleModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
-        setTransferScheduleState({ open: true, lineIndex, productIndex });
-    }, []);
+    const openTransferScheduleModal = useCallback(
+        ({ lineIndex, productIndex }: ProductPosition) => {
+            setTransferScheduleState({ open: true, lineIndex, productIndex });
+        },
+        []
+    );
 
     const handleTransferMachine = useCallback(
         (newMachine: string) => {
@@ -290,7 +307,9 @@ export default function ProductionPlanPage() {
                         ...line,
                         products: line.products.map((product, pi) => {
                             if (pi !== productIndex) return product;
-                            const overrides = [...(product.machineOverrides ?? new Array(7).fill(undefined))];
+                            const overrides = [
+                                ...(product.machineOverrides ?? new Array(7).fill(undefined)),
+                            ];
                             overrides[todayIndex] = newMachine;
                             return { ...product, machineOverrides: overrides };
                         }),
@@ -319,13 +338,20 @@ export default function ProductionPlanPage() {
 
                             const newSchedule = [...product.schedule] as typeof product.schedule;
                             newSchedule[todayIndex] = 0;
-                            newSchedule[newDayIndex] = (newSchedule[newDayIndex] ?? 0) + transferredQty;
+                            newSchedule[newDayIndex] =
+                                (newSchedule[newDayIndex] ?? 0) + transferredQty;
 
-                            const overrides = [...(product.machineOverrides ?? new Array(7).fill(undefined))];
+                            const overrides = [
+                                ...(product.machineOverrides ?? new Array(7).fill(undefined)),
+                            ];
                             overrides[todayIndex] = undefined;
                             overrides[newDayIndex] = newMachine;
 
-                            return { ...product, schedule: newSchedule, machineOverrides: overrides };
+                            return {
+                                ...product,
+                                schedule: newSchedule,
+                                machineOverrides: overrides,
+                            };
                         }),
                     };
                 })
@@ -344,7 +370,9 @@ export default function ProductionPlanPage() {
                     const activeIndex = line.products.findIndex(
                         (product) => product.code === activeCode
                     );
-                    const overIndex = line.products.findIndex((product) => product.code === overCode);
+                    const overIndex = line.products.findIndex(
+                        (product) => product.code === overCode
+                    );
 
                     if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
                         return line;
@@ -362,7 +390,9 @@ export default function ProductionPlanPage() {
 
     const activeLineName = modalState.open ? lines[modalState.lineIndex]?.name : undefined;
     const pendingDeleteProduct =
-        deleteState != null ? lines[deleteState.lineIndex]?.products[deleteState.productIndex] : null;
+        deleteState != null
+            ? lines[deleteState.lineIndex]?.products[deleteState.productIndex]
+            : null;
 
     const headerActions = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -402,10 +432,7 @@ export default function ProductionPlanPage() {
                     },
                 ]}
             />
-            <Button
-                icon={<UploadOutlined />}
-                onClick={() => setImportModalOpen(true)}
-            >
+            <Button icon={<UploadOutlined />} onClick={() => setImportModalOpen(true)}>
                 {t('productionPlan.actions.import')}
             </Button>
             <Button
@@ -591,10 +618,7 @@ export default function ProductionPlanPage() {
                 />
             )}
 
-            <ImportModal
-                open={importModalOpen}
-                onClose={() => setImportModalOpen(false)}
-            />
+            <ImportModal open={importModalOpen} onClose={() => setImportModalOpen(false)} />
 
             <TransferMachineModal
                 open={transferMachineState.open}

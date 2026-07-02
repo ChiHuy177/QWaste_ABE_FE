@@ -49,7 +49,11 @@
 }
 
 .planAntTable :global(.ant-table-tbody > tr:hover > td) {
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 42%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 42%,
+        var(--plan-color-bg-container)
+    ) !important;
 }
 
 .planAntTable :global(.ant-table-tbody > tr:last-child > td) {
@@ -95,7 +99,11 @@
 .dailySheetTable :global(.ant-table-thead > tr > th) {
     height: 42px;
     padding: 6px 8px !important;
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 58%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 58%,
+        var(--plan-color-bg-container)
+    ) !important;
     color: var(--plan-color-text) !important;
     border-color: var(--plan-color-border) !important;
     text-align: center !important;
@@ -103,7 +111,11 @@
 }
 
 .dailySheetTable :global(.ant-table-thead > tr:first-child > th) {
-    background: color-mix(in srgb, var(--plan-color-primary) 10%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-primary) 10%,
+        var(--plan-color-bg-container)
+    ) !important;
     color: var(--plan-color-primary) !important;
     font-weight: 700;
 }
@@ -115,7 +127,11 @@
 }
 
 .dailySheetTable :global(.ant-table-tbody > tr:hover > td) {
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 42%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 42%,
+        var(--plan-color-bg-container)
+    ) !important;
 }
 
 .dailySheetTable :global(.ant-table-tbody > tr > td.ant-table-cell-fix-left) {
@@ -123,7 +139,11 @@
 }
 
 .dailySheetTable .dailySheetTotalRow > :global(td) {
-    background: color-mix(in srgb, var(--plan-color-primary) 7%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-primary) 7%,
+        var(--plan-color-bg-container)
+    ) !important;
     border-top: 2px solid var(--plan-color-border) !important;
     font-weight: 700;
     font-size: 14px;
@@ -172,12 +192,20 @@
 }
 
 .dailySheetPcsColumn {
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 46%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 46%,
+        var(--plan-color-bg-container)
+    ) !important;
 }
 
 .dailySheetTable :global(.ant-table-tbody > tr > td.dailySheetPcsColumn),
 .dailySheetTable :global(.ant-table-summary > tr > td.dailySheetPcsColumn) {
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 46%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 46%,
+        var(--plan-color-bg-container)
+    ) !important;
 }
 
 .dailySheetTotalRow {
@@ -306,7 +334,11 @@ th.stickyName {
 .todayHeader,
 .todayCell,
 .todayColumn {
-    background: color-mix(in srgb, var(--plan-color-primary) 13%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-primary) 13%,
+        var(--plan-color-bg-container)
+    ) !important;
 }
 
 .todayHeader,
@@ -363,7 +395,11 @@ th.stickyName {
 .weeklySheetTable :global(.ant-table-thead > tr > th) {
     height: 42px;
     padding: 6px 8px !important;
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 58%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 58%,
+        var(--plan-color-bg-container)
+    ) !important;
     color: var(--plan-color-text) !important;
     border-color: var(--plan-color-border) !important;
     text-align: center !important;
@@ -377,7 +413,11 @@ th.stickyName {
 }
 
 .weeklySheetTable :global(.ant-table-tbody > tr:hover > td) {
-    background: color-mix(in srgb, var(--plan-color-bg-muted) 42%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 42%,
+        var(--plan-color-bg-container)
+    ) !important;
 }
 
 .weeklySheetTable :global(.ant-table-tbody > tr > td.ant-table-cell-fix-left) {
@@ -385,7 +425,11 @@ th.stickyName {
 }
 
 .weeklySheetTable .weeklyTotalRow > :global(td) {
-    background: color-mix(in srgb, var(--plan-color-primary) 7%, var(--plan-color-bg-container)) !important;
+    background: color-mix(
+        in srgb,
+        var(--plan-color-primary) 7%,
+        var(--plan-color-bg-container)
+    ) !important;
     border-top: 2px solid var(--plan-color-border) !important;
     font-weight: 700;
     font-size: 14px;

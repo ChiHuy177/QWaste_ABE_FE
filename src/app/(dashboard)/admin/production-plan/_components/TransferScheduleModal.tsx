@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react';
 import { Alert, Button, Modal, Tag, theme, Typography } from 'antd';
 import { CheckOutlined, LockOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { WEEK_DAY_KEYS } from '../utils/dateUtils';
-import { getEffectiveMachine } from '../utils/planUtils';
 import { ProductionLine, ProductionProduct } from './types';
+import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
+import { getEffectiveMachine } from '../_utils/planUtils';
 
 interface TransferScheduleModalProps {
     open: boolean;
@@ -326,21 +326,20 @@ export default function TransferScheduleModal({
                                                 background: isSelectedDay
                                                     ? token.colorPrimaryBg
                                                     : isToday
-                                                    ? token.colorPrimaryBg
-                                                    : token.colorFillAlter,
+                                                        ? token.colorPrimaryBg
+                                                        : token.colorFillAlter,
                                                 fontSize: 12,
                                                 fontWeight: 600,
                                                 color: isToday || isSelectedDay
                                                     ? token.colorPrimary
                                                     : token.colorTextSecondary,
                                                 textAlign: 'left',
-                                                borderBottom: `2px solid ${
-                                                    isSelectedDay
-                                                        ? token.colorPrimary
-                                                        : isToday
+                                                borderBottom: `2px solid ${isSelectedDay
+                                                    ? token.colorPrimary
+                                                    : isToday
                                                         ? token.colorPrimaryBorder
                                                         : borderColor
-                                                }`,
+                                                    }`,
                                                 borderLeft: `1px solid ${borderColor}`,
                                                 transition: 'background 0.15s',
                                             }}
@@ -436,10 +435,10 @@ export default function TransferScheduleModal({
                                                         background: isSource
                                                             ? token.colorFillSecondary
                                                             : isSelected
-                                                            ? token.colorPrimaryBg
-                                                            : isToday
-                                                            ? `${token.colorPrimaryBg}66`
-                                                            : token.colorBgContainer,
+                                                                ? token.colorPrimaryBg
+                                                                : isToday
+                                                                    ? `${token.colorPrimaryBg}66`
+                                                                    : token.colorBgContainer,
                                                         borderBottom: isLastRow
                                                             ? 'none'
                                                             : `1px solid ${borderColor}`,

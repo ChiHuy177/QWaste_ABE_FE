@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Dropdown, Empty, Pagination, Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, EditOutlined, MoreOutlined, ScheduleOutlined, SwapOutlined } from '@ant-design/icons';
+import {
+    DeleteOutlined,
+    EditOutlined,
+    MoreOutlined,
+    ScheduleOutlined,
+    SwapOutlined,
+} from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
     closestCenter,
@@ -23,8 +29,8 @@ import {
 } from '@dnd-kit/sortable';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
 import { ProductionLine, ProductionProduct, ProductPosition } from './types';
-import { getEffectiveMachine } from '../utils/planUtils';
 import styles from './ProductionPlanTable.module.css';
+import { getEffectiveMachine } from '../_utils/planUtils';
 
 type DailyProductRow = ProductionProduct & {
     lineIndex: number;
@@ -151,10 +157,7 @@ export default function DailyTable({
         const groupMap = new Map<string, { groupKey: string; lineIndex: number }>();
 
         paginatedGroups.forEach((group) => {
-            const totalCases = group.products.reduce(
-                (sum, p) => sum + p.schedule[todayIndex],
-                0
-            );
+            const totalCases = group.products.reduce((sum, p) => sum + p.schedule[todayIndex], 0);
             const totalPcs = group.products.reduce(
                 (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
                 0
@@ -258,8 +261,7 @@ export default function DailyTable({
                         width: 48,
                         align: 'center',
                         onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' ? <DragHandle /> : null,
+                        render: (_, record) => (record.type === 'product' ? <DragHandle /> : null),
                     },
                     {
                         title: (
@@ -273,7 +275,8 @@ export default function DailyTable({
                         fixed: 'left',
                         onCell: anchorCell,
                         render: (_, record) => {
-                            if (record.type === 'total') return <strong>{t('productionPlan.table.total')}</strong>;
+                            if (record.type === 'total')
+                                return <strong>{t('productionPlan.table.total')}</strong>;
                             if (record.type === 'group-header') return null;
                             return <strong>{record.code}</strong>;
                         },
@@ -283,8 +286,7 @@ export default function DailyTable({
                         key: 'name',
                         width: 380,
                         onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' ? record.name : null,
+                        render: (_, record) => (record.type === 'product' ? record.name : null),
                     },
                     {
                         title: (
@@ -296,8 +298,7 @@ export default function DailyTable({
                         key: 'mold',
                         width: 100,
                         onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' ? record.mold : null,
+                        render: (_, record) => (record.type === 'product' ? record.mold : null),
                     },
                     {
                         title: (
@@ -323,8 +324,7 @@ export default function DailyTable({
                         key: 'time',
                         width: 120,
                         onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' ? record.time : null,
+                        render: (_, record) => (record.type === 'product' ? record.time : null),
                     },
                     {
                         title: (
@@ -364,9 +364,7 @@ export default function DailyTable({
                         }),
                         render: (_, record) => {
                             if (record.type === 'total') {
-                                return (
-                                    <strong>{record.totalPcs.toLocaleString('vi-VN')}</strong>
-                                );
+                                return <strong>{record.totalPcs.toLocaleString('vi-VN')}</strong>;
                             }
                             if (record.type === 'group-header') return null;
                             return (
@@ -414,13 +412,17 @@ export default function DailyTable({
                                             items: [
                                                 {
                                                     key: 'transfer-machine',
-                                                    label: t('productionPlan.actions.transferMachine'),
+                                                    label: t(
+                                                        'productionPlan.actions.transferMachine'
+                                                    ),
                                                     icon: <SwapOutlined />,
                                                     onClick: () => onTransferMachine?.(position),
                                                 },
                                                 {
                                                     key: 'transfer-schedule',
-                                                    label: t('productionPlan.actions.transferSchedule'),
+                                                    label: t(
+                                                        'productionPlan.actions.transferSchedule'
+                                                    ),
                                                     icon: <ScheduleOutlined />,
                                                     onClick: () => onTransferSchedule?.(position),
                                                 },
@@ -481,9 +483,9 @@ export default function DailyTable({
                             record.type === 'total' ? styles.dailySheetTotalRow : ''
                         }
                         onRow={(record) =>
-                        ({
-                            'data-row-type': record.type,
-                        } as React.HTMLAttributes<HTMLTableRowElement>)
+                            ({
+                                'data-row-type': record.type,
+                            }) as React.HTMLAttributes<HTMLTableRowElement>
                         }
                         pagination={false}
                         bordered

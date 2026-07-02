@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ExcelUpload } from '@/components/shared/ExcelUpload/ExcelUpload';
 import { useExcelUpload } from '@/hooks/useExcelUpload';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
-import type { ImportResult, SkippedDay, ImportRowError } from '@/services/ProductionPlanService';
+import { ImportResult, ImportRowError, SkippedDay } from '@/types';
 
 const { Text } = Typography;
 
@@ -68,14 +68,34 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
 function ImportResultView({ result }: { result: ImportResult }) {
     const { t } = useTranslation();
     const skippedColumns = [
-        { title: t('productionPlan.import.columns.date'), dataIndex: 'date', key: 'date', width: 130 },
+        {
+            title: t('productionPlan.import.columns.date'),
+            dataIndex: 'date',
+            key: 'date',
+            width: 130,
+        },
         { title: t('productionPlan.import.columns.reason'), dataIndex: 'reason', key: 'reason' },
     ];
 
     const errorColumns = [
-        { title: t('productionPlan.import.columns.row'), dataIndex: 'rowIndex', key: 'rowIndex', width: 60 },
-        { title: t('productionPlan.import.columns.date'), dataIndex: 'dayLabel', key: 'dayLabel', width: 80 },
-        { title: t('productionPlan.import.columns.column'), dataIndex: 'column', key: 'column', width: 100 },
+        {
+            title: t('productionPlan.import.columns.row'),
+            dataIndex: 'rowIndex',
+            key: 'rowIndex',
+            width: 60,
+        },
+        {
+            title: t('productionPlan.import.columns.date'),
+            dataIndex: 'dayLabel',
+            key: 'dayLabel',
+            width: 80,
+        },
+        {
+            title: t('productionPlan.import.columns.column'),
+            dataIndex: 'column',
+            key: 'column',
+            width: 100,
+        },
         { title: t('productionPlan.import.columns.error'), dataIndex: 'message', key: 'message' },
     ];
 
@@ -99,14 +119,17 @@ function ImportResultView({ result }: { result: ImportResult }) {
                 {result.deferredDays.length > 0 && (
                     <Descriptions.Item label={t('productionPlan.import.result.deferredDays')}>
                         {result.deferredDays.map((d) => (
-                            <Tag key={d} color="warning">{d}</Tag>
+                            <Tag key={d} color="warning">
+                                {d}
+                            </Tag>
                         ))}
                     </Descriptions.Item>
                 )}
                 {result.requiresConfirmation && (
                     <Descriptions.Item label={t('productionPlan.import.result.note')}>
                         <Text type="warning">
-                            <WarningOutlined /> {t('productionPlan.import.result.requiresConfirmation')}{' '}
+                            <WarningOutlined />{' '}
+                            {t('productionPlan.import.result.requiresConfirmation')}{' '}
                             <Text code>{result.sessionToken.slice(0, 12)}...</Text>
                         </Text>
                     </Descriptions.Item>

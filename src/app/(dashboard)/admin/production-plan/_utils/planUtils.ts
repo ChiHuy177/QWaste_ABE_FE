@@ -1,4 +1,4 @@
-import { ProductionLine, ProductionProduct } from '../_components/types';
+import { ProductionLine, ProductionProduct } from '@/types/ProductionPlan';
 
 export function getEffectiveMachine(product: ProductionProduct, dayIndex: number): string {
     return product.machineOverrides?.[dayIndex] ?? product.machine;

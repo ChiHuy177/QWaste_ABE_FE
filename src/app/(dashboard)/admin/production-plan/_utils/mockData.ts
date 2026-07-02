@@ -1,4 +1,4 @@
-import { ProductionLine } from '../_components/types';
+import { ProductionLine } from '@/types/ProductionPlan';
 
 export const initialProductionPlan: ProductionLine[] = [
     // Line 01 — CNC-01 có 5 sản phẩm (test rowspan lớn), CNC-02 có 3 sp, Sander-01 có 1 sp

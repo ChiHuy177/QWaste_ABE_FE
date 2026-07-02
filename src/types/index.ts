@@ -11,3 +11,4 @@ export * from './Space';
 export * from './Task';
 export * from './Step';
 export * from './FloorMap';
+export * from './ProductionPlan';

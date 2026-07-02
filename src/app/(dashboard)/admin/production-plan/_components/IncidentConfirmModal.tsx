@@ -1,18 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-    Alert,
-    Button,
-    Divider,
-    Flex,
-    Input,
-    Modal,
-    Tag,
-    Typography,
-    message,
-    theme,
-} from 'antd';
+import { Alert, Button, Divider, Flex, Input, Modal, Tag, Typography, message, theme } from 'antd';
 import {
     CalendarOutlined,
     CheckCircleOutlined,
@@ -22,10 +11,10 @@ import {
     WifiOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type { MonitorProduct } from '@/hooks/useProductionMonitor';
 import { ProductionLine } from './types';
-import { getTodayScheduleIndex, WEEK_DAY_KEYS } from '../utils/dateUtils';
 import TransferScheduleModal from './TransferScheduleModal';
+import { MonitorProduct } from '@/types';
+import { getTodayScheduleIndex, WEEK_DAY_KEYS } from '../_utils/dateUtils';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -58,7 +47,13 @@ const OPT2_INITIAL: Opt2State = {
     reason: '',
 };
 
-export default function IncidentConfirmModal({ product, open, machineOptions, lines, onClose }: Props) {
+export default function IncidentConfirmModal({
+    product,
+    open,
+    machineOptions,
+    lines,
+    onClose,
+}: Props) {
     const { t } = useTranslation();
     const { token } = theme.useToken();
     const [messageApi, contextHolder] = message.useMessage();
@@ -96,18 +91,18 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
         if (!canConfirm || !product) return;
         if (selected === 1) {
             messageApi.success(
-                t('productionPlan.monitor.incident.successTerminate', { code: product.code }),
+                t('productionPlan.monitor.incident.successTerminate', { code: product.code })
             );
         } else if (selected === 2) {
             messageApi.success(
                 t('productionPlan.monitor.incident.successDefer', {
                     code: product.code,
                     remaining,
-                }),
+                })
             );
         } else {
             messageApi.success(
-                t('productionPlan.monitor.incident.successRepair', { code: product.code }),
+                t('productionPlan.monitor.incident.successRepair', { code: product.code })
             );
         }
         handleClose();
@@ -248,9 +243,9 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                 style={
                                     selected === 2
                                         ? {
-                                              background: token.colorWarning,
-                                              borderColor: token.colorWarning,
-                                          }
+                                            background: token.colorWarning,
+                                            borderColor: token.colorWarning,
+                                        }
                                         : undefined
                                 }
                             >
@@ -323,7 +318,7 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                             showIcon
                                             message={t(
                                                 'productionPlan.monitor.incident.option1Warning',
-                                                { remaining },
+                                                { remaining }
                                             )}
                                             style={{ marginBottom: 12 }}
                                         />
@@ -352,7 +347,10 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                                 </Text>
                                                 <Text
                                                     strong
-                                                    style={{ color: token.colorError, fontSize: 15 }}
+                                                    style={{
+                                                        color: token.colorError,
+                                                        fontSize: 15,
+                                                    }}
                                                 >
                                                     {remaining.toLocaleString('vi-VN')}{' '}
                                                     {t('productionPlan.monitor.detail.pcs')}
@@ -383,7 +381,9 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                             <CalendarOutlined
                                 style={{
                                     fontSize: 22,
-                                    color: isOpt(2) ? token.colorWarning : token.colorTextQuaternary,
+                                    color: isOpt(2)
+                                        ? token.colorWarning
+                                        : token.colorTextQuaternary,
                                     marginTop: 2,
                                     flexShrink: 0,
                                 }}
@@ -439,11 +439,16 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                             </div>
                                             <div style={summaryRow(true)}>
                                                 <Text style={{ color: token.colorWarning }}>
-                                                    {t('productionPlan.monitor.incident.remainingQty')}
+                                                    {t(
+                                                        'productionPlan.monitor.incident.remainingQty'
+                                                    )}
                                                 </Text>
                                                 <Text
                                                     strong
-                                                    style={{ color: token.colorWarning, fontSize: 15 }}
+                                                    style={{
+                                                        color: token.colorWarning,
+                                                        fontSize: 15,
+                                                    }}
                                                 >
                                                     {remaining.toLocaleString('vi-VN')}{' '}
                                                     {t('productionPlan.monitor.detail.pcs')}
@@ -455,7 +460,7 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                         <div style={{ marginBottom: 10 }}>
                                             {fieldLabel(
                                                 t('productionPlan.actions.transferSchedule'),
-                                                true,
+                                                true
                                             )}
                                             {opt2.transferDayIndex === null ? (
                                                 <Button
@@ -505,15 +510,18 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                         <div style={{ marginBottom: 10 }}>
                                             {fieldLabel(
                                                 t('productionPlan.monitor.incident.newMold'),
-                                                true,
+                                                true
                                             )}
                                             <Input
                                                 placeholder={t(
-                                                    'productionPlan.monitor.incident.moldPlaceholder',
+                                                    'productionPlan.monitor.incident.moldPlaceholder'
                                                 )}
                                                 value={opt2.newMold}
                                                 onChange={(e) =>
-                                                    setOpt2((p) => ({ ...p, newMold: e.target.value }))
+                                                    setOpt2((p) => ({
+                                                        ...p,
+                                                        newMold: e.target.value,
+                                                    }))
                                                 }
                                             />
                                         </div>
@@ -522,16 +530,19 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                         <div>
                                             {fieldLabel(
                                                 t('productionPlan.monitor.incident.deferReason'),
-                                                true,
+                                                true
                                             )}
                                             <TextArea
                                                 rows={3}
                                                 placeholder={t(
-                                                    'productionPlan.monitor.incident.deferReasonPh',
+                                                    'productionPlan.monitor.incident.deferReasonPh'
                                                 )}
                                                 value={opt2.reason}
                                                 onChange={(e) =>
-                                                    setOpt2((p) => ({ ...p, reason: e.target.value }))
+                                                    setOpt2((p) => ({
+                                                        ...p,
+                                                        reason: e.target.value,
+                                                    }))
                                                 }
                                             />
                                         </div>
@@ -597,16 +608,16 @@ export default function IncidentConfirmModal({ product, open, machineOptions, li
                                             showIcon
                                             icon={<WifiOutlined />}
                                             message={t(
-                                                'productionPlan.monitor.incident.option3AutoResume',
+                                                'productionPlan.monitor.incident.option3AutoResume'
                                             )}
                                             style={{ marginBottom: 12 }}
                                         />
                                         {fieldLabel(
-                                            t('productionPlan.monitor.incident.pauseReason'),
+                                            t('productionPlan.monitor.incident.pauseReason')
                                         )}
                                         <Input
                                             placeholder={t(
-                                                'productionPlan.monitor.incident.pauseReasonPh',
+                                                'productionPlan.monitor.incident.pauseReasonPh'
                                             )}
                                             value={opt3Reason}
                                             onChange={(e) => setOpt3Reason(e.target.value)}

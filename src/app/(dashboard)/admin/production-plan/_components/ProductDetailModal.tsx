@@ -9,8 +9,8 @@ import {
     SyncOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type { MonitorProduct } from '@/hooks/useProductionMonitor';
 import type { ProductionStatus } from './types';
+import { MonitorProduct } from '@/types';
 
 const { Text } = Typography;
 
@@ -108,8 +108,8 @@ function WeeklySchedule({ schedule, pcsMultiplier }: WeeklyScheduleProps) {
                                             background: isEmpty
                                                 ? token.colorFillSecondary
                                                 : isWeekend
-                                                  ? token.colorPrimaryBg
-                                                  : token.colorPrimary,
+                                                    ? token.colorPrimaryBg
+                                                    : token.colorPrimary,
                                             opacity: isEmpty ? 0.5 : 1,
                                             transition: 'height 0.3s ease',
                                         }}

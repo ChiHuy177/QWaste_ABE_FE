@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Alert, Modal, Select, Tag, theme, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { WEEK_DAY_KEYS } from '../utils/dateUtils';
-import { getEffectiveMachine } from '../utils/planUtils';
 import { ProductionProduct } from './types';
+import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
+import { getEffectiveMachine } from '../_utils/planUtils';
 
 interface TransferMachineModalProps {
     open: boolean;

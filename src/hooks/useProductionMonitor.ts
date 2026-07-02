@@ -2,23 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
-import { ProductionLine, ProductionStatus, ProductionStatusUpdate } from '@/app/(dashboard)/admin/production-plan/_components/types';
+import {
+    MonitorProduct,
+    ProductionLine,
+    ProductionStatus,
+    ProductionStatusUpdate,
+} from '@/types/ProductionPlan';
 
 const WS_TOPIC_PRODUCTION_STATUS = '/topic/production/status';
-
-export interface MonitorProduct {
-    code: string;
-    name: string;
-    machine: string;
-    machineOverrides?: (string | undefined)[];
-    lineName: string;
-    mold: string;
-    time: string;
-    pcsMultiplier: number;
-    schedule: [number, number, number, number, number, number, number];
-    status: ProductionStatus;
-    updatedAt: Date | null;
-}
 
 interface UseProductionMonitorOptions {
     lines: ProductionLine[];

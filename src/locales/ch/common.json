@@ -1904,6 +1904,26 @@
                 "skippedDays": "跳过日期（{{count}}）",
                 "errors": "错误（{{count}}）"
             }
+        },
+        "monitor": {
+            "title": "生产监控",
+            "statusCol": "状态",
+            "lastUpdated": "最后更新",
+            "filterAll": "所有状态",
+            "searchPlaceholder": "按编码、名称、机器搜索...",
+            "showing": "显示 {{count}} / {{total}}",
+            "productCodes": "产品编码",
+            "connected": "已连接",
+            "disconnected": "连接断开",
+            "lastSync": "最后同步：{{time}}",
+            "emptyGroup": "此状态下无产品编码",
+            "needsAction": "⚠ 需要处理",
+            "status": {
+                "TODO": "待处理",
+                "IN_PROGRESS": "进行中",
+                "PAUSE": "已暂停",
+                "COMPLETE": "已完成"
+            }
         }
     },
     "stepManagement": {

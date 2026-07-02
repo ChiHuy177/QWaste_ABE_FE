@@ -26,10 +26,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useProductionMonitor, type MonitorProduct } from '@/hooks/useProductionMonitor';
-import { initialProductionPlan } from '../utils/mockData';
-import { getAllMachineNames } from '../utils/planUtils';
-import { getTodayScheduleIndex } from '../utils/dateUtils';
+import type { MonitorProduct } from '@/types/ProductionPlan';
+import { useProductionMonitor } from '@/hooks/useProductionMonitor';
+import { initialProductionPlan } from '../_utils/mockData';
+import { getAllMachineNames } from '../_utils/planUtils';
+import { getTodayScheduleIndex } from '../_utils/dateUtils';
 import { ProductionStatus } from '../_components/types';
 import ProductDetailModal from '../_components/ProductDetailModal';
 import IncidentConfirmModal from '../_components/IncidentConfirmModal';
@@ -78,13 +79,22 @@ function toFlatRows(products: MonitorProduct[], todayIndex: number): MonitorFlat
             (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
             0
         );
-        rows.push({ type: 'group-header', groupKey: key, machine, lineName, groupSize: group.length });
+        rows.push({
+            type: 'group-header',
+            groupKey: key,
+            machine,
+            lineName,
+            groupSize: group.length,
+        });
         group.forEach((p) => rows.push({ ...p, type: 'product', groupKey: key }));
         rows.push({ type: 'total', groupKey: key, totalCases, totalPcs });
     });
 
     return rows;
 }
+
+const anchorCell = (record: MonitorFlatRow) =>
+    record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
 
 export default function ProductionMonitorPage() {
     const { t } = useTranslation();
@@ -193,9 +203,6 @@ export default function ProductionMonitorPage() {
     }, [grouped, todayIndex]);
 
     const columns: ColumnsType<MonitorFlatRow> = useMemo(() => {
-        const anchorCell = (record: MonitorFlatRow) =>
-            record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
-
         return [
             {
                 key: 'machine',
@@ -306,6 +313,7 @@ export default function ProductionMonitorPage() {
         () => ({
             key: 'action',
             width: 160,
+            onCell: anchorCell,
             render: (_: unknown, record: MonitorFlatRow) => {
                 if (record.type !== 'product') return null;
                 return (
@@ -468,9 +476,9 @@ export default function ProductionMonitorPage() {
                                 borderRadius: 12,
                                 overflow: 'hidden',
                                 boxShadow: isPause
-                                    ? `0 0 0 2px ${token.colorWarning}, 0 4px 16px ${token.colorWarning}30`
+                                    ? `0 4px 16px ${token.colorWarning}20`
                                     : token.boxShadow,
-                                border: isPause ? `2px solid ${token.colorWarning}` : undefined,
+                                border: `1px solid ${isPause ? token.colorWarning : token.colorBorderSecondary}`,
                             }}
                             styles={{ body: { padding: 0 } }}
                         >
@@ -513,7 +521,7 @@ export default function ProductionMonitorPage() {
                                         color="warning"
                                         style={{ marginLeft: 'auto', fontWeight: 600 }}
                                     >
-                                        ⚠ Cần xử lý
+                                        {t('productionPlan.monitor.needsAction')}
                                     </Tag>
                                 )}
                             </Flex>
@@ -521,7 +529,11 @@ export default function ProductionMonitorPage() {
                             {/* Wrapper carries CSS vars so DailySheet classes resolve correctly */}
                             <div
                                 className={`${styles.planAntTable} ${styles.dailySheetTable}`}
-                                style={{ ...(planThemeVars as CSSProperties), border: 'none', borderRadius: 0 }}
+                                style={{
+                                    ...(planThemeVars as CSSProperties),
+                                    border: 'none',
+                                    borderRadius: 0,
+                                }}
                             >
                                 <Table<MonitorFlatRow>
                                     columns={cols}
