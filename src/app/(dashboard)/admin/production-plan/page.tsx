@@ -388,7 +388,7 @@ export default function ProductionPlanPage() {
         []
     );
 
-    const activeLineName = modalState.open ? lines[modalState.lineIndex]?.name : undefined;
+    const activeLineName = modalState.open ? lines[modalState.lineIndex]?.spaceName : undefined;
     const pendingDeleteProduct =
         deleteState != null
             ? lines[deleteState.lineIndex]?.products[deleteState.productIndex]
@@ -573,11 +573,11 @@ export default function ProductionPlanPage() {
                     <Text type="secondary">
                         {activeView === 'daily'
                             ? t('productionPlan.panel.cases', {
-                                count: formatNumber(summary.dailyCases),
-                            })
+                                  count: formatNumber(summary.dailyCases),
+                              })
                             : t('productionPlan.panel.cases', {
-                                count: formatNumber(summary.weeklyCases),
-                            })}
+                                  count: formatNumber(summary.weeklyCases),
+                              })}
                     </Text>
                 </div>
 

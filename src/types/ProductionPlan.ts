@@ -1,4 +1,14 @@
-export type Schedule = [number, number, number, number, number, number, number];
+import { SpacePickingResponse } from './Space';
+
+export type Schedule = [
+    mon: number,
+    tue: number,
+    wed: number,
+    thu: number,
+    fri: number,
+    sat: number,
+    sun: number,
+];
 
 export type ProductionStatus = 'TODO' | 'IN_PROGRESS' | 'PAUSE' | 'COMPLETE';
 
@@ -14,9 +24,7 @@ export interface ProductionProduct {
     status?: ProductionStatus;
 }
 
-export interface ProductionLine {
-    id: string;
-    name: string;
+export interface ProductionLine extends Omit<SpacePickingResponse, 'displayOrder' | 'spaceLevel'> {
     products: ProductionProduct[];
 }
 
@@ -32,7 +40,7 @@ export interface MonitorProduct {
     name: string;
     machine: string;
     machineOverrides?: (string | undefined)[];
-    lineName: string;
+    spaceName: string;
     mold: string;
     time: string;
     pcsMultiplier: number;

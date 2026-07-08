@@ -405,7 +405,7 @@
             }
         },
         "summary": {
-            "lines": "Chuyền",
+            "lines": "Khu vực",
             "products": "Mã hàng",
             "dailyCases": "Thùng hôm nay",
             "weeklyCases": "Thùng trong tuần"
@@ -427,7 +427,7 @@
         "panel": {
             "dailyTable": "Bảng ngày",
             "weeklyTable": "Bảng tuần",
-            "meta": "{{lines}} chuyền / {{products}} mã hàng",
+            "meta": "{{lines}} khu vực / {{products}} mã hàng",
             "cases": "{{count}} thùng"
         },
         "units": {
@@ -441,7 +441,7 @@
             "emptyFiltered": "Không có mã hàng phù hợp với bộ lọc",
             "headers": {
                 "date": "Ngày",
-                "line": "Chuyền (Line)",
+                "line": "Khu vực (Space)",
                 "machine": "Máy",
                 "codeVi": "Mã",
                 "productName": "Tên hàng",

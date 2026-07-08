@@ -112,15 +112,15 @@ export default function WeeklyTable({
                 }
 
                 const current = groupedProducts.get(product.machine) ?? [];
-                current.push({ ...product, lineIndex, lineName: line.name, productIndex });
+                current.push({ ...product, lineIndex, lineName: line.spaceName, productIndex });
                 groupedProducts.set(product.machine, current);
             });
 
             groupedProducts.forEach((products, machine) => {
                 groups.push({
-                    key: `${line.id}-${machine}`,
+                    key: `${line.spaceCode}-${machine}`,
                     lineIndex,
-                    lineName: line.name,
+                    lineName: line.spaceName,
                     machine,
                     products,
                 });

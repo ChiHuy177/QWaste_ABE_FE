@@ -312,7 +312,7 @@ export default function ProductDetailModal({ product, open, onClose }: Props) {
                     {
                         key: 'line',
                         label: t('productionPlan.monitor.detail.line'),
-                        children: product.lineName,
+                        children: product.spaceName,
                     },
                     // Row 2: name full (2) = 2 ✓
                     {

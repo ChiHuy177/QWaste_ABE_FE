@@ -1,10 +1,11 @@
 import { ProductionLine } from '@/types/ProductionPlan';
 
 export const initialProductionPlan: ProductionLine[] = [
-    // Line 01 — CNC-01 có 5 sản phẩm (test rowspan lớn), CNC-02 có 3 sp, Sander-01 có 1 sp
+    // Space: PressTeam
     {
-        id: 'line-01',
-        name: 'Chuyền 1',
+        spaceId: 1,
+        spaceCode: 'press-team',
+        spaceName: 'PressTeam',
         products: [
             // CNC-01: 5 products
             {
@@ -81,7 +82,7 @@ export const initialProductionPlan: ProductionLine[] = [
                 pcsMultiplier: 6,
                 schedule: [15, 0, 15, 15, 15, 0, 0],
             },
-            // Sander-01: 1 product (test nhóm đơn lẻ)
+            // Sander-01: 1 product
             {
                 code: 'P-1009',
                 name: 'Kệ trang trí Oak 3 tầng',
@@ -91,15 +92,73 @@ export const initialProductionPlan: ProductionLine[] = [
                 pcsMultiplier: 12,
                 schedule: [12, 10, 10, 8, 8, 6, 0],
             },
+            // Assembly-01: 3 products
+            {
+                code: 'P-4001',
+                name: 'Bộ lắp ráp ghế ăn 4 chân',
+                machine: 'Assembly-01',
+                mold: 'M-60A',
+                time: '07:00 - 09:00',
+                pcsMultiplier: 5,
+                schedule: [20, 20, 20, 20, 20, 10, 0],
+            },
+            {
+                code: 'P-4002',
+                name: 'Bộ lắp ráp bàn đôi văn phòng module',
+                machine: 'Assembly-01',
+                mold: 'M-61B',
+                time: '09:30 - 12:00',
+                pcsMultiplier: 10,
+                schedule: [6, 6, 6, 6, 6, 0, 0],
+            },
+            {
+                code: 'P-4003',
+                name: 'Kệ sách lắp ráp 5 tầng',
+                machine: 'Assembly-01',
+                mold: 'M-62C',
+                time: '13:00 - 15:30',
+                pcsMultiplier: 3,
+                schedule: [10, 0, 10, 10, 10, 6, 0],
+            },
+            // Press-01: 2 products, số lượng lớn
+            {
+                code: 'P-4004',
+                name: 'Ván ép phẳng 18mm laminate 2 mặt',
+                machine: 'Press-01',
+                mold: 'M-70X',
+                time: '06:30 - 10:30',
+                pcsMultiplier: 40,
+                schedule: [50, 50, 50, 50, 50, 30, 0],
+            },
+            {
+                code: 'P-4005',
+                name: 'Ván HDF chống ẩm 12mm',
+                machine: 'Press-01',
+                mold: 'M-71Y',
+                time: '11:00 - 15:00',
+                pcsMultiplier: 40,
+                schedule: [40, 0, 40, 40, 40, 20, 0],
+            },
+            // Press-02: 1 product
+            {
+                code: 'P-4006',
+                name: 'Mặt bàn bếp đá nhân tạo Stone+ size 2400x600',
+                machine: 'Press-02',
+                mold: 'STONE-2024-HQ-REV2',
+                time: '08:00 - 17:00',
+                pcsMultiplier: 1,
+                schedule: [3, 3, 3, 3, 3, 2, 1],
+            },
         ],
     },
 
-    // Line 02 — CNC-01 trùng tên line-01 nhưng khác chuyền (test grouping riêng biệt)
+    // Space: MoldTeam
     {
-        id: 'line-02',
-        name: 'Chuyền 2',
+        spaceId: 2,
+        spaceCode: 'mold-team',
+        spaceName: 'MoldTeam',
         products: [
-            // CNC-01 (tên máy trùng với Line 01 → hiển thị nhóm riêng)
+            // CNC-01 (tên máy trùng với PressTeam nhưng khác space)
             {
                 code: 'P-2001',
                 name: 'Tủ hồ sơ 3 ngăn chống cháy',
@@ -155,14 +214,6 @@ export const initialProductionPlan: ProductionLine[] = [
                 pcsMultiplier: 4,
                 schedule: [6, 6, 6, 6, 6, 4, 0],
             },
-        ],
-    },
-
-    // Line 03 — Paint-01 có 6 sản phẩm (test rowspan lớn nhất), Spray-02 có 2 sp
-    {
-        id: 'line-03',
-        name: 'Chuyền 3',
-        products: [
             // Paint-01: 6 products
             {
                 code: 'P-3001',
@@ -236,71 +287,6 @@ export const initialProductionPlan: ProductionLine[] = [
                 time: '13:00 - 17:00',
                 pcsMultiplier: 4,
                 schedule: [8, 0, 8, 10, 8, 4, 0],
-            },
-        ],
-    },
-
-    // Line 04 — nhiều nhóm máy nhỏ (1–3 sp/máy), test số lớn và mã khuôn dài
-    {
-        id: 'line-04',
-        name: 'Chuyền 4',
-        products: [
-            // Assembly-01: 3 products
-            {
-                code: 'P-4001',
-                name: 'Bộ lắp ráp ghế ăn 4 chân',
-                machine: 'Assembly-01',
-                mold: 'M-60A',
-                time: '07:00 - 09:00',
-                pcsMultiplier: 5,
-                schedule: [20, 20, 20, 20, 20, 10, 0],
-            },
-            {
-                code: 'P-4002',
-                name: 'Bộ lắp ráp bàn đôi văn phòng module',
-                machine: 'Assembly-01',
-                mold: 'M-61B',
-                time: '09:30 - 12:00',
-                pcsMultiplier: 10,
-                schedule: [6, 6, 6, 6, 6, 0, 0],
-            },
-            {
-                code: 'P-4003',
-                name: 'Kệ sách lắp ráp 5 tầng',
-                machine: 'Assembly-01',
-                mold: 'M-62C',
-                time: '13:00 - 15:30',
-                pcsMultiplier: 3,
-                schedule: [10, 0, 10, 10, 10, 6, 0],
-            },
-            // Press-01: 2 products, số lượng lớn
-            {
-                code: 'P-4004',
-                name: 'Ván ép phẳng 18mm laminate 2 mặt',
-                machine: 'Press-01',
-                mold: 'M-70X',
-                time: '06:30 - 10:30',
-                pcsMultiplier: 40,
-                schedule: [50, 50, 50, 50, 50, 30, 0],
-            },
-            {
-                code: 'P-4005',
-                name: 'Ván HDF chống ẩm 12mm',
-                machine: 'Press-01',
-                mold: 'M-71Y',
-                time: '11:00 - 15:00',
-                pcsMultiplier: 40,
-                schedule: [40, 0, 40, 40, 40, 20, 0],
-            },
-            // Press-02: 1 product (đơn lẻ, mã khuôn dài, pcsMultiplier = 1)
-            {
-                code: 'P-4006',
-                name: 'Mặt bàn bếp đá nhân tạo Stone+ size 2400x600',
-                machine: 'Press-02',
-                mold: 'STONE-2024-HQ-REV2',
-                time: '08:00 - 17:00',
-                pcsMultiplier: 1,
-                schedule: [3, 3, 3, 3, 3, 2, 1],
             },
         ],
     },

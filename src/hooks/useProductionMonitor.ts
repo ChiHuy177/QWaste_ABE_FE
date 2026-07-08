@@ -65,7 +65,7 @@ export function useProductionMonitor({ lines }: UseProductionMonitorOptions): Us
                 name: p.name,
                 machine: p.machine,
                 machineOverrides: p.machineOverrides,
-                lineName: line.name,
+                spaceName: line.spaceName,
                 mold: p.mold,
                 time: p.time,
                 pcsMultiplier: p.pcsMultiplier,

@@ -1757,7 +1757,7 @@
             }
         },
         "summary": {
-            "lines": "生产线",
+            "lines": "区域",
             "products": "产品编码",
             "dailyCases": "今日箱数",
             "weeklyCases": "本周箱数"
@@ -1779,7 +1779,7 @@
         "panel": {
             "dailyTable": "日表",
             "weeklyTable": "周表",
-            "meta": "{{lines}} 条生产线 / {{products}} 个产品编码",
+            "meta": "{{lines}} 个区域 / {{products}} 个产品编码",
             "cases": "{{count}} 箱"
         },
         "units": {
@@ -1793,7 +1793,7 @@
             "emptyFiltered": "没有符合筛选条件的产品编码",
             "headers": {
                 "date": "日期",
-                "line": "生产线",
+                "line": "区域",
                 "machine": "机器",
                 "codeVi": "编码",
                 "productName": "产品名称",

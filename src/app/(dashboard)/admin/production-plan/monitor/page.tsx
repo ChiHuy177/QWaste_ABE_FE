@@ -50,7 +50,7 @@ type MonitorGroupHeader = {
     type: 'group-header';
     groupKey: string;
     machine: string;
-    lineName: string;
+    spaceName: string;
     groupSize: number;
 };
 type MonitorProductRow = MonitorProduct & { type: 'product'; groupKey: string };
@@ -65,7 +65,7 @@ type MonitorFlatRow = MonitorGroupHeader | MonitorProductRow | MonitorTotalRow;
 function toFlatRows(products: MonitorProduct[], todayIndex: number): MonitorFlatRow[] {
     const groupMap = new Map<string, MonitorProduct[]>();
     products.forEach((p) => {
-        const key = `${p.lineName}|${p.machine}`;
+        const key = `${p.spaceName}|${p.machine}`;
         const arr = groupMap.get(key) ?? [];
         arr.push(p);
         groupMap.set(key, arr);
@@ -73,7 +73,7 @@ function toFlatRows(products: MonitorProduct[], todayIndex: number): MonitorFlat
 
     const rows: MonitorFlatRow[] = [];
     groupMap.forEach((group, key) => {
-        const { machine, lineName } = group[0];
+        const { machine, spaceName } = group[0];
         const totalCases = group.reduce((sum, p) => sum + p.schedule[todayIndex], 0);
         const totalPcs = group.reduce(
             (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
@@ -83,7 +83,7 @@ function toFlatRows(products: MonitorProduct[], todayIndex: number): MonitorFlat
             type: 'group-header',
             groupKey: key,
             machine,
-            lineName,
+            spaceName,
             groupSize: group.length,
         });
         group.forEach((p) => rows.push({ ...p, type: 'product', groupKey: key }));
@@ -179,7 +179,7 @@ export default function ProductionMonitorPage() {
                 p.code.toLowerCase().includes(keyword) ||
                 p.name.toLowerCase().includes(keyword) ||
                 p.machine.toLowerCase().includes(keyword) ||
-                p.lineName.toLowerCase().includes(keyword)
+                p.spaceName.toLowerCase().includes(keyword)
         );
     }, [products, searchText]);
 
@@ -218,7 +218,7 @@ export default function ProductionMonitorPage() {
                     return (
                         <div className={styles.dailySheetMachineCell}>
                             <strong>{record.machine}</strong>
-                            <span>{record.lineName}</span>
+                            <span>{record.spaceName}</span>
                         </div>
                     );
                 },

@@ -414,7 +414,7 @@
             }
         },
         "summary": {
-            "lines": "Lines",
+            "lines": "Spaces",
             "products": "Product codes",
             "dailyCases": "Cases today",
             "weeklyCases": "Cases this week"
@@ -436,7 +436,7 @@
         "panel": {
             "dailyTable": "Daily table",
             "weeklyTable": "Weekly table",
-            "meta": "{{lines}} lines / {{products}} product codes",
+            "meta": "{{lines}} spaces / {{products}} product codes",
             "cases": "{{count}} cases"
         },
         "units": {
@@ -450,7 +450,7 @@
             "emptyFiltered": "No product codes match the filter",
             "headers": {
                 "date": "Date",
-                "line": "Line",
+                "line": "Space",
                 "machine": "Machine",
                 "codeVi": "Code",
                 "productName": "Product name",

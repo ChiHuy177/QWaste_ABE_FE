@@ -121,15 +121,15 @@ export default function DailyTable({
                 }
 
                 const current = groupedProducts.get(effectiveMachine) ?? [];
-                current.push({ ...product, lineIndex, lineName: line.name, productIndex });
+                current.push({ ...product, lineIndex, lineName: line.spaceName, productIndex });
                 groupedProducts.set(effectiveMachine, current);
             });
 
             groupedProducts.forEach((products, machine) => {
                 groups.push({
-                    key: `${line.id}-${machine}`,
+                    key: `${line.spaceCode}-${machine}`,
                     lineIndex,
-                    lineName: line.name,
+                    lineName: line.spaceName,
                     machine,
                     products,
                 });
