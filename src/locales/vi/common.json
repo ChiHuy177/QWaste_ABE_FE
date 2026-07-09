@@ -415,7 +415,8 @@
         },
         "views": {
             "daily": "Ngày",
-            "weekly": "Tuần"
+            "weekly": "Tuần",
+            "matrix": "Theo máy"
         },
         "actions": {
             "import": "Import",
@@ -427,6 +428,7 @@
         "panel": {
             "dailyTable": "Bảng ngày",
             "weeklyTable": "Bảng tuần",
+            "machineMatrixTable": "Bảng theo máy",
             "meta": "{{lines}} khu vực / {{products}} mã hàng",
             "cases": "{{count}} thùng"
         },

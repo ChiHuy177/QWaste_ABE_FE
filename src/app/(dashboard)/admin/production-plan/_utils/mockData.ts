@@ -9,6 +9,16 @@ export const initialProductionPlan: ProductionLine[] = [
         products: [
             // CNC-01: 5 products
             {
+                code: 'P-1003',
+                name: 'Chân bàn sắt sơn tĩnh điện',
+                machine: 'CNC-01',
+                mold: 'M-13B',
+                time: '10:00 - 12:00',
+                pcsMultiplier: 4,
+                schedule: [200, 200, 200, 200, 200, 100, 0],
+                status: 'PAUSE',
+            },
+            {
                 code: 'P-1001',
                 name: 'Bàn học sinh Maple phủ sơn PU 2 lớp',
                 machine: 'CNC-01',
@@ -16,6 +26,15 @@ export const initialProductionPlan: ProductionLine[] = [
                 time: '06:00 - 08:30',
                 pcsMultiplier: 24,
                 schedule: [18, 22, 20, 16, 24, 12, 5],
+            },
+            {
+                code: 'P-1005',
+                name: 'Thanh ngang khung ghế Walnut',
+                machine: 'CNC-01',
+                mold: 'M-14C',
+                time: '14:00 - 16:30',
+                pcsMultiplier: 48,
+                schedule: [8, 0, 8, 10, 8, 6, 0],
             },
             {
                 code: 'P-1002',
@@ -27,16 +46,6 @@ export const initialProductionPlan: ProductionLine[] = [
                 schedule: [30, 30, 30, 30, 30, 20, 0],
             },
             {
-                code: 'P-1003',
-                name: 'Chân bàn sắt sơn tĩnh điện',
-                machine: 'CNC-01',
-                mold: 'M-13B',
-                time: '10:00 - 12:00',
-                pcsMultiplier: 4,
-                schedule: [200, 200, 200, 200, 200, 100, 0],
-                status: 'PAUSE',
-            },
-            {
                 code: 'P-1004',
                 name: 'Chốt gỗ',
                 machine: 'CNC-01',
@@ -44,15 +53,6 @@ export const initialProductionPlan: ProductionLine[] = [
                 time: '13:00 - 14:00',
                 pcsMultiplier: 144,
                 schedule: [1, 2, 1, 1, 2, 1, 0],
-            },
-            {
-                code: 'P-1005',
-                name: 'Thanh ngang khung ghế Walnut',
-                machine: 'CNC-01',
-                mold: 'M-14C',
-                time: '14:00 - 16:30',
-                pcsMultiplier: 48,
-                schedule: [8, 0, 8, 10, 8, 6, 0],
             },
             // CNC-02: 3 products
             {

@@ -26,6 +26,7 @@ export interface ProductionProduct {
 
 export interface ProductionLine extends Omit<SpacePickingResponse, 'displayOrder' | 'spaceLevel'> {
     products: ProductionProduct[];
+    dayProductOrders?: string[][];
 }
 
 export interface ProductionStatusUpdate {

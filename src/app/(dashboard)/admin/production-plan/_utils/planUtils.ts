@@ -14,3 +14,24 @@ export function getAllMachineNames(lines: ProductionLine[]): string[] {
     }
     return Array.from(set).sort();
 }
+
+export function getSortedProductsForDay(line: ProductionLine, dayIndex: number): ProductionProduct[] {
+    const order = line.dayProductOrders?.[dayIndex];
+    if (!order || order.length === 0) {
+        return line.products;
+    }
+
+    return [...line.products].sort((a, b) => {
+        const indexA = order.indexOf(a.code);
+        const indexB = order.indexOf(b.code);
+
+        const posA = indexA !== -1 ? indexA : Infinity;
+        const posB = indexB !== -1 ? indexB : Infinity;
+
+        if (posA !== posB) {
+            return posA - posB;
+        }
+
+        return line.products.indexOf(a) - line.products.indexOf(b);
+    });
+}

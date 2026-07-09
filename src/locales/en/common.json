@@ -424,7 +424,8 @@
         },
         "views": {
             "daily": "Day",
-            "weekly": "Week"
+            "weekly": "Week",
+            "matrix": "By Machine"
         },
         "actions": {
             "import": "Import",
@@ -436,6 +437,7 @@
         "panel": {
             "dailyTable": "Daily table",
             "weeklyTable": "Weekly table",
+            "machineMatrixTable": "Machine Table",
             "meta": "{{lines}} spaces / {{products}} product codes",
             "cases": "{{count}} cases"
         },

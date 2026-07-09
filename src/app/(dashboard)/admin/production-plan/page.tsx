@@ -33,6 +33,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import DailyTable from './_components/DailyTable';
 import ImportModal from './_components/ImportModal';
 import WeeklyTable from './_components/WeeklyTable';
+import MachineMatrixTable from './_components/MachineMatrixTable';
 import PlanFormModal from './_components/PlanFormModal';
 import TransferMachineModal from './_components/TransferMachineModal';
 import TransferScheduleModal from './_components/TransferScheduleModal';
@@ -51,11 +52,11 @@ import {
     TransferMachineModalState,
     TransferScheduleModalState,
 } from './_components/types';
-import { getAllMachineNames, getEffectiveMachine } from './_utils/planUtils';
+import { getAllMachineNames, getEffectiveMachine, getSortedProductsForDay } from './_utils/planUtils';
 import styles from './_components/ProductionPlanTable.module.css';
 import { useTranslation } from 'react-i18next';
 
-type ActiveView = 'daily' | 'weekly';
+type ActiveView = 'daily' | 'weekly' | 'matrix';
 
 const { Text } = Typography;
 
@@ -367,25 +368,46 @@ export default function ProductionPlanPage() {
                 currentLines.map((line, currentLineIndex) => {
                     if (currentLineIndex !== lineIndex) return line;
 
-                    const activeIndex = line.products.findIndex(
-                        (product) => product.code === activeCode
-                    );
-                    const overIndex = line.products.findIndex(
-                        (product) => product.code === overCode
-                    );
+                    if (activeView === 'daily') {
+                        const sortedProducts = getSortedProductsForDay(line, todayIndex);
+                        const codes = sortedProducts.map((p) => p.code);
 
-                    if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
-                        return line;
+                        const activeIndex = codes.indexOf(activeCode);
+                        const overIndex = codes.indexOf(overCode);
+
+                        if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
+                            return line;
+                        }
+
+                        const nextCodes = moveArrayItem(codes, activeIndex, overIndex);
+                        const nextDayOrders = [...(line.dayProductOrders ?? new Array(7).fill(undefined))];
+                        nextDayOrders[todayIndex] = nextCodes;
+
+                        return {
+                            ...line,
+                            dayProductOrders: nextDayOrders,
+                        };
+                    } else {
+                        const activeIndex = line.products.findIndex(
+                            (product) => product.code === activeCode
+                        );
+                        const overIndex = line.products.findIndex(
+                            (product) => product.code === overCode
+                        );
+
+                        if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
+                            return line;
+                        }
+
+                        return {
+                            ...line,
+                            products: moveArrayItem(line.products, activeIndex, overIndex),
+                        };
                     }
-
-                    return {
-                        ...line,
-                        products: moveArrayItem(line.products, activeIndex, overIndex),
-                    };
                 })
             );
         },
-        []
+        [activeView, todayIndex]
     );
 
     const activeLineName = modalState.open ? lines[modalState.lineIndex]?.spaceName : undefined;
@@ -428,6 +450,11 @@ export default function ProductionPlanPage() {
                     {
                         label: t('productionPlan.views.weekly'),
                         value: 'weekly',
+                        icon: <TableOutlined />,
+                    },
+                    {
+                        label: t('productionPlan.views.matrix'),
+                        value: 'matrix',
                         icon: <TableOutlined />,
                     },
                 ]}
@@ -543,7 +570,9 @@ export default function ProductionPlanPage() {
                             <Text strong>
                                 {activeView === 'daily'
                                     ? t('productionPlan.panel.dailyTable')
-                                    : t('productionPlan.panel.weeklyTable')}
+                                    : activeView === 'weekly'
+                                    ? t('productionPlan.panel.weeklyTable')
+                                    : t('productionPlan.panel.machineMatrixTable')}
                             </Text>
                             {activeView === 'daily' && (
                                 <Button
@@ -582,7 +611,7 @@ export default function ProductionPlanPage() {
                 </div>
 
                 <div className={styles.tablePanelBody}>
-                    {activeView === 'daily' ? (
+                    {activeView === 'daily' && (
                         <DailyTable
                             lines={lines}
                             todayIndex={todayIndex}
@@ -594,13 +623,20 @@ export default function ProductionPlanPage() {
                             onTransferSchedule={openTransferScheduleModal}
                             machineFilter={machineFilter}
                         />
-                    ) : (
+                    )}
+                    {activeView === 'weekly' && (
                         <WeeklyTable
                             lines={lines}
                             todayIndex={todayIndex}
                             onEdit={openEditModal}
                             onDelete={setDeleteState}
                             onReorder={handleReorderProducts}
+                            machineFilter={machineFilter}
+                        />
+                    )}
+                    {activeView === 'matrix' && (
+                        <MachineMatrixTable
+                            lines={lines}
                             machineFilter={machineFilter}
                         />
                     )}

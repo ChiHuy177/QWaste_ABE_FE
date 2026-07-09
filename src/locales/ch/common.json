@@ -1767,7 +1767,8 @@
         },
         "views": {
             "daily": "日",
-            "weekly": "周"
+            "weekly": "周",
+            "matrix": "按机器"
         },
         "actions": {
             "import": "导入",
@@ -1779,6 +1780,7 @@
         "panel": {
             "dailyTable": "日表",
             "weeklyTable": "周表",
+            "machineMatrixTable": "按机器表",
             "meta": "{{lines}} 个区域 / {{products}} 个产品编码",
             "cases": "{{count}} 箱"
         },

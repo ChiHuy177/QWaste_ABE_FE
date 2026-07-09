@@ -30,7 +30,7 @@ import {
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
 import { ProductionLine, ProductionProduct, ProductPosition } from './types';
 import styles from './ProductionPlanTable.module.css';
-import { getEffectiveMachine } from '../_utils/planUtils';
+import { getEffectiveMachine, getSortedProductsForDay } from '../_utils/planUtils';
 
 type DailyProductRow = ProductionProduct & {
     lineIndex: number;
@@ -110,7 +110,9 @@ export default function DailyTable({
         lines.forEach((line, lineIndex) => {
             const groupedProducts = new Map<string, DailyProductRow[]>();
 
-            line.products.forEach((product, productIndex) => {
+            const sortedProducts = getSortedProductsForDay(line, todayIndex);
+
+            sortedProducts.forEach((product) => {
                 if (product.schedule[todayIndex] <= 0) return;
                 const effectiveMachine = getEffectiveMachine(product, todayIndex);
                 if (
@@ -120,8 +122,15 @@ export default function DailyTable({
                     return;
                 }
 
+                const originalProductIndex = line.products.findIndex((p) => p.code === product.code);
+
                 const current = groupedProducts.get(effectiveMachine) ?? [];
-                current.push({ ...product, lineIndex, lineName: line.spaceName, productIndex });
+                current.push({
+                    ...product,
+                    lineIndex,
+                    lineName: line.spaceName,
+                    productIndex: originalProductIndex,
+                });
                 groupedProducts.set(effectiveMachine, current);
             });
 
