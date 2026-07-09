@@ -6,6 +6,7 @@ import {
     Button,
     Card,
     Col,
+    Collapse,
     Flex,
     Input,
     Row,
@@ -15,8 +16,10 @@ import {
     Typography,
     theme,
 } from 'antd';
+import type { CollapseProps } from 'antd';
 import type { ColumnType, ColumnsType } from 'antd/es/table';
 import {
+    CaretRightOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
     ExclamationCircleOutlined,
@@ -105,6 +108,9 @@ export default function ProductionMonitorPage() {
     const [searchText, setSearchText] = useState('');
     const [selectedProduct, setSelectedProduct] = useState<MonitorProduct | null>(null);
     const [incidentProduct, setIncidentProduct] = useState<MonitorProduct | null>(null);
+    const [activeKeys, setActiveKeys] = useState<ProductionStatus[]>(
+        GROUP_ORDER.filter((status) => status !== 'COMPLETE')
+    );
 
     const { products, isConnected, lastUpdate } = useProductionMonitor({
         lines: initialProductionPlan,
@@ -122,6 +128,8 @@ export default function ProductionMonitorPage() {
                 '--plan-color-text': token.colorText,
                 '--plan-color-text-secondary': token.colorTextSecondary,
                 '--plan-color-text-tertiary': token.colorTextTertiary,
+                '--plan-color-warning': token.colorWarning,
+                '--plan-color-warning-bg': token.colorWarningBg,
             }) as CSSProperties,
         [token]
     );
@@ -201,6 +209,13 @@ export default function ProductionMonitorPage() {
         });
         return result;
     }, [grouped, todayIndex]);
+
+    // While searching, force-open every group that has matches so results are never hidden
+    const displayedActiveKeys = useMemo(() => {
+        if (!searchText.trim()) return activeKeys;
+        const withMatches = GROUP_ORDER.filter((status) => grouped[status].length > 0);
+        return Array.from(new Set([...activeKeys, ...withMatches]));
+    }, [activeKeys, grouped, searchText]);
 
     const columns: ColumnsType<MonitorFlatRow> = useMemo(() => {
         return [
@@ -344,6 +359,82 @@ export default function ProductionMonitorPage() {
         [columns, pauseActionColumn]
     );
 
+    const handleStatCardClick = (status: ProductionStatus) => {
+        setActiveKeys((prev) => (prev.includes(status) ? prev : [...prev, status]));
+        requestAnimationFrame(() => {
+            document
+                .getElementById(`monitor-group-${status}`)
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    };
+
+    const collapseItems = useMemo<CollapseProps['items']>(
+        () =>
+            GROUP_ORDER.map((status) => {
+                const config = statConfigs.find((c) => c.status === status)!;
+                const rows = grouped[status];
+                const isPause = status === 'PAUSE' && rows.length > 0;
+
+                return {
+                    key: status,
+                    classNames: isPause ? { header: styles.monitorPauseHeader } : undefined,
+                    label: (
+                        <Flex align="center" gap={10} id={`monitor-group-${status}`}>
+                            <span
+                                className={styles.monitorStatusPill}
+                                style={{ background: config.color }}
+                            >
+                                {t(`productionPlan.monitor.status.${status}`)}
+                            </span>
+                            <Text type="secondary" style={{ fontSize: 13, fontWeight: 600 }}>
+                                {rows.length}
+                            </Text>
+                        </Flex>
+                    ),
+                    extra: isPause ? (
+                        <Tag color="warning" style={{ margin: 0, fontWeight: 600 }}>
+                            {t('productionPlan.monitor.needsAction')}
+                        </Tag>
+                    ) : undefined,
+                    children: (
+                        // CSS vars inherit from the Collapse root wrapper below
+                        <div className={`${styles.planAntTable} ${styles.dailySheetTable}`}>
+                            <Table<MonitorFlatRow>
+                                columns={status === 'PAUSE' ? pauseColumns : columns}
+                                dataSource={groupedFlatRows[status]}
+                                rowKey={(record) => {
+                                    if (record.type === 'product') return record.code;
+                                    if (record.type === 'total') return `${record.groupKey}-total`;
+                                    return `${record.groupKey}-header`;
+                                }}
+                                rowClassName={(record) =>
+                                    record.type === 'total' ? styles.dailySheetTotalRow : ''
+                                }
+                                size="small"
+                                onRow={(record) => ({
+                                    onClick:
+                                        record.type === 'product'
+                                            ? () => setSelectedProduct(record)
+                                            : undefined,
+                                    style: record.type === 'product' ? { cursor: 'pointer' } : {},
+                                })}
+                                pagination={false}
+                                scroll={{ x: status === 'PAUSE' ? 1200 : 1000 }}
+                                locale={{
+                                    emptyText: (
+                                        <Text type="secondary">
+                                            {t('productionPlan.monitor.emptyGroup')}
+                                        </Text>
+                                    ),
+                                }}
+                            />
+                        </div>
+                    ),
+                };
+            }),
+        [statConfigs, grouped, groupedFlatRows, columns, pauseColumns, t]
+    );
+
     const headerExtra = (
         <Flex align="center" gap={8}>
             <Tooltip
@@ -388,12 +479,14 @@ export default function ProductionMonitorPage() {
                         <Card
                             variant="borderless"
                             hoverable
+                            onClick={() => handleStatCardClick(status)}
                             style={{
                                 height: '100%',
                                 borderRadius: 12,
                                 border: `1px solid ${border}`,
                                 background: bg,
                                 boxShadow: token.boxShadow,
+                                cursor: 'pointer',
                             }}
                         >
                             <Flex align="center" gap={16} wrap="nowrap">
@@ -456,122 +549,30 @@ export default function ProductionMonitorPage() {
                         total: products.length,
                     })}
                 </Text>
+                <Flex gap={4} style={{ marginLeft: 'auto' }}>
+                    <Button type="text" size="small" onClick={() => setActiveKeys([...GROUP_ORDER])}>
+                        {t('productionPlan.monitor.expandAll')}
+                    </Button>
+                    <Button type="text" size="small" onClick={() => setActiveKeys([])}>
+                        {t('productionPlan.monitor.collapseAll')}
+                    </Button>
+                </Flex>
             </Flex>
 
-            {/* Grouped card sections */}
-            <Flex vertical gap={16}>
-                {GROUP_ORDER.map((status) => {
-                    const config = statConfigs.find((c) => c.status === status)!;
-                    const Icon = config.icon;
-                    const { color, bg, border } = config;
-                    const rows = grouped[status];
-                    const flatRows = groupedFlatRows[status];
-                    const isPause = status === 'PAUSE' && rows.length > 0;
-                    const cols = status === 'PAUSE' ? pauseColumns : columns;
-
-                    return (
-                        <Card
-                            key={status}
-                            style={{
-                                borderRadius: 12,
-                                overflow: 'hidden',
-                                boxShadow: isPause
-                                    ? `0 4px 16px ${token.colorWarning}20`
-                                    : token.boxShadow,
-                                border: `1px solid ${isPause ? token.colorWarning : token.colorBorderSecondary}`,
-                            }}
-                            styles={{ body: { padding: 0 } }}
-                        >
-                            <Flex
-                                align="center"
-                                gap={10}
-                                style={{
-                                    padding: '12px 16px',
-                                    background: isPause ? token.colorWarningBg : bg,
-                                    borderBottom: `1px solid ${token.colorBorderSecondary}`,
-                                }}
-                            >
-                                <span
-                                    style={{
-                                        width: 28,
-                                        height: 28,
-                                        borderRadius: 6,
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        background: token.colorBgContainer,
-                                        border: `1px solid ${border}`,
-                                        color,
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    <Icon style={{ fontSize: 14 }} />
-                                </span>
-                                <Text strong style={{ color, fontSize: 14 }}>
-                                    {t(`productionPlan.monitor.status.${status}`)}
-                                </Text>
-                                <Badge
-                                    count={rows.length}
-                                    showZero
-                                    color={isPause ? token.colorWarning : color}
-                                    style={{ boxShadow: 'none' }}
-                                />
-                                {isPause && (
-                                    <Tag
-                                        color="warning"
-                                        style={{ marginLeft: 'auto', fontWeight: 600 }}
-                                    >
-                                        {t('productionPlan.monitor.needsAction')}
-                                    </Tag>
-                                )}
-                            </Flex>
-
-                            {/* Wrapper carries CSS vars so DailySheet classes resolve correctly */}
-                            <div
-                                className={`${styles.planAntTable} ${styles.dailySheetTable}`}
-                                style={{
-                                    ...(planThemeVars as CSSProperties),
-                                    border: 'none',
-                                    borderRadius: 0,
-                                }}
-                            >
-                                <Table<MonitorFlatRow>
-                                    columns={cols}
-                                    dataSource={flatRows}
-                                    rowKey={(record) => {
-                                        if (record.type === 'product') return record.code;
-                                        if (record.type === 'total')
-                                            return `${record.groupKey}-total`;
-                                        return `${record.groupKey}-header`;
-                                    }}
-                                    rowClassName={(record) =>
-                                        record.type === 'total' ? styles.dailySheetTotalRow : ''
-                                    }
-                                    size="small"
-                                    bordered
-                                    onRow={(record) => ({
-                                        onClick:
-                                            record.type === 'product'
-                                                ? () => setSelectedProduct(record)
-                                                : undefined,
-                                        style:
-                                            record.type === 'product' ? { cursor: 'pointer' } : {},
-                                    })}
-                                    pagination={false}
-                                    scroll={{ x: status === 'PAUSE' ? 1200 : 1000 }}
-                                    locale={{
-                                        emptyText: (
-                                            <Text type="secondary">
-                                                {t('productionPlan.monitor.emptyGroup')}
-                                            </Text>
-                                        ),
-                                    }}
-                                />
-                            </div>
-                        </Card>
-                    );
-                })}
-            </Flex>
+            {/* ClickUp-style collapsible status groups */}
+            <Collapse
+                ghost
+                style={planThemeVars}
+                items={collapseItems}
+                activeKey={displayedActiveKeys}
+                onChange={(keys) => setActiveKeys(keys as ProductionStatus[])}
+                collapsible="header"
+                expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+                classNames={{
+                    header: styles.monitorGroupHeader,
+                    body: styles.monitorGroupBody,
+                }}
+            />
 
             <ProductDetailModal
                 product={selectedProduct}

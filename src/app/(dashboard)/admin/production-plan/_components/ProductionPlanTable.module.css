@@ -448,3 +448,42 @@ th.stickyName {
         padding: 12px;
     }
 }
+
+/* ---- Monitor: ClickUp-style status groups (antd Collapse ghost) ---- */
+.monitorGroupHeader {
+    padding: 10px 8px !important;
+    border-radius: 8px;
+    align-items: center !important;
+}
+
+.monitorGroupHeader:hover {
+    background: color-mix(
+        in srgb,
+        var(--plan-color-bg-muted) 60%,
+        var(--plan-color-bg-container)
+    );
+}
+
+.monitorPauseHeader {
+    background: var(--plan-color-warning-bg) !important;
+    border: 1px solid var(--plan-color-warning);
+    border-radius: 8px;
+}
+
+.monitorGroupBody {
+    padding: 4px 0 20px !important;
+}
+
+.monitorStatusPill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}

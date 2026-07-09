@@ -1914,6 +1914,8 @@
             "filterAll": "所有状态",
             "searchPlaceholder": "按编码、名称、机器搜索...",
             "showing": "显示 {{count}} / {{total}}",
+            "expandAll": "全部展开",
+            "collapseAll": "全部收起",
             "productCodes": "产品编码",
             "connected": "已连接",
             "disconnected": "连接断开",

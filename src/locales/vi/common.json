@@ -569,6 +569,8 @@
             "filterAll": "Tất cả trạng thái",
             "searchPlaceholder": "Tìm theo mã hàng, tên, máy...",
             "showing": "Hiển thị {{count}} / {{total}}",
+            "expandAll": "Mở rộng tất cả",
+            "collapseAll": "Thu gọn tất cả",
             "productCodes": "mã hàng",
             "connected": "Đã kết nối",
             "disconnected": "Mất kết nối",
