@@ -34,6 +34,7 @@ const BASE_PATHS = {
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
     MOLDS: `${API}/molds/${V1}`,
     PLANS: `${API}/plans/${V1}`,
+    PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -176,9 +177,25 @@ export const ENDPOINTS = {
         ALL: `${BASE_PATHS.MOLDS}/all`,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
     },
+    // @deprecated — backend đã đổi /api/plans thành /api/productionPlans; dùng PRODUCTION_PLANS. Xoá khi hết usage.
     PLANS: {
         BASE: BASE_PATHS.PLANS,
         IMPORT: `${BASE_PATHS.PLANS}/import`,
+    },
+    PRODUCTION_PLANS: {
+        BASE: BASE_PATHS.PRODUCTION_PLANS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.PRODUCTION_PLANS, id),
+        STATUS_LOGS: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/statusLogs`,
+        DAILY: `${BASE_PATHS.PRODUCTION_PLANS}/daily`,
+        WEEKLY: `${BASE_PATHS.PRODUCTION_PLANS}/weekly`,
+        REORDER: `${BASE_PATHS.PRODUCTION_PLANS}/reorder`,
+        RESTORE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/restoring`,
+        INCIDENT_TERMINATE: (id: PathParam) =>
+            `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/terminate`,
+        INCIDENT_DEFER: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/defer`,
+        INCIDENT_PAUSE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/pause`,
+        IMPORT: `${BASE_PATHS.PRODUCTION_PLANS}/import`,
+        IMPORT_CONFIRM: `${BASE_PATHS.PRODUCTION_PLANS}/import/confirm`,
     },
 } as const;
 
