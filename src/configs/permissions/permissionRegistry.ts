@@ -270,6 +270,44 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Delete mold',
     },
+    {
+        slug: 'mold:restore',
+        subject: 'mold',
+        action: 'restore',
+        routes: [],
+        description: 'Restore deleted mold',
+    },
+
+    // Operation Type
+    {
+        slug: 'operation_type:view',
+        subject: 'operation_type',
+        action: 'view',
+        routes: ['/admin/categories/operationType'],
+        menuKey: 'operation-type',
+        description: 'View operation type list',
+    },
+    {
+        slug: 'operation_type:create',
+        subject: 'operation_type',
+        action: 'create',
+        routes: [],
+        description: 'Create operation type',
+    },
+    {
+        slug: 'operation_type:update',
+        subject: 'operation_type',
+        action: 'update',
+        routes: [],
+        description: 'Update operation type',
+    },
+    {
+        slug: 'operation_type:delete',
+        subject: 'operation_type',
+        action: 'delete',
+        routes: [],
+        description: 'Delete operation type',
+    },
 
     // Staffing
     {

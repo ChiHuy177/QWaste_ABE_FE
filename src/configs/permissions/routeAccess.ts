@@ -46,6 +46,10 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'mold',
         action: 'view',
     },
+    '/admin/categories/operationType': {
+        subject: 'operation_type',
+        action: 'view',
+    },
     '/admin/categories/step': {
         subject: 'step',
         action: 'view',

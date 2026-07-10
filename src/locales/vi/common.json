@@ -329,6 +329,7 @@
             "machineType": "Danh sách loại máy",
             "machineList": "Danh sách máy",
             "mold": "Danh sách Khuôn",
+            "operationType": "Danh sách Công đoạn",
             "electric": "Công suất tiêu thụ điện",
             "factory": "Danh sách nhà máy",
             "factoryOverview": "Tổng quan nhà máy",
@@ -3007,6 +3008,60 @@
             }
         }
     },
+    "operationTypeManagement": {
+        "title": "Danh Sách Công Đoạn",
+        "addOperationType": "Thêm Công Đoạn",
+        "searchPlaceholder": "Tìm theo mã hoặc tên công đoạn",
+        "fetchError": "Không thể tải danh sách công đoạn. Vui lòng thử lại.",
+        "deleteSuccess": "Xóa công đoạn thành công",
+        "deleteError": "Không thể xóa công đoạn. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật công đoạn thành công",
+        "updateError": "Không thể cập nhật công đoạn. Vui lòng thử lại.",
+        "table": {
+            "headers": {
+                "operationTypeCode": "Mã Công Đoạn",
+                "operationTypeName": "Tên Công Đoạn",
+                "description": "Mô Tả",
+                "createdAt": "Ngày Tạo",
+                "updatedAt": "Ngày Cập Nhật",
+                "actions": "Thao Tác"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Xóa Công Đoạn",
+                "description": "Bạn có chắc chắn muốn xóa công đoạn này? Hành động này không thể hoàn tác và sẽ thất bại nếu công đoạn đang được máy hoặc khuôn sử dụng."
+            }
+        },
+        "form": {
+            "createTitle": "Tạo Công Đoạn Mới",
+            "editTitle": "Chỉnh Sửa Công Đoạn",
+            "createDescription": "Điền thông tin vào form bên dưới để tạo công đoạn mới.",
+            "editDescription": "Điền thông tin vào form bên dưới để chỉnh sửa công đoạn.",
+            "createSuccess": "Tạo công đoạn thành công",
+            "createError": "Không thể tạo công đoạn. Vui lòng thử lại.",
+            "fields": {
+                "operationTypeCode": "Mã Công Đoạn",
+                "operationTypeName": "Tên Công Đoạn",
+                "description": "Mô Tả"
+            },
+            "placeholders": {
+                "operationTypeCode": "Nhập mã công đoạn (vd: PRESS)",
+                "operationTypeName": "Nhập tên công đoạn",
+                "description": "Nhập mô tả công đoạn (tùy chọn)"
+            },
+            "validation": {
+                "required": "Trường này là bắt buộc",
+                "maxLength": "Độ dài tối đa là {{max}} ký tự"
+            },
+            "buttons": {
+                "cancel": "Hủy",
+                "create": "Tạo Mới",
+                "save": "Lưu Thay Đổi",
+                "saving": "Đang lưu..."
+            }
+        }
+    },
     "machineListManagement": {
         "title": "Quản lý danh sách máy",
         "addMachine": "Thêm máy",
@@ -3519,6 +3574,7 @@
         "operator": "Nhân viên",
         "machineList": "Danh sách máy",
         "moldList": "Danh sách Khuôn",
+        "operationTypeList": "Danh sách Công đoạn",
         "productionPlan": "Kế hoạch sản xuất",
         "processManagement": "Quản lý quy trình",
         "history": "Lịch sử",

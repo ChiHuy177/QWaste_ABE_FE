@@ -22,6 +22,7 @@ export type Subject =
     | 'machine_type'
     | 'machine'
     | 'mold'
+    | 'operation_type'
     | 'staffing'
     | 'factory'
     | 'space'

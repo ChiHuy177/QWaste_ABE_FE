@@ -339,6 +339,7 @@
             "electric": "Electric overview",
             "machineList": "Machine List",
             "mold": "Mold List",
+            "operationType": "Operation Type List",
             "factory": "Factory List",
             "factoryOverview": "Space Monitoring",
             "floorMap": "Floor Map",
@@ -2362,6 +2363,60 @@
             }
         }
     },
+    "operationTypeManagement": {
+        "title": "Operation Type List",
+        "addOperationType": "Add Operation Type",
+        "searchPlaceholder": "Search by operation type code or name",
+        "fetchError": "Failed to fetch operation type list. Please try again.",
+        "deleteSuccess": "Operation type deleted successfully",
+        "deleteError": "Failed to delete operation type. Please try again.",
+        "updateSuccess": "Operation type updated successfully",
+        "updateError": "Failed to update operation type. Please try again.",
+        "table": {
+            "headers": {
+                "operationTypeCode": "Operation Type Code",
+                "operationTypeName": "Operation Type Name",
+                "description": "Description",
+                "createdAt": "Created At",
+                "updatedAt": "Updated At",
+                "actions": "Actions"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Delete Operation Type",
+                "description": "Are you sure you want to delete this operation type? This action cannot be undone and will fail if the operation type is used by any machine or mold."
+            }
+        },
+        "form": {
+            "createTitle": "Create New Operation Type",
+            "editTitle": "Edit Operation Type",
+            "createDescription": "Fill in the form below to create a new operation type.",
+            "editDescription": "Fill in the form below to edit the operation type.",
+            "createSuccess": "Operation type created successfully",
+            "createError": "Failed to create operation type. Please try again.",
+            "fields": {
+                "operationTypeCode": "Operation Type Code",
+                "operationTypeName": "Operation Type Name",
+                "description": "Description"
+            },
+            "placeholders": {
+                "operationTypeCode": "Enter operation type code (e.g. PRESS)",
+                "operationTypeName": "Enter operation type name",
+                "description": "Enter operation type description (optional)"
+            },
+            "validation": {
+                "required": "This field is required",
+                "maxLength": "Maximum length is {{max}} characters"
+            },
+            "buttons": {
+                "cancel": "Cancel",
+                "create": "Create",
+                "save": "Save Changes",
+                "saving": "Saving..."
+            }
+        }
+    },
     "machineListManagement": {
         "title": "Machine List Management",
         "addMachine": "Add Machine",
@@ -3741,6 +3796,7 @@
         "operator": "Staff Management",
         "machineList": "Machine List",
         "moldList": "Mold List",
+        "operationTypeList": "Operation Type List",
         "productionPlan": "Production Plan",
         "processManagement": "Process Management",
         "history": "History",
