@@ -1,32 +1,84 @@
 'use client';
 
-import { Button, Descriptions, Modal, Table, Tag, Typography } from 'antd';
+import { useState } from 'react';
+import { Button, Descriptions, Modal, Space, Table, Tag, Typography } from 'antd';
 import { UploadOutlined, WarningOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { ExcelUpload } from '@/components/shared/ExcelUpload/ExcelUpload';
 import { useExcelUpload } from '@/hooks/useExcelUpload';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
-import { ImportResult, ImportRowError, SkippedDay } from '@/types';
+import { ImportOption, ImportResult, ImportRowError, SkippedDay } from '@/types';
 
 const { Text } = Typography;
 
 interface ImportModalProps {
     open: boolean;
     onClose: () => void;
+    /** Gọi sau khi import ghi dữ liệu thành công để page refetch. */
+    onImported?: () => void;
 }
 
-export default function ImportModal({ open, onClose }: ImportModalProps) {
+export default function ImportModal({ open, onClose, onImported }: ImportModalProps) {
     const { t } = useTranslation();
+    const { handleError } = useApiErrorHandler();
     const { file, loading, result, setFile, submit, reset } = useExcelUpload<ImportResult>({
         uploadFn: (f) => ProductionPlanService.importFromFile(f),
+        onSuccess: (uploaded) => {
+            // Chỉ refetch khi BE đã ghi dữ liệu ngay (không cần bước xác nhận).
+            if (!uploaded.requiresConfirmation && uploaded.totalInserted > 0) {
+                onImported?.();
+            }
+        },
     });
+    const [confirmResult, setConfirmResult] = useState<ImportResult | null>(null);
+    const [confirming, setConfirming] = useState(false);
+
+    const displayedResult = confirmResult ?? result;
+    const needsConfirmation = !!displayedResult?.requiresConfirmation && !confirmResult;
 
     const handleClose = () => {
         reset();
+        setConfirmResult(null);
         onClose();
     };
 
-    const footer = result ? (
+    const handleConfirm = async (option: ImportOption) => {
+        if (!displayedResult?.sessionToken) return;
+        try {
+            setConfirming(true);
+            const confirmed = await ProductionPlanService.confirmImport({
+                token: displayedResult.sessionToken,
+                option,
+            });
+            setConfirmResult(confirmed);
+            if (option !== 'CANCEL') {
+                onImported?.();
+            }
+        } catch (error) {
+            handleError(error, { fallbackKey: 'productionPlan.import.confirmError' });
+        } finally {
+            setConfirming(false);
+        }
+    };
+
+    const footer = needsConfirmation ? (
+        <Space wrap>
+            <Button onClick={() => handleConfirm('CANCEL')} loading={confirming} danger>
+                {t('productionPlan.import.confirmOptions.cancel')}
+            </Button>
+            <Button onClick={() => handleConfirm('OVERWRITE_RETAIN')} loading={confirming}>
+                {t('productionPlan.import.confirmOptions.overwriteRetain')}
+            </Button>
+            <Button
+                type="primary"
+                onClick={() => handleConfirm('OVERWRITE_ALL')}
+                loading={confirming}
+            >
+                {t('productionPlan.import.confirmOptions.overwriteAll')}
+            </Button>
+        </Space>
+    ) : displayedResult ? (
         <Button onClick={handleClose}>{t('common.close')}</Button>
     ) : (
         <>
@@ -52,8 +104,8 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
             width={600}
             destroyOnHidden
         >
-            {result ? (
-                <ImportResultView result={result} />
+            {displayedResult ? (
+                <ImportResultView result={displayedResult} showConfirmHint={needsConfirmation} />
             ) : (
                 <ExcelUpload
                     onFileSelect={setFile}
@@ -65,7 +117,13 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
     );
 }
 
-function ImportResultView({ result }: { result: ImportResult }) {
+function ImportResultView({
+    result,
+    showConfirmHint,
+}: {
+    result: ImportResult;
+    showConfirmHint: boolean;
+}) {
     const { t } = useTranslation();
     const skippedColumns = [
         {
@@ -125,12 +183,11 @@ function ImportResultView({ result }: { result: ImportResult }) {
                         ))}
                     </Descriptions.Item>
                 )}
-                {result.requiresConfirmation && (
+                {showConfirmHint && (
                     <Descriptions.Item label={t('productionPlan.import.result.note')}>
                         <Text type="warning">
                             <WarningOutlined />{' '}
-                            {t('productionPlan.import.result.requiresConfirmation')}{' '}
-                            <Text code>{result.sessionToken.slice(0, 12)}...</Text>
+                            {t('productionPlan.import.result.requiresConfirmation')}
                         </Text>
                     </Descriptions.Item>
                 )}

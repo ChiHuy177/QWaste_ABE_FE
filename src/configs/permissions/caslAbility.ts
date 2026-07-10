@@ -11,7 +11,9 @@ export type Action =
     | 'store'
     | 'update_sensitive'
     | 'confirm'
-    | 'decline';
+    | 'decline'
+    | 'reorder'
+    | 'import';
 
 export type Subject =
     // Overview
@@ -55,6 +57,8 @@ export type Subject =
     // Tasks Management
     | 'tasks'
     | 'production_monitor'
+    // Production plan (BE tái dùng slug product:*)
+    | 'product'
     // Space
     | 'space_monitoring'
     | 'floor_map'

@@ -26,6 +26,8 @@ export interface MachinePaginatedParams {
 export interface Machine {
     machineId: string;
     machineName: string;
+    /** Mã máy (BE Machine.machine_code, nullable) — dùng ở production plan. */
+    machineCode?: string | null;
     description: string;
     topic: string;
     displayOrder: number;

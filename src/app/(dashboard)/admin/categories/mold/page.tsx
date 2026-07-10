@@ -16,8 +16,6 @@ import {
     Tag,
     Typography,
 } from 'antd';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { FilterOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -34,38 +32,23 @@ import FilterDrawer from '@/components/shared/filters/FilterDrawer';
 
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { MoldService } from '@/services/MoldService';
-import { Mold, MoldFormData, MoldStatus, MoldType } from '@/types/Mold';
+import { OperationTypeService } from '@/services/OperationTypeService';
+import { Mold, MoldFormData } from '@/types/Mold';
 import { getMoldTableColumns, MoldTableColumnProps } from './_components/Columns';
-import { getMoldFormFields } from './_components/moldFormConfig';
+import { getMoldFormFields, toOperationTypeOptions } from './_components/moldFormConfig';
 
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
 
-const SORT_DEFAULT = 'auditMetaData.createdAt,ASC';
 const DEFAULT_PAGE_SIZE = 10;
-
-const MOLD_TYPE_COLOR: Record<MoldType, string> = {
-    PRESS: 'blue',
-    COMPRESS: 'orange',
-};
-
-const MOLD_STATUS_COLOR: Record<MoldStatus, string> = {
-    ACTIVE: 'green',
-    MAINTENANCE: 'gold',
-    RETIRED: 'red',
-};
 
 const moldQueryKeys = {
     lists: ['molds', 'list'] as const,
-    list: (
-        page: number,
-        size: number,
-        sort: string | string[],
-        search: string,
-        moldCode: string | undefined,
-        moldName: string | undefined
-    ) => ['molds', 'list', page, size, sort, search, moldCode, moldName] as const,
-    detail: (moldId: number) => ['molds', 'detail', moldId] as const,
+    detail: (moldId: string) => ['molds', 'detail', moldId] as const,
+};
+
+const operationTypeQueryKeys = {
+    lists: ['operationTypes', 'list'] as const,
 };
 
 const MoldListPage = () => {
@@ -99,7 +82,6 @@ const MoldListPage = () => {
 
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-    const [sort, setSort] = useState<string | string[]>(SORT_DEFAULT);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -116,56 +98,33 @@ const MoldListPage = () => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    const handleTableChange = useCallback(
-        (
-            pagination: TablePaginationConfig,
-            _filters: Record<string, FilterValue | null>,
-            sorter: SorterResult<Mold> | SorterResult<Mold>[]
-        ) => {
-            if (pagination) {
-                setPage((pagination.current ?? 1) - 1);
-                setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
-            }
-
-            const sorters = Array.isArray(sorter) ? sorter : [sorter];
-            const validSorters = sorters
-                .filter((s) => s.field && s.order)
-                .map((s) => {
-                    const field = Array.isArray(s.field) ? s.field.join('.') : String(s.field);
-                    const order = s.order === 'ascend' ? 'ASC' : 'DESC';
-                    return `${field},${order}`;
-                });
-
-            setSort(validSorters.length > 0
-                ? (validSorters.length === 1 ? validSorters[0] : validSorters)
-                : SORT_DEFAULT
-            );
-        },
-        []
-    );
-
+    // BE chỉ có GET /v1 không phân trang (đã cache Caffeine) — search/lọc/sort/phân trang client-side.
     const moldsQuery = useQuery({
-        queryKey: moldQueryKeys.list(
-            page,
-            pageSize,
-            sort,
-            debouncedSearch,
-            moldCodeFilter,
-            moldNameFilter
-        ),
-        queryFn: () =>
-            MoldService.getMoldsPaginated({
-                page,
-                size: pageSize,
-                sort,
-                search: debouncedSearch || undefined,
-                moldCode: moldCodeFilter,
-                moldName: moldNameFilter,
-            }),
+        queryKey: moldQueryKeys.lists,
+        queryFn: () => MoldService.getAllMolds(),
     });
 
-    const moldData = useMemo(() => moldsQuery.data?.content ?? [], [moldsQuery.data]);
-    const totalElements = moldsQuery.data?.totalElements ?? 0;
+    const moldData = useMemo(() => {
+        const allMolds = moldsQuery.data ?? [];
+        const keyword = debouncedSearch.trim().toLowerCase();
+        const codeFilter = moldCodeFilter?.toLowerCase();
+        const nameFilter = moldNameFilter?.toLowerCase();
+
+        return allMolds.filter((mold) => {
+            if (
+                keyword &&
+                !mold.moldCode.toLowerCase().includes(keyword) &&
+                !mold.moldName.toLowerCase().includes(keyword)
+            ) {
+                return false;
+            }
+            if (codeFilter && !mold.moldCode.toLowerCase().includes(codeFilter)) return false;
+            if (nameFilter && !mold.moldName.toLowerCase().includes(nameFilter)) return false;
+            return true;
+        });
+    }, [moldsQuery.data, debouncedSearch, moldCodeFilter, moldNameFilter]);
+
+    const totalElements = moldData.length;
     const isLoading = moldsQuery.isLoading || moldsQuery.isFetching;
 
     useEffect(() => {
@@ -174,13 +133,23 @@ const MoldListPage = () => {
         }
     }, [moldsQuery.error, handleError]);
 
+    const operationTypesQuery = useQuery({
+        queryKey: operationTypeQueryKeys.lists,
+        queryFn: () => OperationTypeService.getAllOperationTypes(),
+    });
+
+    const operationTypeOptions = useMemo(
+        () => toOperationTypeOptions(operationTypesQuery.data ?? []),
+        [operationTypesQuery.data]
+    );
+
     const { mutateAsync: createMold } = useMutation({
         mutationFn: (data: MoldFormData) => MoldService.createMold(data),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: moldQueryKeys.lists }),
     });
 
     const { mutateAsync: updateMold } = useMutation({
-        mutationFn: (data: MoldFormData & { moldId: number }) => MoldService.updateMold(data),
+        mutationFn: (data: MoldFormData & { moldId: string }) => MoldService.updateMold(data),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: moldQueryKeys.lists });
             queryClient.invalidateQueries({ queryKey: moldQueryKeys.detail(variables.moldId) });
@@ -188,7 +157,12 @@ const MoldListPage = () => {
     });
 
     const { mutateAsync: deleteMold } = useMutation({
-        mutationFn: (moldId: number) => MoldService.deleteMold(moldId),
+        mutationFn: (moldId: string) => MoldService.deleteMold(moldId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: moldQueryKeys.lists }),
+    });
+
+    const { mutateAsync: restoreMold } = useMutation({
+        mutationFn: (moldId: string) => MoldService.restoreMold(moldId),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: moldQueryKeys.lists }),
     });
 
@@ -225,8 +199,8 @@ const MoldListPage = () => {
                 type: 'delete',
                 pendingAction: async () => {
                     try {
-                        await deleteMold(mold.moldId);
-                        toast.success(t('moldManagement.deleteSuccess'));
+                        const message = await deleteMold(mold.moldId);
+                        toast.success(message || t('moldManagement.deleteSuccess'));
                     } catch (error) {
                         handleError(error, { fallbackKey: 'moldManagement.deleteError' });
                         throw error;
@@ -235,6 +209,19 @@ const MoldListPage = () => {
             });
         },
         [checkPermission, deleteMold, handleError, t]
+    );
+
+    const handleRestoreMold = useCallback(
+        async (mold: Mold) => {
+            if (!checkPermission('restore', 'mold')) return;
+            try {
+                const message = await restoreMold(mold.moldId);
+                toast.success(message || t('moldManagement.restoreSuccess'));
+            } catch (error) {
+                handleError(error, { fallbackKey: 'moldManagement.restoreError' });
+            }
+        },
+        [checkPermission, handleError, restoreMold, t]
     );
 
     const executeSubmit = async (data: MoldFormData, mode: 'create' | 'edit') => {
@@ -302,16 +289,33 @@ const MoldListPage = () => {
             onView: handleViewMold,
             onEdit: handleEditMold,
             onDelete: handleDeleteMold,
+            onRestore: handleRestoreMold,
             isMobile,
             t,
             ability,
         }),
-        [handleViewMold, handleEditMold, handleDeleteMold, isMobile, t, ability]
+        [handleViewMold, handleEditMold, handleDeleteMold, handleRestoreMold, isMobile, t, ability]
     );
 
     const columns = useMemo(() => getMoldTableColumns(columnProps), [columnProps]);
 
-    const formFields = useMemo(() => getMoldFormFields(t, modalState.mode), [t, modalState.mode]);
+    const formFields = useMemo(
+        () =>
+            getMoldFormFields(
+                t,
+                modalState.mode,
+                operationTypeOptions,
+                operationTypesQuery.isLoading
+            ),
+        [t, modalState.mode, operationTypeOptions, operationTypesQuery.isLoading]
+    );
+
+    // Form field tên 'operationTypeId' (phẳng) nhưng Mold trả 'operationType' (nested) —
+    // map lại để EntityFormModal.setFieldsValue điền đúng Select khi edit.
+    const moldFormInitialData = useMemo(() => {
+        if (!modalState.data) return null;
+        return { ...modalState.data, operationTypeId: modalState.data.operationType.operationTypeId };
+    }, [modalState.data]);
 
     const filterFields: FilterField[] = useMemo(
         () => [
@@ -433,17 +437,12 @@ const MoldListPage = () => {
                             <Descriptions.Item label={t('moldManagement.table.headers.moldName')}>
                                 {viewModalState.data.moldName}
                             </Descriptions.Item>
-                            <Descriptions.Item label={t('moldManagement.table.headers.quantity')}>
-                                {viewModalState.data.quantity}
+                            <Descriptions.Item label={t('moldManagement.table.headers.outputPerShot')}>
+                                {viewModalState.data.outputPerShot}
                             </Descriptions.Item>
-                            <Descriptions.Item label={t('moldManagement.table.headers.moldType')}>
-                                <Tag color={MOLD_TYPE_COLOR[viewModalState.data.moldType]}>
-                                    {t(`moldManagement.moldType.${viewModalState.data.moldType}`)}
-                                </Tag>
-                            </Descriptions.Item>
-                            <Descriptions.Item label={t('moldManagement.table.headers.status')}>
-                                <Tag color={MOLD_STATUS_COLOR[viewModalState.data.status]}>
-                                    {t(`moldManagement.status.${viewModalState.data.status}`)}
+                            <Descriptions.Item label={t('moldManagement.table.headers.operationType')}>
+                                <Tag color="blue">
+                                    {viewModalState.data.operationType.operationTypeName}
                                 </Tag>
                             </Descriptions.Item>
                             <Descriptions.Item
@@ -525,12 +524,15 @@ const MoldListPage = () => {
                         columns={columns}
                         dataSource={moldData}
                         loading={isLoading}
-                        onChange={handleTableChange}
                         rowKey="moldId"
                         pagination={{
                             current: page + 1,
                             pageSize,
                             total: totalElements,
+                            onChange: (current, size) => {
+                                setPage(current - 1);
+                                setPageSize(size ?? DEFAULT_PAGE_SIZE);
+                            },
                             hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
@@ -552,7 +554,7 @@ const MoldListPage = () => {
                 onOpenChange={(open) => setModalState((prev) => ({ ...prev, open }))}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
-                initialData={modalState.data}
+                initialData={moldFormInitialData}
                 fields={formFields}
                 title={{
                     create: t('moldManagement.form.createTitle'),

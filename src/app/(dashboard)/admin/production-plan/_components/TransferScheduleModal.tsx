@@ -1,21 +1,31 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Alert, Button, Modal, Tag, theme, Typography } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Button, Input, Modal, Select, Spin, Tag, theme, Typography } from 'antd';
 import { CheckOutlined, LockOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { ProductionLine, ProductionProduct } from './types';
+import type { IncidentReason } from '@/types/ProductionPlan';
+import { MachineGroupVM, PlanRowTarget } from './types';
 import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
-import { getEffectiveMachine } from '../_utils/planUtils';
+import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/incidentOptions';
+
+export interface TransferSchedulePayload {
+    dayIndex: number;
+    machineId: string;
+    incidentReason: IncidentReason;
+    note?: string;
+}
 
 interface TransferScheduleModalProps {
     open: boolean;
-    product: ProductionProduct | null;
+    target: PlanRowTarget | null;
     todayIndex: number;
-    machineOptions: string[];
-    lines: ProductionLine[];
+    /** Dữ liệu tuần hiện tại (fetch khi mở modal) để vẽ lưới máy × ngày. */
+    weeklyGroups: MachineGroupVM[];
+    gridLoading?: boolean;
+    submitting?: boolean;
     onCancel: () => void;
-    onConfirm: (newDayIndex: number, newMachine: string) => void;
+    onConfirm: (payload: TransferSchedulePayload) => void;
 }
 
 const { Text } = Typography;
@@ -39,44 +49,60 @@ function getDayColumns(todayIndex: number) {
     });
 }
 
-function getProductsForCell(lines: ProductionLine[], machine: string, dayIndex: number) {
-    const result: Array<{ code: string; qty: number }> = [];
-    for (const line of lines) {
-        for (const product of line.products) {
-            if (
-                getEffectiveMachine(product, dayIndex) === machine &&
-                product.schedule[dayIndex] > 0
-            ) {
-                result.push({ code: product.code, qty: product.schedule[dayIndex] });
-            }
-        }
-    }
-    return result;
-}
-
+// Dời lịch = BE incident defer (tạo child plan ngày/máy mới) nên cần lý do sự cố.
 export default function TransferScheduleModal({
     open,
-    product,
+    target,
     todayIndex,
-    machineOptions,
-    lines,
+    weeklyGroups,
+    gridLoading,
+    submitting,
     onCancel,
     onConfirm,
 }: TransferScheduleModalProps) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
     const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
-    const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
+    const [selectedMachineId, setSelectedMachineId] = useState<string | null>(null);
+    const [incidentReason, setIncidentReason] = useState<IncidentReason | undefined>(undefined);
+    const [note, setNote] = useState('');
 
-    const currentMachine = product ? getEffectiveMachine(product, todayIndex) : '';
-    const currentQty = product?.schedule[todayIndex] ?? 0;
+    useEffect(() => {
+        if (!open) {
+            setSelectedDayIndex(null);
+            setSelectedMachineId(null);
+            setIncidentReason(undefined);
+            setNote('');
+        }
+    }, [open]);
+
+    const currentMachineCode = target?.machineCode ?? '';
+    const currentQty = target?.row.schedule[todayIndex] ?? 0;
     const hasNoQty = currentQty === 0;
 
     const dayColumns = useMemo(() => getDayColumns(todayIndex), [todayIndex]);
-    const canConfirm = !hasNoQty && selectedDayIndex !== null && !!selectedMachine;
+    const noteRequired = isIncidentNoteRequired(incidentReason);
+    const canConfirm =
+        !hasNoQty &&
+        selectedDayIndex !== null &&
+        !!selectedMachineId &&
+        !!incidentReason &&
+        (!noteRequired || note.trim().length > 0);
 
-    const existingQtyOnTarget =
-        selectedDayIndex !== null ? (product?.schedule[selectedDayIndex] ?? 0) : 0;
+    const selectedMachine = useMemo(
+        () => weeklyGroups.find((group) => group.machineId === selectedMachineId) ?? null,
+        [selectedMachineId, weeklyGroups]
+    );
+
+    // Cùng sản phẩm (code|mold) đã có sẵn kế hoạch trên ô đích → cảnh báo cộng dồn.
+    const existingQtyOnTarget = useMemo(() => {
+        if (selectedDayIndex === null || !selectedMachine || !target) return 0;
+        const sameProduct = selectedMachine.products.find(
+            (product) =>
+                product.code === target.row.code && product.moldCode === target.row.moldCode
+        );
+        return sameProduct?.schedule[selectedDayIndex] ?? 0;
+    }, [selectedDayIndex, selectedMachine, target]);
 
     const shortDayLabels = WEEK_DAY_KEYS.map((key) => t(`productionPlan.days.short.${key}`));
 
@@ -88,35 +114,39 @@ export default function TransferScheduleModal({
         return null;
     };
 
-    const handleSelectCell = (dayIndex: number, machine: string) => {
-        if (selectedDayIndex === dayIndex && selectedMachine === machine) {
+    const handleSelectCell = (dayIndex: number, machineId: string) => {
+        if (selectedDayIndex === dayIndex && selectedMachineId === machineId) {
             setSelectedDayIndex(null);
-            setSelectedMachine(null);
+            setSelectedMachineId(null);
         } else {
             setSelectedDayIndex(dayIndex);
-            setSelectedMachine(machine);
+            setSelectedMachineId(machineId);
         }
     };
 
-    const reset = () => {
-        setSelectedDayIndex(null);
-        setSelectedMachine(null);
-    };
-
     const handleConfirm = () => {
-        if (!canConfirm || selectedDayIndex === null || !selectedMachine) return;
-        onConfirm(selectedDayIndex, selectedMachine);
-        reset();
-    };
-
-    const handleCancel = () => {
-        reset();
-        onCancel();
+        if (!canConfirm || selectedDayIndex === null || !selectedMachineId || !incidentReason) {
+            return;
+        }
+        onConfirm({
+            dayIndex: selectedDayIndex,
+            machineId: selectedMachineId,
+            incidentReason,
+            note: note.trim() || undefined,
+        });
     };
 
     const borderColor = token.colorBorderSecondary;
 
-    const ProductChip = ({ code, qty, isCurrent }: { code: string; qty: number; isCurrent: boolean }) => (
+    const ProductChip = ({
+        code,
+        qty,
+        isCurrent,
+    }: {
+        code: string;
+        qty: number;
+        isCurrent: boolean;
+    }) => (
         <span
             style={{
                 display: 'inline-flex',
@@ -133,7 +163,11 @@ export default function TransferScheduleModal({
         >
             <span style={{ fontWeight: 700 }}>{code}</span>
             <span style={{ color: token.colorTextQuaternary, fontSize: 10 }}>·</span>
-            <span style={{ color: isCurrent ? token.colorPrimaryTextActive : token.colorTextSecondary }}>
+            <span
+                style={{
+                    color: isCurrent ? token.colorPrimaryTextActive : token.colorTextSecondary,
+                }}
+            >
                 {qty}
             </span>
         </span>
@@ -144,21 +178,31 @@ export default function TransferScheduleModal({
             title={
                 <div>
                     <div style={{ fontSize: 15, fontWeight: 700 }}>
-                        {t('productionPlan.transferSchedule.title', { code: product?.code ?? '' })}
+                        {t('productionPlan.transferSchedule.title', {
+                            code: target?.row.code ?? '',
+                        })}
                     </div>
-                    {product?.name && (
-                        <div style={{ fontSize: 12, fontWeight: 400, color: token.colorTextSecondary, marginTop: 1 }}>
-                            {product.name}
+                    {target?.row.name && (
+                        <div
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 400,
+                                color: token.colorTextSecondary,
+                                marginTop: 1,
+                            }}
+                        >
+                            {target.row.name}
                         </div>
                     )}
                 </div>
             }
             open={open}
             onOk={handleConfirm}
-            onCancel={handleCancel}
+            onCancel={onCancel}
             okText={t('productionPlan.actions.transferSchedule')}
             cancelText={t('common.cancel')}
             okButtonProps={{ disabled: !canConfirm }}
+            confirmLoading={submitting}
             destroyOnHidden
             width="min(92vw, 1200px)"
         >
@@ -171,364 +215,391 @@ export default function TransferScheduleModal({
                     />
                 )}
 
-                {/* From info + Legend */}
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
-                    {/* From card */}
-                    <div
-                        style={{
-                            flex: '0 0 auto',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 16,
-                            padding: '10px 16px',
-                            borderRadius: 8,
-                            border: `1px solid ${borderColor}`,
-                            background: token.colorFillAlter,
-                        }}
-                    >
-                        <div>
-                            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
-                                {t('productionPlan.transferSchedule.from')}
+                {/* From info */}
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16,
+                        padding: '10px 16px',
+                        borderRadius: 8,
+                        border: `1px solid ${borderColor}`,
+                        background: token.colorFillAlter,
+                        alignSelf: 'flex-start',
+                    }}
+                >
+                    <div>
+                        <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
+                            {t('productionPlan.transferSchedule.from')}
+                        </Text>
+                        <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2 }}>
+                            {shortDayLabels[todayIndex]}
+                            <Text
+                                type="secondary"
+                                style={{ fontSize: 11, fontWeight: 400, marginLeft: 5 }}
+                            >
+                                {dayColumns[0]?.dateStr}
                             </Text>
-                            <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2 }}>
-                                {shortDayLabels[todayIndex]}
-                                <Text type="secondary" style={{ fontSize: 11, fontWeight: 400, marginLeft: 5 }}>
-                                    {dayColumns[0]?.dateStr}
-                                </Text>
-                            </div>
-                        </div>
-                        <div style={{ width: 1, alignSelf: 'stretch', background: borderColor }} />
-                        <div>
-                            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
-                                {t('productionPlan.table.headers.machine')}
-                            </Text>
-                            <Tag color="purple" style={{ fontWeight: 700, margin: '4px 0 0' }}>
-                                {currentMachine}
-                            </Tag>
-                        </div>
-                        <div style={{ width: 1, alignSelf: 'stretch', background: borderColor }} />
-                        <div>
-                            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
-                                {t('productionPlan.transferSchedule.caseQuantity')}
-                            </Text>
-                            <div style={{ fontWeight: 700, fontSize: 16, marginTop: 2 }}>
-                                {currentQty}
-                                <Text type="secondary" style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>
-                                    {t('productionPlan.units.cases').toLowerCase()}
-                                </Text>
-                            </div>
                         </div>
                     </div>
-
-                    {/* Legend */}
-                    <div
-                        style={{
-                            flex: 1,
-                            minWidth: 220,
-                            padding: '10px 14px',
-                            borderRadius: 8,
-                            border: `1px solid ${borderColor}`,
-                            background: token.colorBgContainer,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        <Text type="secondary" style={{ fontSize: 11, fontWeight: 600 }}>
-                            Chú thích
+                    <div style={{ width: 1, alignSelf: 'stretch', background: borderColor }} />
+                    <div>
+                        <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
+                            {t('productionPlan.table.headers.machine')}
                         </Text>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-                            <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: 3,
-                                padding: '2px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700,
-                                background: token.colorPrimaryBg,
-                                border: `1px solid ${token.colorPrimaryBorder}`,
-                                color: token.colorPrimary,
-                            }}>
-                                {product?.code ?? 'P-XXX'}
-                            </span>
-                            <Text type="secondary" style={{ fontSize: 11 }}>= SP đang chuyển</Text>
-
-                            <span style={{ color: token.colorTextQuaternary }}>·</span>
-
-                            <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: 3,
-                                padding: '2px 8px', borderRadius: 99, fontSize: 11,
-                                background: token.colorFillSecondary,
-                                border: `1px solid ${token.colorBorderSecondary}`,
-                                color: token.colorText,
-                            }}>
-                                P-XXX
-                            </span>
-                            <Text type="secondary" style={{ fontSize: 11 }}>= SP khác</Text>
-
-                            <span style={{ color: token.colorTextQuaternary }}>·</span>
-
-                            <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                padding: '2px 8px', borderRadius: 4, fontSize: 11,
-                                background: token.colorFillSecondary,
-                                border: `1px solid ${borderColor}`,
-                                color: token.colorTextQuaternary,
-                            }}>
-                                <LockOutlined style={{ fontSize: 10 }} /> Nguồn
-                            </span>
-                            <Text type="secondary" style={{ fontSize: 11 }}>= không thể chọn</Text>
+                        <Tag color="purple" style={{ fontWeight: 700, margin: '4px 0 0' }}>
+                            {currentMachineCode}
+                        </Tag>
+                    </div>
+                    <div style={{ width: 1, alignSelf: 'stretch', background: borderColor }} />
+                    <div>
+                        <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
+                            {t('productionPlan.transferSchedule.caseQuantity')}
+                        </Text>
+                        <div style={{ fontWeight: 700, fontSize: 16, marginTop: 2 }}>
+                            {currentQty}
+                            <Text
+                                type="secondary"
+                                style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}
+                            >
+                                {t('productionPlan.units.cases').toLowerCase()}
+                            </Text>
                         </div>
                     </div>
                 </div>
 
-                {/* Schedule table */}
-                <div
-                    style={{
-                        overflowX: 'auto',
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: 8,
-                    }}
-                >
-                    <table
+                {/* Schedule grid */}
+                <Spin spinning={!!gridLoading}>
+                    <div
                         style={{
-                            borderCollapse: 'collapse',
-                            width: '100%',
-                            minWidth: MACHINE_COL_WIDTH + DAY_COL_MIN_WIDTH * dayColumns.length,
+                            overflowX: 'auto',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: 8,
                         }}
                     >
-                        <thead>
-                            <tr>
-                                <th
-                                    style={{
-                                        width: MACHINE_COL_WIDTH,
-                                        padding: '10px 12px',
-                                        background: token.colorFillAlter,
-                                        fontSize: 12,
-                                        fontWeight: 600,
-                                        color: token.colorTextSecondary,
-                                        textAlign: 'left',
-                                        borderBottom: `2px solid ${borderColor}`,
-                                        position: 'sticky',
-                                        left: 0,
-                                        zIndex: 2,
-                                    }}
-                                >
-                                    {t('productionPlan.table.headers.machine')}
-                                </th>
-                                {dayColumns.map((col) => {
-                                    const relative = getRelativeLabel(col.index);
-                                    const isToday = col.index === todayIndex;
-                                    const isSelectedDay = selectedDayIndex === col.index;
-                                    return (
-                                        <th
-                                            key={col.index}
-                                            style={{
-                                                minWidth: DAY_COL_MIN_WIDTH,
-                                                padding: '8px 12px',
-                                                background: isSelectedDay
-                                                    ? token.colorPrimaryBg
-                                                    : isToday
-                                                        ? token.colorPrimaryBg
-                                                        : token.colorFillAlter,
-                                                fontSize: 12,
-                                                fontWeight: 600,
-                                                color: isToday || isSelectedDay
-                                                    ? token.colorPrimary
-                                                    : token.colorTextSecondary,
-                                                textAlign: 'left',
-                                                borderBottom: `2px solid ${isSelectedDay
-                                                    ? token.colorPrimary
-                                                    : isToday
-                                                        ? token.colorPrimaryBorder
-                                                        : borderColor
-                                                    }`,
-                                                borderLeft: `1px solid ${borderColor}`,
-                                                transition: 'background 0.15s',
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-                                                {relative && (
-                                                    <span
-                                                        style={{
-                                                            padding: '0 5px',
-                                                            borderRadius: 10,
-                                                            fontSize: 10,
-                                                            fontWeight: 700,
-                                                            background: isToday
-                                                                ? token.colorPrimary
-                                                                : token.colorPrimaryBg,
-                                                            color: isToday ? '#fff' : token.colorPrimary,
-                                                            border: `1px solid ${token.colorPrimaryBorder}`,
-                                                        }}
-                                                    >
-                                                        {relative}
-                                                    </span>
-                                                )}
-                                                <span>{shortDayLabels[col.index]}</span>
-                                            </div>
-                                            <div
+                        <table
+                            style={{
+                                borderCollapse: 'collapse',
+                                width: '100%',
+                                minWidth: MACHINE_COL_WIDTH + DAY_COL_MIN_WIDTH * dayColumns.length,
+                            }}
+                        >
+                            <thead>
+                                <tr>
+                                    <th
+                                        style={{
+                                            width: MACHINE_COL_WIDTH,
+                                            padding: '10px 12px',
+                                            background: token.colorFillAlter,
+                                            fontSize: 12,
+                                            fontWeight: 600,
+                                            color: token.colorTextSecondary,
+                                            textAlign: 'left',
+                                            borderBottom: `2px solid ${borderColor}`,
+                                            position: 'sticky',
+                                            left: 0,
+                                            zIndex: 2,
+                                        }}
+                                    >
+                                        {t('productionPlan.table.headers.machine')}
+                                    </th>
+                                    {dayColumns.map((col) => {
+                                        const relative = getRelativeLabel(col.index);
+                                        const isToday = col.index === todayIndex;
+                                        const isSelectedDay = selectedDayIndex === col.index;
+                                        return (
+                                            <th
+                                                key={col.index}
                                                 style={{
-                                                    fontSize: 11,
-                                                    fontWeight: 400,
-                                                    color: isToday || isSelectedDay
-                                                        ? token.colorPrimaryTextActive
-                                                        : token.colorTextTertiary,
-                                                    marginTop: 2,
+                                                    minWidth: DAY_COL_MIN_WIDTH,
+                                                    padding: '8px 12px',
+                                                    background:
+                                                        isSelectedDay || isToday
+                                                            ? token.colorPrimaryBg
+                                                            : token.colorFillAlter,
+                                                    fontSize: 12,
+                                                    fontWeight: 600,
+                                                    color:
+                                                        isToday || isSelectedDay
+                                                            ? token.colorPrimary
+                                                            : token.colorTextSecondary,
+                                                    textAlign: 'left',
+                                                    borderBottom: `2px solid ${
+                                                        isSelectedDay
+                                                            ? token.colorPrimary
+                                                            : isToday
+                                                              ? token.colorPrimaryBorder
+                                                              : borderColor
+                                                    }`,
+                                                    borderLeft: `1px solid ${borderColor}`,
+                                                    transition: 'background 0.15s',
                                                 }}
                                             >
-                                                {col.dateStr}
-                                            </div>
-                                        </th>
-                                    );
-                                })}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {machineOptions.map((machine, mIdx) => {
-                                const isLastRow = mIdx === machineOptions.length - 1;
-                                const isCurrentMachine = machine === currentMachine;
-                                return (
-                                    <tr key={machine}>
-                                        <td
-                                            style={{
-                                                width: MACHINE_COL_WIDTH,
-                                                padding: '10px 12px',
-                                                background: token.colorFillAlter,
-                                                borderBottom: isLastRow ? 'none' : `1px solid ${borderColor}`,
-                                                verticalAlign: 'middle',
-                                                position: 'sticky',
-                                                left: 0,
-                                                zIndex: 1,
-                                            }}
-                                        >
-                                            <Tag
-                                                color={isCurrentMachine ? 'purple' : 'default'}
-                                                style={{ fontWeight: 700, margin: 0 }}
-                                            >
-                                                {machine}
-                                            </Tag>
-                                        </td>
-
-                                        {dayColumns.map((col) => {
-                                            const isSource =
-                                                machine === currentMachine && col.index === todayIndex;
-                                            const isSelected =
-                                                selectedDayIndex === col.index && selectedMachine === machine;
-                                            const isToday = col.index === todayIndex;
-                                            const cellProducts = getProductsForCell(
-                                                lines,
-                                                machine,
-                                                col.index,
-                                            );
-
-                                            return (
-                                                <td
-                                                    key={col.index}
-                                                    onClick={
-                                                        !isSource
-                                                            ? () => handleSelectCell(col.index, machine)
-                                                            : undefined
-                                                    }
+                                                <div
                                                     style={{
-                                                        minWidth: DAY_COL_MIN_WIDTH,
-                                                        padding: '8px 10px',
-                                                        verticalAlign: 'top',
-                                                        cursor: isSource ? 'not-allowed' : 'pointer',
-                                                        background: isSource
-                                                            ? token.colorFillSecondary
-                                                            : isSelected
-                                                                ? token.colorPrimaryBg
-                                                                : isToday
-                                                                    ? `${token.colorPrimaryBg}66`
-                                                                    : token.colorBgContainer,
-                                                        borderBottom: isLastRow
-                                                            ? 'none'
-                                                            : `1px solid ${borderColor}`,
-                                                        borderLeft: `1px solid ${borderColor}`,
-                                                        outline: isSelected
-                                                            ? `2px solid ${token.colorPrimary}`
-                                                            : undefined,
-                                                        outlineOffset: -2,
-                                                        transition: 'background 0.15s',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 5,
+                                                        flexWrap: 'wrap',
                                                     }}
                                                 >
-                                                    {/* Product chips */}
-                                                    <div
+                                                    {relative && (
+                                                        <span
+                                                            style={{
+                                                                padding: '0 5px',
+                                                                borderRadius: 10,
+                                                                fontSize: 10,
+                                                                fontWeight: 700,
+                                                                background: isToday
+                                                                    ? token.colorPrimary
+                                                                    : token.colorPrimaryBg,
+                                                                color: isToday
+                                                                    ? '#fff'
+                                                                    : token.colorPrimary,
+                                                                border: `1px solid ${token.colorPrimaryBorder}`,
+                                                            }}
+                                                        >
+                                                            {relative}
+                                                        </span>
+                                                    )}
+                                                    <span>{shortDayLabels[col.index]}</span>
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontWeight: 400,
+                                                        color:
+                                                            isToday || isSelectedDay
+                                                                ? token.colorPrimaryTextActive
+                                                                : token.colorTextTertiary,
+                                                        marginTop: 2,
+                                                    }}
+                                                >
+                                                    {col.dateStr}
+                                                </div>
+                                            </th>
+                                        );
+                                    })}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {weeklyGroups.map((group, mIdx) => {
+                                    const isLastRow = mIdx === weeklyGroups.length - 1;
+                                    const isCurrentMachine = group.machineId === target?.machineId;
+                                    return (
+                                        <tr key={group.machineId}>
+                                            <td
+                                                style={{
+                                                    width: MACHINE_COL_WIDTH,
+                                                    padding: '10px 12px',
+                                                    background: token.colorFillAlter,
+                                                    borderBottom: isLastRow
+                                                        ? 'none'
+                                                        : `1px solid ${borderColor}`,
+                                                    verticalAlign: 'middle',
+                                                    position: 'sticky',
+                                                    left: 0,
+                                                    zIndex: 1,
+                                                }}
+                                            >
+                                                <Tag
+                                                    color={isCurrentMachine ? 'purple' : 'default'}
+                                                    style={{ fontWeight: 700, margin: 0 }}
+                                                >
+                                                    {group.machineCode}
+                                                </Tag>
+                                            </td>
+
+                                            {dayColumns.map((col) => {
+                                                const isSource =
+                                                    isCurrentMachine && col.index === todayIndex;
+                                                const isSelected =
+                                                    selectedDayIndex === col.index &&
+                                                    selectedMachineId === group.machineId;
+                                                const isToday = col.index === todayIndex;
+                                                const cellProducts = group.products
+                                                    .filter(
+                                                        (product) =>
+                                                            !product.isDeleted &&
+                                                            product.schedule[col.index] > 0
+                                                    )
+                                                    .map((product) => ({
+                                                        code: product.code,
+                                                        qty: product.schedule[col.index],
+                                                    }));
+
+                                                return (
+                                                    <td
+                                                        key={col.index}
+                                                        onClick={
+                                                            !isSource
+                                                                ? () =>
+                                                                      handleSelectCell(
+                                                                          col.index,
+                                                                          group.machineId
+                                                                      )
+                                                                : undefined
+                                                        }
                                                         style={{
-                                                            display: 'flex',
-                                                            flexWrap: 'wrap',
-                                                            gap: 4,
-                                                            marginBottom: 6,
-                                                            minHeight: 22,
+                                                            minWidth: DAY_COL_MIN_WIDTH,
+                                                            padding: '8px 10px',
+                                                            verticalAlign: 'top',
+                                                            cursor: isSource
+                                                                ? 'not-allowed'
+                                                                : 'pointer',
+                                                            background: isSource
+                                                                ? token.colorFillSecondary
+                                                                : isSelected
+                                                                  ? token.colorPrimaryBg
+                                                                  : isToday
+                                                                    ? `${token.colorPrimaryBg}66`
+                                                                    : token.colorBgContainer,
+                                                            borderBottom: isLastRow
+                                                                ? 'none'
+                                                                : `1px solid ${borderColor}`,
+                                                            borderLeft: `1px solid ${borderColor}`,
+                                                            outline: isSelected
+                                                                ? `2px solid ${token.colorPrimary}`
+                                                                : undefined,
+                                                            outlineOffset: -2,
+                                                            transition: 'background 0.15s',
                                                         }}
                                                     >
-                                                        {cellProducts.length > 0 ? (
-                                                            cellProducts.map((p) => (
-                                                                <ProductChip
-                                                                    key={p.code}
-                                                                    code={p.code}
-                                                                    qty={p.qty}
-                                                                    isCurrent={p.code === product?.code}
-                                                                />
-                                                            ))
-                                                        ) : (
-                                                            <span
+                                                        {/* Product chips */}
+                                                        <div
+                                                            style={{
+                                                                display: 'flex',
+                                                                flexWrap: 'wrap',
+                                                                gap: 4,
+                                                                marginBottom: 6,
+                                                                minHeight: 22,
+                                                            }}
+                                                        >
+                                                            {cellProducts.length > 0 ? (
+                                                                cellProducts.map((p) => (
+                                                                    <ProductChip
+                                                                        key={p.code}
+                                                                        code={p.code}
+                                                                        qty={p.qty}
+                                                                        isCurrent={
+                                                                            p.code ===
+                                                                            target?.row.code
+                                                                        }
+                                                                    />
+                                                                ))
+                                                            ) : (
+                                                                <span
+                                                                    style={{
+                                                                        fontSize: 11,
+                                                                        color: token.colorTextQuaternary,
+                                                                        fontStyle: 'italic',
+                                                                        lineHeight: '22px',
+                                                                    }}
+                                                                >
+                                                                    —
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Action */}
+                                                        {isSource ? (
+                                                            <div
                                                                 style={{
                                                                     fontSize: 11,
                                                                     color: token.colorTextQuaternary,
-                                                                    fontStyle: 'italic',
-                                                                    lineHeight: '22px',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 4,
                                                                 }}
                                                             >
-                                                                —
-                                                            </span>
+                                                                <LockOutlined
+                                                                    style={{ fontSize: 10 }}
+                                                                />
+                                                                <span>
+                                                                    {t(
+                                                                        'productionPlan.transferSchedule.sourceLocked'
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <Button
+                                                                size="small"
+                                                                type={
+                                                                    isSelected
+                                                                        ? 'primary'
+                                                                        : 'dashed'
+                                                                }
+                                                                icon={
+                                                                    isSelected ? (
+                                                                        <CheckOutlined />
+                                                                    ) : (
+                                                                        <PlusOutlined />
+                                                                    )
+                                                                }
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleSelectCell(
+                                                                        col.index,
+                                                                        group.machineId
+                                                                    );
+                                                                }}
+                                                                style={{
+                                                                    fontSize: 11,
+                                                                    height: 24,
+                                                                }}
+                                                            >
+                                                                {isSelected
+                                                                    ? t(
+                                                                          'productionPlan.transferSchedule.selected'
+                                                                      )
+                                                                    : t(
+                                                                          'productionPlan.transferSchedule.selectTransferTo'
+                                                                      )}
+                                                            </Button>
                                                         )}
-                                                    </div>
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </Spin>
 
-                                                    {/* Action */}
-                                                    {isSource ? (
-                                                        <div
-                                                            style={{
-                                                                fontSize: 11,
-                                                                color: token.colorTextQuaternary,
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 4,
-                                                            }}
-                                                        >
-                                                            <LockOutlined style={{ fontSize: 10 }} />
-                                                            <span>
-                                                                {t('productionPlan.transferSchedule.sourceLocked')}
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <Button
-                                                            size="small"
-                                                            type={isSelected ? 'primary' : 'dashed'}
-                                                            icon={
-                                                                isSelected ? (
-                                                                    <CheckOutlined />
-                                                                ) : (
-                                                                    <PlusOutlined />
-                                                                )
-                                                            }
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleSelectCell(col.index, machine);
-                                                            }}
-                                                            style={{ fontSize: 11, height: 24 }}
-                                                        >
-                                                            {isSelected
-                                                                ? t('productionPlan.transferSchedule.selected')
-                                                                : t('productionPlan.transferSchedule.selectTransferTo')}
-                                                        </Button>
-                                                    )}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                {/* Incident reason */}
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ flex: '0 0 280px' }}>
+                        <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                            {t('productionPlan.incident.reasonLabel')}
+                        </Text>
+                        <Select
+                            style={{ width: '100%' }}
+                            placeholder={t('productionPlan.incident.reasonPlaceholder')}
+                            value={incidentReason}
+                            onChange={setIncidentReason}
+                            options={getIncidentReasonOptions(t)}
+                        />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 260 }}>
+                        <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                            {t('productionPlan.incident.noteLabel')}
+                            {noteRequired && <Text type="danger"> *</Text>}
+                        </Text>
+                        <Input.TextArea
+                            rows={2}
+                            maxLength={2000}
+                            value={note}
+                            onChange={(event) => setNote(event.target.value)}
+                            placeholder={t('productionPlan.incident.notePlaceholder')}
+                        />
+                        {noteRequired && !note.trim() && (
+                            <Text type="danger" style={{ fontSize: 12 }}>
+                                {t('productionPlan.incident.noteRequiredForOther')}
+                            </Text>
+                        )}
+                    </div>
                 </div>
 
                 {/* Transfer preview */}
@@ -550,18 +621,31 @@ export default function TransferScheduleModal({
                                 fontSize: 13,
                             }}
                         >
-                            <Text type="secondary" style={{ fontSize: 12 }}>Chuyển</Text>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                {t('productionPlan.transferSchedule.from')}
+                            </Text>
                             <Tag style={{ fontWeight: 700, margin: 0 }}>
                                 {currentQty} {t('productionPlan.units.cases').toLowerCase()}
                             </Tag>
-                            <Text type="secondary" style={{ fontSize: 12 }}>từ</Text>
                             <strong>{shortDayLabels[todayIndex]}</strong>
-                            <Tag color="purple" style={{ margin: 0 }}>{currentMachine}</Tag>
-                            <span style={{ color: token.colorSuccess, fontWeight: 700, fontSize: 16 }}>→</span>
+                            <Tag color="purple" style={{ margin: 0 }}>
+                                {currentMachineCode}
+                            </Tag>
+                            <span
+                                style={{
+                                    color: token.colorSuccess,
+                                    fontWeight: 700,
+                                    fontSize: 16,
+                                }}
+                            >
+                                →
+                            </span>
                             <strong style={{ color: token.colorSuccess }}>
                                 {shortDayLabels[selectedDayIndex]}
                             </strong>
-                            <Tag color="green" style={{ margin: 0 }}>{selectedMachine}</Tag>
+                            <Tag color="green" style={{ margin: 0 }}>
+                                {selectedMachine.machineCode}
+                            </Tag>
                         </div>
                         {existingQtyOnTarget > 0 && (
                             <Alert
@@ -570,12 +654,18 @@ export default function TransferScheduleModal({
                                 style={{ marginTop: 8 }}
                                 message={
                                     <span>
-                                        {t('productionPlan.transferSchedule.targetAlreadyHasPrefix')}{' '}
+                                        {t(
+                                            'productionPlan.transferSchedule.targetAlreadyHasPrefix'
+                                        )}{' '}
                                         <strong>{existingQtyOnTarget}</strong>{' '}
                                         {t('productionPlan.units.cases').toLowerCase()},{' '}
-                                        {t('productionPlan.transferSchedule.targetAlreadyHasMiddle')}{' '}
+                                        {t(
+                                            'productionPlan.transferSchedule.targetAlreadyHasMiddle'
+                                        )}{' '}
                                         <strong>{existingQtyOnTarget + currentQty}</strong>{' '}
-                                        {t('productionPlan.transferSchedule.targetAlreadyHasSuffix')}
+                                        {t(
+                                            'productionPlan.transferSchedule.targetAlreadyHasSuffix'
+                                        )}
                                     </span>
                                 }
                             />

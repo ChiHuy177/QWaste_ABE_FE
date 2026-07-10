@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Dropdown, Empty, Pagination, Table, Tooltip } from 'antd';
+import { Button, Dropdown, Empty, Pagination, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
     DeleteOutlined,
@@ -9,6 +9,7 @@ import {
     MoreOutlined,
     ScheduleOutlined,
     SwapOutlined,
+    UndoOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
@@ -28,69 +29,67 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
-import { ProductionLine, ProductionProduct, ProductPosition } from './types';
+import { MachineGroupVM, PlanRowTarget, PlanRowVM } from './types';
 import styles from './ProductionPlanTable.module.css';
-import { getEffectiveMachine, getSortedProductsForDay } from '../_utils/planUtils';
-
-type DailyProductRow = ProductionProduct & {
-    lineIndex: number;
-    lineName: string;
-    productIndex: number;
-};
 
 type GroupHeaderRow = {
     type: 'group-header';
     groupKey: string;
-    machine: string;
-    lineName: string;
-    lineIndex: number;
+    machineCode: string;
+    spaceName: string;
     groupSize: number;
 };
 
-type ProductFlatRow = DailyProductRow & {
+type ProductFlatRow = PlanRowVM & {
     type: 'product';
     groupKey: string;
+    machineId: string;
+    machineCode: string;
 };
 
 type TotalFlatRow = {
     type: 'total';
     groupKey: string;
-    machine: string;
-    lineName: string;
-    lineIndex: number;
     totalCases: number;
-    totalPcs: number;
 };
 
 type FlatRow = GroupHeaderRow | ProductFlatRow | TotalFlatRow;
 
-interface MachineGroup {
-    key: string;
-    lineIndex: number;
-    lineName: string;
-    machine: string;
-    products: DailyProductRow[];
-}
-
 interface DailyTableProps {
-    lines: ProductionLine[];
+    groups: MachineGroupVM[];
     todayIndex: number;
     dateLabel: string;
     machineFilter: string;
-    onEdit: (position: ProductPosition) => void;
-    onDelete: (position: ProductPosition) => void;
-    onReorder: (lineIndex: number, activeCode: string, overCode: string) => void;
-    onTransferMachine?: (position: ProductPosition) => void;
-    onTransferSchedule?: (position: ProductPosition) => void;
+    canReorder?: boolean;
+    onEdit: (target: PlanRowTarget) => void;
+    onDelete: (target: PlanRowTarget) => void;
+    onRestore: (target: PlanRowTarget) => void;
+    onReorder: (machineId: string, activeRowKey: string, overRowKey: string) => void;
+    onTransferMachine?: (target: PlanRowTarget) => void;
+    onTransferSchedule?: (target: PlanRowTarget) => void;
 }
 
+const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
+    !normalizedFilter ||
+    group.machineCode.toLowerCase().includes(normalizedFilter) ||
+    group.machineName.toLowerCase().includes(normalizedFilter) ||
+    group.spaceName.toLowerCase().includes(normalizedFilter);
+
+const toTarget = (record: ProductFlatRow): PlanRowTarget => ({
+    machineId: record.machineId,
+    machineCode: record.machineCode,
+    row: record,
+});
+
 export default function DailyTable({
-    lines,
+    groups,
     todayIndex,
     dateLabel,
     machineFilter,
+    canReorder = true,
     onEdit,
     onDelete,
+    onRestore,
     onReorder,
     onTransferMachine,
     onTransferSchedule,
@@ -104,117 +103,80 @@ export default function DailyTable({
     );
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
 
-    const machineGroups = useMemo<MachineGroup[]>(() => {
-        const groups: MachineGroup[] = [];
-
-        lines.forEach((line, lineIndex) => {
-            const groupedProducts = new Map<string, DailyProductRow[]>();
-
-            const sortedProducts = getSortedProductsForDay(line, todayIndex);
-
-            sortedProducts.forEach((product) => {
-                if (product.schedule[todayIndex] <= 0) return;
-                const effectiveMachine = getEffectiveMachine(product, todayIndex);
-                if (
-                    normalizedMachineFilter &&
-                    !effectiveMachine.toLowerCase().includes(normalizedMachineFilter)
-                ) {
-                    return;
-                }
-
-                const originalProductIndex = line.products.findIndex((p) => p.code === product.code);
-
-                const current = groupedProducts.get(effectiveMachine) ?? [];
-                current.push({
-                    ...product,
-                    lineIndex,
-                    lineName: line.spaceName,
-                    productIndex: originalProductIndex,
-                });
-                groupedProducts.set(effectiveMachine, current);
-            });
-
-            groupedProducts.forEach((products, machine) => {
-                groups.push({
-                    key: `${line.spaceCode}-${machine}`,
-                    lineIndex,
-                    lineName: line.spaceName,
-                    machine,
-                    products,
-                });
-            });
-        });
-
-        return groups;
-    }, [lines, normalizedMachineFilter, todayIndex]);
+    const visibleGroups = useMemo(
+        () =>
+            groups.filter(
+                (group) =>
+                    group.products.length > 0 && matchMachineFilter(group, normalizedMachineFilter)
+            ),
+        [groups, normalizedMachineFilter]
+    );
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [machineGroups.length]);
+    }, [visibleGroups.length]);
 
     const paginatedGroups = useMemo(
-        () => machineGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-        [machineGroups, currentPage, pageSize]
+        () => visibleGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [visibleGroups, currentPage, pageSize]
     );
 
-    const { flatRows, sortableKeys, productGroupMap } = useMemo(() => {
+    const { flatRows, sortableKeys, rowGroupMap } = useMemo(() => {
         const rows: FlatRow[] = [];
         const keys: string[] = [];
-        const groupMap = new Map<string, { groupKey: string; lineIndex: number }>();
+        const groupMap = new Map<string, { groupKey: string; machineId: string }>();
 
         paginatedGroups.forEach((group) => {
-            const totalCases = group.products.reduce((sum, p) => sum + p.schedule[todayIndex], 0);
-            const totalPcs = group.products.reduce(
-                (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
-                0
-            );
+            const groupKey = group.machineId;
+            const totalCases = group.products
+                .filter((p) => !p.isDeleted)
+                .reduce((sum, p) => sum + p.schedule[todayIndex], 0);
 
             // Anchor row: holds the machine rowspan cell, not draggable.
             // groupSize + 2 = 1 (this row) + groupSize (products) + 1 (total).
             rows.push({
                 type: 'group-header',
-                groupKey: group.key,
-                machine: group.machine,
-                lineName: group.lineName,
-                lineIndex: group.lineIndex,
+                groupKey,
+                machineCode: group.machineCode,
+                spaceName: group.spaceName,
                 groupSize: group.products.length,
             });
 
             group.products.forEach((product) => {
-                rows.push({ ...product, type: 'product', groupKey: group.key });
-                keys.push(product.code);
-                groupMap.set(product.code, { groupKey: group.key, lineIndex: group.lineIndex });
+                rows.push({
+                    ...product,
+                    type: 'product',
+                    groupKey,
+                    machineId: group.machineId,
+                    machineCode: group.machineCode,
+                });
+                if (!product.isDeleted) {
+                    keys.push(product.rowKey);
+                    groupMap.set(product.rowKey, { groupKey, machineId: group.machineId });
+                }
             });
 
-            rows.push({
-                type: 'total',
-                groupKey: group.key,
-                machine: group.machine,
-                lineName: group.lineName,
-                lineIndex: group.lineIndex,
-                totalCases,
-                totalPcs,
-            });
+            rows.push({ type: 'total', groupKey, totalCases });
         });
 
-        return { flatRows: rows, sortableKeys: keys, productGroupMap: groupMap };
+        return { flatRows: rows, sortableKeys: keys, rowGroupMap: groupMap };
     }, [paginatedGroups, todayIndex]);
 
     const sameGroupCollisionDetection = useCallback<CollisionDetection>(
         (args) => {
-            const activeGroupKey = productGroupMap.get(String(args.active.id))?.groupKey;
+            const activeGroupKey = rowGroupMap.get(String(args.active.id))?.groupKey;
             if (!activeGroupKey) return [];
 
             const sameGroupContainers = args.droppableContainers.filter(
-                (c) => productGroupMap.get(String(c.id))?.groupKey === activeGroupKey
+                (c) => rowGroupMap.get(String(c.id))?.groupKey === activeGroupKey
             );
 
             return closestCenter({ ...args, droppableContainers: sameGroupContainers });
         },
-        [productGroupMap]
+        [rowGroupMap]
     );
 
     // Returns the onCell override that hides a cell inside the anchor (group-header) row.
@@ -254,8 +216,8 @@ export default function DailyTable({
                             if (record.type !== 'group-header') return null;
                             return (
                                 <div className={styles.dailySheetMachineCell}>
-                                    <strong>{record.machine}</strong>
-                                    <span>{record.lineName}</span>
+                                    <strong>{record.machineCode}</strong>
+                                    <span>{record.spaceName}</span>
                                 </div>
                             );
                         },
@@ -270,7 +232,10 @@ export default function DailyTable({
                         width: 48,
                         align: 'center',
                         onCell: anchorCell,
-                        render: (_, record) => (record.type === 'product' ? <DragHandle /> : null),
+                        render: (_, record) =>
+                            record.type === 'product' && !record.isDeleted && canReorder ? (
+                                <DragHandle />
+                            ) : null,
                     },
                     {
                         title: (
@@ -280,14 +245,23 @@ export default function DailyTable({
                             </div>
                         ),
                         key: 'code',
-                        width: 120,
+                        width: 140,
                         fixed: 'left',
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
                                 return <strong>{t('productionPlan.table.total')}</strong>;
                             if (record.type === 'group-header') return null;
-                            return <strong>{record.code}</strong>;
+                            return (
+                                <>
+                                    <strong>{record.code}</strong>
+                                    {record.isDeleted && (
+                                        <Tag style={{ marginLeft: 6 }}>
+                                            {t('productionPlan.table.deletedTag')}
+                                        </Tag>
+                                    )}
+                                </>
+                            );
                         },
                     },
                     {
@@ -305,35 +279,9 @@ export default function DailyTable({
                             </div>
                         ),
                         key: 'mold',
-                        width: 100,
+                        width: 110,
                         onCell: anchorCell,
-                        render: (_, record) => (record.type === 'product' ? record.mold : null),
-                    },
-                    {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.average')}</span>
-                                <span>Average</span>
-                            </div>
-                        ),
-                        key: 'pcsMultiplier',
-                        width: 100,
-                        align: 'right',
-                        onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' ? record.pcsMultiplier : null,
-                    },
-                    {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.time')}</span>
-                                <span>Time</span>
-                            </div>
-                        ),
-                        key: 'time',
-                        width: 120,
-                        onCell: anchorCell,
-                        render: (_, record) => (record.type === 'product' ? record.time : null),
+                        render: (_, record) => (record.type === 'product' ? record.moldCode : null),
                     },
                     {
                         title: (
@@ -348,41 +296,9 @@ export default function DailyTable({
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
-                                return record.totalCases.toLocaleString('vi-VN');
+                                return <strong>{record.totalCases.toLocaleString('vi-VN')}</strong>;
                             if (record.type === 'group-header') return null;
                             return record.schedule[todayIndex];
-                        },
-                    },
-                    {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.units.pcs')}</span>
-                                <span>(pcs)</span>
-                            </div>
-                        ),
-                        key: 'pcs',
-                        width: 100,
-                        align: 'right',
-                        className: styles.dailySheetPcsColumn,
-                        onCell: (record) => ({
-                            ...anchorCell(record),
-                            className:
-                                record.type === 'group-header'
-                                    ? styles.dailyGroupAnchorCell
-                                    : styles.dailySheetPcsColumn,
-                        }),
-                        render: (_, record) => {
-                            if (record.type === 'total') {
-                                return <strong>{record.totalPcs.toLocaleString('vi-VN')}</strong>;
-                            }
-                            if (record.type === 'group-header') return null;
-                            return (
-                                <strong>
-                                    {(
-                                        record.schedule[todayIndex] * record.pcsMultiplier
-                                    ).toLocaleString('vi-VN')}
-                                </strong>
-                            );
                         },
                     },
                     {
@@ -393,17 +309,27 @@ export default function DailyTable({
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type !== 'product') return null;
-                            const position = {
-                                lineIndex: record.lineIndex,
-                                productIndex: record.productIndex,
-                            };
+                            const target = toTarget(record);
+
+                            if (record.isDeleted) {
+                                return (
+                                    <Tooltip title={t('productionPlan.actions.restore')}>
+                                        <Button
+                                            type="text"
+                                            icon={<UndoOutlined />}
+                                            onClick={() => onRestore(target)}
+                                        />
+                                    </Tooltip>
+                                );
+                            }
+
                             return (
                                 <div className={styles.actions}>
                                     <Tooltip title={t('common.edit')}>
                                         <Button
                                             type="text"
                                             icon={<EditOutlined />}
-                                            onClick={() => onEdit(position)}
+                                            onClick={() => onEdit(target)}
                                         />
                                     </Tooltip>
                                     <Tooltip title={t('common.delete')}>
@@ -411,7 +337,7 @@ export default function DailyTable({
                                             danger
                                             type="text"
                                             icon={<DeleteOutlined />}
-                                            onClick={() => onDelete(position)}
+                                            onClick={() => onDelete(target)}
                                         />
                                     </Tooltip>
                                     <Dropdown
@@ -425,7 +351,7 @@ export default function DailyTable({
                                                         'productionPlan.actions.transferMachine'
                                                     ),
                                                     icon: <SwapOutlined />,
-                                                    onClick: () => onTransferMachine?.(position),
+                                                    onClick: () => onTransferMachine?.(target),
                                                 },
                                                 {
                                                     key: 'transfer-schedule',
@@ -433,7 +359,7 @@ export default function DailyTable({
                                                         'productionPlan.actions.transferSchedule'
                                                     ),
                                                     icon: <ScheduleOutlined />,
-                                                    onClick: () => onTransferSchedule?.(position),
+                                                    onClick: () => onTransferSchedule?.(target),
                                                 },
                                             ],
                                         }}
@@ -447,21 +373,31 @@ export default function DailyTable({
                 ],
             },
         ],
-        [dateLabel, onDelete, onEdit, onTransferMachine, onTransferSchedule, t, todayIndex]
+        [
+            canReorder,
+            dateLabel,
+            onDelete,
+            onEdit,
+            onRestore,
+            onTransferMachine,
+            onTransferSchedule,
+            t,
+            todayIndex,
+        ]
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
-        const activeInfo = productGroupMap.get(String(active.id));
-        const overInfo = productGroupMap.get(String(over.id));
+        const activeInfo = rowGroupMap.get(String(active.id));
+        const overInfo = rowGroupMap.get(String(over.id));
         if (!activeInfo || !overInfo || activeInfo.groupKey !== overInfo.groupKey) return;
 
-        onReorder(activeInfo.lineIndex, String(active.id), String(over.id));
+        onReorder(activeInfo.machineId, String(active.id), String(over.id));
     };
 
-    if (machineGroups.length === 0) {
+    if (visibleGroups.length === 0) {
         return <Empty description={t('productionPlan.table.emptyDaily')} />;
     }
 
@@ -484,13 +420,17 @@ export default function DailyTable({
                         columns={columns}
                         dataSource={flatRows}
                         rowKey={(record) => {
-                            if (record.type === 'product') return record.code;
+                            if (record.type === 'product') return record.rowKey;
                             if (record.type === 'total') return `${record.groupKey}-total`;
                             return `${record.groupKey}-header`;
                         }}
-                        rowClassName={(record) =>
-                            record.type === 'total' ? styles.dailySheetTotalRow : ''
-                        }
+                        rowClassName={(record) => {
+                            if (record.type === 'total') return styles.dailySheetTotalRow;
+                            if (record.type === 'product' && record.isDeleted) {
+                                return styles.deletedRow;
+                            }
+                            return '';
+                        }}
                         onRow={(record) =>
                             ({
                                 'data-row-type': record.type,
@@ -499,7 +439,7 @@ export default function DailyTable({
                         pagination={false}
                         bordered
                         size="small"
-                        scroll={{ x: 1330 }}
+                        scroll={{ x: 1100 }}
                     />
                 </SortableContext>
             </DndContext>
@@ -507,7 +447,7 @@ export default function DailyTable({
                 <Pagination
                     current={currentPage}
                     pageSize={pageSize}
-                    total={machineGroups.length}
+                    total={visibleGroups.length}
                     onChange={(page, size) => {
                         setCurrentPage(page);
                         setPageSize(size);

@@ -1,37 +1,32 @@
-import { AuditMetaData } from './Metadata';
-
-export type MoldType = 'PRESS' | 'COMPRESS';
-export type MoldStatus = 'ACTIVE' | 'MAINTENANCE' | 'RETIRED';
+import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
+import { OperationType } from './OperationType';
 
 export interface Mold {
-    moldId: number;
+    /** UUID (BE Mold.moldId) */
+    moldId: string;
     moldCode: string;
     moldName: string;
-    quantity: number;
+    /** Cavity factor — số sản phẩm hoàn thành mỗi nhát ép. */
+    outputPerShot: number;
     description?: string;
-    moldType: MoldType;
-    status: MoldStatus;
+    /** Công đoạn khuôn dùng — xác định khuôn tương thích với máy nào (machine.operationTypeId). */
+    operationType: OperationType;
     auditMetaData?: AuditMetaData;
+    /** GET /api/molds/v1 trả cả mold đã soft-delete — dùng field này để lọc/hiển thị. */
+    softDeleteMetaData?: SoftDeleteMetaData;
 }
 
 export interface MoldFormData {
     moldCode: string;
     moldName: string;
-    quantity: number;
+    outputPerShot: number;
     description?: string;
-    moldType: MoldType;
-    status: MoldStatus;
+    operationTypeId: number;
 }
 
 export interface MoldUpdateFormData extends MoldFormData {
-    moldId: number;
+    moldId: string;
 }
 
-export interface MoldPaginatedParams {
-    page: number;
-    size: number;
-    sort?: string | string[];
-    search?: string;
-    moldCode?: string;
-    moldName?: string;
-}
+/** Mold khả dụng cho picker/kế hoạch: chưa bị soft-delete. */
+export const isMoldSchedulable = (mold: Mold): boolean => !mold.softDeleteMetaData?.isDeleted;

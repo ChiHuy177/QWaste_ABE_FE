@@ -1,66 +1,81 @@
 'use client';
 
-import { useState } from 'react';
-import { Alert, Modal, Select, Tag, theme, Typography } from 'antd';
+import { useEffect, useState } from 'react';
+import { Alert, Input, Modal, Select, Tag, theme, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ProductionProduct } from './types';
+import type { IncidentReason } from '@/types/ProductionPlan';
+import { PlanRowTarget, SelectOptionVM } from './types';
 import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
-import { getEffectiveMachine } from '../_utils/planUtils';
+import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/incidentOptions';
+
+export interface TransferMachinePayload {
+    machineId: string;
+    incidentReason: IncidentReason;
+    note?: string;
+}
 
 interface TransferMachineModalProps {
     open: boolean;
-    product: ProductionProduct | null;
+    target: PlanRowTarget | null;
     todayIndex: number;
-    machineOptions: string[];
+    /** value = machineId */
+    machineOptions: SelectOptionVM[];
+    submitting?: boolean;
     onCancel: () => void;
-    onConfirm: (newMachine: string) => void;
+    onConfirm: (payload: TransferMachinePayload) => void;
 }
 
 const { Text } = Typography;
 
+// Đổi máy = BE incident defer (tạo child plan cùng ngày, máy mới) nên cần lý do sự cố.
 export default function TransferMachineModal({
     open,
-    product,
+    target,
     todayIndex,
     machineOptions,
+    submitting,
     onCancel,
     onConfirm,
 }: TransferMachineModalProps) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
-    const [newMachine, setNewMachine] = useState<string | undefined>(undefined);
+    const [newMachineId, setNewMachineId] = useState<string | undefined>(undefined);
+    const [incidentReason, setIncidentReason] = useState<IncidentReason | undefined>(undefined);
+    const [note, setNote] = useState('');
 
-    const currentMachine = product ? getEffectiveMachine(product, todayIndex) : '';
+    useEffect(() => {
+        if (!open) {
+            setNewMachineId(undefined);
+            setIncidentReason(undefined);
+            setNote('');
+        }
+    }, [open]);
+
+    const currentMachineCode = target?.machineCode ?? '';
     const dayLabel = t(`productionPlan.days.full.${WEEK_DAY_KEYS[todayIndex]}`);
-    const isDuplicate = newMachine === currentMachine;
-    const canConfirm = !!newMachine && !isDuplicate;
+    const noteRequired = isIncidentNoteRequired(incidentReason);
+    const canConfirm =
+        !!newMachineId && !!incidentReason && (!noteRequired || note.trim().length > 0);
 
     const handleConfirm = () => {
-        if (!newMachine || !canConfirm) return;
-        onConfirm(newMachine);
-        setNewMachine(undefined);
+        if (!canConfirm || !newMachineId || !incidentReason) return;
+        onConfirm({ machineId: newMachineId, incidentReason, note: note.trim() || undefined });
     };
 
-    const handleCancel = () => {
-        setNewMachine(undefined);
-        onCancel();
-    };
-
-    const selectOptions = machineOptions
-        .filter((m) => m !== currentMachine)
-        .map((m) => ({ label: m, value: m }));
+    const selectOptions = machineOptions.filter((option) => option.value !== target?.machineId);
 
     return (
         <Modal
-            title={t('productionPlan.transferMachine.title', { code: product?.code ?? '' })}
+            title={t('productionPlan.transferMachine.title', { code: target?.row.code ?? '' })}
             open={open}
             onOk={handleConfirm}
-            onCancel={handleCancel}
+            onCancel={onCancel}
             okText={t('productionPlan.actions.transfer')}
             cancelText={t('common.cancel')}
             okButtonProps={{ disabled: !canConfirm }}
+            confirmLoading={submitting}
             destroyOnHidden
-            width={420}
+            width={440}
         >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
                 <div
@@ -85,7 +100,9 @@ export default function TransferMachineModal({
                             {t('productionPlan.transferMachine.currentMachine')}
                         </Text>
                         <div style={{ marginTop: 4 }}>
-                            <Tag color="default" style={{ fontWeight: 600 }}>{currentMachine}</Tag>
+                            <Tag color="default" style={{ fontWeight: 600 }}>
+                                {currentMachineCode}
+                            </Tag>
                         </div>
                     </div>
                 </div>
@@ -98,28 +115,52 @@ export default function TransferMachineModal({
                         style={{ width: '100%' }}
                         placeholder={t('productionPlan.transferMachine.newMachinePlaceholder')}
                         showSearch
-                        value={newMachine}
-                        onChange={setNewMachine}
+                        value={newMachineId}
+                        onChange={setNewMachineId}
                         options={selectOptions}
                         filterOption={(input, option) =>
                             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                         }
                         notFoundContent={t('productionPlan.transferMachine.machineNotFound')}
                     />
-                    {isDuplicate && (
-                        <Alert
-                            type="warning"
-                            title={t('productionPlan.transferMachine.duplicateMachine')}
-                            style={{ marginTop: 8 }}
-                            showIcon
-                        />
+                </div>
+
+                <div>
+                    <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                        {t('productionPlan.incident.reasonLabel')}
+                    </Text>
+                    <Select
+                        style={{ width: '100%' }}
+                        placeholder={t('productionPlan.incident.reasonPlaceholder')}
+                        value={incidentReason}
+                        onChange={setIncidentReason}
+                        options={getIncidentReasonOptions(t)}
+                    />
+                </div>
+
+                <div>
+                    <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                        {t('productionPlan.incident.noteLabel')}
+                        {noteRequired && <Text type="danger"> *</Text>}
+                    </Text>
+                    <Input.TextArea
+                        rows={2}
+                        maxLength={2000}
+                        value={note}
+                        onChange={(event) => setNote(event.target.value)}
+                        placeholder={t('productionPlan.incident.notePlaceholder')}
+                    />
+                    {noteRequired && !note.trim() && (
+                        <Text type="danger" style={{ fontSize: 12 }}>
+                            {t('productionPlan.incident.noteRequiredForOther')}
+                        </Text>
                     )}
                 </div>
 
                 <Alert
                     type="info"
                     showIcon
-                    title={t('productionPlan.transferMachine.applyOnlySelectedDay', {
+                    message={t('productionPlan.transferMachine.applyOnlySelectedDay', {
                         day: dayLabel,
                     })}
                 />

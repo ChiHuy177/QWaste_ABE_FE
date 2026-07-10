@@ -1,9 +1,9 @@
-import { Mold, MoldFormData, MoldUpdateFormData, MoldPaginatedParams } from '@/types/Mold';
-import { PaginatedResult } from '@/types/Common';
+import { Mold, MoldFormData, MoldUpdateFormData } from '@/types/Mold';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
 export class MoldService {
+    /** GET /api/molds/v1 — danh sách đầy đủ KHÔNG phân trang, gồm cả mold đã soft-delete. */
     static async getAllMolds(): Promise<Mold[]> {
         const response = await NetworkService.requestJson<Mold[]>({
             method: 'GET',
@@ -12,16 +12,7 @@ export class MoldService {
         return response.result as Mold[];
     }
 
-    static async getMoldsPaginated(params: MoldPaginatedParams): Promise<PaginatedResult<Mold>> {
-        const queryParams = MoldService.buildQueryParams(params);
-        const response = await NetworkService.requestJson<PaginatedResult<Mold>>({
-            method: 'GET',
-            url: `${ENDPOINTS.MOLDS.ALL}?${queryParams.toString()}`,
-        });
-        return response.result as PaginatedResult<Mold>;
-    }
-
-    static async getMoldById(moldId: number): Promise<Mold> {
+    static async getMoldById(moldId: string): Promise<Mold> {
         const response = await NetworkService.requestJson<Mold>({
             method: 'GET',
             url: ENDPOINTS.MOLDS.DETAIL(moldId),
@@ -47,35 +38,19 @@ export class MoldService {
         return response.message as string;
     }
 
-    static async deleteMold(moldId: number): Promise<void> {
-        await NetworkService.requestJson<void>({
+    static async deleteMold(moldId: string): Promise<string> {
+        const response = await NetworkService.requestJson<void>({
             method: 'DELETE',
             url: ENDPOINTS.MOLDS.DETAIL(moldId),
         });
+        return response.message as string;
     }
 
-    private static buildQueryParams(params: MoldPaginatedParams): URLSearchParams {
-        const queryParams = new URLSearchParams({
-            page: params.page.toString(),
-            size: params.size.toString(),
+    static async restoreMold(moldId: string): Promise<string> {
+        const response = await NetworkService.requestJson<void>({
+            method: 'PUT',
+            url: ENDPOINTS.MOLDS.RESTORE(moldId),
         });
-
-        MoldService.appendSortParams(queryParams, params.sort);
-        MoldService.appendTrimmedParam(queryParams, 'search', params.search);
-        MoldService.appendTrimmedParam(queryParams, 'moldCode', params.moldCode);
-        MoldService.appendTrimmedParam(queryParams, 'moldName', params.moldName);
-
-        return queryParams;
-    }
-
-    private static appendSortParams(queryParams: URLSearchParams, sort?: string | string[]) {
-        if (!sort) return;
-        const sortParams = Array.isArray(sort) ? sort : [sort];
-        sortParams.forEach((s) => queryParams.append('sort', s));
-    }
-
-    private static appendTrimmedParam(queryParams: URLSearchParams, key: string, value?: string) {
-        const trimmed = value?.trim();
-        if (trimmed) queryParams.append(key, trimmed);
+        return response.message as string;
     }
 }

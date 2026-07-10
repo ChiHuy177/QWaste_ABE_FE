@@ -1,6 +1,6 @@
 'use client';
 
-import { type CSSProperties, useCallback, useMemo, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Button,
     Card,
@@ -28,37 +28,57 @@ import {
     UploadOutlined,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { usePermissionCheck } from '@/hooks/usePermissionCheck';
+import { ProductionPlanService } from '@/services/ProductionPlanService';
+import { MachineService } from '@/services/MachineService';
+import { MoldService } from '@/services/MoldService';
+import type { Machine } from '@/types/Machine';
+import { isMoldSchedulable, type Mold } from '@/types/Mold';
+import type {
+    ProductionPlanFormData,
+    ProductionPlanUpdateFormData,
+} from '@/types/ProductionPlan';
 import DailyTable from './_components/DailyTable';
 import ImportModal from './_components/ImportModal';
 import WeeklyTable from './_components/WeeklyTable';
 import MachineMatrixTable from './_components/MachineMatrixTable';
 import PlanFormModal from './_components/PlanFormModal';
-import TransferMachineModal from './_components/TransferMachineModal';
-import TransferScheduleModal from './_components/TransferScheduleModal';
+import TransferMachineModal, {
+    TransferMachinePayload,
+} from './_components/TransferMachineModal';
+import TransferScheduleModal, {
+    TransferSchedulePayload,
+} from './_components/TransferScheduleModal';
+import { formatDailyLabel, formatWeeklyLabel, getTodayScheduleIndex, WEEK_DAY_KEYS } from './_utils/dateUtils';
 import {
-    formatDailyLabel,
-    formatWeeklyLabel,
-    getTodayScheduleIndex,
-    WEEK_DAY_KEYS,
-} from './_utils/dateUtils';
-import { initialProductionPlan } from './_utils/mockData';
+    buildMachineInfoMap,
+    mapDailyGroups,
+    mapWeeklyGroups,
+    type MachineInfoMap,
+} from './_utils/planMappers';
 import {
+    MachineGroupVM,
+    PlanFormValues,
     PlanModalState,
-    ProductionLine,
-    ProductionProduct,
-    ProductPosition,
+    PlanRowTarget,
+    SelectOptionVM,
     TransferMachineModalState,
     TransferScheduleModalState,
 } from './_components/types';
-import { getAllMachineNames, getEffectiveMachine, getSortedProductsForDay } from './_utils/planUtils';
 import styles from './_components/ProductionPlanTable.module.css';
-import { useTranslation } from 'react-i18next';
 
 type ActiveView = 'daily' | 'weekly' | 'matrix';
 
 const { Text } = Typography;
+
+const DATE_FORMAT = 'YYYY-MM-DD';
+// BE phân trang theo máy (size mặc định 20) — lấy dư để render toàn bộ (G9).
+const MACHINE_PAGE_SIZE = 100;
 
 const formatNumber = (value: number) => value.toLocaleString('vi-VN');
 
@@ -70,28 +90,65 @@ const moveArrayItem = <T,>(items: T[], fromIndex: number, toIndex: number) => {
     return nextItems;
 };
 
+const getWeekStart = (date: Dayjs) => date.subtract((date.day() + 6) % 7, 'day');
+
+const machineOptionLabel = (machine: Machine) => {
+    const code = machine.machineCode || machine.machineName;
+    const space = machine.space?.spaceName;
+    return space ? `${code} — ${space}` : code;
+};
+
 export default function ProductionPlanPage() {
     const { token } = theme.useToken();
     const { t } = useTranslation();
+    const { handleError } = useApiErrorHandler();
+    const { checkPermission, checkPermissionSilent } = usePermissionCheck();
 
     usePageTitle(t('productionPlan.title'));
 
     const [activeView, setActiveView] = useState<ActiveView>('daily');
-    const [lines, setLines] = useState<ProductionLine[]>(initialProductionPlan);
+    const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
+    const [machineFilter, setMachineFilter] = useState('');
+
+    const [machineGroups, setMachineGroups] = useState<MachineGroupVM[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [machines, setMachines] = useState<Machine[]>([]);
+    const [molds, setMolds] = useState<Mold[]>([]);
+
     const [modalState, setModalState] = useState<PlanModalState>({ open: false });
-    const [deleteState, setDeleteState] = useState<ProductPosition | null>(null);
+    const [formSubmitting, setFormSubmitting] = useState(false);
+    const [deleteState, setDeleteState] = useState<PlanRowTarget | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
     const [transferMachineState, setTransferMachineState] = useState<TransferMachineModalState>({
         open: false,
     });
-    const [transferScheduleState, setTransferScheduleState] = useState<TransferScheduleModalState>({
-        open: false,
-    });
-    const [machineFilter, setMachineFilter] = useState('');
-    const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
+    const [transferScheduleState, setTransferScheduleState] = useState<TransferScheduleModalState>(
+        { open: false }
+    );
+    const [transferWeeklyGroups, setTransferWeeklyGroups] = useState<MachineGroupVM[]>([]);
+    const [transferGridLoading, setTransferGridLoading] = useState(false);
+    const [transferSubmitting, setTransferSubmitting] = useState(false);
+
     const [importModalOpen, setImportModalOpen] = useState(false);
+
+    // Machine list fetch 1 lần cho cả enrich spaceName lẫn options (G2).
+    const machineInfoPromiseRef = useRef<Promise<{
+        machines: Machine[];
+        map: MachineInfoMap;
+    }> | null>(null);
+
+    const loadMachineInfo = useCallback(() => {
+        machineInfoPromiseRef.current ??= MachineService.getAllMachines().then((machineList) => {
+            setMachines(machineList);
+            return { machines: machineList, map: buildMachineInfoMap(machineList) };
+        });
+        return machineInfoPromiseRef.current;
+    }, []);
 
     const selectedDateValue = useMemo(() => selectedDate.toDate(), [selectedDate]);
     const todayIndex = useMemo(() => getTodayScheduleIndex(selectedDateValue), [selectedDateValue]);
+    const weekStart = useMemo(() => getWeekStart(selectedDate), [selectedDate]);
     const fullWeekDays = useMemo(
         () => WEEK_DAY_KEYS.map((dayKey) => t(`productionPlan.days.full.${dayKey}`)),
         [t]
@@ -101,71 +158,107 @@ export default function ProductionPlanPage() {
             ? formatDailyLabel(selectedDateValue, fullWeekDays)
             : formatWeeklyLabel(selectedDateValue, t('productionPlan.days.week'));
 
-    const selectedProduct = useMemo(() => {
-        if (!modalState.open || modalState.mode !== 'edit' || modalState.productIndex == null) {
-            return undefined;
+    const canCreate = checkPermissionSilent('create', 'product');
+    const canReorder = checkPermissionSilent('reorder', 'product');
+    const canImport = checkPermissionSilent('import', 'product');
+
+    const fetchPlanData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const { map } = await loadMachineInfo();
+
+            if (activeView === 'daily') {
+                const page = await ProductionPlanService.getDailyProductionPlans({
+                    date: selectedDate.format(DATE_FORMAT),
+                    size: MACHINE_PAGE_SIZE,
+                });
+                setMachineGroups(mapDailyGroups(page.content, map, todayIndex));
+            } else {
+                const page = await ProductionPlanService.getWeeklyProductionPlans({
+                    startDate: weekStart.format(DATE_FORMAT),
+                    endDate: weekStart.add(6, 'day').format(DATE_FORMAT),
+                    size: MACHINE_PAGE_SIZE,
+                });
+                setMachineGroups(mapWeeklyGroups(page.content, map, weekStart.format(DATE_FORMAT)));
+            }
+        } catch (error) {
+            handleError(error, { fallbackKey: 'productionPlan.fetchError' });
+        } finally {
+            setLoading(false);
         }
+    }, [activeView, handleError, loadMachineInfo, selectedDate, todayIndex, weekStart]);
 
-        return lines[modalState.lineIndex]?.products[modalState.productIndex];
-    }, [lines, modalState]);
+    useEffect(() => {
+        fetchPlanData();
+    }, [fetchPlanData]);
 
-    const allMachineNames = useMemo(() => getAllMachineNames(lines), [lines]);
+    useEffect(() => {
+        let cancelled = false;
 
-    const transferMachineProduct = useMemo(() => {
-        if (!transferMachineState.open) return null;
-        return (
-            lines[transferMachineState.lineIndex]?.products[transferMachineState.productIndex] ??
-            null
-        );
-    }, [lines, transferMachineState]);
+        const fetchMolds = async () => {
+            try {
+                const moldList = await MoldService.getAllMolds();
+                if (!cancelled) {
+                    setMolds(moldList);
+                }
+            } catch (error) {
+                handleError(error, { fallbackKey: 'productionPlan.moldFetchError' });
+            }
+        };
 
-    const transferScheduleProduct = useMemo(() => {
-        if (!transferScheduleState.open) return null;
-        return (
-            lines[transferScheduleState.lineIndex]?.products[transferScheduleState.productIndex] ??
-            null
-        );
-    }, [lines, transferScheduleState]);
+        fetchMolds();
+        return () => {
+            cancelled = true;
+        };
+    }, [handleError]);
+
+    const machineOptions = useMemo<SelectOptionVM[]>(
+        () =>
+            machines.map((machine) => ({
+                value: String(machine.machineId),
+                label: machineOptionLabel(machine),
+            })),
+        [machines]
+    );
+
+    // GET /v1 trả cả mold đã xóa/RETIRED — picker chỉ đưa mold còn dùng được.
+    const moldOptions = useMemo<SelectOptionVM[]>(
+        () =>
+            molds.filter(isMoldSchedulable).map((mold) => ({
+                value: mold.moldId,
+                label: `${mold.moldCode} — ${mold.moldName}`,
+            })),
+        [molds]
+    );
+
+    const normalizedMachineFilter = machineFilter.trim().toLowerCase();
 
     const summary = useMemo(() => {
-        const normalizedMachineFilter = machineFilter.trim().toLowerCase();
-        const visibleLines = lines
-            .map((line) => ({
-                ...line,
-                products: line.products.filter(
-                    (product) =>
-                        !normalizedMachineFilter ||
-                        getEffectiveMachine(product, todayIndex)
-                            .toLowerCase()
-                            .includes(normalizedMachineFilter)
-                ),
-            }))
-            .filter((line) => line.products.length > 0);
-
-        const totalProducts = visibleLines.reduce((sum, line) => sum + line.products.length, 0);
-        const dailyCases = visibleLines.reduce(
-            (sum, line) =>
-                sum +
-                line.products.reduce(
-                    (lineSum, product) => lineSum + product.schedule[todayIndex],
-                    0
-                ),
-            0
-        );
-        const weeklyCases = visibleLines.reduce(
-            (sum, line) =>
-                sum +
-                line.products.reduce(
-                    (lineSum, product) =>
-                        lineSum +
-                        product.schedule.reduce((daySum, quantity) => daySum + quantity, 0),
-                    0
-                ),
-            0
+        const visibleGroups = machineGroups.filter(
+            (group) =>
+                group.products.length > 0 &&
+                (!normalizedMachineFilter ||
+                    group.machineCode.toLowerCase().includes(normalizedMachineFilter) ||
+                    group.machineName.toLowerCase().includes(normalizedMachineFilter) ||
+                    group.spaceName.toLowerCase().includes(normalizedMachineFilter))
         );
 
-        return { totalLines: visibleLines.length, totalProducts, dailyCases, weeklyCases };
-    }, [lines, machineFilter, todayIndex]);
+        let totalProducts = 0;
+        let dailyCases = 0;
+        let weeklyCases = 0;
+
+        visibleGroups.forEach((group) => {
+            group.products
+                .filter((product) => !product.isDeleted)
+                .forEach((product) => {
+                    totalProducts += 1;
+                    dailyCases += product.schedule[todayIndex];
+                    weeklyCases += product.schedule.reduce((sum, qty) => sum + qty, 0);
+                });
+        });
+
+        return { totalLines: visibleGroups.length, totalProducts, dailyCases, weeklyCases };
+    }, [machineGroups, normalizedMachineFilter, todayIndex]);
 
     const summaryCards = useMemo(
         () => [
@@ -223,198 +316,320 @@ export default function ProductionPlanPage() {
         ]
     );
 
-    const openCreateModal = useCallback((lineIndex: number) => {
-        setModalState({ open: true, mode: 'create', lineIndex });
-    }, []);
+    // ─── Create / Edit ───────────────────────────────────────────────────────
 
-    const openEditModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
-        setModalState({ open: true, mode: 'edit', lineIndex, productIndex });
-    }, []);
+    const openCreateModal = useCallback(() => {
+        if (!checkPermission('create', 'product')) return;
+        setModalState({ open: true, mode: 'create' });
+    }, [checkPermission]);
+
+    const openEditModal = useCallback(
+        (target: PlanRowTarget) => {
+            if (!checkPermission('update', 'product')) return;
+            setModalState({ open: true, mode: 'edit', machineId: target.machineId, row: target.row });
+        },
+        [checkPermission]
+    );
 
     const closeModal = useCallback(() => {
         setModalState({ open: false });
     }, []);
 
-    const handleSubmit = useCallback(
-        (product: ProductionProduct) => {
-            if (!modalState.open) return;
+    const formInitialValues = useMemo<Partial<PlanFormValues> | undefined>(() => {
+        if (!modalState.open) return undefined;
+        if (modalState.mode === 'create') {
+            return { plannedDate: selectedDate, plannedQuantity: 1 };
+        }
+        return {
+            code: modalState.row.code,
+            name: modalState.row.name,
+            plannedQuantity: modalState.row.schedule[todayIndex],
+        };
+    }, [modalState, selectedDate, todayIndex]);
 
-            setLines((currentLines) =>
-                currentLines.map((line, lineIndex) => {
-                    if (lineIndex !== modalState.lineIndex) return line;
-
-                    if (modalState.mode === 'create') {
-                        return {
-                            ...line,
-                            products: [...line.products, product],
-                        };
-                    }
-
-                    return {
-                        ...line,
-                        products: line.products.map((currentProduct, productIndex) => {
-                            if (productIndex !== modalState.productIndex) return currentProduct;
-                            return {
-                                ...product,
-                                machineOverrides: currentProduct.machineOverrides,
-                            };
-                        }),
-                    };
-                })
+    const nextSequenceForMachine = useCallback(
+        (machineId: string) => {
+            const group = machineGroups.find((g) => g.machineId === machineId);
+            if (!group) return 1;
+            const maxSequence = group.products.reduce(
+                (max, product) => Math.max(max, product.sequence ?? 0),
+                0
             );
-            closeModal();
+            return maxSequence + 1;
         },
-        [closeModal, modalState]
+        [machineGroups]
     );
 
-    const confirmDelete = useCallback(() => {
+    const handleSubmit = useCallback(
+        async (values: PlanFormValues) => {
+            if (!modalState.open) return;
+
+            try {
+                setFormSubmitting(true);
+
+                if (modalState.mode === 'create') {
+                    if (!values.machineId || !values.moldId || !values.plannedDate) return;
+                    const request: ProductionPlanFormData = {
+                        productionPlanCode: values.code,
+                        productionPlanName: values.name,
+                        plannedQuantity: values.plannedQuantity,
+                        sequence: nextSequenceForMachine(values.machineId),
+                        plannedDate: values.plannedDate.format(DATE_FORMAT),
+                        note: values.note,
+                        machineId: values.machineId,
+                        moldId: values.moldId,
+                    };
+                    await ProductionPlanService.createProductionPlan(request);
+                    toast.success(t('productionPlan.form.createSuccess'));
+                } else {
+                    const request: ProductionPlanUpdateFormData = {
+                        productionPlanId: modalState.row.productionPlanId,
+                        productionPlanCode: values.code,
+                        productionPlanName: values.name,
+                        plannedQuantity: values.plannedQuantity,
+                        moldId: values.moldId,
+                    };
+                    await ProductionPlanService.updateProductionPlan(request);
+                    toast.success(t('productionPlan.form.updateSuccess'));
+                }
+
+                closeModal();
+                fetchPlanData();
+            } catch (error) {
+                handleError(error, {
+                    fallbackKey:
+                        modalState.mode === 'create'
+                            ? 'productionPlan.form.createError'
+                            : 'productionPlan.form.updateError',
+                });
+            } finally {
+                setFormSubmitting(false);
+            }
+        },
+        [closeModal, fetchPlanData, handleError, modalState, nextSequenceForMachine, t]
+    );
+
+    // ─── Delete / Restore (chỉ daily view) ───────────────────────────────────
+
+    const requestDelete = useCallback(
+        (target: PlanRowTarget) => {
+            if (!checkPermission('delete', 'product')) return;
+            setDeleteState(target);
+        },
+        [checkPermission]
+    );
+
+    const confirmDelete = useCallback(async () => {
         if (!deleteState) return;
 
-        setLines((currentLines) =>
-            currentLines.map((line, lineIndex) => {
-                if (lineIndex !== deleteState.lineIndex) return line;
+        try {
+            setDeleting(true);
+            const message = await ProductionPlanService.deleteProductionPlan(
+                deleteState.row.productionPlanId
+            );
+            toast.success(message || t('productionPlan.deleteSuccess'));
+            setDeleteState(null);
+            fetchPlanData();
+        } catch (error) {
+            handleError(error, { fallbackKey: 'productionPlan.deleteError' });
+        } finally {
+            setDeleting(false);
+        }
+    }, [deleteState, fetchPlanData, handleError, t]);
 
-                return {
-                    ...line,
-                    products: line.products.filter(
-                        (_product, productIndex) => productIndex !== deleteState.productIndex
-                    ),
-                };
-            })
-        );
-        setDeleteState(null);
-    }, [deleteState]);
+    const handleRestore = useCallback(
+        async (target: PlanRowTarget) => {
+            if (!checkPermission('restore', 'product')) return;
 
-    const openTransferMachineModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
-        setTransferMachineState({ open: true, lineIndex, productIndex });
-    }, []);
+            try {
+                const message = await ProductionPlanService.restoreProductionPlan(
+                    target.row.productionPlanId
+                );
+                toast.success(message || t('productionPlan.restoreSuccess'));
+                fetchPlanData();
+            } catch (error) {
+                handleError(error, { fallbackKey: 'productionPlan.restoreError' });
+            }
+        },
+        [checkPermission, fetchPlanData, handleError, t]
+    );
+
+    // ─── Reorder (daily view, trong 1 máy) ───────────────────────────────────
+
+    const handleReorderProducts = useCallback(
+        async (machineId: string, activeRowKey: string, overRowKey: string) => {
+            if (!checkPermission('reorder', 'product')) return;
+
+            const group = machineGroups.find((g) => g.machineId === machineId);
+            if (!group) return;
+
+            const activeProducts = group.products.filter((product) => !product.isDeleted);
+            const activeIndex = activeProducts.findIndex((p) => p.rowKey === activeRowKey);
+            const overIndex = activeProducts.findIndex((p) => p.rowKey === overRowKey);
+            if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return;
+
+            const reordered = moveArrayItem(activeProducts, activeIndex, overIndex);
+
+            // Optimistic update — rollback bằng refetch khi lỗi.
+            setMachineGroups((currentGroups) =>
+                currentGroups.map((currentGroup) => {
+                    if (currentGroup.machineId !== machineId) return currentGroup;
+                    const deletedProducts = currentGroup.products.filter((p) => p.isDeleted);
+                    return { ...currentGroup, products: [...reordered, ...deletedProducts] };
+                })
+            );
+
+            try {
+                await ProductionPlanService.reorderProductionPlans(
+                    reordered.map((product, index) => ({
+                        productionPlanId: product.productionPlanId,
+                        sequence: index + 1,
+                    }))
+                );
+            } catch (error) {
+                handleError(error, { fallbackKey: 'productionPlan.reorderError' });
+                fetchPlanData();
+            }
+        },
+        [checkPermission, fetchPlanData, handleError, machineGroups]
+    );
+
+    // ─── Transfer (BE incident defer — G6) ───────────────────────────────────
+
+    // BE detail response không có moldId — resolve từ mold list qua snapshotMoldCode.
+    // Tra trên toàn bộ list (kể cả mold hết ACTIVE) vì plan cũ vẫn giữ khuôn cũ.
+    const resolveMoldId = useCallback(
+        (moldCode: string | null) => {
+            if (!moldCode) return undefined;
+            return molds.find((m) => m.moldCode === moldCode)?.moldId;
+        },
+        [molds]
+    );
+
+    const openTransferMachineModal = useCallback(
+        (target: PlanRowTarget) => {
+            if (!checkPermission('update', 'product')) return;
+            setTransferMachineState({ open: true, ...target });
+        },
+        [checkPermission]
+    );
 
     const openTransferScheduleModal = useCallback(
-        ({ lineIndex, productIndex }: ProductPosition) => {
-            setTransferScheduleState({ open: true, lineIndex, productIndex });
+        async (target: PlanRowTarget) => {
+            if (!checkPermission('update', 'product')) return;
+            setTransferScheduleState({ open: true, ...target });
+
+            try {
+                setTransferGridLoading(true);
+                const { map } = await loadMachineInfo();
+                const page = await ProductionPlanService.getWeeklyProductionPlans({
+                    startDate: weekStart.format(DATE_FORMAT),
+                    endDate: weekStart.add(6, 'day').format(DATE_FORMAT),
+                    size: MACHINE_PAGE_SIZE,
+                });
+                setTransferWeeklyGroups(
+                    mapWeeklyGroups(page.content, map, weekStart.format(DATE_FORMAT))
+                );
+            } catch (error) {
+                handleError(error, { fallbackKey: 'productionPlan.fetchError' });
+            } finally {
+                setTransferGridLoading(false);
+            }
         },
-        []
+        [checkPermission, handleError, loadMachineInfo, weekStart]
+    );
+
+    const runDefer = useCallback(
+        async (
+            target: PlanRowTarget,
+            payload: {
+                plannedDate: string;
+                machineId: string;
+                incidentReason: TransferMachinePayload['incidentReason'];
+                note?: string;
+            },
+            sequence: number,
+            onDone: () => void
+        ) => {
+            const moldId = resolveMoldId(target.row.moldCode);
+            if (!moldId) {
+                toast.error(t('productionPlan.transfer.detailNotReady'));
+                return;
+            }
+
+            try {
+                setTransferSubmitting(true);
+                await ProductionPlanService.deferProductionPlan(target.row.productionPlanId, {
+                    plannedDate: payload.plannedDate,
+                    machineId: payload.machineId,
+                    moldId,
+                    sequence,
+                    incidentReason: payload.incidentReason,
+                    note: payload.note,
+                });
+                toast.success(t('productionPlan.transfer.success'));
+                onDone();
+                fetchPlanData();
+            } catch (error) {
+                handleError(error, { fallbackKey: 'productionPlan.transfer.error' });
+            } finally {
+                setTransferSubmitting(false);
+            }
+        },
+        [fetchPlanData, handleError, resolveMoldId, t]
     );
 
     const handleTransferMachine = useCallback(
-        (newMachine: string) => {
+        (payload: TransferMachinePayload) => {
             if (!transferMachineState.open) return;
-            const { lineIndex, productIndex } = transferMachineState;
+            const target: PlanRowTarget = transferMachineState;
 
-            setLines((currentLines) =>
-                currentLines.map((line, li) => {
-                    if (li !== lineIndex) return line;
-                    return {
-                        ...line,
-                        products: line.products.map((product, pi) => {
-                            if (pi !== productIndex) return product;
-                            const overrides = [
-                                ...(product.machineOverrides ?? new Array(7).fill(undefined)),
-                            ];
-                            overrides[todayIndex] = newMachine;
-                            return { ...product, machineOverrides: overrides };
-                        }),
-                    };
-                })
+            runDefer(
+                target,
+                {
+                    plannedDate: selectedDate.format(DATE_FORMAT),
+                    machineId: payload.machineId,
+                    incidentReason: payload.incidentReason,
+                    note: payload.note,
+                },
+                nextSequenceForMachine(payload.machineId),
+                () => setTransferMachineState({ open: false })
             );
-            setTransferMachineState({ open: false });
         },
-        [transferMachineState, todayIndex]
+        [nextSequenceForMachine, runDefer, selectedDate, transferMachineState]
     );
 
     const handleTransferSchedule = useCallback(
-        (newDayIndex: number, newMachine: string) => {
+        (payload: TransferSchedulePayload) => {
             if (!transferScheduleState.open) return;
-            const { lineIndex, productIndex } = transferScheduleState;
+            const target: PlanRowTarget = transferScheduleState;
 
-            setLines((currentLines) =>
-                currentLines.map((line, li) => {
-                    if (li !== lineIndex) return line;
-                    return {
-                        ...line,
-                        products: line.products.map((product, pi) => {
-                            if (pi !== productIndex) return product;
-                            const transferredQty = product.schedule[todayIndex];
-                            if (transferredQty <= 0) return product;
-
-                            const newSchedule = [...product.schedule] as typeof product.schedule;
-                            newSchedule[todayIndex] = 0;
-                            newSchedule[newDayIndex] =
-                                (newSchedule[newDayIndex] ?? 0) + transferredQty;
-
-                            const overrides = [
-                                ...(product.machineOverrides ?? new Array(7).fill(undefined)),
-                            ];
-                            overrides[todayIndex] = undefined;
-                            overrides[newDayIndex] = newMachine;
-
-                            return {
-                                ...product,
-                                schedule: newSchedule,
-                                machineOverrides: overrides,
-                            };
-                        }),
-                    };
-                })
+            const targetGroup = transferWeeklyGroups.find(
+                (group) => group.machineId === payload.machineId
             );
-            setTransferScheduleState({ open: false });
-        },
-        [transferScheduleState, todayIndex]
-    );
+            const plansOnTargetDay =
+                targetGroup?.products.filter(
+                    (product) => !product.isDeleted && product.schedule[payload.dayIndex] > 0
+                ).length ?? 0;
 
-    const handleReorderProducts = useCallback(
-        (lineIndex: number, activeCode: string, overCode: string) => {
-            setLines((currentLines) =>
-                currentLines.map((line, currentLineIndex) => {
-                    if (currentLineIndex !== lineIndex) return line;
-
-                    if (activeView === 'daily') {
-                        const sortedProducts = getSortedProductsForDay(line, todayIndex);
-                        const codes = sortedProducts.map((p) => p.code);
-
-                        const activeIndex = codes.indexOf(activeCode);
-                        const overIndex = codes.indexOf(overCode);
-
-                        if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
-                            return line;
-                        }
-
-                        const nextCodes = moveArrayItem(codes, activeIndex, overIndex);
-                        const nextDayOrders = [...(line.dayProductOrders ?? new Array(7).fill(undefined))];
-                        nextDayOrders[todayIndex] = nextCodes;
-
-                        return {
-                            ...line,
-                            dayProductOrders: nextDayOrders,
-                        };
-                    } else {
-                        const activeIndex = line.products.findIndex(
-                            (product) => product.code === activeCode
-                        );
-                        const overIndex = line.products.findIndex(
-                            (product) => product.code === overCode
-                        );
-
-                        if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
-                            return line;
-                        }
-
-                        return {
-                            ...line,
-                            products: moveArrayItem(line.products, activeIndex, overIndex),
-                        };
-                    }
-                })
+            runDefer(
+                target,
+                {
+                    plannedDate: weekStart.add(payload.dayIndex, 'day').format(DATE_FORMAT),
+                    machineId: payload.machineId,
+                    incidentReason: payload.incidentReason,
+                    note: payload.note,
+                },
+                plansOnTargetDay + 1,
+                () => setTransferScheduleState({ open: false })
             );
         },
-        [activeView, todayIndex]
+        [runDefer, transferScheduleState, transferWeeklyGroups, weekStart]
     );
 
-    const activeLineName = modalState.open ? lines[modalState.lineIndex]?.spaceName : undefined;
-    const pendingDeleteProduct =
-        deleteState != null
-            ? lines[deleteState.lineIndex]?.products[deleteState.productIndex]
-            : null;
+    // ─── Render ──────────────────────────────────────────────────────────────
+
+    const pendingDeleteProduct = deleteState?.row ?? null;
 
     const headerActions = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -459,17 +674,16 @@ export default function ProductionPlanPage() {
                     },
                 ]}
             />
-            <Button icon={<UploadOutlined />} onClick={() => setImportModalOpen(true)}>
-                {t('productionPlan.actions.import')}
-            </Button>
-            <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => openCreateModal(0)}
-                disabled={lines.length === 0}
-            >
-                {t('productionPlan.actions.addProduct')}
-            </Button>
+            {canImport && (
+                <Button icon={<UploadOutlined />} onClick={() => setImportModalOpen(true)}>
+                    {t('productionPlan.actions.import')}
+                </Button>
+            )}
+            {canCreate && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+                    {t('productionPlan.actions.addProduct')}
+                </Button>
+            )}
         </div>
     );
 
@@ -478,14 +692,18 @@ export default function ProductionPlanPage() {
             <ResponsivePageHeader
                 title={t('productionPlan.headerTitle', { label: headerLabel })}
                 rightContent={headerActions}
-                mobileMenuItems={[
-                    {
-                        key: 'add-product',
-                        label: t('productionPlan.actions.addProduct'),
-                        icon: <PlusOutlined />,
-                        onClick: () => openCreateModal(0),
-                    },
-                ]}
+                mobileMenuItems={
+                    canCreate
+                        ? [
+                              {
+                                  key: 'add-product',
+                                  label: t('productionPlan.actions.addProduct'),
+                                  icon: <PlusOutlined />,
+                                  onClick: openCreateModal,
+                              },
+                          ]
+                        : []
+                }
             />
 
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
@@ -552,6 +770,7 @@ export default function ProductionPlanPage() {
             </Row>
 
             <Card
+                loading={loading}
                 style={{
                     ...planThemeVars,
                     borderRadius: 12,
@@ -571,8 +790,8 @@ export default function ProductionPlanPage() {
                                 {activeView === 'daily'
                                     ? t('productionPlan.panel.dailyTable')
                                     : activeView === 'weekly'
-                                    ? t('productionPlan.panel.weeklyTable')
-                                    : t('productionPlan.panel.machineMatrixTable')}
+                                      ? t('productionPlan.panel.weeklyTable')
+                                      : t('productionPlan.panel.machineMatrixTable')}
                             </Text>
                             {activeView === 'daily' && (
                                 <Button
@@ -613,32 +832,28 @@ export default function ProductionPlanPage() {
                 <div className={styles.tablePanelBody}>
                     {activeView === 'daily' && (
                         <DailyTable
-                            lines={lines}
+                            groups={machineGroups}
                             todayIndex={todayIndex}
                             dateLabel={headerLabel}
+                            machineFilter={machineFilter}
+                            canReorder={canReorder}
                             onEdit={openEditModal}
-                            onDelete={setDeleteState}
+                            onDelete={requestDelete}
+                            onRestore={handleRestore}
                             onReorder={handleReorderProducts}
                             onTransferMachine={openTransferMachineModal}
                             onTransferSchedule={openTransferScheduleModal}
-                            machineFilter={machineFilter}
                         />
                     )}
                     {activeView === 'weekly' && (
                         <WeeklyTable
-                            lines={lines}
+                            groups={machineGroups}
                             todayIndex={todayIndex}
-                            onEdit={openEditModal}
-                            onDelete={setDeleteState}
-                            onReorder={handleReorderProducts}
                             machineFilter={machineFilter}
                         />
                     )}
                     {activeView === 'matrix' && (
-                        <MachineMatrixTable
-                            lines={lines}
-                            machineFilter={machineFilter}
-                        />
+                        <MachineMatrixTable groups={machineGroups} machineFilter={machineFilter} />
                     )}
                 </div>
             </Card>
@@ -647,30 +862,39 @@ export default function ProductionPlanPage() {
                 <PlanFormModal
                     open={modalState.open}
                     mode={modalState.mode}
-                    lineName={activeLineName}
-                    initialData={selectedProduct}
+                    initialValues={formInitialValues}
+                    currentMoldCode={modalState.mode === 'edit' ? modalState.row.moldCode : undefined}
+                    machineOptions={machineOptions}
+                    moldOptions={moldOptions}
+                    submitting={formSubmitting}
                     onCancel={closeModal}
                     onSubmit={handleSubmit}
                 />
             )}
 
-            <ImportModal open={importModalOpen} onClose={() => setImportModalOpen(false)} />
+            <ImportModal
+                open={importModalOpen}
+                onClose={() => setImportModalOpen(false)}
+                onImported={fetchPlanData}
+            />
 
             <TransferMachineModal
                 open={transferMachineState.open}
-                product={transferMachineProduct}
+                target={transferMachineState.open ? transferMachineState : null}
                 todayIndex={todayIndex}
-                machineOptions={allMachineNames}
+                machineOptions={machineOptions}
+                submitting={transferSubmitting}
                 onCancel={() => setTransferMachineState({ open: false })}
                 onConfirm={handleTransferMachine}
             />
 
             <TransferScheduleModal
                 open={transferScheduleState.open}
-                product={transferScheduleProduct}
+                target={transferScheduleState.open ? transferScheduleState : null}
                 todayIndex={todayIndex}
-                machineOptions={allMachineNames}
-                lines={lines}
+                weeklyGroups={transferWeeklyGroups}
+                gridLoading={transferGridLoading}
+                submitting={transferSubmitting}
                 onCancel={() => setTransferScheduleState({ open: false })}
                 onConfirm={handleTransferSchedule}
             />
@@ -680,7 +904,7 @@ export default function ProductionPlanPage() {
                 open={deleteState != null}
                 okText={t('common.delete')}
                 cancelText={t('common.cancel')}
-                okButtonProps={{ danger: true }}
+                okButtonProps={{ danger: true, loading: deleting }}
                 onOk={confirmDelete}
                 onCancel={() => setDeleteState(null)}
             >

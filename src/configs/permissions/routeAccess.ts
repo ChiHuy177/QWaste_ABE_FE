@@ -110,7 +110,7 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
     '/admin/production-plan': {
-        subject: 'tasks',
+        subject: 'product',
         action: 'view',
     },
     '/admin/production-plan/monitor': {

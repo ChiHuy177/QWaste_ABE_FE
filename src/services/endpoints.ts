@@ -33,7 +33,7 @@ const BASE_PATHS = {
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
     MOLDS: `${API}/molds/${V1}`,
-    PLANS: `${API}/plans/${V1}`,
+    OPERATION_TYPES: `${API}/operationTypes/${V1}`,
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
 } as const;
 
@@ -174,13 +174,11 @@ export const ENDPOINTS = {
     },
     MOLDS: {
         BASE: BASE_PATHS.MOLDS,
-        ALL: `${BASE_PATHS.MOLDS}/all`,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
+        RESTORE: (id: PathParam) => `${BASE_PATHS.MOLDS}/${id}/restoring`,
     },
-    // @deprecated — backend đã đổi /api/plans thành /api/productionPlans; dùng PRODUCTION_PLANS. Xoá khi hết usage.
-    PLANS: {
-        BASE: BASE_PATHS.PLANS,
-        IMPORT: `${BASE_PATHS.PLANS}/import`,
+    OPERATION_TYPES: {
+        BASE: BASE_PATHS.OPERATION_TYPES,
     },
     PRODUCTION_PLANS: {
         BASE: BASE_PATHS.PRODUCTION_PLANS,

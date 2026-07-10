@@ -126,6 +126,58 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View production plan monitor',
     },
 
+    // Production Plan (BE tái dùng slug product:* — xem ProductionPlanConstants.Permissions)
+    {
+        slug: 'product:view',
+        subject: 'product',
+        action: 'view',
+        routes: ['/admin/production-plan'],
+        menuKey: 'production-plan',
+        description: 'View production plans',
+    },
+    {
+        slug: 'product:create',
+        subject: 'product',
+        action: 'create',
+        routes: [],
+        description: 'Create production plan',
+    },
+    {
+        slug: 'product:update',
+        subject: 'product',
+        action: 'update',
+        routes: [],
+        description: 'Update production plan (incl. incident actions)',
+    },
+    {
+        slug: 'product:delete',
+        subject: 'product',
+        action: 'delete',
+        routes: [],
+        description: 'Delete production plan',
+    },
+    {
+        slug: 'product:restore',
+        subject: 'product',
+        action: 'restore',
+        routes: [],
+        description: 'Restore deleted production plan',
+    },
+    {
+        slug: 'product:reorder',
+        subject: 'product',
+        action: 'reorder',
+        routes: [],
+        description: 'Reorder production plans',
+    },
+    {
+        slug: 'product:import',
+        subject: 'product',
+        action: 'import',
+        routes: [],
+        description: 'Import production plans from Excel',
+    },
+
     // Machine List
     {
         slug: 'machine:view',

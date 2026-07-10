@@ -1,5 +1,4 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
-import { SpacePickingResponse } from './Space';
 
 // ─── Enums (khớp BE model/enums) ─────────────────────────────────────────────
 
@@ -219,11 +218,7 @@ export interface ImportConfirmRequest {
     option: ImportOption;
 }
 
-// ─── Types mock cũ ───────────────────────────────────────────────────────────
-// @deprecated — chỉ còn phục vụ UI mock hiện tại; xoá ở Phase 5 (xem
-// .claude/plans/production-plan-mapping/05-cleanup-validation.md) sau khi 2 trang
-// production-plan chuyển hẳn sang view-model mới.
-
+/** Số lượng theo 7 ngày Mon..Sun — dùng bởi view-model bảng kế hoạch. */
 export type Schedule = [
     mon: number,
     tue: number,
@@ -233,48 +228,3 @@ export type Schedule = [
     sat: number,
     sun: number,
 ];
-
-/** @deprecated dùng ProductionPlanStatus (enum BE) */
-export type ProductionStatus = 'TODO' | 'IN_PROGRESS' | 'PAUSE' | 'COMPLETE';
-
-/** @deprecated view-model mock — thay bằng PlanRowVM (Phase 2) */
-export interface ProductionProduct {
-    code: string;
-    name: string;
-    machine: string;
-    machineOverrides?: (string | undefined)[];
-    mold: string;
-    time: string;
-    pcsMultiplier: number;
-    schedule: Schedule;
-    status?: ProductionStatus;
-}
-
-/** @deprecated view-model mock — thay bằng MachineGroupVM (Phase 2) */
-export interface ProductionLine extends Omit<SpacePickingResponse, 'displayOrder' | 'spaceLevel'> {
-    products: ProductionProduct[];
-    dayProductOrders?: string[][];
-}
-
-/** @deprecated payload WS mock — thay bằng ProductionPlanStatusChangedPayload */
-export interface ProductionStatusUpdate {
-    code: string;
-    machine: string;
-    status: ProductionStatus;
-    timestamp: string;
-}
-
-/** @deprecated view-model mock monitor — viết lại ở Phase 4 */
-export interface MonitorProduct {
-    code: string;
-    name: string;
-    machine: string;
-    machineOverrides?: (string | undefined)[];
-    spaceName: string;
-    mold: string;
-    time: string;
-    pcsMultiplier: number;
-    schedule: Schedule;
-    status: ProductionStatus;
-    updatedAt: Date | null;
-}

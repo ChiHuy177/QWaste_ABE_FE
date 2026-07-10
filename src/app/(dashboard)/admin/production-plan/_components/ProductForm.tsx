@@ -1,29 +1,41 @@
 'use client';
 
-import { Col, Divider, Form, Input, InputNumber, Row, theme } from 'antd';
+import { Col, DatePicker, Divider, Form, Input, InputNumber, Row, Select, theme } from 'antd';
 import type { FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { getTodayScheduleIndex, WEEK_DAY_KEYS } from '../_utils/dateUtils';
+import type { SelectOptionVM } from './types';
 
 interface ProductFormProps {
     form: FormInstance;
     mode: 'create' | 'edit';
+    machineOptions: SelectOptionVM[];
+    moldOptions: SelectOptionVM[];
+    /** Mã khuôn hiện tại của plan (edit) — hiển thị placeholder khi không đổi khuôn. */
+    currentMoldCode?: string | null;
 }
 
-export default function ProductForm({ form, mode }: ProductFormProps) {
+const filterOption = (input: string, option?: { label?: string }) =>
+    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+
+export default function ProductForm({
+    form: _form,
+    mode,
+    machineOptions,
+    moldOptions,
+    currentMoldCode,
+}: ProductFormProps) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
-    const todayIndex = getTodayScheduleIndex();
 
-    const scheduleValues: (number | undefined)[] = Form.useWatch('schedule', form) ?? [];
-    const pcsMultiplier: number = Form.useWatch('pcsMultiplier', form) ?? 1;
-
-    const totalCases = scheduleValues.reduce<number>((sum, q) => sum + (q ?? 0), 0);
-    const totalPcs = totalCases * pcsMultiplier;
+    const isCreate = mode === 'create';
 
     return (
         <>
-            <Divider orientation="horizontal" style={{ marginTop: 8 }} styles={{ content: { margin: 0 } }}>
+            <Divider
+                orientation="horizontal"
+                style={{ marginTop: 8 }}
+                styles={{ content: { margin: 0 } }}
+            >
                 <span style={{ fontSize: 13, fontWeight: 600, color: token.colorTextSecondary }}>
                     {t('productionPlan.form.sections.productInfo')}
                 </span>
@@ -34,10 +46,16 @@ export default function ProductForm({ form, mode }: ProductFormProps) {
                     <Form.Item
                         name="code"
                         label={t('productionPlan.form.fields.code.label')}
-                        rules={[{ required: true, message: t('productionPlan.form.fields.code.required') }]}
+                        rules={[
+                            {
+                                required: true,
+                                message: t('productionPlan.form.fields.code.required'),
+                            },
+                        ]}
                     >
                         <Input
                             placeholder={t('productionPlan.form.fields.code.placeholder')}
+                            maxLength={100}
                             disabled={mode === 'edit'}
                         />
                     </Form.Item>
@@ -46,141 +64,110 @@ export default function ProductForm({ form, mode }: ProductFormProps) {
                     <Form.Item
                         name="name"
                         label={t('productionPlan.form.fields.name.label')}
-                        rules={[{ required: true, message: t('productionPlan.form.fields.name.required') }]}
+                        rules={[
+                            {
+                                required: true,
+                                message: t('productionPlan.form.fields.name.required'),
+                            },
+                        ]}
                     >
-                        <Input placeholder={t('productionPlan.form.fields.name.placeholder')} />
+                        <Input
+                            placeholder={t('productionPlan.form.fields.name.placeholder')}
+                            maxLength={255}
+                        />
                     </Form.Item>
                 </Col>
+                {isCreate && (
+                    <Col xs={24} md={8}>
+                        <Form.Item
+                            name="machineId"
+                            label={t('productionPlan.form.fields.machine.label')}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t('productionPlan.form.fields.machine.required'),
+                                },
+                            ]}
+                        >
+                            <Select
+                                showSearch={{ filterOption: filterOption }}
+                                placeholder={t('productionPlan.form.fields.machine.placeholder')}
+                                options={machineOptions}
+                            />
+                        </Form.Item>
+                    </Col>
+                )}
                 <Col xs={24} md={8}>
                     <Form.Item
-                        name="machine"
-                        label={t('productionPlan.form.fields.machine.label')}
-                        rules={[{ required: true, message: t('productionPlan.form.fields.machine.required') }]}
-                    >
-                        <Input placeholder={t('productionPlan.form.fields.machine.placeholder')} />
-                    </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                    <Form.Item
-                        name="mold"
+                        name="moldId"
                         label={t('productionPlan.form.fields.mold.label')}
-                        rules={[{ required: true, message: t('productionPlan.form.fields.mold.required') }]}
+                        rules={
+                            isCreate
+                                ? [
+                                    {
+                                        required: true,
+                                        message: t('productionPlan.form.fields.mold.required'),
+                                    },
+                                ]
+                                : undefined
+                        }
                     >
-                        <Input placeholder={t('productionPlan.form.fields.mold.placeholder')} />
+                        <Select
+                            showSearch={{ filterOption: filterOption }}
+                            allowClear={!isCreate}
+                            placeholder={
+                                !isCreate && currentMoldCode
+                                    ? t('productionPlan.form.fields.mold.keepCurrent', {
+                                        mold: currentMoldCode,
+                                    })
+                                    : t('productionPlan.form.fields.mold.placeholder')
+                            }
+                            options={moldOptions}
+                        />
                     </Form.Item>
                 </Col>
+                {isCreate && (
+                    <Col xs={24} md={8}>
+                        <Form.Item
+                            name="plannedDate"
+                            label={t('productionPlan.form.fields.plannedDate.label')}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t('productionPlan.form.fields.plannedDate.required'),
+                                },
+                            ]}
+                        >
+                            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
+                        </Form.Item>
+                    </Col>
+                )}
                 <Col xs={24} md={8}>
                     <Form.Item
-                        name="time"
-                        label={t('productionPlan.form.fields.time.label')}
-                        rules={[{ required: true, message: t('productionPlan.form.fields.time.required') }]}
-                    >
-                        <Input placeholder={t('productionPlan.form.fields.time.placeholder')} />
-                    </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                    <Form.Item
-                        name="pcsMultiplier"
-                        label={t('productionPlan.form.fields.pcsMultiplier.label')}
-                        rules={[{ required: true, message: t('productionPlan.form.fields.pcsMultiplier.required') }]}
+                        name="plannedQuantity"
+                        label={t('productionPlan.form.fields.plannedQuantity.label')}
+                        rules={[
+                            {
+                                required: true,
+                                message: t('productionPlan.form.fields.plannedQuantity.required'),
+                            },
+                        ]}
                     >
                         <InputNumber min={1} precision={0} style={{ width: '100%' }} />
                     </Form.Item>
                 </Col>
+                {isCreate && (
+                    <Col xs={24}>
+                        <Form.Item name="note" label={t('productionPlan.form.fields.note.label')}>
+                            <Input.TextArea
+                                rows={2}
+                                maxLength={2000}
+                                placeholder={t('productionPlan.form.fields.note.placeholder')}
+                            />
+                        </Form.Item>
+                    </Col>
+                )}
             </Row>
-
-            <Divider titlePlacement="left" styles={{ content: { margin: 0 } }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: token.colorTextSecondary }}>
-                    {t('productionPlan.form.sections.schedule')}
-                </span>
-            </Divider>
-
-            <Row gutter={[10, 8]}>
-                {WEEK_DAY_KEYS.map((dayKey, index) => {
-                    const isToday = index === todayIndex;
-                    const day = t(`productionPlan.days.full.${dayKey}`);
-                    return (
-                        <Col key={day} flex="1 1 88px">
-                            <div
-                                style={{
-                                    padding: '8px 8px 6px',
-                                    borderRadius: 8,
-                                    background: isToday ? token.colorPrimaryBg : token.colorFillAlter,
-                                    border: `1px solid ${isToday ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        fontSize: 12,
-                                        fontWeight: isToday ? 700 : 500,
-                                        color: isToday ? token.colorPrimary : token.colorTextSecondary,
-                                        textAlign: 'center',
-                                        marginBottom: 2,
-                                        lineHeight: 1.4,
-                                    }}
-                                >
-                                    {day}
-                                    {isToday && (
-                                        <span
-                                            style={{
-                                                display: 'block',
-                                                fontSize: 10,
-                                                color: token.colorPrimary,
-                                                opacity: 0.8,
-                                            }}
-                                        >
-                                            {t('productionPlan.days.today')}
-                                        </span>
-                                    )}
-                                </div>
-                                <Form.Item
-                                    name={['schedule', index]}
-                                    rules={[{ required: true, message: '' }]}
-                                    style={{ marginBottom: 0 }}
-                                >
-                                    <InputNumber
-                                        min={0}
-                                        precision={0}
-                                        style={{ width: '100%' }}
-                                        variant={isToday ? 'filled' : 'outlined'}
-                                    />
-                                </Form.Item>
-                            </div>
-                        </Col>
-                    );
-                })}
-            </Row>
-
-            <div
-                style={{
-                    marginTop: 14,
-                    padding: '12px 20px',
-                    background: token.colorFillAlter,
-                    borderRadius: 8,
-                    border: `1px solid ${token.colorBorderSecondary}`,
-                    display: 'flex',
-                    gap: 32,
-                    alignItems: 'center',
-                }}
-            >
-                <div>
-                    <div style={{ fontSize: 12, color: token.colorTextTertiary, marginBottom: 2 }}>
-                        {t('productionPlan.form.summary.totalCasesWeek')}
-                    </div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: token.colorText, lineHeight: 1 }}>
-                        {totalCases.toLocaleString('vi-VN')}
-                    </div>
-                </div>
-                <div style={{ width: 1, height: 32, background: token.colorBorder }} />
-                <div>
-                    <div style={{ fontSize: 12, color: token.colorTextTertiary, marginBottom: 2 }}>
-                        {t('productionPlan.form.summary.totalPcsWeek')}
-                    </div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: token.colorPrimary, lineHeight: 1 }}>
-                        {totalPcs.toLocaleString('vi-VN')}
-                    </div>
-                </div>
-            </div>
         </>
     );
 }

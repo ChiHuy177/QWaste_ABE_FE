@@ -487,3 +487,13 @@ th.stickyName {
     letter-spacing: 0.4px;
     white-space: nowrap;
 }
+
+/* Soft-deleted plan rows (daily management view) */
+.deletedRow > :global(td) {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.deletedRow > :global(td:last-child) {
+    text-decoration: none;
+}

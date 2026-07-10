@@ -391,6 +391,51 @@
     "productionPlan": {
         "title": "Production Plan",
         "headerTitle": "Production Plan - {{label}}",
+        "fetchError": "Failed to load production plans",
+        "moldFetchError": "Failed to load mold list",
+        "deleteSuccess": "Plan deleted successfully",
+        "deleteError": "Failed to delete plan",
+        "restoreSuccess": "Plan restored successfully",
+        "restoreError": "Failed to restore plan",
+        "reorderError": "Failed to reorder plans",
+        "status": {
+            "PENDING": "Pending",
+            "RUNNING": "Running",
+            "PAUSE": "Paused",
+            "PARTIAL": "Partially completed",
+            "COMPLETE": "Completed"
+        },
+        "trigger": {
+            "MQTT_RUN": "Machine running",
+            "MQTT_ERROR": "Machine error",
+            "MQTT_OFFLINE": "Machine offline",
+            "MQTT_IDLE": "Machine idle",
+            "AUTO_ADVANCE": "Auto advance",
+            "MANUAL": "Manual"
+        },
+        "incidentReason": {
+            "WAITING_MATERIALS": "Waiting for materials",
+            "TOOL_ADJUSTMENT": "Tool adjustment",
+            "SENSOR_CALIBRATION": "Sensor calibration",
+            "MOLD_DAMAGE": "Mold damage",
+            "MACHINE_BREAKDOWN": "Machine breakdown",
+            "QUALITY_ISSUE": "Quality issue",
+            "ORDER_CANCELLED": "Order cancelled",
+            "PRODUCTION_DISCONTINUED": "Production discontinued",
+            "OTHER": "Other"
+        },
+        "incident": {
+            "reasonLabel": "Reason",
+            "reasonPlaceholder": "Select a reason",
+            "noteLabel": "Note",
+            "notePlaceholder": "Details (required when Other is selected)",
+            "noteRequiredForOther": "Please enter details when selecting Other"
+        },
+        "transfer": {
+            "success": "Plan transferred successfully",
+            "error": "Failed to transfer plan",
+            "detailNotReady": "Plan details are still loading, please retry"
+        },
         "days": {
             "week": "Week",
             "today": "Today",
@@ -430,6 +475,7 @@
         "actions": {
             "import": "Import",
             "addProduct": "Add product code",
+            "restore": "Restore",
             "transfer": "Transfer",
             "transferMachine": "Transfer machine",
             "transferSchedule": "Transfer schedule"
@@ -448,6 +494,7 @@
         },
         "table": {
             "total": "Total",
+            "deletedTag": "Deleted",
             "emptyDaily": "No production plan for the selected day",
             "emptyFiltered": "No product codes match the filter",
             "headers": {
@@ -470,6 +517,10 @@
             "editTitle": "Edit plan"
         },
         "form": {
+            "createSuccess": "Plan created successfully",
+            "createError": "Failed to create plan",
+            "updateSuccess": "Plan updated successfully",
+            "updateError": "Failed to update plan",
             "sections": {
                 "productInfo": "Product information",
                 "schedule": "7-day plan (cases)"
@@ -493,7 +544,20 @@
                 "mold": {
                     "label": "Mold",
                     "placeholder": "Example: M-12A",
-                    "required": "Please enter a mold code"
+                    "required": "Please enter a mold code",
+                    "keepCurrent": "Keep current mold: {{mold}}"
+                },
+                "plannedDate": {
+                    "label": "Production date",
+                    "required": "Please select the production date"
+                },
+                "plannedQuantity": {
+                    "label": "Quantity (cases)",
+                    "required": "Please enter the quantity"
+                },
+                "note": {
+                    "label": "Note",
+                    "placeholder": "Additional note (optional)"
                 },
                 "time": {
                     "label": "Time",
@@ -553,6 +617,12 @@
             "title": "Import production plan",
             "upload": "Upload",
             "hint": "Excel file containing the production plan - maximum 10MB",
+            "confirmError": "Failed to confirm import",
+            "confirmOptions": {
+                "cancel": "Cancel import session",
+                "overwriteAll": "Overwrite all",
+                "overwriteRetain": "Overwrite, retain existing data"
+            },
             "columns": {
                 "date": "Date",
                 "reason": "Reason",
@@ -573,6 +643,8 @@
         },
         "monitor": {
             "title": "Production Monitor",
+            "partialTag": "Partially completed",
+            "refresh": "Refresh",
             "statusCol": "Status",
             "lastUpdated": "Last updated",
             "filterAll": "All statuses",
@@ -634,6 +706,13 @@
             },
             "detail": {
                 "statusTrack": "Current Status",
+                "plannedDate": "Production date",
+                "operationType": "Operation",
+                "plannedQuantity": "Planned quantity",
+                "actualQuantity": "Produced",
+                "note": "Note",
+                "statusLogs": "Status history",
+                "noLogs": "No status history yet",
                 "productInfo": "Product Information",
                 "weeklySchedule": "Weekly Production Schedule",
                 "code": "Product Code",
@@ -2221,25 +2300,18 @@
         "searchPlaceholder": "Search by mold code or name",
         "fetchError": "Failed to fetch mold list. Please try again.",
         "deleteSuccess": "Mold deleted successfully",
+        "restoreSuccess": "Mold restored successfully",
+        "restoreError": "Failed to restore mold",
+        "deletedTag": "Deleted",
         "deleteError": "Failed to delete mold. Please try again.",
         "updateSuccess": "Mold updated successfully",
         "updateError": "Failed to update mold. Please try again.",
-        "moldType": {
-            "PRESS": "Press",
-            "COMPRESS": "Compress"
-        },
-        "status": {
-            "ACTIVE": "Active",
-            "MAINTENANCE": "Maintenance",
-            "RETIRED": "Retired"
-        },
         "table": {
             "headers": {
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
-                "quantity": "Cavities",
-                "moldType": "Mold Type",
-                "status": "Status",
+                "outputPerShot": "Cavities",
+                "operationType": "Operation",
                 "description": "Description",
                 "createdAt": "Created At",
                 "updatedAt": "Updated At",
@@ -2250,6 +2322,10 @@
             "deleteConfirmation": {
                 "title": "Delete Mold",
                 "description": "Are you sure you want to delete this mold? This action cannot be undone."
+            },
+            "restoreConfirmation": {
+                "title": "Restore Mold",
+                "description": "The mold will return to the active list. Continue?"
             }
         },
         "form": {
@@ -2262,23 +2338,21 @@
             "fields": {
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
-                "quantity": "Number of Cavities",
-                "moldType": "Mold Type",
-                "status": "Status",
+                "outputPerShot": "Number of Cavities",
+                "operationType": "Operation",
                 "description": "Description"
             },
             "placeholders": {
                 "moldCode": "Enter mold code (e.g. KM001)",
                 "moldName": "Enter mold name",
-                "quantity": "Enter number of cavities",
-                "moldType": "Select mold type",
-                "status": "Select status",
+                "outputPerShot": "Enter number of cavities",
+                "operationType": "Select operation",
                 "description": "Enter mold description (optional)"
             },
             "validation": {
                 "required": "This field is required",
                 "maxLength": "Maximum length is {{max}} characters",
-                "minQuantity": "Number of cavities must be at least {{min}}"
+                "minOutputPerShot": "Number of cavities must be at least {{min}}"
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -4363,6 +4437,12 @@
         }
     },
     "notification": {
+        "production_plan": {
+            "incident_pause": {
+                "title": "Plan paused due to incident",
+                "content": "A production plan has been paused due to a machine incident."
+            }
+        },
         "order": {
             "assigned_operators": {
                 "title": "New Order Assigned",
