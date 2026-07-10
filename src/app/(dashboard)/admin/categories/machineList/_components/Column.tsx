@@ -89,15 +89,15 @@ export const getMachineListTableColumns = (
             },
         },
         {
-            title: () => t('machineListManagement.table.headers.propertyCode'),
-            dataIndex: 'propertyCode',
-            key: 'propertyCode',
+            title: () => t('machineListManagement.table.headers.machineCode'),
+            dataIndex: 'machineCode',
+            key: 'machineCode',
             width: 150,
             align: 'center',
             ellipsis: { showTitle: false },
             sorter: (a, b) => {
-                const codeA = a.propertyCode || '';
-                const codeB = b.propertyCode || '';
+                const codeA = a.machineCode || '';
+                const codeB = b.machineCode || '';
                 return codeA.localeCompare(codeB);
             },
             render: (text: string) => {

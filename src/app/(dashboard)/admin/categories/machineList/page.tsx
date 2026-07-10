@@ -62,9 +62,9 @@ const machineQueryKeys = {
         sort: string | string[],
         search: string,
         name: string | undefined,
-        prop: string | undefined,
+        code: string | undefined,
         topic: string | undefined
-    ) => ['machines', 'list', spaceId, page, size, sort, search, name, prop, topic] as const,
+    ) => ['machines', 'list', spaceId, page, size, sort, search, name, code, topic] as const,
     detail: (machineId: string) => ['machines', 'detail', machineId] as const,
 };
 
@@ -120,11 +120,11 @@ const MachineListPageContent = () => {
 
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
-    const [propertyCodeFilter, setPropertyCodeFilter] = useState<string | undefined>(undefined);
+    const [machineCodeFilter, setMachineCodeFilter] = useState<string | undefined>(undefined);
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
-    const activeFilterCount = [machineNameFilter, propertyCodeFilter, mqttTopicFilter].filter(Boolean).length;
+    const activeFilterCount = [machineNameFilter, machineCodeFilter, mqttTopicFilter].filter(Boolean).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -167,7 +167,7 @@ const MachineListPageContent = () => {
             sort,
             debouncedSearch,
             machineNameFilter,
-            propertyCodeFilter,
+            machineCodeFilter,
             mqttTopicFilter
         ),
         queryFn: async () => MachineService.getMachinesPaginated({
@@ -177,7 +177,7 @@ const MachineListPageContent = () => {
             search: debouncedSearch,
             spaceId: selectedSpaceId,
             machineName: machineNameFilter,
-            propertyCode: propertyCodeFilter,
+            machineCode: machineCodeFilter,
             topic: mqttTopicFilter,
         }),
         enabled: selectedSpaceId !== undefined,
@@ -554,10 +554,10 @@ const MachineListPageContent = () => {
                 value: machineNameFilter ?? '',
             },
             {
-                key: 'propertyCode',
-                label: t('machineListManagement.table.headers.propertyCode'),
-                placeholder: t('machineListManagement.filters.propertyPlaceholder'),
-                value: propertyCodeFilter ?? '',
+                key: 'machineCode',
+                label: t('machineListManagement.table.headers.machineCode'),
+                placeholder: t('machineListManagement.filters.machineCodePlaceholder'),
+                value: machineCodeFilter ?? '',
             },
             {
                 key: 'mqttTopic',
@@ -566,7 +566,7 @@ const MachineListPageContent = () => {
                 value: mqttTopicFilter ?? '',
             },
         ],
-        [t, machineNameFilter, propertyCodeFilter, mqttTopicFilter]
+        [t, machineNameFilter, machineCodeFilter, mqttTopicFilter]
     );
 
     const findSpacePath = (
@@ -592,14 +592,14 @@ const MachineListPageContent = () => {
 
     const handleResetFilters = useCallback(() => {
         setMachineNameFilter(undefined);
-        setPropertyCodeFilter(undefined);
+        setMachineCodeFilter(undefined);
         setMqttTopicFilter(undefined);
         setPage(0);
     }, []);
 
     const handleApplyFilters = useCallback((values: Record<string, string>) => {
         setMachineNameFilter(values.machineName?.trim() || undefined);
-        setPropertyCodeFilter(values.propertyCode?.trim() || undefined);
+        setMachineCodeFilter(values.machineCode?.trim() || undefined);
         setMqttTopicFilter(values.mqttTopic?.trim() || undefined);
         setPage(0);
     }, []);
@@ -707,10 +707,10 @@ const MachineListPageContent = () => {
                                 <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
                                     <Descriptions.Item
                                         label={t(
-                                            'machineListManagement.table.headers.propertyCode'
+                                            'machineListManagement.table.headers.machineCode'
                                         )}
                                     >
-                                        {viewModalState.data.propertyCode || '-'}
+                                        {viewModalState.data.machineCode || '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item
                                         label={t('machineListManagement.table.headers.space')}
@@ -826,9 +826,9 @@ const MachineListPageContent = () => {
                             {t('machineListManagement.table.headers.machineName')}: {machineNameFilter}
                         </Tag>
                     )}
-                    {propertyCodeFilter && (
-                        <Tag closable onClose={() => { setPropertyCodeFilter(undefined); setPage(0); }}>
-                            {t('machineListManagement.table.headers.propertyCode')}: {propertyCodeFilter}
+                    {machineCodeFilter && (
+                        <Tag closable onClose={() => { setMachineCodeFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.table.headers.machineCode')}: {machineCodeFilter}
                         </Tag>
                     )}
                     {mqttTopicFilter && (

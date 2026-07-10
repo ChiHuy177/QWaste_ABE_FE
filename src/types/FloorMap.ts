@@ -8,7 +8,7 @@ export interface FloorMapResponse {
 
 export interface FloorMapMachineResponse {
     machineId: string;
-    propertyCode: string;
+    machineCode: string;
     spaceId: number;
     spaceCode: string;
     spaceName: string;

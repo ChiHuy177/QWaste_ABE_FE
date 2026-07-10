@@ -3,7 +3,7 @@ import { SelectOption } from '@/types/Common';
 
 const VALIDATION_CONFIG = Object.freeze({
     MACHINE_NAME: { required: true, minLength: 2, maxLength: 50 },
-    PROPERTY_CODE: { required: true, maxLength: 15 },
+    MACHINE_CODE: { required: true, maxLength: 50 },
     POWER: { required: true, min: 0.1, maxLength: 10 },
     DESCRIPTION: { required: true, maxLength: 255 },
     TOPIC: { required: true, maxLength: 255 },
@@ -48,21 +48,21 @@ export const getMachineListFormFields = (
             span: { xs: 24, md: 12 },
         },
         {
-            name: 'propertyCode',
-            label: t('machineListManagement.form.fields.propertyCode'),
+            name: 'machineCode',
+            label: t('machineListManagement.form.fields.machineCode'),
             type: 'text',
-            placeholder: t('machineListManagement.form.placeholders.propertyCode'),
-            required: VALIDATION_CONFIG.PROPERTY_CODE.required,
-            maxLength: VALIDATION_CONFIG.PROPERTY_CODE.maxLength,
+            placeholder: t('machineListManagement.form.placeholders.machineCode'),
+            required: VALIDATION_CONFIG.MACHINE_CODE.required,
+            maxLength: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
             rules: [
                 {
-                    required: VALIDATION_CONFIG.PROPERTY_CODE.required,
+                    required: VALIDATION_CONFIG.MACHINE_CODE.required,
                     message: t('machineListManagement.form.validation.required'),
                 },
                 {
-                    max: VALIDATION_CONFIG.PROPERTY_CODE.maxLength,
+                    max: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
                     message: t('machineListManagement.form.validation.maxLength', {
-                        max: VALIDATION_CONFIG.PROPERTY_CODE.maxLength,
+                        max: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
                     }),
                 },
             ],

@@ -37,7 +37,7 @@ export class MachineService {
         }
 
         MachineService.appendTrimmedParam(queryParams, 'machineName', params.machineName);
-        MachineService.appendTrimmedParam(queryParams, 'propertyCode', params.propertyCode);
+        MachineService.appendTrimmedParam(queryParams, 'machineCode', params.machineCode);
         MachineService.appendTrimmedParam(queryParams, 'topic', params.topic);
 
         return queryParams;

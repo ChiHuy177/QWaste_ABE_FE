@@ -19,14 +19,14 @@ export interface MachinePaginatedParams {
     search?: string;
     spaceId?: number;
     machineName?: string;
-    propertyCode?: string;
+    machineCode?: string;
     topic?: string;
 }
 
 export interface Machine {
     machineId: string;
     machineName: string;
-    /** Mã máy (BE Machine.machine_code, nullable) — dùng ở production plan. */
+    /** Mã máy (BE Machine.machine_code, nullable ở DB nhưng bắt buộc khi tạo/sửa). */
     machineCode?: string | null;
     description: string;
     topic: string;
@@ -34,7 +34,6 @@ export interface Machine {
     productionTime: number;
     machineImage: string;
     space: SpaceDetailResponse;
-    propertyCode?: string;
     operatorCount?: number;
     power?: number;
     auditMetaData?: AuditMetaData;
@@ -47,7 +46,7 @@ export interface MachineFormData {
     topic: string;
     machineImage: string;
     spaceId: number;
-    propertyCode?: string;
+    machineCode: string;
     power?: number;
 }
 
@@ -58,7 +57,7 @@ export interface MachineUpdateFormData {
     topic: string;
     machineImage: string;
     spaceId: number;
-    propertyCode?: string;
+    machineCode: string;
     power?: number;
 }
 export interface MachineLog {
@@ -70,7 +69,6 @@ export interface MachineOverview {
     machineId: string;
     machineName: string;
     machineCode?: string;
-    propertyCode?: string;
     power?: number;
     status: 'running' | 'idle' | 'error' | 'empty';
     machineImage?: string;
@@ -99,7 +97,7 @@ export interface MachineOverview {
 export interface MachineCurrentShiftOverview {
     machineId: string;
     machineName: string;
-    propertyCode?: string;
+    machineCode?: string;
     power?: number;
     topic?: string;
     currentStatus: currentStatus;
@@ -121,7 +119,6 @@ export interface MachineWithStatusLogsSummary {
     machineId: string;
     machineName: string;
     machineCode: string;
-    propertyCode: string;
     power: number;
     machineDisplayOrder: number;
     topic: string;

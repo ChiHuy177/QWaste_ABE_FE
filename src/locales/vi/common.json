@@ -1445,7 +1445,7 @@
             "offlineNote": "Không tính vào tỷ lệ phần trăm",
             "totalActiveTime": "Tổng Thời Gian Hoạt Động",
             "excludingOffline": "Không bao gồm thời gian offline",
-            "propertyCode": "Mã Tài Sản",
+            "machineCode": "Mã Máy",
             "power": "Công Suất",
             "measuredEnergy": "Năng Lượng Đo",
             "productionMetrics": "Chỉ Số Sản Xuất",
@@ -3098,7 +3098,7 @@
                 "createdAt": "Ngày tạo",
                 "updatedAt": "Ngày cập nhật",
                 "actions": "Hành động",
-                "propertyCode": "Mã tài sản",
+                "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "space": "Khu vực",
                 "displayOrder": "Thứ tự hiển thị",
@@ -3115,7 +3115,7 @@
             "selectLine": "Chọn băng chuyền",
             "codePlaceholder": "Nhập mã máy...",
             "namePlaceholder": "Nhập tên máy...",
-            "propertyPlaceholder": "VD: 11.xx.0001",
+            "machineCodePlaceholder": "VD: 11.xx.0001",
             "topicPlaceholder": "Nhập topic..."
         },
         "actions": {
@@ -3150,7 +3150,7 @@
                 "productionTime": "Thời gian sản xuất",
                 "zone": "Khu vực",
                 "machineImage": "Hình ảnh máy",
-                "propertyCode": "Mã tài sản",
+                "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "line": "Danh sách chuyền",
                 "displayOrder": "Thứ tự hiển thị"
@@ -3163,7 +3163,7 @@
                 "topic": "Nhập chủ đề",
                 "productionTime": "Nhập thời gian sản xuất",
                 "zone": "Chọn một khu vực",
-                "propertyCode": "Nhập mã tài sản",
+                "machineCode": "Nhập mã máy",
                 "power": "Nhập mức điện",
                 "line": "Chọn một băng chuyền",
                 "machineImage": "Tải lên hình ảnh máy"
