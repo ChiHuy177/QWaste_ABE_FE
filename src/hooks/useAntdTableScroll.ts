@@ -28,7 +28,9 @@ export const useAntdTableScroll = (minScrollY = 120) => {
                 const tableHeader =
                     container.querySelector('.ant-table-header') ||
                     container.querySelector('.ant-table-thead');
-                const pagination = container.querySelector('.ant-table-pagination');
+                const pagination =
+                    container.querySelector('.ant-table-pagination') ||
+                    container.querySelector('.ant-pagination');
                 const headerHeight = getOuterHeight(tableHeader, 55);
                 const paginationHeight = getOuterHeight(pagination, 56);
                 const nextScrollY = Math.max(

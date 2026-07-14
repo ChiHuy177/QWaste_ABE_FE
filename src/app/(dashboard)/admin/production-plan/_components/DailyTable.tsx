@@ -61,6 +61,7 @@ interface DailyTableProps {
     dateLabel: string;
     machineFilter: string;
     canReorder?: boolean;
+    scrollY?: number;
     onEdit: (target: PlanRowTarget) => void;
     onDelete: (target: PlanRowTarget) => void;
     onRestore: (target: PlanRowTarget) => void;
@@ -87,6 +88,7 @@ export default function DailyTable({
     dateLabel,
     machineFilter,
     canReorder = true,
+    scrollY,
     onEdit,
     onDelete,
     onRestore,
@@ -402,48 +404,57 @@ export default function DailyTable({
     }
 
     return (
-        <>
-            <DndContext
-                sensors={sensors}
-                collisionDetection={sameGroupCollisionDetection}
-                modifiers={[restrictToVerticalAxis]}
-                onDragEnd={handleDragEnd}
-            >
-                <SortableContext items={sortableKeys} strategy={verticalListSortingStrategy}>
-                    <Table<FlatRow>
-                        className={`${styles.planAntTable} ${styles.dailySheetTable}`}
-                        components={{
-                            body: {
-                                row: SmartTableRow,
-                            },
-                        }}
-                        columns={columns}
-                        dataSource={flatRows}
-                        rowKey={(record) => {
-                            if (record.type === 'product') return record.rowKey;
-                            if (record.type === 'total') return `${record.groupKey}-total`;
-                            return `${record.groupKey}-header`;
-                        }}
-                        rowClassName={(record) => {
-                            if (record.type === 'total') return styles.dailySheetTotalRow;
-                            if (record.type === 'product' && record.isDeleted) {
-                                return styles.deletedRow;
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={sameGroupCollisionDetection}
+                    modifiers={[restrictToVerticalAxis]}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext items={sortableKeys} strategy={verticalListSortingStrategy}>
+                        <Table<FlatRow>
+                            className={`${styles.planAntTable} ${styles.dailySheetTable}`}
+                            components={{
+                                body: {
+                                    row: SmartTableRow,
+                                },
+                            }}
+                            columns={columns}
+                            dataSource={flatRows}
+                            rowKey={(record) => {
+                                if (record.type === 'product') return record.rowKey;
+                                if (record.type === 'total') return `${record.groupKey}-total`;
+                                return `${record.groupKey}-header`;
+                            }}
+                            rowClassName={(record) => {
+                                if (record.type === 'total') return styles.dailySheetTotalRow;
+                                if (record.type === 'product' && record.isDeleted) {
+                                    return styles.deletedRow;
+                                }
+                                return '';
+                            }}
+                            onRow={(record) =>
+                                ({
+                                    'data-row-type': record.type,
+                                }) as React.HTMLAttributes<HTMLTableRowElement>
                             }
-                            return '';
-                        }}
-                        onRow={(record) =>
-                            ({
-                                'data-row-type': record.type,
-                            }) as React.HTMLAttributes<HTMLTableRowElement>
-                        }
-                        pagination={false}
-                        bordered
-                        size="small"
-                        scroll={{ x: 1100 }}
-                    />
-                </SortableContext>
-            </DndContext>
-            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+                            pagination={false}
+                            bordered
+                            size="small"
+                            scroll={{ x: 1100, y: scrollY }}
+                        />
+                    </SortableContext>
+                </DndContext>
+            </div>
+            <div
+                style={{
+                    marginTop: 16,
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    flexShrink: 0,
+                }}
+            >
                 <Pagination
                     current={currentPage}
                     pageSize={pageSize}
@@ -460,6 +471,6 @@ export default function DailyTable({
                     hideOnSinglePage
                 />
             </div>
-        </>
+        </div>
     );
 }

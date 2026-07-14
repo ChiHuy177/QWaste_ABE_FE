@@ -34,6 +34,7 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import { MachineService } from '@/services/MachineService';
 import { MoldService } from '@/services/MoldService';
@@ -131,6 +132,8 @@ export default function ProductionPlanPage() {
     const [transferSubmitting, setTransferSubmitting] = useState(false);
 
     const [importModalOpen, setImportModalOpen] = useState(false);
+
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     // Machine list fetch 1 lần cho cả enrich spaceName lẫn options (G2).
     const machineInfoPromiseRef = useRef<Promise<{
@@ -688,25 +691,33 @@ export default function ProductionPlanPage() {
     );
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('productionPlan.headerTitle', { label: headerLabel })}
                 rightContent={headerActions}
                 mobileMenuItems={
                     canCreate
                         ? [
-                              {
-                                  key: 'add-product',
-                                  label: t('productionPlan.actions.addProduct'),
-                                  icon: <PlusOutlined />,
-                                  onClick: openCreateModal,
-                              },
-                          ]
+                            {
+                                key: 'add-product',
+                                label: t('productionPlan.actions.addProduct'),
+                                icon: <PlusOutlined />,
+                                onClick: openCreateModal,
+                            },
+                        ]
                         : []
                 }
             />
 
-            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Row gutter={[16, 16]} style={{ marginBottom: 24, flexShrink: 0 }}>
                 {summaryCards.map((item) => {
                     const Icon = item.icon;
 
@@ -776,10 +787,19 @@ export default function ProductionPlanPage() {
                     borderRadius: 12,
                     overflow: 'hidden',
                     boxShadow: token.boxShadow,
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
                 }}
                 styles={{
                     body: {
                         padding: 0,
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
                     },
                 }}
             >
@@ -790,8 +810,8 @@ export default function ProductionPlanPage() {
                                 {activeView === 'daily'
                                     ? t('productionPlan.panel.dailyTable')
                                     : activeView === 'weekly'
-                                      ? t('productionPlan.panel.weeklyTable')
-                                      : t('productionPlan.panel.machineMatrixTable')}
+                                        ? t('productionPlan.panel.weeklyTable')
+                                        : t('productionPlan.panel.machineMatrixTable')}
                             </Text>
                             {activeView === 'daily' && (
                                 <Button
@@ -821,15 +841,15 @@ export default function ProductionPlanPage() {
                     <Text type="secondary">
                         {activeView === 'daily'
                             ? t('productionPlan.panel.cases', {
-                                  count: formatNumber(summary.dailyCases),
-                              })
+                                count: formatNumber(summary.dailyCases),
+                            })
                             : t('productionPlan.panel.cases', {
-                                  count: formatNumber(summary.weeklyCases),
-                              })}
+                                count: formatNumber(summary.weeklyCases),
+                            })}
                     </Text>
                 </div>
 
-                <div className={styles.tablePanelBody}>
+                <div ref={tableContainerRef} className={styles.tablePanelBody}>
                     {activeView === 'daily' && (
                         <DailyTable
                             groups={machineGroups}
@@ -837,6 +857,7 @@ export default function ProductionPlanPage() {
                             dateLabel={headerLabel}
                             machineFilter={machineFilter}
                             canReorder={canReorder}
+                            scrollY={tableScrollY}
                             onEdit={openEditModal}
                             onDelete={requestDelete}
                             onRestore={handleRestore}
@@ -850,10 +871,15 @@ export default function ProductionPlanPage() {
                             groups={machineGroups}
                             todayIndex={todayIndex}
                             machineFilter={machineFilter}
+                            scrollY={tableScrollY}
                         />
                     )}
                     {activeView === 'matrix' && (
-                        <MachineMatrixTable groups={machineGroups} machineFilter={machineFilter} />
+                        <MachineMatrixTable
+                            groups={machineGroups}
+                            machineFilter={machineFilter}
+                            scrollY={tableScrollY}
+                        />
                     )}
                 </div>
             </Card>
@@ -914,6 +940,6 @@ export default function ProductionPlanPage() {
                 </strong>{' '}
                 {t('productionPlan.deleteModal.messageSuffix')}
             </Modal>
-        </>
+        </div>
     );
 }

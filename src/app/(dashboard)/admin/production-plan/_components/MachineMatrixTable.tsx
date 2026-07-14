@@ -11,6 +11,7 @@ import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
 interface MachineMatrixTableProps {
     groups: MachineGroupVM[];
     machineFilter: string;
+    scrollY?: number;
 }
 
 interface DayItem {
@@ -34,7 +35,11 @@ const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
     group.machineName.toLowerCase().includes(normalizedFilter) ||
     group.spaceName.toLowerCase().includes(normalizedFilter);
 
-export default function MachineMatrixTable({ groups, machineFilter }: MachineMatrixTableProps) {
+export default function MachineMatrixTable({
+    groups,
+    machineFilter,
+    scrollY,
+}: MachineMatrixTableProps) {
     const { t } = useTranslation();
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
 
@@ -152,7 +157,7 @@ export default function MachineMatrixTable({ groups, machineFilter }: MachineMat
             pagination={false}
             bordered
             size="small"
-            scroll={{ x: 1430 }}
+            scroll={{ x: 1430, y: scrollY }}
         />
     );
 }

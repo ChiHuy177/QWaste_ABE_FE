@@ -34,6 +34,7 @@ interface WeeklyTableProps {
     groups: MachineGroupVM[];
     todayIndex: number;
     machineFilter: string;
+    scrollY?: number;
 }
 
 const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
@@ -44,7 +45,12 @@ const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
 
 // Weekly là view tổng hợp: 1 dòng gộp nhiều plan/ngày nên sửa/xoá/kéo-thả
 // chỉ thao tác được ở daily view (mỗi dòng = đúng 1 plan).
-export default function WeeklyTable({ groups, todayIndex, machineFilter }: WeeklyTableProps) {
+export default function WeeklyTable({
+    groups,
+    todayIndex,
+    machineFilter,
+    scrollY,
+}: WeeklyTableProps) {
     const { t } = useTranslation();
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
     const weekDayLabels = useMemo(
@@ -243,7 +249,7 @@ export default function WeeklyTable({ groups, todayIndex, machineFilter }: Weekl
             pagination={false}
             bordered
             size="small"
-            scroll={{ x: 1300 }}
+            scroll={{ x: 1300, y: scrollY }}
         />
     );
 }

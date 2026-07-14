@@ -632,14 +632,28 @@
                 "error": "Error"
             },
             "result": {
-                "inserted": "Imported",
-                "records": "{{count}} records",
-                "importedDays": "Imported days",
-                "deferredDays": "Deferred days",
-                "note": "Note",
-                "requiresConfirmation": "Confirmation required - sessionToken:",
                 "skippedDays": "Skipped days ({{count}})",
-                "errors": "Errors ({{count}})"
+                "errors": "Errors ({{count}})",
+                "importedDaysCount": "Imported days ({{count}})",
+                "deferredDaysCount": "Days needing confirmation ({{count}})",
+                "banner": {
+                    "error": {
+                        "title": "Import failed — {{count}} row errors, nothing was written",
+                        "description": "The file was not imported. Fix the errors below in Excel, then re-upload the whole file."
+                    },
+                    "confirm": {
+                        "title": "Not written yet — {{count}} day(s) conflict with a pending plan",
+                        "description": "The days below already have an unfinished plan in the system. Choose how to proceed to finish the import."
+                    },
+                    "success": {
+                        "title": "{{count}} records were written to the system",
+                        "description": "The production plan for the days below has been updated successfully."
+                    },
+                    "empty": {
+                        "title": "Nothing was written",
+                        "description": "Every day in the file was skipped — there was no data to import."
+                    }
+                }
             }
         },
         "monitor": {

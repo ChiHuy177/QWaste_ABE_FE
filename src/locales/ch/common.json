@@ -1967,14 +1967,28 @@
                 "error": "错误"
             },
             "result": {
-                "inserted": "已导入",
-                "records": "{{count}} 条记录",
-                "importedDays": "已导入日期",
-                "deferredDays": "延期日期",
-                "note": "备注",
-                "requiresConfirmation": "需要确认 - sessionToken:",
                 "skippedDays": "跳过日期（{{count}}）",
-                "errors": "错误（{{count}}）"
+                "errors": "错误（{{count}}）",
+                "importedDaysCount": "已导入日期（{{count}}）",
+                "deferredDaysCount": "待确认日期（{{count}}）",
+                "banner": {
+                    "error": {
+                        "title": "导入失败 — {{count}} 行数据有误，尚未写入任何数据",
+                        "description": "文件尚未导入系统。请在 Excel 中修正下方错误后重新上传整份文件。"
+                    },
+                    "confirm": {
+                        "title": "尚未写入数据 — {{count}} 天与待处理计划冲突",
+                        "description": "下方日期在系统中已有未完成的计划。请选择处理方式以完成导入。"
+                    },
+                    "success": {
+                        "title": "已成功写入 {{count}} 条记录",
+                        "description": "下方日期的生产计划已更新成功。"
+                    },
+                    "empty": {
+                        "title": "未写入任何数据",
+                        "description": "文件中的所有日期均被跳过，没有可导入的数据。"
+                    }
+                }
             }
         },
         "monitor": {

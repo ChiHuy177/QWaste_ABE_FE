@@ -623,14 +623,28 @@
                 "error": "Lỗi"
             },
             "result": {
-                "inserted": "Đã nhập",
-                "records": "{{count}} bản ghi",
-                "importedDays": "Ngày đã nhập",
-                "deferredDays": "Ngày hoãn",
-                "note": "Lưu ý",
-                "requiresConfirmation": "Cần xác nhận - sessionToken:",
                 "skippedDays": "Ngày bị bỏ qua ({{count}})",
-                "errors": "Lỗi ({{count}})"
+                "errors": "Lỗi ({{count}})",
+                "importedDaysCount": "Ngày đã nhập ({{count}})",
+                "deferredDaysCount": "Ngày cần xác nhận ({{count}})",
+                "banner": {
+                    "error": {
+                        "title": "Import thất bại — {{count}} dòng lỗi, chưa có dữ liệu nào được ghi",
+                        "description": "File chưa được nhập vào hệ thống. Sửa các lỗi bên dưới trong Excel rồi tải lên lại toàn bộ file."
+                    },
+                    "confirm": {
+                        "title": "Chưa ghi dữ liệu — {{count}} ngày bị trùng với kế hoạch đang chờ xử lý",
+                        "description": "Các ngày bên dưới đã có kế hoạch chưa hoàn tất trong hệ thống. Chọn cách xử lý bên dưới để hoàn tất import."
+                    },
+                    "success": {
+                        "title": "{{count}} bản ghi đã được ghi vào hệ thống",
+                        "description": "Kế hoạch sản xuất cho các ngày bên dưới đã cập nhật thành công."
+                    },
+                    "empty": {
+                        "title": "Không có dòng nào được ghi",
+                        "description": "Tất cả ngày trong file đã bị bỏ qua, không có dữ liệu nào để nhập."
+                    }
+                }
             }
         },
         "monitor": {
