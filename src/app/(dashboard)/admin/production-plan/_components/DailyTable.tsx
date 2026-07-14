@@ -62,6 +62,8 @@ interface DailyTableProps {
     machineFilter: string;
     canReorder?: boolean;
     scrollY?: number;
+    /** Còn thay đổi thứ tự chưa lưu ở page cha — khóa Sửa/Xóa/Chuyển máy/Chuyển lịch. */
+    actionsLocked?: boolean;
     onEdit: (target: PlanRowTarget) => void;
     onDelete: (target: PlanRowTarget) => void;
     onRestore: (target: PlanRowTarget) => void;
@@ -89,6 +91,7 @@ export default function DailyTable({
     machineFilter,
     canReorder = true,
     scrollY,
+    actionsLocked = false,
     onEdit,
     onDelete,
     onRestore,
@@ -312,13 +315,21 @@ export default function DailyTable({
                         render: (_, record) => {
                             if (record.type !== 'product') return null;
                             const target = toTarget(record);
+                            const lockedHint = t('productionPlan.reorder.lockedActionHint');
 
                             if (record.isDeleted) {
                                 return (
-                                    <Tooltip title={t('productionPlan.actions.restore')}>
+                                    <Tooltip
+                                        title={
+                                            actionsLocked
+                                                ? lockedHint
+                                                : t('productionPlan.actions.restore')
+                                        }
+                                    >
                                         <Button
                                             type="text"
                                             icon={<UndoOutlined />}
+                                            disabled={actionsLocked}
                                             onClick={() => onRestore(target)}
                                         />
                                     </Tooltip>
@@ -327,47 +338,56 @@ export default function DailyTable({
 
                             return (
                                 <div className={styles.actions}>
-                                    <Tooltip title={t('common.edit')}>
+                                    <Tooltip title={actionsLocked ? lockedHint : t('common.edit')}>
                                         <Button
                                             type="text"
                                             icon={<EditOutlined />}
+                                            disabled={actionsLocked}
                                             onClick={() => onEdit(target)}
                                         />
                                     </Tooltip>
-                                    <Tooltip title={t('common.delete')}>
+                                    <Tooltip title={actionsLocked ? lockedHint : t('common.delete')}>
                                         <Button
                                             danger
                                             type="text"
                                             icon={<DeleteOutlined />}
+                                            disabled={actionsLocked}
                                             onClick={() => onDelete(target)}
                                         />
                                     </Tooltip>
-                                    <Dropdown
-                                        trigger={['click']}
-                                        placement="bottomRight"
-                                        menu={{
-                                            items: [
-                                                {
-                                                    key: 'transfer-machine',
-                                                    label: t(
-                                                        'productionPlan.actions.transferMachine'
-                                                    ),
-                                                    icon: <SwapOutlined />,
-                                                    onClick: () => onTransferMachine?.(target),
-                                                },
-                                                {
-                                                    key: 'transfer-schedule',
-                                                    label: t(
-                                                        'productionPlan.actions.transferSchedule'
-                                                    ),
-                                                    icon: <ScheduleOutlined />,
-                                                    onClick: () => onTransferSchedule?.(target),
-                                                },
-                                            ],
-                                        }}
-                                    >
-                                        <Button type="text" icon={<MoreOutlined />} />
-                                    </Dropdown>
+                                    <Tooltip title={actionsLocked ? lockedHint : undefined}>
+                                        <Dropdown
+                                            trigger={['click']}
+                                            placement="bottomRight"
+                                            disabled={actionsLocked}
+                                            menu={{
+                                                items: [
+                                                    {
+                                                        key: 'transfer-machine',
+                                                        label: t(
+                                                            'productionPlan.actions.transferMachine'
+                                                        ),
+                                                        icon: <SwapOutlined />,
+                                                        onClick: () => onTransferMachine?.(target),
+                                                    },
+                                                    {
+                                                        key: 'transfer-schedule',
+                                                        label: t(
+                                                            'productionPlan.actions.transferSchedule'
+                                                        ),
+                                                        icon: <ScheduleOutlined />,
+                                                        onClick: () => onTransferSchedule?.(target),
+                                                    },
+                                                ],
+                                            }}
+                                        >
+                                            <Button
+                                                type="text"
+                                                icon={<MoreOutlined />}
+                                                disabled={actionsLocked}
+                                            />
+                                        </Dropdown>
+                                    </Tooltip>
                                 </div>
                             );
                         },
@@ -376,6 +396,7 @@ export default function DailyTable({
             },
         ],
         [
+            actionsLocked,
             canReorder,
             dateLabel,
             onDelete,

@@ -390,6 +390,20 @@
         "restoreSuccess": "Khôi phục kế hoạch thành công",
         "restoreError": "Khôi phục kế hoạch thất bại",
         "reorderError": "Sắp xếp thứ tự thất bại",
+        "reorder": {
+            "save": "Lưu thứ tự",
+            "saveSuccess": "Lưu thứ tự thành công",
+            "discard": "Hủy thay đổi",
+            "unsavedTag": "Thứ tự chưa lưu",
+            "confirmTitle": "Có thay đổi thứ tự chưa lưu",
+            "confirmMessage": "Bạn vừa sắp xếp lại thứ tự sản phẩm nhưng chưa lưu. Vui lòng lưu hoặc hủy thay đổi trước khi tiếp tục.",
+            "saveAndContinue": "Lưu và tiếp tục",
+            "discardAndContinue": "Hủy và tiếp tục",
+            "lockedActionHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thao tác",
+            "lockedFilterHint": "Lưu hoặc hủy thay đổi thứ tự trước khi lọc",
+            "lockedCreateHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thêm mã hàng",
+            "lockedImportHint": "Lưu hoặc hủy thay đổi thứ tự trước khi import"
+        },
         "status": {
             "PENDING": "Chờ sản xuất",
             "RUNNING": "Đang chạy",

@@ -1741,6 +1741,20 @@
         "restoreSuccess": "恢复计划成功",
         "restoreError": "恢复计划失败",
         "reorderError": "排序失败",
+        "reorder": {
+            "save": "保存顺序",
+            "saveSuccess": "保存顺序成功",
+            "discard": "放弃更改",
+            "unsavedTag": "顺序未保存",
+            "confirmTitle": "有未保存的顺序更改",
+            "confirmMessage": "您刚调整了产品顺序但尚未保存。请先保存或放弃更改后再继续。",
+            "saveAndContinue": "保存并继续",
+            "discardAndContinue": "放弃并继续",
+            "lockedActionHint": "请先保存或放弃顺序更改后再操作",
+            "lockedFilterHint": "请先保存或放弃顺序更改后再筛选",
+            "lockedCreateHint": "请先保存或放弃顺序更改后再新增料号",
+            "lockedImportHint": "请先保存或放弃顺序更改后再导入"
+        },
         "status": {
             "PENDING": "待生产",
             "RUNNING": "运行中",

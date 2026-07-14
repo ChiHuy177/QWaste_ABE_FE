@@ -101,7 +101,7 @@ export default function ImportModal({ open, onClose, onImported }: ImportModalPr
             open={open}
             onCancel={handleClose}
             footer={footer}
-            width={600}
+            width={'70vw'}
             destroyOnHidden
         >
             {displayedResult ? (
