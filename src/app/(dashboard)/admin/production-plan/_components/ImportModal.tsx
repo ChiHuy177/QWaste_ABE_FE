@@ -30,6 +30,7 @@ export default function ImportModal({ open, onClose, onImported }: ImportModalPr
                 onImported?.();
             }
         },
+        onError: (error) => handleError(error, { fallbackKey: 'productionPlan.import.uploadError' }),
     });
     const [confirmResult, setConfirmResult] = useState<ImportResult | null>(null);
     const [confirming, setConfirming] = useState(false);

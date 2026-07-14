@@ -632,6 +632,7 @@
             "title": "Import production plan",
             "upload": "Upload",
             "hint": "Excel file containing the production plan - maximum 10MB",
+            "uploadError": "Failed to upload import file",
             "confirmError": "Failed to confirm import",
             "confirmOptions": {
                 "cancel": "Cancel import session",

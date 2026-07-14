@@ -623,6 +623,7 @@
             "title": "Import kế hoạch sản xuất",
             "upload": "Tải lên",
             "hint": "File Excel chứa kế hoạch sản xuất - tối đa 10MB",
+            "uploadError": "Tải lên import thất bại",
             "confirmError": "Xác nhận import thất bại",
             "confirmOptions": {
                 "cancel": "Hủy phiên import",

@@ -489,7 +489,6 @@ export default function DailyTable({
                     showTotal={(total) =>
                         t('productionPlan.table.pagination.machineGroups', { total })
                     }
-                    hideOnSinglePage
                 />
             </div>
         </div>

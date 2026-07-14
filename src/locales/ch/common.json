@@ -1967,6 +1967,7 @@
             "title": "导入生产计划",
             "upload": "上传",
             "hint": "包含生产计划的 Excel 文件 - 最大 10MB",
+            "uploadError": "上传导入文件失败",
             "confirmError": "确认导入失败",
             "confirmOptions": {
                 "cancel": "取消导入会话",
