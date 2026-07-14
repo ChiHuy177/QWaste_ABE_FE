@@ -10,7 +10,7 @@ import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/inci
 
 export interface TransferMachinePayload {
     machineId: string;
-    incidentReason: IncidentReason;
+    incidentReason?: IncidentReason;
     note?: string;
 }
 
@@ -27,7 +27,7 @@ interface TransferMachineModalProps {
 
 const { Text } = Typography;
 
-// Đổi máy = BE incident defer (tạo child plan cùng ngày, máy mới) nên cần lý do sự cố.
+// Đổi máy: PENDING → BE /move (không cần lý do sự cố); PAUSE → BE /incident/defer (bắt buộc lý do sự cố).
 export default function TransferMachineModal({
     open,
     target,
@@ -53,13 +53,21 @@ export default function TransferMachineModal({
 
     const currentMachineCode = target?.machineCode ?? '';
     const dayLabel = t(`productionPlan.days.full.${WEEK_DAY_KEYS[todayIndex]}`);
-    const noteRequired = isIncidentNoteRequired(incidentReason);
+    // BE: PENDING dùng /move (không cần lý do sự cố), PAUSE dùng /incident/defer (bắt buộc).
+    const requiresIncidentReason = target?.row.status === 'PAUSE';
+    const noteRequired = requiresIncidentReason && isIncidentNoteRequired(incidentReason);
     const canConfirm =
-        !!newMachineId && !!incidentReason && (!noteRequired || note.trim().length > 0);
+        !!newMachineId &&
+        (!requiresIncidentReason || (!!incidentReason && (!noteRequired || note.trim().length > 0)));
 
     const handleConfirm = () => {
-        if (!canConfirm || !newMachineId || !incidentReason) return;
-        onConfirm({ machineId: newMachineId, incidentReason, note: note.trim() || undefined });
+        if (!canConfirm || !newMachineId) return;
+        if (requiresIncidentReason && !incidentReason) return;
+        onConfirm({
+            machineId: newMachineId,
+            incidentReason: requiresIncidentReason ? incidentReason : undefined,
+            note: requiresIncidentReason ? note.trim() || undefined : undefined,
+        });
     };
 
     const selectOptions = machineOptions.filter((option) => option.value !== target?.machineId);
@@ -125,37 +133,41 @@ export default function TransferMachineModal({
                     />
                 </div>
 
-                <div>
-                    <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                        {t('productionPlan.incident.reasonLabel')}
-                    </Text>
-                    <Select
-                        style={{ width: '100%' }}
-                        placeholder={t('productionPlan.incident.reasonPlaceholder')}
-                        value={incidentReason}
-                        onChange={setIncidentReason}
-                        options={getIncidentReasonOptions(t)}
-                    />
-                </div>
+                {requiresIncidentReason && (
+                    <>
+                        <div>
+                            <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                                {t('productionPlan.incident.reasonLabel')}
+                            </Text>
+                            <Select
+                                style={{ width: '100%' }}
+                                placeholder={t('productionPlan.incident.reasonPlaceholder')}
+                                value={incidentReason}
+                                onChange={setIncidentReason}
+                                options={getIncidentReasonOptions(t)}
+                            />
+                        </div>
 
-                <div>
-                    <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                        {t('productionPlan.incident.noteLabel')}
-                        {noteRequired && <Text type="danger"> *</Text>}
-                    </Text>
-                    <Input.TextArea
-                        rows={2}
-                        maxLength={2000}
-                        value={note}
-                        onChange={(event) => setNote(event.target.value)}
-                        placeholder={t('productionPlan.incident.notePlaceholder')}
-                    />
-                    {noteRequired && !note.trim() && (
-                        <Text type="danger" style={{ fontSize: 12 }}>
-                            {t('productionPlan.incident.noteRequiredForOther')}
-                        </Text>
-                    )}
-                </div>
+                        <div>
+                            <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                                {t('productionPlan.incident.noteLabel')}
+                                {noteRequired && <Text type="danger"> *</Text>}
+                            </Text>
+                            <Input.TextArea
+                                rows={2}
+                                maxLength={2000}
+                                value={note}
+                                onChange={(event) => setNote(event.target.value)}
+                                placeholder={t('productionPlan.incident.notePlaceholder')}
+                            />
+                            {noteRequired && !note.trim() && (
+                                <Text type="danger" style={{ fontSize: 12 }}>
+                                    {t('productionPlan.incident.noteRequiredForOther')}
+                                </Text>
+                            )}
+                        </div>
+                    </>
+                )}
 
                 <Alert
                     type="info"

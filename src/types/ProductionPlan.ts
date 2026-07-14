@@ -92,6 +92,11 @@ export interface ProductionPlanMutationResponse {
     isDeleted: boolean;
 }
 
+export interface ProductionPlanDeferResponse {
+    originalProductionPlan: ProductionPlanMutationResponse;
+    carryOverProductionPlan: ProductionPlanMutationResponse;
+}
+
 export interface ProductionPlanStatusLog {
     productionPlanStatusLogId: number;
     machineId: string;
@@ -126,6 +131,7 @@ export interface ProductionPlanUpdateFormData {
     productionPlanName: string;
     plannedQuantity: number;
     moldId?: string;
+    note?: string;
 }
 
 export interface ProductionPlanDailyFilter {
@@ -153,6 +159,27 @@ export interface ProductionPlanWeeklyFilter {
 
 export interface ProductionPlanReorderItem {
     productionPlanId: string;
+    sequence: number;
+}
+
+export interface ProductionPlanReorderMachineGroup {
+    machineId: string;
+    productionPlans: ProductionPlanReorderItem[];
+}
+
+export interface ProductionPlanReorderDayGroup {
+    plannedDate: string; // yyyy-MM-dd
+    machines: ProductionPlanReorderMachineGroup[];
+}
+
+export interface ProductionPlanReorderDayResponse {
+    plannedDate: string; // yyyy-MM-dd
+    machines: ProductionPlanDailyMachineGroup[];
+}
+
+export interface ProductionPlanMoveRequest {
+    machineId: string;
+    plannedDate: string; // yyyy-MM-dd
     sequence: number;
 }
 

@@ -1835,7 +1835,8 @@
             "restore": "恢复",
             "transfer": "转移",
             "transferMachine": "转移机器",
-            "transferSchedule": "转移计划"
+            "transferSchedule": "转移计划",
+            "statusLockedHint": "仅适用于待处理（PENDING）的计划"
         },
         "panel": {
             "dailyTable": "日表",
@@ -1863,7 +1864,8 @@
                 "mold": "模具",
                 "average": "平均",
                 "avgShort": "平均",
-                "time": "时间"
+                "time": "时间",
+                "status": "状态"
             },
             "pagination": {
                 "machineGroups": "共 {{total}} 个机器组"

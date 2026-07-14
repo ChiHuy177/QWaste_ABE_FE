@@ -39,7 +39,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     }
 
     const productionPlanItems: MenuItem[] = [];
-    if (ability.can('view', 'product')) {
+    if (ability.can('view', 'production_plan')) {
         productionPlanItems.push(
             createMenuItem(
                 '/admin/production-plan',

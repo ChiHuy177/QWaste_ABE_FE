@@ -126,10 +126,11 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View production plan monitor',
     },
 
-    // Production Plan (BE tái dùng slug product:* — xem ProductionPlanConstants.Permissions)
+    // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
+    // create/import chưa có bằng chứng BE đổi nên tạm giữ trên subject 'product' cũ.)
     {
-        slug: 'product:view',
-        subject: 'product',
+        slug: 'production_plan:view',
+        subject: 'production_plan',
         action: 'view',
         routes: ['/admin/production-plan'],
         menuKey: 'production-plan',
@@ -143,29 +144,43 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Create production plan',
     },
     {
-        slug: 'product:update',
-        subject: 'product',
+        slug: 'production_plan:update',
+        subject: 'production_plan',
         action: 'update',
         routes: [],
-        description: 'Update production plan (incl. incident actions)',
+        description: 'Update production plan fields',
     },
     {
-        slug: 'product:delete',
-        subject: 'product',
+        slug: 'production_plan:incident',
+        subject: 'production_plan',
+        action: 'incident',
+        routes: [],
+        description: 'Terminate/pause/defer production plan (incident actions)',
+    },
+    {
+        slug: 'production_plan:move',
+        subject: 'production_plan',
+        action: 'move',
+        routes: [],
+        description: 'Move a PENDING production plan to another machine/date',
+    },
+    {
+        slug: 'production_plan:delete',
+        subject: 'production_plan',
         action: 'delete',
         routes: [],
         description: 'Delete production plan',
     },
     {
-        slug: 'product:restore',
-        subject: 'product',
+        slug: 'production_plan:restore',
+        subject: 'production_plan',
         action: 'restore',
         routes: [],
         description: 'Restore deleted production plan',
     },
     {
-        slug: 'product:reorder',
-        subject: 'product',
+        slug: 'production_plan:reorder',
+        subject: 'production_plan',
         action: 'reorder',
         routes: [],
         description: 'Reorder production plans',

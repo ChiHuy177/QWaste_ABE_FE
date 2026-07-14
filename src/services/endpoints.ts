@@ -188,6 +188,7 @@ export const ENDPOINTS = {
         DAILY: `${BASE_PATHS.PRODUCTION_PLANS}/daily`,
         WEEKLY: `${BASE_PATHS.PRODUCTION_PLANS}/weekly`,
         REORDER: `${BASE_PATHS.PRODUCTION_PLANS}/reorder`,
+        MOVE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/move`,
         RESTORE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/restoring`,
         INCIDENT_TERMINATE: (id: PathParam) =>
             `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/terminate`,

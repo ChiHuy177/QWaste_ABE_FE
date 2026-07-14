@@ -493,7 +493,8 @@
             "restore": "Restore",
             "transfer": "Transfer",
             "transferMachine": "Transfer machine",
-            "transferSchedule": "Transfer schedule"
+            "transferSchedule": "Transfer schedule",
+            "statusLockedHint": "Only available for PENDING plans"
         },
         "panel": {
             "dailyTable": "Daily table",
@@ -521,7 +522,8 @@
                 "mold": "mold",
                 "average": "Average",
                 "avgShort": "Avg.",
-                "time": "Time"
+                "time": "Time",
+                "status": "Status"
             },
             "pagination": {
                 "machineGroups": "Total {{total}} machine groups"

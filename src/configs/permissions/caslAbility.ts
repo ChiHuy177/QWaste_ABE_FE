@@ -13,7 +13,9 @@ export type Action =
     | 'confirm'
     | 'decline'
     | 'reorder'
-    | 'import';
+    | 'import'
+    | 'incident'
+    | 'move';
 
 export type Subject =
     // Overview
@@ -58,7 +60,8 @@ export type Subject =
     // Tasks Management
     | 'tasks'
     | 'production_monitor'
-    // Production plan (BE tái dùng slug product:*)
+    // Production plan — BE dùng slug production_plan:* (create/import vẫn tạm trên 'product')
+    | 'production_plan'
     | 'product'
     // Space
     | 'space_monitoring'

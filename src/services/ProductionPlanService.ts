@@ -7,10 +7,13 @@ import {
     IncidentTerminateRequest,
     ProductionPlanDailyFilter,
     ProductionPlanDailyMachineGroup,
+    ProductionPlanDeferResponse,
     ProductionPlanDetail,
     ProductionPlanFormData,
+    ProductionPlanMoveRequest,
     ProductionPlanMutationResponse,
-    ProductionPlanReorderItem,
+    ProductionPlanReorderDayGroup,
+    ProductionPlanReorderDayResponse,
     ProductionPlanStatusLog,
     ProductionPlanUpdateFormData,
     ProductionPlanWeeklyFilter,
@@ -110,14 +113,29 @@ export class ProductionPlanService {
         return response.message as string;
     }
 
-    static async reorderProductionPlans(items: ProductionPlanReorderItem[]): Promise<string> {
-        const response = await NetworkService.requestJson<void>({
+    static async reorderProductionPlans(
+        days: ProductionPlanReorderDayGroup[]
+    ): Promise<ProductionPlanReorderDayResponse[]> {
+        const response = await NetworkService.requestJson<ProductionPlanReorderDayResponse[]>({
             method: 'PUT',
             url: ENDPOINTS.PRODUCTION_PLANS.REORDER,
-            data: { items },
+            data: { days },
         });
 
-        return response.message as string;
+        return response.result as ProductionPlanReorderDayResponse[];
+    }
+
+    static async moveProductionPlan(
+        productionPlanId: string,
+        request: ProductionPlanMoveRequest
+    ): Promise<ProductionPlanMutationResponse> {
+        const response = await NetworkService.requestJson<ProductionPlanMutationResponse>({
+            method: 'PUT',
+            url: ENDPOINTS.PRODUCTION_PLANS.MOVE(productionPlanId),
+            data: request,
+        });
+
+        return response.result as ProductionPlanMutationResponse;
     }
 
     static async terminateProductionPlan(
@@ -136,14 +154,14 @@ export class ProductionPlanService {
     static async deferProductionPlan(
         productionPlanId: string,
         request: IncidentDeferRequest
-    ): Promise<ProductionPlanMutationResponse> {
-        const response = await NetworkService.requestJson<ProductionPlanMutationResponse>({
+    ): Promise<ProductionPlanDeferResponse> {
+        const response = await NetworkService.requestJson<ProductionPlanDeferResponse>({
             method: 'POST',
             url: ENDPOINTS.PRODUCTION_PLANS.INCIDENT_DEFER(productionPlanId),
             data: request,
         });
 
-        return response.result as ProductionPlanMutationResponse;
+        return response.result as ProductionPlanDeferResponse;
     }
 
     static async pauseProductionPlan(

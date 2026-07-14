@@ -28,9 +28,18 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import type { ProductionPlanStatus } from '@/types/ProductionPlan';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
 import { MachineGroupVM, PlanRowTarget, PlanRowVM } from './types';
 import styles from './ProductionPlanTable.module.css';
+
+const STATUS_TAG_COLOR: Record<ProductionPlanStatus, string> = {
+    PENDING: 'default',
+    RUNNING: 'processing',
+    PAUSE: 'warning',
+    PARTIAL: 'gold',
+    COMPLETE: 'success',
+};
 
 type GroupHeaderRow = {
     type: 'group-header';
@@ -307,6 +316,21 @@ export default function DailyTable({
                         },
                     },
                     {
+                        title: t('productionPlan.table.headers.status'),
+                        key: 'status',
+                        width: 130,
+                        align: 'center',
+                        onCell: anchorCell,
+                        render: (_, record) => {
+                            if (record.type !== 'product') return null;
+                            return (
+                                <Tag color={STATUS_TAG_COLOR[record.status]}>
+                                    {t(`productionPlan.status.${record.status}`)}
+                                </Tag>
+                            );
+                        },
+                    },
+                    {
                         title: '',
                         key: 'actions',
                         width: 120,
@@ -336,58 +360,85 @@ export default function DailyTable({
                                 );
                             }
 
+                            // BE: update/delete chỉ cho PENDING (409 khác); transfer cho phép
+                            // PENDING (/move) và PAUSE (/incident/defer) — status khác thì ẩn.
+                            const isPending = record.status === 'PENDING';
+                            const isPause = record.status === 'PAUSE';
+                            const canEdit = !actionsLocked && isPending;
+                            const canDelete = !actionsLocked && isPending;
+                            const canTransfer = !actionsLocked && (isPending || isPause);
+                            const statusLockedHint = t('productionPlan.actions.statusLockedHint');
+
                             return (
                                 <div className={styles.actions}>
-                                    <Tooltip title={actionsLocked ? lockedHint : t('common.edit')}>
+                                    <Tooltip
+                                        title={
+                                            actionsLocked
+                                                ? lockedHint
+                                                : !isPending
+                                                  ? statusLockedHint
+                                                  : t('common.edit')
+                                        }
+                                    >
                                         <Button
                                             type="text"
                                             icon={<EditOutlined />}
-                                            disabled={actionsLocked}
+                                            disabled={!canEdit}
                                             onClick={() => onEdit(target)}
                                         />
                                     </Tooltip>
-                                    <Tooltip title={actionsLocked ? lockedHint : t('common.delete')}>
+                                    <Tooltip
+                                        title={
+                                            actionsLocked
+                                                ? lockedHint
+                                                : !isPending
+                                                  ? statusLockedHint
+                                                  : t('common.delete')
+                                        }
+                                    >
                                         <Button
                                             danger
                                             type="text"
                                             icon={<DeleteOutlined />}
-                                            disabled={actionsLocked}
+                                            disabled={!canDelete}
                                             onClick={() => onDelete(target)}
                                         />
                                     </Tooltip>
-                                    <Tooltip title={actionsLocked ? lockedHint : undefined}>
-                                        <Dropdown
-                                            trigger={['click']}
-                                            placement="bottomRight"
-                                            disabled={actionsLocked}
-                                            menu={{
-                                                items: [
-                                                    {
-                                                        key: 'transfer-machine',
-                                                        label: t(
-                                                            'productionPlan.actions.transferMachine'
-                                                        ),
-                                                        icon: <SwapOutlined />,
-                                                        onClick: () => onTransferMachine?.(target),
-                                                    },
-                                                    {
-                                                        key: 'transfer-schedule',
-                                                        label: t(
-                                                            'productionPlan.actions.transferSchedule'
-                                                        ),
-                                                        icon: <ScheduleOutlined />,
-                                                        onClick: () => onTransferSchedule?.(target),
-                                                    },
-                                                ],
-                                            }}
-                                        >
-                                            <Button
-                                                type="text"
-                                                icon={<MoreOutlined />}
+                                    {canTransfer && (
+                                        <Tooltip title={actionsLocked ? lockedHint : undefined}>
+                                            <Dropdown
+                                                trigger={['click']}
+                                                placement="bottomRight"
                                                 disabled={actionsLocked}
-                                            />
-                                        </Dropdown>
-                                    </Tooltip>
+                                                menu={{
+                                                    items: [
+                                                        {
+                                                            key: 'transfer-machine',
+                                                            label: t(
+                                                                'productionPlan.actions.transferMachine'
+                                                            ),
+                                                            icon: <SwapOutlined />,
+                                                            onClick: () => onTransferMachine?.(target),
+                                                        },
+                                                        {
+                                                            key: 'transfer-schedule',
+                                                            label: t(
+                                                                'productionPlan.actions.transferSchedule'
+                                                            ),
+                                                            icon: <ScheduleOutlined />,
+                                                            onClick: () => onTransferSchedule?.(target),
+                                                        },
+                                                    ],
+                                                }}
+                                            >
+                                                <Button
+                                                    type="text"
+                                                    icon={<MoreOutlined />}
+                                                    disabled={actionsLocked}
+                                                />
+                                            </Dropdown>
+                                        </Tooltip>
+                                    )}
                                 </div>
                             );
                         },

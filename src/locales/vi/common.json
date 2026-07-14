@@ -484,7 +484,8 @@
             "restore": "Khôi phục",
             "transfer": "Chuyển",
             "transferMachine": "Chuyển máy",
-            "transferSchedule": "Chuyển lịch"
+            "transferSchedule": "Chuyển lịch",
+            "statusLockedHint": "Chỉ áp dụng cho kế hoạch đang chờ (PENDING)"
         },
         "panel": {
             "dailyTable": "Bảng ngày",
@@ -512,7 +513,8 @@
                 "mold": "khuôn",
                 "average": "Trung bình",
                 "avgShort": "T.bình",
-                "time": "Thời gian"
+                "time": "Thời gian",
+                "status": "Trạng thái"
             },
             "pagination": {
                 "machineGroups": "Tổng {{total}} nhóm máy"

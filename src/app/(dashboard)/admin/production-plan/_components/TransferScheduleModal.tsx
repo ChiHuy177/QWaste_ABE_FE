@@ -12,7 +12,7 @@ import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/inci
 export interface TransferSchedulePayload {
     dayIndex: number;
     machineId: string;
-    incidentReason: IncidentReason;
+    incidentReason?: IncidentReason;
     note?: string;
 }
 
@@ -49,7 +49,7 @@ function getDayColumns(todayIndex: number) {
     });
 }
 
-// Dời lịch = BE incident defer (tạo child plan ngày/máy mới) nên cần lý do sự cố.
+// Dời lịch: PENDING → BE /move (không cần lý do sự cố); PAUSE → BE /incident/defer (bắt buộc lý do sự cố).
 export default function TransferScheduleModal({
     open,
     target,
@@ -81,13 +81,14 @@ export default function TransferScheduleModal({
     const hasNoQty = currentQty === 0;
 
     const dayColumns = useMemo(() => getDayColumns(todayIndex), [todayIndex]);
-    const noteRequired = isIncidentNoteRequired(incidentReason);
+    // BE: PENDING dùng /move (không cần lý do sự cố), PAUSE dùng /incident/defer (bắt buộc).
+    const requiresIncidentReason = target?.row.status === 'PAUSE';
+    const noteRequired = requiresIncidentReason && isIncidentNoteRequired(incidentReason);
     const canConfirm =
         !hasNoQty &&
         selectedDayIndex !== null &&
         !!selectedMachineId &&
-        !!incidentReason &&
-        (!noteRequired || note.trim().length > 0);
+        (!requiresIncidentReason || (!!incidentReason && (!noteRequired || note.trim().length > 0)));
 
     const selectedMachine = useMemo(
         () => weeklyGroups.find((group) => group.machineId === selectedMachineId) ?? null,
@@ -125,14 +126,15 @@ export default function TransferScheduleModal({
     };
 
     const handleConfirm = () => {
-        if (!canConfirm || selectedDayIndex === null || !selectedMachineId || !incidentReason) {
+        if (!canConfirm || selectedDayIndex === null || !selectedMachineId) {
             return;
         }
+        if (requiresIncidentReason && !incidentReason) return;
         onConfirm({
             dayIndex: selectedDayIndex,
             machineId: selectedMachineId,
-            incidentReason,
-            note: note.trim() || undefined,
+            incidentReason: requiresIncidentReason ? incidentReason : undefined,
+            note: requiresIncidentReason ? note.trim() || undefined : undefined,
         });
     };
 
@@ -568,39 +570,41 @@ export default function TransferScheduleModal({
                     </div>
                 </Spin>
 
-                {/* Incident reason */}
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <div style={{ flex: '0 0 280px' }}>
-                        <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                            {t('productionPlan.incident.reasonLabel')}
-                        </Text>
-                        <Select
-                            style={{ width: '100%' }}
-                            placeholder={t('productionPlan.incident.reasonPlaceholder')}
-                            value={incidentReason}
-                            onChange={setIncidentReason}
-                            options={getIncidentReasonOptions(t)}
-                        />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 260 }}>
-                        <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                            {t('productionPlan.incident.noteLabel')}
-                            {noteRequired && <Text type="danger"> *</Text>}
-                        </Text>
-                        <Input.TextArea
-                            rows={2}
-                            maxLength={2000}
-                            value={note}
-                            onChange={(event) => setNote(event.target.value)}
-                            placeholder={t('productionPlan.incident.notePlaceholder')}
-                        />
-                        {noteRequired && !note.trim() && (
-                            <Text type="danger" style={{ fontSize: 12 }}>
-                                {t('productionPlan.incident.noteRequiredForOther')}
+                {/* Incident reason — chỉ áp dụng khi kế hoạch đang PAUSE (BE incident/defer) */}
+                {requiresIncidentReason && (
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                        <div style={{ flex: '0 0 280px' }}>
+                            <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                                {t('productionPlan.incident.reasonLabel')}
                             </Text>
-                        )}
+                            <Select
+                                style={{ width: '100%' }}
+                                placeholder={t('productionPlan.incident.reasonPlaceholder')}
+                                value={incidentReason}
+                                onChange={setIncidentReason}
+                                options={getIncidentReasonOptions(t)}
+                            />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 260 }}>
+                            <Text style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                                {t('productionPlan.incident.noteLabel')}
+                                {noteRequired && <Text type="danger"> *</Text>}
+                            </Text>
+                            <Input.TextArea
+                                rows={2}
+                                maxLength={2000}
+                                value={note}
+                                onChange={(event) => setNote(event.target.value)}
+                                placeholder={t('productionPlan.incident.notePlaceholder')}
+                            />
+                            {noteRequired && !note.trim() && (
+                                <Text type="danger" style={{ fontSize: 12 }}>
+                                    {t('productionPlan.incident.noteRequiredForOther')}
+                                </Text>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Transfer preview */}
                 {canConfirm && selectedDayIndex !== null && selectedMachine && (

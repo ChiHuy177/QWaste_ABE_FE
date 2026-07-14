@@ -39,11 +39,14 @@ import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import { MachineService } from '@/services/MachineService';
 import { MoldService } from '@/services/MoldService';
+import { getErrorStatus } from '@/utils/apiError';
 import type { Machine } from '@/types/Machine';
 import { isMoldSchedulable, type Mold } from '@/types/Mold';
 import type {
     ProductionPlanFormData,
-    ProductionPlanReorderItem,
+    ProductionPlanMoveRequest,
+    ProductionPlanReorderDayGroup,
+    ProductionPlanReorderMachineGroup,
     ProductionPlanUpdateFormData,
 } from '@/types/ProductionPlan';
 import DailyTable from './_components/DailyTable';
@@ -64,6 +67,7 @@ import {
     mapWeeklyGroups,
     type MachineInfoMap,
 } from './_utils/planMappers';
+import { ReorderErrorHandler } from './_utils/reorderErrorHandler';
 import {
     MachineGroupVM,
     PlanFormValues,
@@ -173,7 +177,7 @@ export default function ProductionPlanPage() {
             : formatWeeklyLabel(selectedDateValue, t('productionPlan.days.week'));
 
     const canCreate = checkPermissionSilent('create', 'product');
-    const canReorder = checkPermissionSilent('reorder', 'product');
+    const canReorder = checkPermissionSilent('reorder', 'production_plan');
     const canImport = checkPermissionSilent('import', 'product');
 
     const fetchPlanData = useCallback(async () => {
@@ -238,6 +242,15 @@ export default function ProductionPlanPage() {
                 value: String(machine.machineId),
                 label: machineOptionLabel(machine),
             })),
+        [machines]
+    );
+
+    // Dùng để hiển thị context lỗi reorder (context.entityId là machineId) dễ đọc hơn.
+    const machineCodeById = useMemo(
+        () =>
+            new Map(
+                machines.map((machine) => [String(machine.machineId), machine.machineCode ?? ''])
+            ),
         [machines]
     );
 
@@ -355,7 +368,7 @@ export default function ProductionPlanPage() {
     const openEditModal = useCallback(
         (target: PlanRowTarget) => {
             if (blockIfReorderDirty()) return;
-            if (!checkPermission('update', 'product')) return;
+            if (!checkPermission('update', 'production_plan')) return;
             setModalState({ open: true, mode: 'edit', machineId: target.machineId, row: target.row });
         },
         [blockIfReorderDirty, checkPermission]
@@ -444,7 +457,7 @@ export default function ProductionPlanPage() {
     const requestDelete = useCallback(
         (target: PlanRowTarget) => {
             if (blockIfReorderDirty()) return;
-            if (!checkPermission('delete', 'product')) return;
+            if (!checkPermission('delete', 'production_plan')) return;
             setDeleteState(target);
         },
         [blockIfReorderDirty, checkPermission]
@@ -471,7 +484,7 @@ export default function ProductionPlanPage() {
     const handleRestore = useCallback(
         async (target: PlanRowTarget) => {
             if (blockIfReorderDirty()) return;
-            if (!checkPermission('restore', 'product')) return;
+            if (!checkPermission('restore', 'production_plan')) return;
 
             try {
                 const message = await ProductionPlanService.restoreProductionPlan(
@@ -492,7 +505,7 @@ export default function ProductionPlanPage() {
     // API PUT /reorder chỉ chạy khi bấm "Lưu thứ tự" (handleSaveReorder), gộp mọi máy dirty.
     const handleReorderProducts = useCallback(
         (machineId: string, activeRowKey: string, overRowKey: string) => {
-            if (!checkPermission('reorder', 'product')) return;
+            if (!checkPermission('reorder', 'production_plan')) return;
 
             const group = machineGroups.find((g) => g.machineId === machineId);
             if (!group) return;
@@ -516,18 +529,25 @@ export default function ProductionPlanPage() {
         [checkPermission, machineGroups]
     );
 
-    const buildReorderItems = useCallback((): ProductionPlanReorderItem[] => {
-        const items: ProductionPlanReorderItem[] = [];
+    // Reorder hiện chỉ áp dụng cho daily view (onReorder chỉ truyền cho DailyTable) nên mọi
+    // máy dirty đều cùng chung selectedDate — nếu sau này bật reorder cho weekly view, phải
+    // gom theo từng ngày riêng thay vì luôn nhét vào 1 nhóm ngày duy nhất.
+    const buildReorderDays = useCallback((): ProductionPlanReorderDayGroup[] => {
+        const machines: ProductionPlanReorderMachineGroup[] = [];
         machineGroups.forEach((group) => {
             if (!dirtyMachineIds.has(group.machineId)) return;
-            group.products
+            const productionPlans = group.products
                 .filter((product) => !product.isDeleted)
-                .forEach((product, index) => {
-                    items.push({ productionPlanId: product.productionPlanId, sequence: index + 1 });
-                });
+                .map((product, index) => ({
+                    productionPlanId: product.productionPlanId,
+                    sequence: index + 1,
+                }));
+            machines.push({ machineId: group.machineId, productionPlans });
         });
-        return items;
-    }, [dirtyMachineIds, machineGroups]);
+        return machines.length === 0
+            ? []
+            : [{ plannedDate: selectedDate.format(DATE_FORMAT), machines }];
+    }, [dirtyMachineIds, machineGroups, selectedDate]);
 
     const handleDiscardReorder = useCallback(() => {
         setMachineGroups(savedMachineGroupsRef.current);
@@ -535,25 +555,50 @@ export default function ProductionPlanPage() {
     }, []);
 
     const handleSaveReorder = useCallback(async () => {
-        const items = buildReorderItems();
-        if (items.length === 0) {
+        const days = buildReorderDays();
+        if (days.length === 0) {
             setDirtyMachineIds(new Set());
             return;
         }
 
         try {
             setSavingReorder(true);
-            await ProductionPlanService.reorderProductionPlans(items);
+            const response = await ProductionPlanService.reorderProductionPlans(days);
+            const { map } = await loadMachineInfo();
+            // BE là nguồn sự thật sau reorder — áp lại machines trong response (chỉ scope
+            // các máy dirty) vào machineGroups hiện tại, giữ nguyên các nhóm không đổi.
+            const updatedGroups = mapDailyGroups(
+                response.flatMap((day) => day.machines),
+                map,
+                todayIndex
+            );
+            const updatedByMachineId = new Map(updatedGroups.map((g) => [g.machineId, g]));
+            const nextMachineGroups = machineGroups.map(
+                (group) => updatedByMachineId.get(group.machineId) ?? group
+            );
+
+            setMachineGroups(nextMachineGroups);
+            savedMachineGroupsRef.current = nextMachineGroups;
             toast.success(t('productionPlan.reorder.saveSuccess'));
-            savedMachineGroupsRef.current = machineGroups;
             setDirtyMachineIds(new Set());
         } catch (error) {
-            handleError(error, { fallbackKey: 'productionPlan.reorderError' });
+            // Lỗi 400 riêng của /reorder (trùng entry, set mismatch, sequence conflict,
+            // hoặc wrapper multi-error 80026) hiển thị chi tiết qua ReorderErrorHandler.
+            // Các status khác (401/403/404/409/500...) vẫn dùng handleError toàn cục.
+            if (getErrorStatus(error) === 400) {
+                ReorderErrorHandler.notify(error, {
+                    t,
+                    machineCodeById,
+                    fallbackKey: 'productionPlan.reorderError',
+                });
+            } else {
+                handleError(error, { fallbackKey: 'productionPlan.reorderError' });
+            }
             throw error;
         } finally {
             setSavingReorder(false);
         }
-    }, [buildReorderItems, handleError, machineGroups, t]);
+    }, [buildReorderDays, handleError, loadMachineInfo, machineCodeById, machineGroups, t, todayIndex]);
 
     // Chặn điều hướng (đổi ngày/view/filter) khi còn thay đổi thứ tự chưa lưu —
     // mở modal xác nhận Lưu/Hủy thay vì âm thầm mất dữ liệu qua fetchPlanData().
@@ -604,19 +649,31 @@ export default function ProductionPlanPage() {
         [molds]
     );
 
+    // PENDING dùng /move (slug production_plan:move), PAUSE dùng /incident/defer
+    // (slug production_plan:incident) — trạng thái khác không cho phép transfer.
+    const transferPermissionSlug = useCallback((status: PlanRowTarget['row']['status']) => {
+        if (status === 'PENDING') return 'move';
+        if (status === 'PAUSE') return 'incident';
+        return null;
+    }, []);
+
     const openTransferMachineModal = useCallback(
         (target: PlanRowTarget) => {
             if (blockIfReorderDirty()) return;
-            if (!checkPermission('update', 'product')) return;
+            const slug = transferPermissionSlug(target.row.status);
+            if (!slug) return;
+            if (!checkPermission(slug, 'production_plan')) return;
             setTransferMachineState({ open: true, ...target });
         },
-        [blockIfReorderDirty, checkPermission]
+        [blockIfReorderDirty, checkPermission, transferPermissionSlug]
     );
 
     const openTransferScheduleModal = useCallback(
         async (target: PlanRowTarget) => {
             if (blockIfReorderDirty()) return;
-            if (!checkPermission('update', 'product')) return;
+            const slug = transferPermissionSlug(target.row.status);
+            if (!slug) return;
+            if (!checkPermission(slug, 'production_plan')) return;
             setTransferScheduleState({ open: true, ...target });
 
             try {
@@ -636,9 +693,17 @@ export default function ProductionPlanPage() {
                 setTransferGridLoading(false);
             }
         },
-        [blockIfReorderDirty, checkPermission, handleError, loadMachineInfo, weekStart]
+        [
+            blockIfReorderDirty,
+            checkPermission,
+            handleError,
+            loadMachineInfo,
+            transferPermissionSlug,
+            weekStart,
+        ]
     );
 
+    // PAUSE — BE /incident/defer (chốt PARTIAL + tạo kế hoạch con nối tiếp).
     const runDefer = useCallback(
         async (
             target: PlanRowTarget,
@@ -654,6 +719,10 @@ export default function ProductionPlanPage() {
             const moldId = resolveMoldId(target.row.moldCode);
             if (!moldId) {
                 toast.error(t('productionPlan.transfer.detailNotReady'));
+                return;
+            }
+            if (!payload.incidentReason) {
+                toast.error(t('productionPlan.transfer.error'));
                 return;
             }
 
@@ -679,24 +748,56 @@ export default function ProductionPlanPage() {
         [fetchPlanData, handleError, resolveMoldId, t]
     );
 
+    // PENDING — BE /move (chỉ máy/ngày/sequence, không cần lý do sự cố).
+    const runMove = useCallback(
+        async (
+            target: PlanRowTarget,
+            payload: ProductionPlanMoveRequest,
+            onDone: () => void
+        ) => {
+            try {
+                setTransferSubmitting(true);
+                await ProductionPlanService.moveProductionPlan(target.row.productionPlanId, payload);
+                toast.success(t('productionPlan.transfer.success'));
+                onDone();
+                fetchPlanData();
+            } catch (error) {
+                handleError(error, { fallbackKey: 'productionPlan.transfer.error' });
+            } finally {
+                setTransferSubmitting(false);
+            }
+        },
+        [fetchPlanData, handleError, t]
+    );
+
     const handleTransferMachine = useCallback(
         (payload: TransferMachinePayload) => {
             if (!transferMachineState.open) return;
             const target: PlanRowTarget = transferMachineState;
+            const plannedDate = selectedDate.format(DATE_FORMAT);
+            const sequence = nextSequenceForMachine(payload.machineId);
 
-            runDefer(
-                target,
-                {
-                    plannedDate: selectedDate.format(DATE_FORMAT),
-                    machineId: payload.machineId,
-                    incidentReason: payload.incidentReason,
-                    note: payload.note,
-                },
-                nextSequenceForMachine(payload.machineId),
-                () => setTransferMachineState({ open: false })
-            );
+            if (target.row.status === 'PAUSE') {
+                runDefer(
+                    target,
+                    {
+                        plannedDate,
+                        machineId: payload.machineId,
+                        incidentReason: payload.incidentReason,
+                        note: payload.note,
+                    },
+                    sequence,
+                    () => setTransferMachineState({ open: false })
+                );
+            } else {
+                runMove(
+                    target,
+                    { plannedDate, machineId: payload.machineId, sequence },
+                    () => setTransferMachineState({ open: false })
+                );
+            }
         },
-        [nextSequenceForMachine, runDefer, selectedDate, transferMachineState]
+        [nextSequenceForMachine, runDefer, runMove, selectedDate, transferMachineState]
     );
 
     const handleTransferSchedule = useCallback(
@@ -711,20 +812,30 @@ export default function ProductionPlanPage() {
                 targetGroup?.products.filter(
                     (product) => !product.isDeleted && product.schedule[payload.dayIndex] > 0
                 ).length ?? 0;
+            const plannedDate = weekStart.add(payload.dayIndex, 'day').format(DATE_FORMAT);
+            const sequence = plansOnTargetDay + 1;
 
-            runDefer(
-                target,
-                {
-                    plannedDate: weekStart.add(payload.dayIndex, 'day').format(DATE_FORMAT),
-                    machineId: payload.machineId,
-                    incidentReason: payload.incidentReason,
-                    note: payload.note,
-                },
-                plansOnTargetDay + 1,
-                () => setTransferScheduleState({ open: false })
-            );
+            if (target.row.status === 'PAUSE') {
+                runDefer(
+                    target,
+                    {
+                        plannedDate,
+                        machineId: payload.machineId,
+                        incidentReason: payload.incidentReason,
+                        note: payload.note,
+                    },
+                    sequence,
+                    () => setTransferScheduleState({ open: false })
+                );
+            } else {
+                runMove(
+                    target,
+                    { plannedDate, machineId: payload.machineId, sequence },
+                    () => setTransferScheduleState({ open: false })
+                );
+            }
         },
-        [runDefer, transferScheduleState, transferWeeklyGroups, weekStart]
+        [runDefer, runMove, transferScheduleState, transferWeeklyGroups, weekStart]
     );
 
     // ─── Render ──────────────────────────────────────────────────────────────

@@ -356,7 +356,7 @@ export default function ProductionMonitorPage() {
 
     const openIncidentModal = useCallback(
         (row: MonitorRowVM) => {
-            if (!checkPermission('update', 'product')) return;
+            if (!checkPermission('incident', 'production_plan')) return;
             setIncidentRow(row);
         },
         [checkPermission]
