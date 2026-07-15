@@ -7,6 +7,7 @@ import {
     Col,
     DatePicker,
     Flex,
+    Grid,
     Input,
     Modal,
     Row,
@@ -54,6 +55,7 @@ import type { PlanFormValues } from './_components/types';
 import styles from './_components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 const formatNumber = (value: number) => value.toLocaleString('vi-VN');
@@ -61,6 +63,8 @@ const formatNumber = (value: number) => value.toLocaleString('vi-VN');
 export default function ProductionPlanPage() {
     const { token } = theme.useToken();
     const { t } = useTranslation();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
     usePageTitle(t('productionPlan.title'));
 
@@ -267,9 +271,9 @@ export default function ProductionPlanPage() {
     return (
         <div
             style={{
-                height: '100%',
+                height: isMobile ? 'auto' : '100%',
                 minHeight: 0,
-                overflow: 'hidden',
+                overflow: isMobile ? 'visible' : 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
             }}
@@ -361,8 +365,9 @@ export default function ProductionPlanPage() {
                     borderRadius: 12,
                     overflow: 'hidden',
                     boxShadow: token.boxShadow,
-                    flex: 1,
-                    minHeight: 0,
+                    flex: isMobile ? 'none' : 1,
+                    height: isMobile ? '60vh' : undefined,
+                    minHeight: isMobile ? 420 : 0,
                     display: 'flex',
                     flexDirection: 'column',
                 }}
@@ -481,6 +486,7 @@ export default function ProductionPlanPage() {
                             machineFilter={machineFilter}
                             canReorder={actions.canReorder}
                             scrollY={tableScrollY}
+                            isMobile={isMobile}
                             actionsLocked={isReorderDirty}
                             onEdit={actions.openEditModal}
                             onDelete={actions.requestDelete}
@@ -496,6 +502,7 @@ export default function ProductionPlanPage() {
                             todayIndex={todayIndex}
                             machineFilter={machineFilter}
                             scrollY={tableScrollY}
+                            isMobile={isMobile}
                         />
                     )}
                     {activeView === 'matrix' && (
@@ -503,6 +510,7 @@ export default function ProductionPlanPage() {
                             groups={machineGroups}
                             machineFilter={machineFilter}
                             scrollY={tableScrollY}
+                            isMobile={isMobile}
                         />
                     )}
                 </div>

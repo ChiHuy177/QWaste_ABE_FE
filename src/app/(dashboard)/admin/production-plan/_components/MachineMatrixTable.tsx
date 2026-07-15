@@ -12,6 +12,7 @@ interface MachineMatrixTableProps {
     groups: MachineGroupVM[];
     machineFilter: string;
     scrollY?: number;
+    isMobile?: boolean;
 }
 
 interface DayItem {
@@ -39,6 +40,7 @@ export default function MachineMatrixTable({
     groups,
     machineFilter,
     scrollY,
+    isMobile = false,
 }: MachineMatrixTableProps) {
     const { t } = useTranslation();
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
@@ -105,7 +107,7 @@ export default function MachineMatrixTable({
                 ),
                 key: 'machine',
                 width: 170,
-                fixed: 'left',
+                fixed: isMobile ? undefined : 'left',
                 className: styles.dailySheetMachineColumn,
                 onCell: (record) => {
                     if (record.rowIndex === 0) {
@@ -142,7 +144,7 @@ export default function MachineMatrixTable({
                 ],
             })),
         ];
-    }, [t]);
+    }, [isMobile, t]);
 
     if (machineGroups.length === 0) {
         return <Empty description={t('productionPlan.table.emptyFiltered')} />;

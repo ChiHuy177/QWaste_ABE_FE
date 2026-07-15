@@ -6,6 +6,7 @@ import type { ColumnsType } from 'antd/es/table';
 import {
     DeleteOutlined,
     EditOutlined,
+    HolderOutlined,
     MoreOutlined,
     ScheduleOutlined,
     SwapOutlined,
@@ -71,6 +72,7 @@ interface DailyTableProps {
     machineFilter: string;
     canReorder?: boolean;
     scrollY?: number;
+    isMobile?: boolean;
     /** Còn thay đổi thứ tự chưa lưu ở page cha — khóa Sửa/Xóa/Chuyển máy/Chuyển lịch. */
     actionsLocked?: boolean;
     onEdit: (target: PlanRowTarget) => void;
@@ -87,6 +89,10 @@ const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
     group.machineName.toLowerCase().includes(normalizedFilter) ||
     group.spaceName.toLowerCase().includes(normalizedFilter);
 
+// BE /reorder chỉ cho phép đổi sequence của plan PENDING/PAUSE — status khác khóa kéo-thả.
+const isReorderableStatus = (status: ProductionPlanStatus) =>
+    status === 'PENDING' || status === 'PAUSE';
+
 const toTarget = (record: ProductFlatRow): PlanRowTarget => ({
     machineId: record.machineId,
     machineCode: record.machineCode,
@@ -100,6 +106,7 @@ export default function DailyTable({
     machineFilter,
     canReorder = true,
     scrollY,
+    isMobile = false,
     actionsLocked = false,
     onEdit,
     onDelete,
@@ -167,7 +174,7 @@ export default function DailyTable({
                     machineId: group.machineId,
                     machineCode: group.machineCode,
                 });
-                if (!product.isDeleted) {
+                if (!product.isDeleted && isReorderableStatus(product.status)) {
                     keys.push(product.rowKey);
                     groupMap.set(product.rowKey, { groupKey, machineId: group.machineId });
                 }
@@ -216,7 +223,7 @@ export default function DailyTable({
                         ),
                         key: 'machine',
                         width: 170,
-                        fixed: 'left',
+                        fixed: isMobile ? undefined : 'left',
                         className: styles.dailySheetMachineColumn,
                         onCell: (record) => {
                             // Anchor row: machine cell spans itself + all products + total row.
@@ -246,10 +253,16 @@ export default function DailyTable({
                         width: 48,
                         align: 'center',
                         onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' && !record.isDeleted && canReorder ? (
-                                <DragHandle />
-                            ) : null,
+                        render: (_, record) => {
+                            if (record.type !== 'product' || record.isDeleted || !canReorder)
+                                return null;
+                            if (isReorderableStatus(record.status)) return <DragHandle />;
+                            return (
+                                <Tooltip title={t('productionPlan.reorder.statusLockedDragHint')}>
+                                    <HolderOutlined style={{ color: 'var(--plan-color-text-tertiary)' }} />
+                                </Tooltip>
+                            );
+                        },
                     },
                     {
                         title: (
@@ -260,7 +273,7 @@ export default function DailyTable({
                         ),
                         key: 'code',
                         width: 140,
-                        fixed: 'left',
+                        fixed: isMobile ? undefined : 'left',
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
@@ -450,6 +463,7 @@ export default function DailyTable({
             actionsLocked,
             canReorder,
             dateLabel,
+            isMobile,
             onDelete,
             onEdit,
             onRestore,
@@ -509,6 +523,11 @@ export default function DailyTable({
                             onRow={(record) =>
                                 ({
                                     'data-row-type': record.type,
+                                    'data-draggable':
+                                        record.type === 'product' &&
+                                        !record.isDeleted &&
+                                        canReorder &&
+                                        isReorderableStatus(record.status),
                                 }) as React.HTMLAttributes<HTMLTableRowElement>
                             }
                             pagination={false}

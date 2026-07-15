@@ -36,10 +36,15 @@ interface DraggableTableRowProps extends React.HTMLAttributes<HTMLTableRowElemen
 interface SmartTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
     'data-row-key'?: React.Key;
     'data-row-type'?: string;
+    'data-draggable'?: boolean;
 }
 
-export const SmartTableRow = ({ 'data-row-type': rowType, ...props }: SmartTableRowProps) => {
-    if (rowType === 'total' || rowType === 'group-header') {
+export const SmartTableRow = ({
+    'data-row-type': rowType,
+    'data-draggable': draggable,
+    ...props
+}: SmartTableRowProps) => {
+    if (rowType !== 'product' || !draggable) {
         return <tr {...props} />;
     }
     return <DraggableTableRow {...props} />;

@@ -35,6 +35,7 @@ interface WeeklyTableProps {
     todayIndex: number;
     machineFilter: string;
     scrollY?: number;
+    isMobile?: boolean;
 }
 
 const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
@@ -50,6 +51,7 @@ export default function WeeklyTable({
     todayIndex,
     machineFilter,
     scrollY,
+    isMobile = false,
 }: WeeklyTableProps) {
     const { t } = useTranslation();
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
@@ -110,7 +112,7 @@ export default function WeeklyTable({
                 ),
                 key: 'machine',
                 width: 170,
-                fixed: 'left',
+                fixed: isMobile ? undefined : 'left',
                 className: styles.dailySheetMachineColumn,
                 onCell: (record) => {
                     if (record.type === 'group-header') {
@@ -140,7 +142,7 @@ export default function WeeklyTable({
                 ),
                 key: 'code',
                 width: 140,
-                fixed: 'left',
+                fixed: isMobile ? undefined : 'left',
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type === 'total')
@@ -224,7 +226,7 @@ export default function WeeklyTable({
                 },
             },
         ],
-        [t, todayIndex, weekDayLabels]
+        [isMobile, t, todayIndex, weekDayLabels]
     );
 
     if (visibleGroups.length === 0) {

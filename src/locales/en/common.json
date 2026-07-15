@@ -411,7 +411,8 @@
             "lockedActionHint": "Save or discard the order changes before doing this",
             "lockedFilterHint": "Save or discard the order changes before filtering",
             "lockedCreateHint": "Save or discard the order changes before adding a product",
-            "lockedImportHint": "Save or discard the order changes before importing"
+            "lockedImportHint": "Save or discard the order changes before importing",
+            "statusLockedDragHint": "Only Pending or Paused plans can be reordered"
         },
         "status": {
             "PENDING": "Pending",

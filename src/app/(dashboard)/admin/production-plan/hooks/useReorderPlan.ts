@@ -16,7 +16,7 @@ import type {
 } from '@/types/ProductionPlan';
 import { ReorderErrorHandler } from '../_utils/reorderErrorHandler';
 import { productionPlanQueryKeys } from '../_hooks/queryKeys';
-import type { MachineGroupVM } from '../_components/types';
+import type { MachineGroupVM, PlanRowVM } from '../_components/types';
 import type { RawPlanData } from './useProductionPlanData';
 
 const moveArrayItem = <T,>(items: T[], fromIndex: number, toIndex: number) => {
@@ -24,6 +24,34 @@ const moveArrayItem = <T,>(items: T[], fromIndex: number, toIndex: number) => {
     const [movedItem] = nextItems.splice(fromIndex, 1);
     nextItems.splice(toIndex, 0, movedItem);
     return nextItems;
+};
+
+// BE /reorder chỉ cho phép đổi sequence của plan PENDING/PAUSE — plan status khác
+// phải giữ nguyên vị trí tuyệt đối, chỉ hoán vị các plan PENDING/PAUSE với nhau.
+const isReorderableStatus = (status: PlanRowVM['status']) =>
+    status === 'PENDING' || status === 'PAUSE';
+
+const reorderActiveProducts = (
+    activeProducts: PlanRowVM[],
+    activeRowKey: string,
+    overRowKey: string
+) => {
+    const reorderableIndices: number[] = [];
+    activeProducts.forEach((product, index) => {
+        if (isReorderableStatus(product.status)) reorderableIndices.push(index);
+    });
+
+    const reorderableItems = reorderableIndices.map((index) => activeProducts[index]);
+    const fromIndex = reorderableItems.findIndex((product) => product.rowKey === activeRowKey);
+    const toIndex = reorderableItems.findIndex((product) => product.rowKey === overRowKey);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return null;
+
+    const reordered = moveArrayItem(reorderableItems, fromIndex, toIndex);
+    const nextActiveProducts = [...activeProducts];
+    reorderableIndices.forEach((index, i) => {
+        nextActiveProducts[index] = reordered[i];
+    });
+    return nextActiveProducts;
 };
 
 interface UseReorderPlanParams {
@@ -63,11 +91,9 @@ export const useReorderPlan = ({
             if (!group) return;
 
             const activeProducts = group.products.filter((product) => !product.isDeleted);
-            const activeIndex = activeProducts.findIndex((p) => p.rowKey === activeRowKey);
-            const overIndex = activeProducts.findIndex((p) => p.rowKey === overRowKey);
-            if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return;
+            const reordered = reorderActiveProducts(activeProducts, activeRowKey, overRowKey);
+            if (!reordered) return;
 
-            const reordered = moveArrayItem(activeProducts, activeIndex, overIndex);
             const nextGroups = baseGroups.map((currentGroup) => {
                 if (currentGroup.machineId !== machineId) return currentGroup;
                 const deletedProducts = currentGroup.products.filter((p) => p.isDeleted);

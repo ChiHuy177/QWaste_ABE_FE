@@ -402,7 +402,8 @@
             "lockedActionHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thao tác",
             "lockedFilterHint": "Lưu hoặc hủy thay đổi thứ tự trước khi lọc",
             "lockedCreateHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thêm mã hàng",
-            "lockedImportHint": "Lưu hoặc hủy thay đổi thứ tự trước khi import"
+            "lockedImportHint": "Lưu hoặc hủy thay đổi thứ tự trước khi import",
+            "statusLockedDragHint": "Chỉ có thể kéo-thả sắp xếp lại các kế hoạch đang Chờ sản xuất hoặc Tạm dừng"
         },
         "status": {
             "PENDING": "Chờ sản xuất",

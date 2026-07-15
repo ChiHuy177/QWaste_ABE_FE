@@ -1753,7 +1753,8 @@
             "lockedActionHint": "请先保存或放弃顺序更改后再操作",
             "lockedFilterHint": "请先保存或放弃顺序更改后再筛选",
             "lockedCreateHint": "请先保存或放弃顺序更改后再新增料号",
-            "lockedImportHint": "请先保存或放弃顺序更改后再导入"
+            "lockedImportHint": "请先保存或放弃顺序更改后再导入",
+            "statusLockedDragHint": "仅可拖拽排序待生产或暂停中的计划"
         },
         "status": {
             "PENDING": "待生产",
