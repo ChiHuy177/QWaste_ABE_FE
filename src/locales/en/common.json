@@ -561,7 +561,8 @@
                 "machine": {
                     "label": "Machine",
                     "placeholder": "Example: CNC-01",
-                    "required": "Please enter a machine"
+                    "required": "Please enter a machine",
+                    "selectMoldFirst": "Select a mold first"
                 },
                 "mold": {
                     "label": "Mold",

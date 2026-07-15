@@ -73,7 +73,7 @@ export interface PlanFormValues {
     name: string;
     /** create-only */
     machineId?: string;
-    /** create: bắt buộc; edit: chỉ gửi khi đổi khuôn */
+    /** Bắt buộc ở cả create/edit — edit được prefill khuôn hiện tại nên luôn có giá trị. */
     moldId?: string;
     /** create-only */
     plannedDate?: Dayjs;

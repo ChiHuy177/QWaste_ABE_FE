@@ -87,8 +87,8 @@ export default function ProductionPlanPage() {
         setMachineFilter,
     } = useProductionPlanData();
 
-    const { machineOptions, machineCodeById } = useMachineOptions();
-    const { moldOptions } = useMoldOptions();
+    const { machineCodeById } = useMachineOptions();
+    const { molds, moldOptions } = useMoldOptions();
 
     const actions = useProductionPlanActions({ machineGroups: fetchedMachineGroups, modalState });
 
@@ -178,6 +178,15 @@ export default function ProductionPlanPage() {
         ]
     );
 
+    const currentMoldCode =
+        modalState.open && modalState.mode === 'edit'
+            ? (editDetail?.snapshotMoldCode ?? modalState.row.moldCode)
+            : undefined;
+    const currentMoldId = useMemo(
+        () => molds.find((mold) => mold.moldCode === currentMoldCode)?.moldId,
+        [molds, currentMoldCode]
+    );
+
     const formInitialValues = useMemo<Partial<PlanFormValues> | undefined>(() => {
         if (!modalState.open) return undefined;
         if (modalState.mode === 'create') {
@@ -188,8 +197,9 @@ export default function ProductionPlanPage() {
             name: editDetail?.productionPlanName ?? modalState.row.name,
             plannedQuantity: editDetail?.plannedQuantity ?? modalState.row.schedule[todayIndex],
             note: editDetail?.note ?? undefined,
+            moldId: currentMoldId,
         };
-    }, [editDetail, modalState, selectedDate, todayIndex]);
+    }, [editDetail, modalState, selectedDate, todayIndex, currentMoldId]);
 
     const pendingDeleteProduct = actions.deleteState?.row ?? null;
 
@@ -517,12 +527,8 @@ export default function ProductionPlanPage() {
                     open={modalState.open}
                     mode={modalState.mode}
                     initialValues={formInitialValues}
-                    currentMoldCode={
-                        modalState.mode === 'edit'
-                            ? (editDetail?.snapshotMoldCode ?? modalState.row.moldCode)
-                            : undefined
-                    }
-                    machineOptions={machineOptions}
+                    currentMoldCode={currentMoldCode}
+                    molds={molds}
                     moldOptions={moldOptions}
                     submitting={actions.formSubmitting}
                     onCancel={actions.closeModal}

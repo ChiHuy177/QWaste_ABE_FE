@@ -3,12 +3,15 @@
 import { Col, DatePicker, Divider, Form, Input, InputNumber, Row, Select, theme } from 'antd';
 import type { FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
+import type { Mold } from '@/types/Mold';
 import type { SelectOptionVM } from './types';
+import { useCompatibleMachines } from '../_hooks/useCompatibleMachines';
 
 interface ProductFormProps {
     form: FormInstance;
     mode: 'create' | 'edit';
-    machineOptions: SelectOptionVM[];
+    /** Danh sách khuôn đầy đủ — dùng tra operationType để lọc máy tương thích khi chọn khuôn. */
+    molds: Mold[];
     moldOptions: SelectOptionVM[];
     /** Mã khuôn hiện tại của plan (edit) — hiển thị placeholder khi không đổi khuôn. */
     currentMoldCode?: string | null;
@@ -17,17 +20,21 @@ interface ProductFormProps {
 const filterOption = (input: string, option?: { label?: string }) =>
     (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
 
-export default function ProductForm({
-    form: _form,
-    mode,
-    machineOptions,
-    moldOptions,
-    currentMoldCode,
-}: ProductFormProps) {
+export default function ProductForm({ form, mode, molds, moldOptions, currentMoldCode }: ProductFormProps) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
     const isCreate = mode === 'create';
+
+    // Chọn khuôn trước → tra operationType của khuôn đó → chỉ hiện máy tương thích
+    // (GET /machines/v1/pickingByOperationType), giống modal chuyển kế hoạch.
+    const selectedMoldId = Form.useWatch('moldId', form);
+    const selectedMold = molds.find((mold) => mold.moldId === selectedMoldId);
+    const operationTypeId = selectedMold?.operationType?.operationTypeId;
+    const { machineOptions, isLoading: machineOptionsLoading } = useCompatibleMachines(
+        operationTypeId,
+        isCreate
+    );
 
     return (
         <>
@@ -77,6 +84,33 @@ export default function ProductForm({
                         />
                     </Form.Item>
                 </Col>
+                <Col xs={24} md={8}>
+                    <Form.Item
+                        name="moldId"
+                        label={t('productionPlan.form.fields.mold.label')}
+                        rules={[
+                            {
+                                required: true,
+                                message: t('productionPlan.form.fields.mold.required'),
+                            },
+                        ]}
+                    >
+                        <Select
+                            showSearch={{ filterOption: filterOption }}
+                            placeholder={
+                                !isCreate && currentMoldCode
+                                    ? t('productionPlan.form.fields.mold.keepCurrent', {
+                                        mold: currentMoldCode,
+                                    })
+                                    : t('productionPlan.form.fields.mold.placeholder')
+                            }
+                            options={moldOptions}
+                            onChange={() => {
+                                if (isCreate) form.setFieldValue('machineId', undefined);
+                            }}
+                        />
+                    </Form.Item>
+                </Col>
                 {isCreate && (
                     <Col xs={24} md={8}>
                         <Form.Item
@@ -91,41 +125,21 @@ export default function ProductForm({
                         >
                             <Select
                                 showSearch={{ filterOption: filterOption }}
-                                placeholder={t('productionPlan.form.fields.machine.placeholder')}
+                                loading={machineOptionsLoading}
+                                disabled={!selectedMoldId}
+                                placeholder={
+                                    !selectedMoldId
+                                        ? t('productionPlan.form.fields.machine.selectMoldFirst')
+                                        : t('productionPlan.form.fields.machine.placeholder')
+                                }
+                                notFoundContent={
+                                    selectedMoldId ? t('productionPlan.transfer.noCompatibleMachine') : null
+                                }
                                 options={machineOptions}
                             />
                         </Form.Item>
                     </Col>
                 )}
-                <Col xs={24} md={8}>
-                    <Form.Item
-                        name="moldId"
-                        label={t('productionPlan.form.fields.mold.label')}
-                        rules={
-                            isCreate
-                                ? [
-                                    {
-                                        required: true,
-                                        message: t('productionPlan.form.fields.mold.required'),
-                                    },
-                                ]
-                                : undefined
-                        }
-                    >
-                        <Select
-                            showSearch={{ filterOption: filterOption }}
-                            allowClear={!isCreate}
-                            placeholder={
-                                !isCreate && currentMoldCode
-                                    ? t('productionPlan.form.fields.mold.keepCurrent', {
-                                        mold: currentMoldCode,
-                                    })
-                                    : t('productionPlan.form.fields.mold.placeholder')
-                            }
-                            options={moldOptions}
-                        />
-                    </Form.Item>
-                </Col>
                 {isCreate && (
                     <Col xs={24} md={8}>
                         <Form.Item

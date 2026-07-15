@@ -552,7 +552,8 @@
                 "machine": {
                     "label": "Máy",
                     "placeholder": "VD: CNC-01",
-                    "required": "Vui lòng nhập máy"
+                    "required": "Vui lòng nhập máy",
+                    "selectMoldFirst": "Chọn khuôn trước"
                 },
                 "mold": {
                     "label": "Khuôn",

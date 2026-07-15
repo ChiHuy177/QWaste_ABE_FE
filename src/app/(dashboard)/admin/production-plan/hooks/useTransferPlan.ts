@@ -9,13 +9,13 @@ import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { productionPlanActions } from '@/stores/ProductionPlanStore';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { MachineService } from '@/services/MachineService';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { IncidentDeferRequest, ProductionPlanMoveRequest } from '@/types/ProductionPlan';
 import { ReorderErrorHandler } from '../_utils/reorderErrorHandler';
 import { mapWeeklyGroups } from '../_utils/planMappers';
 import { useMachineOptions } from '../_hooks/useMachineOptions';
 import { useMoldOptions } from '../_hooks/useMoldOptions';
+import { useCompatibleMachines } from '../_hooks/useCompatibleMachines';
 import { productionPlanQueryKeys } from '../_hooks/queryKeys';
 import type { MachineGroupVM, PlanRowTarget } from '../_components/types';
 import type { TransferPayload } from '../_components/TransferGridModal';
@@ -106,11 +106,7 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
     );
     const operationTypeId = transferMold?.operationType?.operationTypeId;
 
-    const compatibleMachinesQuery = useQuery({
-        queryKey: ['machines', 'pickingByOperationType', operationTypeId],
-        queryFn: () => MachineService.getMachinesPickingByOperationType(operationTypeId as number),
-        enabled: transferState.open && operationTypeId != null,
-    });
+    const compatibleMachines = useCompatibleMachines(operationTypeId, transferState.open);
 
     // Lưới tuần của modal chuyển — chia sẻ cache thô (RawPlanData) với view weekly chính khi
     // trùng tuần đang xem (cùng queryKey); đổi sang tuần khác thì fetch riêng theo tuần đó.
@@ -140,7 +136,7 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
             ).forEach((group) => groupsByMachineId.set(group.machineId, group));
         }
 
-        return (compatibleMachinesQuery.data ?? []).map((machine): MachineGroupVM => {
+        return compatibleMachines.machines.map((machine): MachineGroupVM => {
             const machineId = String(machine.machineId);
             return (
                 groupsByMachineId.get(machineId) ?? {
@@ -152,7 +148,7 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
                 }
             );
         });
-    }, [weeklyGridQuery.data, machineInfoMap, gridWeekStart, compatibleMachinesQuery.data]);
+    }, [weeklyGridQuery.data, machineInfoMap, gridWeekStart, compatibleMachines.machines]);
 
     // PAUSE — BE /incident/defer (chốt PARTIAL + tạo kế hoạch con nối tiếp).
     const deferMutation = useMutation({
@@ -228,7 +224,7 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
         transferState,
         transferSubmitting,
         transferWeeklyGroups,
-        transferGridLoading: weeklyGridQuery.isLoading || compatibleMachinesQuery.isLoading,
+        transferGridLoading: weeklyGridQuery.isLoading || compatibleMachines.isLoading,
         gridWeekStart,
         gridWeekOffset,
         shiftGridWeek,
