@@ -538,6 +538,7 @@
             "createError": "Failed to create plan",
             "updateSuccess": "Plan updated successfully",
             "updateError": "Failed to update plan",
+            "fetchDetailError": "Failed to load plan details for editing",
             "sections": {
                 "productInfo": "Product information",
                 "schedule": "7-day plan (cases)"

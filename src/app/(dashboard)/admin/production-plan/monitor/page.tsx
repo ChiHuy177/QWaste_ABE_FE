@@ -1,54 +1,21 @@
 'use client';
 
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-    Badge,
-    Button,
-    Card,
-    Col,
-    Collapse,
-    Flex,
-    Input,
-    Row,
-    Table,
-    Tag,
-    Tooltip,
-    Typography,
-    theme,
-} from 'antd';
-import type { CollapseProps } from 'antd';
-import type { ColumnType, ColumnsType } from 'antd/es/table';
-import {
-    CaretRightOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    ExclamationCircleOutlined,
-    PauseCircleOutlined,
-    ReloadOutlined,
-    SyncOutlined,
-} from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { type CSSProperties, useMemo } from 'react';
+import { Badge, Button, Card, Col, Collapse, Flex, Input, Row, Tooltip, Typography, theme } from 'antd';
+import { CaretRightOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { useProductionMonitor } from '@/hooks/useProductionMonitor';
-import { MachineService } from '@/services/MachineService';
-import { MoldService } from '@/services/MoldService';
-import { ProductionPlanService } from '@/services/ProductionPlanService';
-import type { Machine } from '@/types/Machine';
-import { isMoldSchedulable, type Mold } from '@/types/Mold';
-import {
-    MONITOR_GROUP_BY_STATUS,
-    MONITOR_GROUP_ORDER,
-    type MonitorGroupKey,
-    buildMachineInfoMap,
-    mapDailyGroups,
-} from '../_utils/planMappers';
-import type { MonitorRowVM, SelectOptionVM } from '../_components/types';
+import { useAppDispatch, useAppSelector } from '@/stores/hook';
+import { productionPlanMonitorActions } from '@/stores/ProductionPlanMonitorStore';
+import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../_utils/planMappers';
+import type { MonitorRowVM } from '../_components/types';
 import ProductDetailModal from '../_components/ProductDetailModal';
 import IncidentConfirmModal from '../_components/IncidentConfirmModal';
+import { useMachineOptions } from '../_hooks/useMachineOptions';
+import { useMoldOptions } from '../_hooks/useMoldOptions';
+import { useMonitorColumns, useMonitorData, useMonitorGroups } from './hooks';
 import styles from '../_components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
@@ -56,175 +23,64 @@ const { Search } = Input;
 
 const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
-const DATE_FORMAT = 'YYYY-MM-DD';
-const MACHINE_PAGE_SIZE = 100;
-
-// -------- Flat-row types (machine-grouped, mirrors DailyTable pattern) --------
-type MonitorGroupHeader = {
-    type: 'group-header';
-    groupKey: string;
-    machineCode: string;
-    spaceName: string;
-    groupSize: number;
-};
-type MonitorProductRow = MonitorRowVM & { type: 'product'; groupKey: string };
-type MonitorTotalRow = {
-    type: 'total';
-    groupKey: string;
-    totalCases: number;
-};
-type MonitorFlatRow = MonitorGroupHeader | MonitorProductRow | MonitorTotalRow;
-
-function toFlatRows(products: MonitorProductRowInput[]): MonitorFlatRow[] {
-    const groupMap = new Map<string, MonitorProductRowInput[]>();
-    products.forEach((p) => {
-        const arr = groupMap.get(p.machineId) ?? [];
-        arr.push(p);
-        groupMap.set(p.machineId, arr);
-    });
-
-    const rows: MonitorFlatRow[] = [];
-    groupMap.forEach((group, machineId) => {
-        const { machineCode, spaceName } = group[0];
-        const totalCases = group.reduce((sum, p) => sum + p.plannedQuantity, 0);
-        rows.push({
-            type: 'group-header',
-            groupKey: machineId,
-            machineCode,
-            spaceName,
-            groupSize: group.length,
-        });
-        group.forEach((p) => rows.push({ ...p, type: 'product', groupKey: machineId }));
-        rows.push({ type: 'total', groupKey: machineId, totalCases });
-    });
-
-    return rows;
-}
-
-type MonitorProductRowInput = MonitorRowVM;
-
-const anchorCell = (record: MonitorFlatRow) =>
-    record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
-
 export default function ProductionMonitorPage() {
     const { t } = useTranslation();
     const { token } = theme.useToken();
-    const { handleError } = useApiErrorHandler();
     const { checkPermission } = usePermissionCheck();
+    const dispatch = useAppDispatch();
 
     usePageTitle(t('productionPlan.monitor.title'));
 
-    // Monitor luôn nhìn hôm nay.
-    const todayIso = useMemo(() => dayjs().format(DATE_FORMAT), []);
+    const selectedRowId = useAppSelector((state) => state.productionPlanMonitor.selectedRowId);
+    const incidentRowId = useAppSelector((state) => state.productionPlanMonitor.incidentRowId);
 
-    const [searchText, setSearchText] = useState('');
-    const [baseRows, setBaseRows] = useState<MonitorRowVM[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [machines, setMachines] = useState<Machine[]>([]);
-    const [molds, setMolds] = useState<Mold[]>([]);
-    const [selectedRow, setSelectedRow] = useState<MonitorRowVM | null>(null);
-    const [incidentRow, setIncidentRow] = useState<MonitorRowVM | null>(null);
-    const [activeKeys, setActiveKeys] = useState<MonitorGroupKey[]>(
-        MONITOR_GROUP_ORDER.filter((status) => status !== 'COMPLETE')
+    const { products, isLoading, refresh, isConnected, lastUpdate } = useMonitorData();
+    const { machineOptions } = useMachineOptions();
+    const { molds, moldOptions } = useMoldOptions();
+
+    const {
+        setSearchText,
+        activeKeys,
+        setActiveKeys,
+        statConfigs,
+        statusCounts,
+        filteredByKeyword,
+        grouped,
+        groupedFlatRows,
+        displayedActiveKeys,
+    } = useMonitorGroups({ products });
+
+    const selectedRow = useMemo(
+        () => products.find((row) => row.productionPlanId === selectedRowId) ?? null,
+        [products, selectedRowId]
+    );
+    const incidentRow = useMemo(
+        () => products.find((row) => row.productionPlanId === incidentRowId) ?? null,
+        [products, incidentRowId]
     );
 
-    const machineInfoPromiseRef = useRef<Promise<{
-        machines: Machine[];
-        map: ReturnType<typeof buildMachineInfoMap>;
-    }> | null>(null);
+    // Tra trên toàn bộ list (kể cả mold hết ACTIVE) vì plan cũ vẫn giữ khuôn cũ.
+    const incidentCurrentMoldId = useMemo(() => {
+        if (!incidentRow?.moldCode) return undefined;
+        return molds.find((m) => m.moldCode === incidentRow.moldCode)?.moldId;
+    }, [incidentRow, molds]);
 
-    const loadMachineInfo = useCallback(() => {
-        machineInfoPromiseRef.current ??= MachineService.getAllMachines().then((machineList) => {
-            setMachines(machineList);
-            return { machines: machineList, map: buildMachineInfoMap(machineList) };
-        });
-        return machineInfoPromiseRef.current;
-    }, []);
+    const openIncidentModal = (row: MonitorRowVM) => {
+        if (!checkPermission('incident', 'production_plan')) return;
+        dispatch(productionPlanMonitorActions.openIncidentModal(row.productionPlanId));
+    };
 
-    const fetchMonitorData = useCallback(async () => {
-        try {
-            setLoading(true);
-            const { map } = await loadMachineInfo();
-            const page = await ProductionPlanService.getDailyProductionPlans({
-                date: todayIso,
-                size: MACHINE_PAGE_SIZE,
-            });
+    const selectRow = (row: MonitorRowVM) =>
+        dispatch(productionPlanMonitorActions.selectRow(row.productionPlanId));
 
-            const groups = mapDailyGroups(page.content, map, 0);
-            const rows: MonitorRowVM[] = groups.flatMap((group) =>
-                group.products
-                    .filter((product) => !product.isDeleted)
-                    .map((product) => ({
-                        productionPlanId: product.productionPlanId,
-                        code: product.code,
-                        name: product.name,
-                        machineId: group.machineId,
-                        machineCode: group.machineCode,
-                        spaceName: group.spaceName,
-                        moldCode: product.moldCode,
-                        plannedQuantity: product.schedule[0],
-                        status: product.status,
-                        updatedAt: null,
-                    }))
-            );
-            setBaseRows(rows);
-        } catch (error) {
-            handleError(error, { fallbackKey: 'productionPlan.fetchError' });
-        } finally {
-            setLoading(false);
-        }
-    }, [handleError, loadMachineInfo, todayIso]);
-
-    useEffect(() => {
-        fetchMonitorData();
-    }, [fetchMonitorData]);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        const fetchMolds = async () => {
-            try {
-                const moldList = await MoldService.getAllMolds();
-                if (!cancelled) {
-                    setMolds(moldList);
-                }
-            } catch (error) {
-                handleError(error, { fallbackKey: 'productionPlan.moldFetchError' });
-            }
-        };
-
-        fetchMolds();
-        return () => {
-            cancelled = true;
-        };
-    }, [handleError]);
-
-    const machineIds = useMemo(
-        () => Array.from(new Set(baseRows.map((row) => row.machineId))),
-        [baseRows]
-    );
-    const knownPlanIds = useMemo(
-        () => new Set(baseRows.map((row) => row.productionPlanId)),
-        [baseRows]
-    );
-
-    const { statusMap, isConnected, lastUpdate } = useProductionMonitor({
-        machineIds,
-        dateIso: todayIso,
-        knownPlanIds,
-        onUnknownPlan: fetchMonitorData,
+    const { collapseItems } = useMonitorColumns({
+        statConfigs,
+        grouped,
+        groupedFlatRows,
+        loading: isLoading,
+        onOpenIncident: openIncidentModal,
+        onSelectRow: selectRow,
     });
-
-    // Merge status realtime đè lên dữ liệu fetch.
-    const products = useMemo<MonitorRowVM[]>(
-        () =>
-            baseRows.map((row) => {
-                const entry = statusMap.get(row.productionPlanId);
-                if (!entry) return row;
-                return { ...row, status: entry.status, updatedAt: entry.updatedAt };
-            }),
-        [baseRows, statusMap]
-    );
 
     const planThemeVars = useMemo(
         () =>
@@ -242,323 +98,16 @@ export default function ProductionMonitorPage() {
         [token]
     );
 
-    const statConfigs = useMemo(
-        () => [
-            {
-                status: 'TODO' as MonitorGroupKey,
-                icon: ClockCircleOutlined,
-                color: '#722ed1',
-                bg: '#f9f0ff',
-                border: '#d3adf7',
-            },
-            {
-                status: 'IN_PROGRESS' as MonitorGroupKey,
-                icon: SyncOutlined,
-                color: token.colorInfo,
-                bg: token.colorInfoBg,
-                border: token.colorInfo,
-            },
-            {
-                status: 'PAUSE' as MonitorGroupKey,
-                icon: PauseCircleOutlined,
-                color: token.colorWarning,
-                bg: token.colorWarningBg,
-                border: token.colorWarning,
-            },
-            {
-                status: 'COMPLETE' as MonitorGroupKey,
-                icon: CheckCircleOutlined,
-                color: token.colorSuccess,
-                bg: token.colorSuccessBg,
-                border: token.colorSuccess,
-            },
-        ],
-        [token]
-    );
-
-    const statusCounts = useMemo(() => {
-        const counts: Record<MonitorGroupKey, number> = {
-            TODO: 0,
-            IN_PROGRESS: 0,
-            PAUSE: 0,
-            COMPLETE: 0,
-        };
-        products.forEach((p) => counts[MONITOR_GROUP_BY_STATUS[p.status]]++);
-        return counts;
-    }, [products]);
-
-    const filteredByKeyword = useMemo(() => {
-        const keyword = searchText.trim().toLowerCase();
-        if (!keyword) return products;
-        return products.filter(
-            (p) =>
-                p.code.toLowerCase().includes(keyword) ||
-                p.name.toLowerCase().includes(keyword) ||
-                p.machineCode.toLowerCase().includes(keyword) ||
-                p.spaceName.toLowerCase().includes(keyword)
-        );
-    }, [products, searchText]);
-
-    const grouped = useMemo(() => {
-        const map: Record<MonitorGroupKey, MonitorRowVM[]> = {
-            IN_PROGRESS: [],
-            PAUSE: [],
-            TODO: [],
-            COMPLETE: [],
-        };
-        filteredByKeyword.forEach((p) => map[MONITOR_GROUP_BY_STATUS[p.status]].push(p));
-        return map;
-    }, [filteredByKeyword]);
-
-    const groupedFlatRows = useMemo(() => {
-        const result = {} as Record<MonitorGroupKey, MonitorFlatRow[]>;
-        MONITOR_GROUP_ORDER.forEach((status) => {
-            result[status] = toFlatRows(grouped[status]);
-        });
-        return result;
-    }, [grouped]);
-
-    // While searching, force-open every group that has matches so results are never hidden
-    const displayedActiveKeys = useMemo(() => {
-        if (!searchText.trim()) return activeKeys;
-        const withMatches = MONITOR_GROUP_ORDER.filter((status) => grouped[status].length > 0);
-        return Array.from(new Set([...activeKeys, ...withMatches]));
-    }, [activeKeys, grouped, searchText]);
-
-    const machineOptions = useMemo<SelectOptionVM[]>(
-        () =>
-            machines.map((machine) => {
-                const code = machine.machineCode || machine.machineName;
-                const space = machine.space?.spaceName;
-                return {
-                    value: String(machine.machineId),
-                    label: space ? `${code} — ${space}` : code,
-                };
-            }),
-        [machines]
-    );
-
-    // GET /v1 trả cả mold đã xóa/RETIRED — picker chỉ đưa mold còn dùng được.
-    const moldOptions = useMemo<SelectOptionVM[]>(
-        () =>
-            molds.filter(isMoldSchedulable).map((mold) => ({
-                value: mold.moldId,
-                label: `${mold.moldCode} — ${mold.moldName}`,
-            })),
-        [molds]
-    );
-
-    // Tra trên toàn bộ list (kể cả mold hết ACTIVE) vì plan cũ vẫn giữ khuôn cũ.
-    const incidentCurrentMoldId = useMemo(() => {
-        if (!incidentRow?.moldCode) return undefined;
-        return molds.find((m) => m.moldCode === incidentRow.moldCode)?.moldId;
-    }, [incidentRow, molds]);
-
-    const openIncidentModal = useCallback(
-        (row: MonitorRowVM) => {
-            if (!checkPermission('incident', 'production_plan')) return;
-            setIncidentRow(row);
-        },
-        [checkPermission]
-    );
-
-    const columns: ColumnsType<MonitorFlatRow> = useMemo(() => {
-        return [
-            {
-                key: 'machine',
-                width: 160,
-                fixed: 'left',
-                className: styles.dailySheetMachineColumn,
-                onCell: (record) => {
-                    if (record.type === 'group-header') return { rowSpan: record.groupSize + 2 };
-                    return { rowSpan: 0 };
-                },
-                render: (_, record) => {
-                    if (record.type !== 'group-header') return null;
-                    return (
-                        <div className={styles.dailySheetMachineCell}>
-                            <strong>{record.machineCode}</strong>
-                            <span>{record.spaceName}</span>
-                        </div>
-                    );
-                },
-            },
-            {
-                title: t('productionPlan.table.headers.codeVi'),
-                key: 'code',
-                width: 140,
-                onCell: anchorCell,
-                render: (_, record) => {
-                    if (record.type === 'total')
-                        return <Text strong>{t('productionPlan.table.total')}</Text>;
-                    if (record.type === 'group-header') return null;
-                    return (
-                        <>
-                            <Text strong>{record.code}</Text>
-                            {record.status === 'PARTIAL' && (
-                                <Tag color="warning" style={{ marginLeft: 6 }}>
-                                    {t('productionPlan.monitor.partialTag')}
-                                </Tag>
-                            )}
-                        </>
-                    );
-                },
-            },
-            {
-                title: t('productionPlan.table.headers.productName'),
-                key: 'name',
-                ellipsis: true,
-                onCell: anchorCell,
-                render: (_, record) => (record.type === 'product' ? record.name : null),
-            },
-            {
-                title: t('productionPlan.table.headers.mold'),
-                key: 'mold',
-                width: 120,
-                onCell: anchorCell,
-                render: (_, record) => (record.type === 'product' ? record.moldCode : null),
-            },
-            {
-                title: t('productionPlan.units.cases'),
-                key: 'cases',
-                width: 100,
-                align: 'right',
-                onCell: anchorCell,
-                render: (_, record) => {
-                    if (record.type === 'total')
-                        return <Text strong>{formatNumber(record.totalCases)}</Text>;
-                    if (record.type === 'group-header') return null;
-                    return record.plannedQuantity;
-                },
-            },
-            {
-                title: t('productionPlan.monitor.lastUpdated'),
-                key: 'updatedAt',
-                width: 150,
-                onCell: anchorCell,
-                render: (_, record) => {
-                    if (record.type !== 'product') return null;
-                    return (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {record.updatedAt ? record.updatedAt.toLocaleTimeString('vi-VN') : '—'}
-                        </Text>
-                    );
-                },
-            },
-        ];
-    }, [t]);
-
-    const pauseActionColumn: ColumnType<MonitorFlatRow> = useMemo(
-        () => ({
-            key: 'action',
-            width: 160,
-            onCell: anchorCell,
-            render: (_: unknown, record: MonitorFlatRow) => {
-                if (record.type !== 'product') return null;
-                return (
-                    <Button
-                        size="small"
-                        icon={<ExclamationCircleOutlined />}
-                        style={{
-                            color: token.colorWarning,
-                            borderColor: token.colorWarningBorder,
-                            background: token.colorWarningBg,
-                            fontWeight: 600,
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            openIncidentModal(record);
-                        }}
-                    >
-                        {t('productionPlan.monitor.incident.actionBtn')}
-                    </Button>
-                );
-            },
-        }),
-        [openIncidentModal, token, t]
-    );
-
-    const pauseColumns: ColumnsType<MonitorFlatRow> = useMemo(
-        () => [...columns, pauseActionColumn],
-        [columns, pauseActionColumn]
-    );
-
     const handleStatCardClick = (status: MonitorGroupKey) => {
-        setActiveKeys((prev) => (prev.includes(status) ? prev : [...prev, status]));
+        if (!activeKeys.includes(status)) {
+            setActiveKeys([...activeKeys, status]);
+        }
         requestAnimationFrame(() => {
             document
                 .getElementById(`monitor-group-${status}`)
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     };
-
-    const collapseItems = useMemo<CollapseProps['items']>(
-        () =>
-            MONITOR_GROUP_ORDER.map((status) => {
-                const config = statConfigs.find((c) => c.status === status)!;
-                const rows = grouped[status];
-                const isPause = status === 'PAUSE' && rows.length > 0;
-
-                return {
-                    key: status,
-                    classNames: isPause ? { header: styles.monitorPauseHeader } : undefined,
-                    label: (
-                        <Flex align="center" gap={10} id={`monitor-group-${status}`}>
-                            <span
-                                className={styles.monitorStatusPill}
-                                style={{ background: config.color }}
-                            >
-                                {t(`productionPlan.monitor.status.${status}`)}
-                            </span>
-                            <Text type="secondary" style={{ fontSize: 13, fontWeight: 600 }}>
-                                {rows.length}
-                            </Text>
-                        </Flex>
-                    ),
-                    extra: isPause ? (
-                        <Tag color="warning" style={{ margin: 0, fontWeight: 600 }}>
-                            {t('productionPlan.monitor.needsAction')}
-                        </Tag>
-                    ) : undefined,
-                    children: (
-                        // CSS vars inherit from the Collapse root wrapper below
-                        <div className={`${styles.planAntTable} ${styles.dailySheetTable}`}>
-                            <Table<MonitorFlatRow>
-                                columns={status === 'PAUSE' ? pauseColumns : columns}
-                                dataSource={groupedFlatRows[status]}
-                                loading={loading}
-                                rowKey={(record) => {
-                                    if (record.type === 'product') return record.productionPlanId;
-                                    if (record.type === 'total') return `${record.groupKey}-total`;
-                                    return `${record.groupKey}-header`;
-                                }}
-                                rowClassName={(record) =>
-                                    record.type === 'total' ? styles.dailySheetTotalRow : ''
-                                }
-                                size="small"
-                                onRow={(record) => ({
-                                    onClick:
-                                        record.type === 'product'
-                                            ? () => setSelectedRow(record)
-                                            : undefined,
-                                    style: record.type === 'product' ? { cursor: 'pointer' } : {},
-                                })}
-                                pagination={false}
-                                scroll={{ x: status === 'PAUSE' ? 1100 : 950 }}
-                                locale={{
-                                    emptyText: (
-                                        <Text type="secondary">
-                                            {t('productionPlan.monitor.emptyGroup')}
-                                        </Text>
-                                    ),
-                                }}
-                            />
-                        </div>
-                    ),
-                };
-            }),
-        [statConfigs, grouped, groupedFlatRows, columns, loading, pauseColumns, t]
-    );
 
     const headerExtra = (
         <Flex align="center" gap={8}>
@@ -591,8 +140,8 @@ export default function ProductionMonitorPage() {
                 <Button
                     size="small"
                     icon={<ReloadOutlined />}
-                    loading={loading}
-                    onClick={fetchMonitorData}
+                    loading={isLoading}
+                    onClick={refresh}
                 />
             </Tooltip>
         </Flex>
@@ -714,7 +263,7 @@ export default function ProductionMonitorPage() {
             <ProductDetailModal
                 row={selectedRow}
                 open={!!selectedRow}
-                onClose={() => setSelectedRow(null)}
+                onClose={() => dispatch(productionPlanMonitorActions.selectRow(null))}
             />
 
             <IncidentConfirmModal
@@ -723,8 +272,8 @@ export default function ProductionMonitorPage() {
                 machineOptions={machineOptions}
                 moldOptions={moldOptions}
                 currentMoldId={incidentCurrentMoldId}
-                onClose={() => setIncidentRow(null)}
-                onDone={fetchMonitorData}
+                onClose={() => dispatch(productionPlanMonitorActions.closeIncidentModal())}
+                onDone={refresh}
             />
         </>
     );

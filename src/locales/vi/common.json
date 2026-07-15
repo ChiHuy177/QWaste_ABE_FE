@@ -529,6 +529,7 @@
             "createError": "Tạo kế hoạch thất bại",
             "updateSuccess": "Cập nhật kế hoạch thành công",
             "updateError": "Cập nhật kế hoạch thất bại",
+            "fetchDetailError": "Không thể tải chi tiết kế hoạch để chỉnh sửa",
             "sections": {
                 "productInfo": "Thông tin sản phẩm",
                 "schedule": "Kế hoạch 7 ngày (thùng)"

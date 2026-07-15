@@ -156,17 +156,15 @@ export default function ProductForm({
                         <InputNumber min={1} precision={0} style={{ width: '100%' }} />
                     </Form.Item>
                 </Col>
-                {isCreate && (
-                    <Col xs={24}>
-                        <Form.Item name="note" label={t('productionPlan.form.fields.note.label')}>
-                            <Input.TextArea
-                                rows={2}
-                                maxLength={2000}
-                                placeholder={t('productionPlan.form.fields.note.placeholder')}
-                            />
-                        </Form.Item>
-                    </Col>
-                )}
+                <Col xs={24}>
+                    <Form.Item name="note" label={t('productionPlan.form.fields.note.label')}>
+                        <Input.TextArea
+                            rows={2}
+                            maxLength={2000}
+                            placeholder={t('productionPlan.form.fields.note.placeholder')}
+                        />
+                    </Form.Item>
+                </Col>
             </Row>
         </>
     );

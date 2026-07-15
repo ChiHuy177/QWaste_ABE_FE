@@ -1880,6 +1880,7 @@
             "createError": "创建计划失败",
             "updateSuccess": "更新计划成功",
             "updateError": "更新计划失败",
+            "fetchDetailError": "无法加载计划详情以进行编辑",
             "sections": {
                 "productInfo": "产品信息",
                 "schedule": "7天计划（箱）"
