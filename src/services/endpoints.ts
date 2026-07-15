@@ -98,6 +98,7 @@ export const ENDPOINTS = {
         RESTORE: (id: PathParam) => `${BASE_PATHS.MACHINES}/${id}/restoring`,
         MACHINE_LIST: `${BASE_PATHS.MACHINES_V2}/machineList`,
         PAGINATION: `${BASE_PATHS.MACHINES}/all`,
+        PICKING_BY_OPERATION_TYPE: `${BASE_PATHS.MACHINES}/pickingByOperationType`,
         MACHINE_OPERATOR_HISTORY: {
             BASE: BASE_PATHS.MACHINES_OP_HISTORY,
             DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MACHINES_OP_HISTORY, id),

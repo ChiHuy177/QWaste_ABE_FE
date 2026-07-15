@@ -1,5 +1,6 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { SelectOption } from '@/types/Common';
+import { OperationType } from '@/types/OperationType';
 
 const VALIDATION_CONFIG = Object.freeze({
     MACHINE_NAME: { required: true, minLength: 2, maxLength: 50 },
@@ -9,14 +10,15 @@ const VALIDATION_CONFIG = Object.freeze({
     TOPIC: { required: true, maxLength: 255 },
     LINE_ID: { required: true },
     MACHINE_TYPE_ID: { required: true },
+    OPERATION_TYPE: { required: true },
     MACHINE_IMAGE: { required: true },
 });
 
 export const getMachineListFormFields = (
     t: any,
     mode: 'create' | 'edit',
-    _machineTypeOptions: SelectOption[] = [],
-    _isLoadingMachineTypes: boolean = false
+    operationTypeOptions: SelectOption[] = [],
+    isLoadingOperationTypes: boolean = false
 ): FormFieldConfig[] => {
     return [
         // Machine Name
@@ -113,23 +115,23 @@ export const getMachineListFormFields = (
             span: { xs: 24, md: 8 },
         },
 
-        // {
-        //     name: 'machineTypeId',
-        //     label: t('machineListManagement.form.fields.machineType'),
-        //     type: 'select',
-        //     placeholder: t('machineListManagement.form.placeholders.machineType'),
-        //     required: VALIDATION_CONFIG.MACHINE_TYPE_ID.required,
-        //     options: machineTypeOptions,
-        //     loading: isLoadingMachineTypes,
-        //     disabled: isLoadingMachineTypes,
-        //     rules: [
-        //         {
-        //             required: VALIDATION_CONFIG.MACHINE_TYPE_ID.required,
-        //             message: t('machineListManagement.form.validation.required'),
-        //         },
-        //     ],
-        //     span: { xs: 24, md: 12 },
-        // },
+        {
+            name: 'operationTypeId',
+            label: t('machineListManagement.form.fields.operationType'),
+            type: 'select',
+            placeholder: t('machineListManagement.form.placeholders.operationType'),
+            required: VALIDATION_CONFIG.OPERATION_TYPE.required,
+            options: operationTypeOptions,
+            loading: isLoadingOperationTypes,
+            disabled: isLoadingOperationTypes,
+            rules: [
+                {
+                    required: VALIDATION_CONFIG.OPERATION_TYPE.required,
+                    message: t('machineListManagement.form.validation.required'),
+                },
+            ],
+            span: { xs: 24, md: 12 },
+        },
         // Line
         {
             name: 'spaceId',
@@ -179,3 +181,9 @@ export const getMachineListFormFields = (
         },
     ];
 };
+
+export const toOperationTypeOptions = (operationTypes: OperationType[]): SelectOption[] =>
+    operationTypes.map((operationType) => ({
+        value: operationType.operationTypeId,
+        label: `${operationType.operationTypeCode} — ${operationType.operationTypeName}`,
+    }));

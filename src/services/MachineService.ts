@@ -65,6 +65,15 @@ export class MachineService {
         return response.result as Machine[];
     }
 
+    static async getMachinesPickingByOperationType(operationTypeId: number): Promise<Machine[]> {
+        const response = await NetworkService.requestJson<Machine[]>({
+            method: 'GET',
+            url: `${ENDPOINTS.MACHINE.PICKING_BY_OPERATION_TYPE}?operationTypeId=${operationTypeId}`,
+        });
+
+        return response.result as Machine[];
+    }
+
     static async getAllMachinesInList(spaceId: number): Promise<Machine[]> {
         const url = `${ENDPOINTS.MACHINE.MACHINE_LIST}?spaceId=${spaceId}`;
 

@@ -2500,7 +2500,8 @@
                 "power": "Power",
                 "space": "Space",
                 "displayOrder": "Display Order",
-                "status": "Status"
+                "status": "Status",
+                "operationType": "Operation Type"
             },
             "units": {
                 "hours": "Hours"
@@ -2541,7 +2542,8 @@
                 "power": "Power",
                 "line": "Line List",
                 "space": "Space",
-                "displayOrder": "Display Order"
+                "displayOrder": "Display Order",
+                "operationType": "Operation Type"
             },
             "placeholders": {
                 "machineName": "Enter the machine name (e.g., CNC Machine, 3D Printer, Lathe)",
@@ -2554,7 +2556,8 @@
                 "machineCode": "Enter machine code",
                 "power": "Enter power",
                 "line": "Choose a line",
-                "space": "Choose a space"
+                "space": "Choose a space",
+                "operationType": "Select an operation type"
             },
             "validation": {
                 "required": "This field is required",

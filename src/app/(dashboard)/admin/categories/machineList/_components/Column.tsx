@@ -158,6 +158,38 @@ export const getMachineListTableColumns = (
             },
         },
         {
+            title: () => t('machineListManagement.table.headers.operationType'),
+            dataIndex: ['operationType', 'operationTypeName'],
+            key: 'operationType',
+            width: 150,
+            align: 'center',
+            ellipsis: { showTitle: false },
+            render: (_, record: Machine) => {
+                const name = record.operationType?.operationTypeName;
+                if (!name) return <Text type="secondary">{t('common.notAvailable')}</Text>;
+                return (
+                    <Tooltip placement="topLeft" title={name}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Tag
+                                color="blue"
+                                style={{
+                                    fontSize: 13,
+                                    maxWidth: '100%',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    verticalAlign: 'middle',
+                                    marginInlineEnd: 0
+                                }}
+                            >
+                                {name}
+                            </Tag>
+                        </div>
+                    </Tooltip>
+                );
+            },
+        },
+        {
             title: () => t('machineListManagement.table.headers.status'),
             dataIndex: ['softDeleteMetaData', 'deleted'],
             key: 'softDeleteMetaData.deleted',

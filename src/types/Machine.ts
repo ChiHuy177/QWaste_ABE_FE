@@ -1,5 +1,6 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
 import { SpaceDetailResponse } from './Space';
+import { OperationType } from './OperationType';
 
 export type currentStatus =
     | 'RUNTIME'
@@ -36,6 +37,7 @@ export interface Machine {
     space: SpaceDetailResponse;
     operatorCount?: number;
     power?: number;
+    operationType: OperationType;
     auditMetaData?: AuditMetaData;
     softDeleteMetaData?: SoftDeleteMetaData;
 }
@@ -48,6 +50,7 @@ export interface MachineFormData {
     spaceId: number;
     machineCode: string;
     power?: number;
+    operationTypeId: number;
 }
 
 export interface MachineUpdateFormData {
@@ -59,6 +62,7 @@ export interface MachineUpdateFormData {
     spaceId: number;
     machineCode: string;
     power?: number;
+    operationTypeId: number;
 }
 export interface MachineLog {
     totalLogStateTime: number;

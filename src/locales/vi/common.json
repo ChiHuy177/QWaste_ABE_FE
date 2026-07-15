@@ -3135,7 +3135,8 @@
                 "power": "Mức điện",
                 "space": "Khu vực",
                 "displayOrder": "Thứ tự hiển thị",
-                "status": "Trạng thái"
+                "status": "Trạng thái",
+                "operationType": "Công đoạn"
             },
             "units": {
                 "hours": "Giờ"
@@ -3186,7 +3187,8 @@
                 "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "line": "Danh sách chuyền",
-                "displayOrder": "Thứ tự hiển thị"
+                "displayOrder": "Thứ tự hiển thị",
+                "operationType": "Công đoạn"
             },
             "placeholders": {
                 "machineName": "Nhập tên máy (vd: Máy CNC, Máy in 3D, Máy tiện)",
@@ -3199,7 +3201,8 @@
                 "machineCode": "Nhập mã máy",
                 "power": "Nhập mức điện",
                 "line": "Chọn một băng chuyền",
-                "machineImage": "Tải lên hình ảnh máy"
+                "machineImage": "Tải lên hình ảnh máy",
+                "operationType": "Chọn một công đoạn"
             },
             "validation": {
                 "required": "Trường này là bắt buộc",

@@ -26,9 +26,10 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { Machine } from '@/types/Machine';
 import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
 import { MachineService } from '@/services/MachineService';
+import { OperationTypeService } from '@/services/OperationTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
-import { getMachineListFormFields } from './_components/machineListFormConfig';
+import { getMachineListFormFields, toOperationTypeOptions } from './_components/machineListFormConfig';
 import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -71,6 +72,10 @@ const machineQueryKeys = {
 const spaceQueryKeys = {
     levelWithChildren: (level: number) => ['spaces', 'level-with-children', level] as const,
     tree: ['spaces', 'tree'] as const,
+};
+
+const operationTypeQueryKeys = {
+    lists: ['operationTypes', 'list'] as const,
 };
 
 const isLocalFile = (value: unknown): value is File => {
@@ -298,6 +303,16 @@ const MachineListPageContent = () => {
     const spaceTreeSelectData = useMemo(
         () => mapSpaceTreeToTreeSelect(spacesTree),
         [spacesTree]
+    );
+
+    const operationTypesQuery = useQuery({
+        queryKey: operationTypeQueryKeys.lists,
+        queryFn: () => OperationTypeService.getAllOperationTypes(),
+    });
+
+    const operationTypeOptions = useMemo(
+        () => toOperationTypeOptions(operationTypesQuery.data ?? []),
+        [operationTypesQuery.data]
     );
 
     useEffect(() => {
@@ -541,9 +556,24 @@ const MachineListPageContent = () => {
 
     const formFields = useMemo(
         () =>
-            getMachineListFormFields(t, modalState.mode),
-        [t, modalState.mode]
+            getMachineListFormFields(
+                t,
+                modalState.mode,
+                operationTypeOptions,
+                operationTypesQuery.isLoading
+            ),
+        [t, modalState.mode, operationTypeOptions, operationTypesQuery.isLoading]
     );
+
+    // Form field tên 'operationTypeId' (phẳng) nhưng Machine trả 'operationType' (nested) —
+    // map lại để EntityFormModal.setFieldsValue điền đúng Select khi edit.
+    const machineFormInitialData = useMemo(() => {
+        if (!modalState.data) return modalState.data;
+        return {
+            ...modalState.data,
+            operationTypeId: modalState.data.operationType?.operationTypeId,
+        };
+    }, [modalState.data]);
 
     const machineFilterFields: FilterField[] = useMemo(
         () => [
@@ -725,6 +755,13 @@ const MachineListPageContent = () => {
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item
+                                        label={t(
+                                            'machineListManagement.table.headers.operationType'
+                                        )}
+                                    >
+                                        {viewModalState.data.operationType?.operationTypeName ?? '-'}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item
                                         label={t('machineListManagement.table.headers.status')}
                                     >
                                         {viewModalState.data.softDeleteMetaData?.isDeleted ? (
@@ -886,7 +923,7 @@ const MachineListPageContent = () => {
                             placement: ['bottomCenter'],
                         }}
                         scroll={{
-                            x: 1520,
+                            x: 1670,
                             y: tableScrollY,
                         }}
                         style={{ height: '100%' }}
@@ -901,7 +938,7 @@ const MachineListPageContent = () => {
                 onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
-                initialData={modalState.data}
+                initialData={machineFormInitialData}
                 fields={formFields}
                 title={{
                     create: t('machineListManagement.form.createTitle'),
