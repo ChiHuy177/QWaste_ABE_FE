@@ -450,7 +450,12 @@
         "transfer": {
             "success": "Plan transferred successfully",
             "error": "Failed to transfer plan",
-            "detailNotReady": "Plan details are still loading, please retry"
+            "detailNotReady": "Plan details are still loading, please retry",
+            "title": "Transfer plan — {{code}}",
+            "noCompatibleMachine": "No machine matches this mold's operation type",
+            "prevWeek": "Previous week",
+            "nextWeek": "Next week",
+            "thisWeek": "this week"
         },
         "days": {
             "week": "Week",
@@ -493,8 +498,6 @@
             "addProduct": "Add product code",
             "restore": "Restore",
             "transfer": "Transfer",
-            "transferMachine": "Transfer machine",
-            "transferSchedule": "Transfer schedule",
             "statusLockedHint": "Only available for PENDING plans"
         },
         "panel": {
@@ -610,7 +613,6 @@
             "applyOnlySelectedDay": "Only applies to {{day}}. Other days in the week will not change."
         },
         "transferSchedule": {
-            "title": "Transfer schedule - {{code}}",
             "noQuantityToday": "There is no quantity to transfer today",
             "from": "From",
             "day": "Day",

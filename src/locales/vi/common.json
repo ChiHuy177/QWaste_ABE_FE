@@ -441,7 +441,12 @@
         "transfer": {
             "success": "Chuyển kế hoạch thành công",
             "error": "Chuyển kế hoạch thất bại",
-            "detailNotReady": "Đang tải thông tin kế hoạch, vui lòng thử lại"
+            "detailNotReady": "Đang tải thông tin kế hoạch, vui lòng thử lại",
+            "title": "Chuyển kế hoạch — {{code}}",
+            "noCompatibleMachine": "Không có máy phù hợp với công đoạn của khuôn này",
+            "prevWeek": "Tuần trước",
+            "nextWeek": "Tuần sau",
+            "thisWeek": "tuần này"
         },
         "days": {
             "week": "Tuần",
@@ -484,8 +489,6 @@
             "addProduct": "Thêm mã hàng",
             "restore": "Khôi phục",
             "transfer": "Chuyển",
-            "transferMachine": "Chuyển máy",
-            "transferSchedule": "Chuyển lịch",
             "statusLockedHint": "Chỉ áp dụng cho kế hoạch đang chờ (PENDING)"
         },
         "panel": {
@@ -601,7 +604,6 @@
             "applyOnlySelectedDay": "Chỉ áp dụng cho {{day}}. Các ngày khác trong tuần không thay đổi."
         },
         "transferSchedule": {
-            "title": "Chuyển lịch - {{code}}",
             "noQuantityToday": "Không có sản lượng để chuyển hôm nay",
             "from": "Từ",
             "day": "Ngày",

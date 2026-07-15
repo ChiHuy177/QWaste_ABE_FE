@@ -3,8 +3,7 @@ import dayjs from 'dayjs';
 import type {
     PlanModalState,
     PlanRowTarget,
-    TransferMachineModalState,
-    TransferScheduleModalState,
+    TransferState,
 } from '@/app/(dashboard)/admin/production-plan/_components/types';
 
 export type ProductionPlanActiveView = 'daily' | 'weekly' | 'matrix';
@@ -16,8 +15,7 @@ export interface IProductionPlanStoreState {
     machineFilter: string;
     modalState: PlanModalState;
     deleteState: PlanRowTarget | null;
-    transferMachineState: TransferMachineModalState;
-    transferScheduleState: TransferScheduleModalState;
+    transferState: TransferState;
     importModalOpen: boolean;
     dirtyMachineIds: string[];
     navConfirmOpen: boolean;
@@ -29,8 +27,7 @@ const initialState: IProductionPlanStoreState = {
     machineFilter: '',
     modalState: { open: false },
     deleteState: null,
-    transferMachineState: { open: false },
-    transferScheduleState: { open: false },
+    transferState: { open: false },
     importModalOpen: false,
     dirtyMachineIds: [],
     navConfirmOpen: false,
@@ -76,12 +73,8 @@ const slice = createSlice({
             state.deleteState = action.payload;
         },
 
-        setTransferMachineState: (state, action: PayloadAction<TransferMachineModalState>) => {
-            state.transferMachineState = action.payload;
-        },
-
-        setTransferScheduleState: (state, action: PayloadAction<TransferScheduleModalState>) => {
-            state.transferScheduleState = action.payload;
+        setTransferState: (state, action: PayloadAction<TransferState>) => {
+            state.transferState = action.payload;
         },
 
         setImportModalOpen: (state, action: PayloadAction<boolean>) => {
@@ -116,8 +109,7 @@ export const productionPlanActions = {
     openEditModal: slice.actions.openEditModal,
     closeModal: slice.actions.closeModal,
     setDeleteState: slice.actions.setDeleteState,
-    setTransferMachineState: slice.actions.setTransferMachineState,
-    setTransferScheduleState: slice.actions.setTransferScheduleState,
+    setTransferState: slice.actions.setTransferState,
     setImportModalOpen: slice.actions.setImportModalOpen,
     markMachineDirty: slice.actions.markMachineDirty,
     clearDirtyMachines: slice.actions.clearDirtyMachines,

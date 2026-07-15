@@ -39,8 +39,7 @@ import ImportModal from './_components/ImportModal';
 import WeeklyTable from './_components/WeeklyTable';
 import MachineMatrixTable from './_components/MachineMatrixTable';
 import PlanFormModal from './_components/PlanFormModal';
-import TransferMachineModal from './_components/TransferMachineModal';
-import TransferScheduleModal from './_components/TransferScheduleModal';
+import TransferGridModal from './_components/TransferGridModal';
 import { formatDailyLabel, formatWeeklyLabel, WEEK_DAY_KEYS } from './_utils/dateUtils';
 import { useMachineOptions } from './_hooks/useMachineOptions';
 import { useMoldOptions } from './_hooks/useMoldOptions';
@@ -101,8 +100,6 @@ export default function ProductionPlanPage() {
     const machineGroups = reorder.machineGroups;
 
     const transfer = useTransferPlan({
-        machineGroups,
-        selectedDate,
         weekStart,
         machineCodeById,
         onMutated: actions.invalidatePlanQueries,
@@ -492,8 +489,7 @@ export default function ProductionPlanPage() {
                             onDelete={actions.requestDelete}
                             onRestore={actions.handleRestore}
                             onReorder={reorder.handleReorderProducts}
-                            onTransferMachine={transfer.openTransferMachineModal}
-                            onTransferSchedule={transfer.openTransferScheduleModal}
+                            onTransferOpen={transfer.openTransfer}
                         />
                     )}
                     {activeView === 'weekly' && (
@@ -540,26 +536,22 @@ export default function ProductionPlanPage() {
                 onImported={actions.invalidatePlanQueries}
             />
 
-            <TransferMachineModal
-                open={transfer.transferMachineState.open}
-                target={transfer.transferMachineState.open ? transfer.transferMachineState : null}
-                todayIndex={todayIndex}
-                machineOptions={machineOptions}
-                submitting={transfer.transferSubmitting}
-                onCancel={transfer.closeTransferMachineModal}
-                onConfirm={transfer.handleTransferMachine}
-            />
-
-            <TransferScheduleModal
-                open={transfer.transferScheduleState.open}
-                target={transfer.transferScheduleState.open ? transfer.transferScheduleState : null}
-                todayIndex={todayIndex}
-                weeklyGroups={transfer.transferWeeklyGroups}
-                gridLoading={transfer.transferGridLoading}
-                submitting={transfer.transferSubmitting}
-                onCancel={transfer.closeTransferScheduleModal}
-                onConfirm={transfer.handleTransferSchedule}
-            />
+            {transfer.transferState.open && (
+                <TransferGridModal
+                    open={transfer.transferState.open}
+                    target={transfer.transferState}
+                    todayIndex={todayIndex}
+                    weekStart={weekStart}
+                    gridWeekStart={transfer.gridWeekStart}
+                    gridWeekOffset={transfer.gridWeekOffset}
+                    onShiftWeek={transfer.shiftGridWeek}
+                    weeklyGroups={transfer.transferWeeklyGroups}
+                    gridLoading={transfer.transferGridLoading}
+                    submitting={transfer.transferSubmitting}
+                    onCancel={transfer.closeTransfer}
+                    onConfirm={transfer.handleTransferConfirm}
+                />
+            )}
 
             <Modal
                 title={t('productionPlan.deleteModal.title')}

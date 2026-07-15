@@ -1,17 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Dropdown, Empty, Pagination, Table, Tag, Tooltip } from 'antd';
+import { Button, Empty, Pagination, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import {
-    DeleteOutlined,
-    EditOutlined,
-    HolderOutlined,
-    MoreOutlined,
-    ScheduleOutlined,
-    SwapOutlined,
-    UndoOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, HolderOutlined, SwapOutlined, UndoOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
     closestCenter,
@@ -73,14 +65,14 @@ interface DailyTableProps {
     canReorder?: boolean;
     scrollY?: number;
     isMobile?: boolean;
-    /** Còn thay đổi thứ tự chưa lưu ở page cha — khóa Sửa/Xóa/Chuyển máy/Chuyển lịch. */
+    /** Còn thay đổi thứ tự chưa lưu ở page cha — khóa Sửa/Xóa/Chuyển. */
     actionsLocked?: boolean;
     onEdit: (target: PlanRowTarget) => void;
     onDelete: (target: PlanRowTarget) => void;
     onRestore: (target: PlanRowTarget) => void;
     onReorder: (machineId: string, activeRowKey: string, overRowKey: string) => void;
-    onTransferMachine?: (target: PlanRowTarget) => void;
-    onTransferSchedule?: (target: PlanRowTarget) => void;
+    /** Mở modal lưới tuần chuyển máy/lịch (hướng 1) — single instance, render ở page cha. */
+    onTransferOpen: (target: PlanRowTarget) => void;
 }
 
 const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
@@ -112,8 +104,7 @@ export default function DailyTable({
     onDelete,
     onRestore,
     onReorder,
-    onTransferMachine,
-    onTransferSchedule,
+    onTransferOpen,
 }: DailyTableProps) {
     const { t } = useTranslation();
     const sensors = useSensors(
@@ -418,38 +409,12 @@ export default function DailyTable({
                                         />
                                     </Tooltip>
                                     {canTransfer && (
-                                        <Tooltip title={actionsLocked ? lockedHint : undefined}>
-                                            <Dropdown
-                                                trigger={['click']}
-                                                placement="bottomRight"
-                                                disabled={actionsLocked}
-                                                menu={{
-                                                    items: [
-                                                        {
-                                                            key: 'transfer-machine',
-                                                            label: t(
-                                                                'productionPlan.actions.transferMachine'
-                                                            ),
-                                                            icon: <SwapOutlined />,
-                                                            onClick: () => onTransferMachine?.(target),
-                                                        },
-                                                        {
-                                                            key: 'transfer-schedule',
-                                                            label: t(
-                                                                'productionPlan.actions.transferSchedule'
-                                                            ),
-                                                            icon: <ScheduleOutlined />,
-                                                            onClick: () => onTransferSchedule?.(target),
-                                                        },
-                                                    ],
-                                                }}
-                                            >
-                                                <Button
-                                                    type="text"
-                                                    icon={<MoreOutlined />}
-                                                    disabled={actionsLocked}
-                                                />
-                                            </Dropdown>
+                                        <Tooltip title={t('productionPlan.actions.transfer')}>
+                                            <Button
+                                                type="text"
+                                                icon={<SwapOutlined />}
+                                                onClick={() => onTransferOpen(target)}
+                                            />
                                         </Tooltip>
                                     )}
                                 </div>
@@ -467,8 +432,7 @@ export default function DailyTable({
             onDelete,
             onEdit,
             onRestore,
-            onTransferMachine,
-            onTransferSchedule,
+            onTransferOpen,
             t,
             todayIndex,
         ]

@@ -93,6 +93,4 @@ export interface PlanRowTarget {
     row: PlanRowVM;
 }
 
-export type TransferMachineModalState = { open: false } | ({ open: true } & PlanRowTarget);
-
-export type TransferScheduleModalState = { open: false } | ({ open: true } & PlanRowTarget);
+export type TransferState = { open: false } | ({ open: true } & PlanRowTarget);
