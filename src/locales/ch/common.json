@@ -1734,6 +1734,66 @@
     "productionPlan": {
         "title": "生产计划",
         "headerTitle": "生产计划 - {{label}}",
+        "fetchError": "无法加载生产计划",
+        "moldFetchError": "无法加载模具列表",
+        "deleteSuccess": "删除计划成功",
+        "deleteError": "删除计划失败",
+        "restoreSuccess": "恢复计划成功",
+        "restoreError": "恢复计划失败",
+        "reorderError": "排序失败",
+        "reorder": {
+            "save": "保存顺序",
+            "saveSuccess": "保存顺序成功",
+            "discard": "放弃更改",
+            "unsavedTag": "顺序未保存",
+            "confirmTitle": "有未保存的顺序更改",
+            "confirmMessage": "您刚调整了产品顺序但尚未保存。请先保存或放弃更改后再继续。",
+            "saveAndContinue": "保存并继续",
+            "discardAndContinue": "放弃并继续",
+            "lockedActionHint": "请先保存或放弃顺序更改后再操作",
+            "lockedFilterHint": "请先保存或放弃顺序更改后再筛选",
+            "lockedCreateHint": "请先保存或放弃顺序更改后再新增料号",
+            "lockedImportHint": "请先保存或放弃顺序更改后再导入",
+            "statusLockedDragHint": "仅可拖拽排序待生产或暂停中的计划"
+        },
+        "status": {
+            "PENDING": "待生产",
+            "RUNNING": "运行中",
+            "PAUSE": "暂停",
+            "PARTIAL": "部分完成",
+            "COMPLETE": "已完成"
+        },
+        "trigger": {
+            "MQTT_RUN": "机器运行",
+            "MQTT_ERROR": "机器故障",
+            "MQTT_OFFLINE": "机器离线",
+            "MQTT_IDLE": "机器空闲",
+            "AUTO_ADVANCE": "自动切换",
+            "MANUAL": "手动操作"
+        },
+        "incidentReason": {
+            "WAITING_MATERIALS": "等待物料",
+            "TOOL_ADJUSTMENT": "工具调整",
+            "SENSOR_CALIBRATION": "传感器校准",
+            "MOLD_DAMAGE": "模具损坏",
+            "MACHINE_BREAKDOWN": "机器故障",
+            "QUALITY_ISSUE": "质量问题",
+            "ORDER_CANCELLED": "订单取消",
+            "PRODUCTION_DISCONTINUED": "停止生产",
+            "OTHER": "其他原因"
+        },
+        "incident": {
+            "reasonLabel": "原因",
+            "reasonPlaceholder": "选择原因",
+            "noteLabel": "备注",
+            "notePlaceholder": "详细说明（选择其他原因时必填）",
+            "noteRequiredForOther": "选择其他原因时请填写详细说明"
+        },
+        "transfer": {
+            "success": "转移计划成功",
+            "error": "转移计划失败",
+            "detailNotReady": "计划信息加载中，请重试"
+        },
         "days": {
             "week": "周",
             "today": "今天",
@@ -1773,9 +1833,11 @@
         "actions": {
             "import": "导入",
             "addProduct": "新增产品编码",
+            "restore": "恢复",
             "transfer": "转移",
             "transferMachine": "转移机器",
-            "transferSchedule": "转移计划"
+            "transferSchedule": "转移计划",
+            "statusLockedHint": "仅适用于待处理（PENDING）的计划"
         },
         "panel": {
             "dailyTable": "日表",
@@ -1791,6 +1853,7 @@
         },
         "table": {
             "total": "合计",
+            "deletedTag": "已删除",
             "emptyDaily": "所选日期没有生产计划",
             "emptyFiltered": "没有符合筛选条件的产品编码",
             "headers": {
@@ -1802,7 +1865,8 @@
                 "mold": "模具",
                 "average": "平均",
                 "avgShort": "平均",
-                "time": "时间"
+                "time": "时间",
+                "status": "状态"
             },
             "pagination": {
                 "machineGroups": "共 {{total}} 个机器组"
@@ -1813,6 +1877,11 @@
             "editTitle": "编辑计划"
         },
         "form": {
+            "createSuccess": "创建计划成功",
+            "createError": "创建计划失败",
+            "updateSuccess": "更新计划成功",
+            "updateError": "更新计划失败",
+            "fetchDetailError": "无法加载计划详情以进行编辑",
             "sections": {
                 "productInfo": "产品信息",
                 "schedule": "7天计划（箱）"
@@ -1836,7 +1905,20 @@
                 "mold": {
                     "label": "模具",
                     "placeholder": "例如：M-12A",
-                    "required": "请输入模具编码"
+                    "required": "请输入模具编码",
+                    "keepCurrent": "保留当前模具：{{mold}}"
+                },
+                "plannedDate": {
+                    "label": "生产日期",
+                    "required": "请选择生产日期"
+                },
+                "plannedQuantity": {
+                    "label": "数量（箱）",
+                    "required": "请输入数量"
+                },
+                "note": {
+                    "label": "备注",
+                    "placeholder": "附加备注（可选）"
                 },
                 "time": {
                     "label": "时间",
@@ -1889,6 +1971,13 @@
             "title": "导入生产计划",
             "upload": "上传",
             "hint": "包含生产计划的 Excel 文件 - 最大 10MB",
+            "uploadError": "上传导入文件失败",
+            "confirmError": "确认导入失败",
+            "confirmOptions": {
+                "cancel": "取消导入会话",
+                "overwriteAll": "全部覆盖",
+                "overwriteRetain": "覆盖并保留现有数据"
+            },
             "columns": {
                 "date": "日期",
                 "reason": "原因",
@@ -1897,18 +1986,34 @@
                 "error": "错误"
             },
             "result": {
-                "inserted": "已导入",
-                "records": "{{count}} 条记录",
-                "importedDays": "已导入日期",
-                "deferredDays": "延期日期",
-                "note": "备注",
-                "requiresConfirmation": "需要确认 - sessionToken:",
                 "skippedDays": "跳过日期（{{count}}）",
-                "errors": "错误（{{count}}）"
+                "errors": "错误（{{count}}）",
+                "importedDaysCount": "已导入日期（{{count}}）",
+                "deferredDaysCount": "待确认日期（{{count}}）",
+                "banner": {
+                    "error": {
+                        "title": "导入失败 — {{count}} 行数据有误，尚未写入任何数据",
+                        "description": "文件尚未导入系统。请在 Excel 中修正下方错误后重新上传整份文件。"
+                    },
+                    "confirm": {
+                        "title": "尚未写入数据 — {{count}} 天与待处理计划冲突",
+                        "description": "下方日期在系统中已有未完成的计划。请选择处理方式以完成导入。"
+                    },
+                    "success": {
+                        "title": "已成功写入 {{count}} 条记录",
+                        "description": "下方日期的生产计划已更新成功。"
+                    },
+                    "empty": {
+                        "title": "未写入任何数据",
+                        "description": "文件中的所有日期均被跳过，没有可导入的数据。"
+                    }
+                }
             }
         },
         "monitor": {
             "title": "生产监控",
+            "partialTag": "部分完成",
+            "refresh": "刷新",
             "statusCol": "状态",
             "lastUpdated": "最后更新",
             "filterAll": "所有状态",
@@ -1922,11 +2027,74 @@
             "lastSync": "最后同步：{{time}}",
             "emptyGroup": "此状态下无产品编码",
             "needsAction": "⚠ 需要处理",
+            "allConfirmed": "已全部确认",
+            "confirmedTag": "已确认",
             "status": {
                 "TODO": "待处理",
                 "IN_PROGRESS": "进行中",
                 "PAUSE": "已暂停",
                 "COMPLETE": "已完成"
+            },
+            "incident": {
+                "actionBtn": "处理故障",
+                "title": "处理生产故障",
+                "confirm": "确认",
+                "option1Title": "终止计划",
+                "option1UseCase": "订单取消或停止生产时使用",
+                "option1Desc": "计划将标记为部分完成，剩余数量不再生产。",
+                "option1Warning": "此操作无法撤销。",
+                "option2Title": "转移到其他日期/机器",
+                "option2UseCase": "机器需要长时间维修时使用",
+                "option2Desc": "为剩余数量创建新的子计划。",
+                "option3Title": "临时暂停",
+                "option3UseCase": "短时间故障，可以尽快恢复时使用",
+                "option3Desc": "机器恢复运行后计划自动继续。",
+                "planQty": "计划数量",
+                "produced": "已生产",
+                "remainingQty": "剩余",
+                "newDate": "新日期",
+                "newMachine": "新机器",
+                "newMold": "模具",
+                "moldPlaceholder": "选择模具",
+                "successTerminate": "已终止计划 {{code}}",
+                "successDefer": "已转移计划 {{code}}（剩余 {{remaining}}）",
+                "successRepair": "已暂停计划 {{code}}"
+            },
+            "detail": {
+                "statusTrack": "当前状态",
+                "productInfo": "产品信息",
+                "code": "产品编码",
+                "line": "区域",
+                "name": "产品名称",
+                "machine": "机器",
+                "mold": "模具",
+                "plannedDate": "生产日期",
+                "operationType": "工序",
+                "plannedQuantity": "计划数量",
+                "actualQuantity": "已生产",
+                "note": "备注",
+                "statusLogs": "状态历史",
+                "noLogs": "暂无状态历史",
+                "noUpdate": "暂无更新"
+            }
+        }
+    },
+    "moldManagement": {
+        "restoreSuccess": "恢复模具成功",
+        "restoreError": "恢复模具失败",
+        "deletedTag": "已删除",
+        "dialogs": {
+            "restoreConfirmation": {
+                "title": "恢复模具",
+                "description": "模具将返回可用列表。继续？"
+            }
+        }
+    },
+    "notification": {
+        "production_plan": {
+            "incident_pause": {
+                "title": "因故障暂停计划",
+                "content": "一个生产计划因机器故障已转为暂停。"
             }
         }
     },

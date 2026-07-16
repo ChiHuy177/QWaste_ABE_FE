@@ -46,6 +46,10 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'mold',
         action: 'view',
     },
+    '/admin/categories/operationType': {
+        subject: 'operation_type',
+        action: 'view',
+    },
     '/admin/categories/step': {
         subject: 'step',
         action: 'view',
@@ -110,7 +114,7 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
     '/admin/production-plan': {
-        subject: 'tasks',
+        subject: 'production_plan',
         action: 'view',
     },
     '/admin/production-plan/monitor': {

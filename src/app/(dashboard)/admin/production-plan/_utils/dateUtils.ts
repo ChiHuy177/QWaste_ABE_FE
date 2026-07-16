@@ -1,3 +1,5 @@
+import type { Dayjs } from 'dayjs';
+
 export const WEEK_DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'] as const;
 export const FULL_WEEK_DAYS = [
     'Thứ 2',
@@ -45,3 +47,19 @@ export const getIsoWeek = (date = new Date()) => {
 
 export const formatWeeklyLabel = (date = new Date(), weekLabel = 'Tuần') =>
     `${weekLabel} ${getIsoWeek(date)}`;
+
+export interface WeekDayColumn {
+    index: number;
+    dateStr: string;
+}
+
+/**
+ * Cột ngày của 1 tuần (Mon=0..Sun=6), bắt đầu từ startIndex — dùng cho lưới chuyển kế hoạch.
+ * weekStart phải là thứ 2 của tuần cần hiển thị (nhận trực tiếp thay vì tự suy ra từ `new Date()`,
+ * để hỗ trợ hiển thị tuần khác tuần đang xem — VD: đổi sang tuần sau khi chuyển kế hoạch).
+ */
+export const getWeekDayColumns = (weekStart: Dayjs, startIndex = 0): WeekDayColumn[] =>
+    Array.from({ length: 7 - startIndex }, (_, i) => {
+        const index = startIndex + i;
+        return { index, dateStr: weekStart.add(index, 'day').format('DD/MM') };
+    });

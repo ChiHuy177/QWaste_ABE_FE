@@ -89,15 +89,15 @@ export const getMachineListTableColumns = (
             },
         },
         {
-            title: () => t('machineListManagement.table.headers.propertyCode'),
-            dataIndex: 'propertyCode',
-            key: 'propertyCode',
+            title: () => t('machineListManagement.table.headers.machineCode'),
+            dataIndex: 'machineCode',
+            key: 'machineCode',
             width: 150,
             align: 'center',
             ellipsis: { showTitle: false },
             sorter: (a, b) => {
-                const codeA = a.propertyCode || '';
-                const codeB = b.propertyCode || '';
+                const codeA = a.machineCode || '';
+                const codeB = b.machineCode || '';
                 return codeA.localeCompare(codeB);
             },
             render: (text: string) => {
@@ -151,6 +151,38 @@ export const getMachineListTableColumns = (
                                 }}
                             >
                                 {power} kW
+                            </Tag>
+                        </div>
+                    </Tooltip>
+                );
+            },
+        },
+        {
+            title: () => t('machineListManagement.table.headers.operationType'),
+            dataIndex: ['operationType', 'operationTypeName'],
+            key: 'operationType',
+            width: 150,
+            align: 'center',
+            ellipsis: { showTitle: false },
+            render: (_, record: Machine) => {
+                const name = record.operationType?.operationTypeName;
+                if (!name) return <Text type="secondary">{t('common.notAvailable')}</Text>;
+                return (
+                    <Tooltip placement="topLeft" title={name}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Tag
+                                color="blue"
+                                style={{
+                                    fontSize: 13,
+                                    maxWidth: '100%',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    verticalAlign: 'middle',
+                                    marginInlineEnd: 0
+                                }}
+                            >
+                                {name}
                             </Tag>
                         </div>
                     </Tooltip>

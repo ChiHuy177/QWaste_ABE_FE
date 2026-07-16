@@ -373,6 +373,11 @@ th.stickyName {
 }
 
 .tablePanelBody {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     padding: 16px;
 }
 
@@ -486,4 +491,14 @@ th.stickyName {
     text-transform: uppercase;
     letter-spacing: 0.4px;
     white-space: nowrap;
+}
+
+/* Soft-deleted plan rows (daily management view) */
+.deletedRow > :global(td) {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.deletedRow > :global(td:last-child) {
+    text-decoration: none;
 }

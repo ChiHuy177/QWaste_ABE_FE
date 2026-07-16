@@ -33,7 +33,8 @@ const BASE_PATHS = {
     UTILS: `${API}/utils/${V1}`,
     EXCEL_EXPORT: `${API}/excelExport/${V1}`,
     MOLDS: `${API}/molds/${V1}`,
-    PLANS: `${API}/plans/${V1}`,
+    OPERATION_TYPES: `${API}/operationTypes/${V1}`,
+    PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -97,6 +98,7 @@ export const ENDPOINTS = {
         RESTORE: (id: PathParam) => `${BASE_PATHS.MACHINES}/${id}/restoring`,
         MACHINE_LIST: `${BASE_PATHS.MACHINES_V2}/machineList`,
         PAGINATION: `${BASE_PATHS.MACHINES}/all`,
+        PICKING_BY_OPERATION_TYPE: `${BASE_PATHS.MACHINES}/pickingByOperationType`,
         MACHINE_OPERATOR_HISTORY: {
             BASE: BASE_PATHS.MACHINES_OP_HISTORY,
             DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MACHINES_OP_HISTORY, id),
@@ -173,12 +175,28 @@ export const ENDPOINTS = {
     },
     MOLDS: {
         BASE: BASE_PATHS.MOLDS,
-        ALL: `${BASE_PATHS.MOLDS}/all`,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
+        RESTORE: (id: PathParam) => `${BASE_PATHS.MOLDS}/${id}/restoring`,
     },
-    PLANS: {
-        BASE: BASE_PATHS.PLANS,
-        IMPORT: `${BASE_PATHS.PLANS}/import`,
+    OPERATION_TYPES: {
+        BASE: BASE_PATHS.OPERATION_TYPES,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.OPERATION_TYPES, id),
+    },
+    PRODUCTION_PLANS: {
+        BASE: BASE_PATHS.PRODUCTION_PLANS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.PRODUCTION_PLANS, id),
+        STATUS_LOGS: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/statusLogs`,
+        DAILY: `${BASE_PATHS.PRODUCTION_PLANS}/daily`,
+        WEEKLY: `${BASE_PATHS.PRODUCTION_PLANS}/weekly`,
+        REORDER: `${BASE_PATHS.PRODUCTION_PLANS}/reorder`,
+        MOVE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/move`,
+        RESTORE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/restoring`,
+        INCIDENT_TERMINATE: (id: PathParam) =>
+            `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/terminate`,
+        INCIDENT_DEFER: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/defer`,
+        INCIDENT_PAUSE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/pause`,
+        IMPORT: `${BASE_PATHS.PRODUCTION_PLANS}/import`,
+        IMPORT_CONFIRM: `${BASE_PATHS.PRODUCTION_PLANS}/import/confirm`,
     },
 } as const;
 

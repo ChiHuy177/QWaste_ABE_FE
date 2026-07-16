@@ -11,7 +11,11 @@ export type Action =
     | 'store'
     | 'update_sensitive'
     | 'confirm'
-    | 'decline';
+    | 'decline'
+    | 'reorder'
+    | 'import'
+    | 'incident'
+    | 'move';
 
 export type Subject =
     // Overview
@@ -20,6 +24,7 @@ export type Subject =
     | 'machine_type'
     | 'machine'
     | 'mold'
+    | 'operation_type'
     | 'staffing'
     | 'factory'
     | 'space'
@@ -55,6 +60,9 @@ export type Subject =
     // Tasks Management
     | 'tasks'
     | 'production_monitor'
+    // Production plan — BE dùng slug production_plan:* (create/import vẫn tạm trên 'product')
+    | 'production_plan'
+    | 'product'
     // Space
     | 'space_monitoring'
     | 'floor_map'

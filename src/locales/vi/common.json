@@ -329,6 +329,7 @@
             "machineType": "Danh sách loại máy",
             "machineList": "Danh sách máy",
             "mold": "Danh sách Khuôn",
+            "operationType": "Danh sách Công đoạn",
             "electric": "Công suất tiêu thụ điện",
             "factory": "Danh sách nhà máy",
             "factoryOverview": "Tổng quan nhà máy",
@@ -382,6 +383,71 @@
     "productionPlan": {
         "title": "Kế hoạch sản xuất",
         "headerTitle": "Kế hoạch sản xuất - {{label}}",
+        "fetchError": "Không thể tải kế hoạch sản xuất",
+        "moldFetchError": "Không thể tải danh sách khuôn",
+        "deleteSuccess": "Xóa kế hoạch thành công",
+        "deleteError": "Xóa kế hoạch thất bại",
+        "restoreSuccess": "Khôi phục kế hoạch thành công",
+        "restoreError": "Khôi phục kế hoạch thất bại",
+        "reorderError": "Sắp xếp thứ tự thất bại",
+        "reorder": {
+            "save": "Lưu thứ tự",
+            "saveSuccess": "Lưu thứ tự thành công",
+            "discard": "Hủy thay đổi",
+            "unsavedTag": "Thứ tự chưa lưu",
+            "confirmTitle": "Có thay đổi thứ tự chưa lưu",
+            "confirmMessage": "Bạn vừa sắp xếp lại thứ tự sản phẩm nhưng chưa lưu. Vui lòng lưu hoặc hủy thay đổi trước khi tiếp tục.",
+            "saveAndContinue": "Lưu và tiếp tục",
+            "discardAndContinue": "Hủy và tiếp tục",
+            "lockedActionHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thao tác",
+            "lockedFilterHint": "Lưu hoặc hủy thay đổi thứ tự trước khi lọc",
+            "lockedCreateHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thêm mã hàng",
+            "lockedImportHint": "Lưu hoặc hủy thay đổi thứ tự trước khi import",
+            "statusLockedDragHint": "Chỉ có thể kéo-thả sắp xếp lại các kế hoạch đang Chờ sản xuất hoặc Tạm dừng"
+        },
+        "status": {
+            "PENDING": "Chờ sản xuất",
+            "RUNNING": "Đang chạy",
+            "PAUSE": "Tạm dừng",
+            "PARTIAL": "Hoàn thành một phần",
+            "COMPLETE": "Hoàn thành"
+        },
+        "trigger": {
+            "MQTT_RUN": "Máy chạy",
+            "MQTT_ERROR": "Máy lỗi",
+            "MQTT_OFFLINE": "Mất kết nối máy",
+            "MQTT_IDLE": "Máy chờ",
+            "AUTO_ADVANCE": "Tự động chuyển",
+            "MANUAL": "Thao tác tay"
+        },
+        "incidentReason": {
+            "WAITING_MATERIALS": "Chờ nguyên liệu",
+            "TOOL_ADJUSTMENT": "Chỉnh dụng cụ",
+            "SENSOR_CALIBRATION": "Hiệu chuẩn cảm biến",
+            "MOLD_DAMAGE": "Hỏng khuôn",
+            "MACHINE_BREAKDOWN": "Hỏng máy",
+            "QUALITY_ISSUE": "Lỗi chất lượng",
+            "ORDER_CANCELLED": "Hủy đơn hàng",
+            "PRODUCTION_DISCONTINUED": "Ngừng sản xuất",
+            "OTHER": "Lý do khác"
+        },
+        "incident": {
+            "reasonLabel": "Lý do",
+            "reasonPlaceholder": "Chọn lý do",
+            "noteLabel": "Ghi chú",
+            "notePlaceholder": "Mô tả chi tiết (bắt buộc khi chọn Lý do khác)",
+            "noteRequiredForOther": "Vui lòng nhập chi tiết khi chọn Lý do khác"
+        },
+        "transfer": {
+            "success": "Chuyển kế hoạch thành công",
+            "error": "Chuyển kế hoạch thất bại",
+            "detailNotReady": "Đang tải thông tin kế hoạch, vui lòng thử lại",
+            "title": "Chuyển kế hoạch — {{code}}",
+            "noCompatibleMachine": "Không có máy phù hợp với công đoạn của khuôn này",
+            "prevWeek": "Tuần trước",
+            "nextWeek": "Tuần sau",
+            "thisWeek": "tuần này"
+        },
         "days": {
             "week": "Tuần",
             "today": "Hôm nay",
@@ -421,9 +487,9 @@
         "actions": {
             "import": "Import",
             "addProduct": "Thêm mã hàng",
+            "restore": "Khôi phục",
             "transfer": "Chuyển",
-            "transferMachine": "Chuyển máy",
-            "transferSchedule": "Chuyển lịch"
+            "statusLockedHint": "Chỉ áp dụng cho kế hoạch đang chờ (PENDING)"
         },
         "panel": {
             "dailyTable": "Bảng ngày",
@@ -439,6 +505,7 @@
         },
         "table": {
             "total": "Tổng",
+            "deletedTag": "Đã xóa",
             "emptyDaily": "Không có kế hoạch sản xuất cho ngày đã chọn",
             "emptyFiltered": "Không có mã hàng phù hợp với bộ lọc",
             "headers": {
@@ -447,10 +514,11 @@
                 "machine": "Máy",
                 "codeVi": "Mã",
                 "productName": "Tên hàng",
-                "mold": "khuôn",
+                "mold": "Khuôn",
                 "average": "Trung bình",
                 "avgShort": "T.bình",
-                "time": "Thời gian"
+                "time": "Thời gian",
+                "status": "Trạng thái"
             },
             "pagination": {
                 "machineGroups": "Tổng {{total}} nhóm máy"
@@ -461,6 +529,11 @@
             "editTitle": "Chỉnh sửa kế hoạch"
         },
         "form": {
+            "createSuccess": "Tạo kế hoạch thành công",
+            "createError": "Tạo kế hoạch thất bại",
+            "updateSuccess": "Cập nhật kế hoạch thành công",
+            "updateError": "Cập nhật kế hoạch thất bại",
+            "fetchDetailError": "Không thể tải chi tiết kế hoạch để chỉnh sửa",
             "sections": {
                 "productInfo": "Thông tin sản phẩm",
                 "schedule": "Kế hoạch 7 ngày (thùng)"
@@ -479,12 +552,26 @@
                 "machine": {
                     "label": "Máy",
                     "placeholder": "VD: CNC-01",
-                    "required": "Vui lòng nhập máy"
+                    "required": "Vui lòng nhập máy",
+                    "selectMoldFirst": "Chọn khuôn trước"
                 },
                 "mold": {
                     "label": "Khuôn",
                     "placeholder": "VD: M-12A",
-                    "required": "Vui lòng nhập mã khuôn"
+                    "required": "Vui lòng nhập mã khuôn",
+                    "keepCurrent": "Giữ khuôn hiện tại: {{mold}}"
+                },
+                "plannedDate": {
+                    "label": "Ngày sản xuất",
+                    "required": "Vui lòng chọn ngày sản xuất"
+                },
+                "plannedQuantity": {
+                    "label": "Số lượng (thùng)",
+                    "required": "Vui lòng nhập số lượng"
+                },
+                "note": {
+                    "label": "Ghi chú",
+                    "placeholder": "Ghi chú thêm (không bắt buộc)"
                 },
                 "time": {
                     "label": "Thời gian",
@@ -518,7 +605,6 @@
             "applyOnlySelectedDay": "Chỉ áp dụng cho {{day}}. Các ngày khác trong tuần không thay đổi."
         },
         "transferSchedule": {
-            "title": "Chuyển lịch - {{code}}",
             "noQuantityToday": "Không có sản lượng để chuyển hôm nay",
             "from": "Từ",
             "day": "Ngày",
@@ -544,6 +630,13 @@
             "title": "Import kế hoạch sản xuất",
             "upload": "Tải lên",
             "hint": "File Excel chứa kế hoạch sản xuất - tối đa 10MB",
+            "uploadError": "Tải lên import thất bại",
+            "confirmError": "Xác nhận import thất bại",
+            "confirmOptions": {
+                "cancel": "Hủy phiên import",
+                "overwriteAll": "Ghi đè tất cả",
+                "overwriteRetain": "Ghi đè, giữ dữ liệu hiện tại"
+            },
             "columns": {
                 "date": "Ngày",
                 "reason": "Lý do",
@@ -552,18 +645,34 @@
                 "error": "Lỗi"
             },
             "result": {
-                "inserted": "Đã nhập",
-                "records": "{{count}} bản ghi",
-                "importedDays": "Ngày đã nhập",
-                "deferredDays": "Ngày hoãn",
-                "note": "Lưu ý",
-                "requiresConfirmation": "Cần xác nhận - sessionToken:",
                 "skippedDays": "Ngày bị bỏ qua ({{count}})",
-                "errors": "Lỗi ({{count}})"
+                "errors": "Lỗi ({{count}})",
+                "importedDaysCount": "Ngày đã nhập ({{count}})",
+                "deferredDaysCount": "Ngày cần xác nhận ({{count}})",
+                "banner": {
+                    "error": {
+                        "title": "Import thất bại — {{count}} dòng lỗi, chưa có dữ liệu nào được ghi",
+                        "description": "File chưa được nhập vào hệ thống. Sửa các lỗi bên dưới trong Excel rồi tải lên lại toàn bộ file."
+                    },
+                    "confirm": {
+                        "title": "Chưa ghi dữ liệu — {{count}} ngày bị trùng với kế hoạch đang chờ xử lý",
+                        "description": "Các ngày bên dưới đã có kế hoạch chưa hoàn tất trong hệ thống. Chọn cách xử lý bên dưới để hoàn tất import."
+                    },
+                    "success": {
+                        "title": "{{count}} bản ghi đã được ghi vào hệ thống",
+                        "description": "Kế hoạch sản xuất cho các ngày bên dưới đã cập nhật thành công."
+                    },
+                    "empty": {
+                        "title": "Không có dòng nào được ghi",
+                        "description": "Tất cả ngày trong file đã bị bỏ qua, không có dữ liệu nào để nhập."
+                    }
+                }
             }
         },
         "monitor": {
             "title": "Giám sát sản xuất",
+            "partialTag": "Hoàn thành một phần",
+            "refresh": "Tải lại",
             "statusCol": "Trạng thái",
             "lastUpdated": "Cập nhật lần cuối",
             "filterAll": "Tất cả trạng thái",
@@ -576,7 +685,9 @@
             "disconnected": "Mất kết nối",
             "lastSync": "Đồng bộ lúc: {{time}}",
             "emptyGroup": "Không có mã hàng nào ở trạng thái này",
-            "needsAction": "⚠ Cần xử lý",
+            "needsAction": "Cần xử lý",
+            "allConfirmed": "Đã xác nhận tất cả",
+            "confirmedTag": "Đã xác nhận",
             "status": {
                 "TODO": "Chờ làm",
                 "IN_PROGRESS": "Đang chạy",
@@ -625,6 +736,13 @@
             },
             "detail": {
                 "statusTrack": "Trạng thái hiện tại",
+                "plannedDate": "Ngày sản xuất",
+                "operationType": "Công đoạn",
+                "plannedQuantity": "Số lượng kế hoạch",
+                "actualQuantity": "Đã sản xuất",
+                "note": "Ghi chú",
+                "statusLogs": "Lịch sử trạng thái",
+                "noLogs": "Chưa có lịch sử trạng thái",
                 "productInfo": "Thông tin sản phẩm",
                 "weeklySchedule": "Kế hoạch sản xuất tuần",
                 "code": "Mã hàng",
@@ -1365,7 +1483,7 @@
             "offlineNote": "Không tính vào tỷ lệ phần trăm",
             "totalActiveTime": "Tổng Thời Gian Hoạt Động",
             "excludingOffline": "Không bao gồm thời gian offline",
-            "propertyCode": "Mã Tài Sản",
+            "machineCode": "Mã Máy",
             "power": "Công Suất",
             "measuredEnergy": "Năng Lượng Đo",
             "productionMetrics": "Chỉ Số Sản Xuất",
@@ -2866,25 +2984,18 @@
         "searchPlaceholder": "Tìm theo mã hoặc tên khuôn",
         "fetchError": "Không thể tải danh sách khuôn. Vui lòng thử lại.",
         "deleteSuccess": "Xóa khuôn thành công",
+        "restoreSuccess": "Khôi phục khuôn thành công",
+        "restoreError": "Khôi phục khuôn thất bại",
+        "deletedTag": "Đã xóa",
         "deleteError": "Không thể xóa khuôn. Vui lòng thử lại.",
         "updateSuccess": "Cập nhật khuôn thành công",
         "updateError": "Không thể cập nhật khuôn. Vui lòng thử lại.",
-        "moldType": {
-            "PRESS": "Ép",
-            "COMPRESS": "Nén"
-        },
-        "status": {
-            "ACTIVE": "Hoạt động",
-            "MAINTENANCE": "Bảo trì",
-            "RETIRED": "Ngừng dùng"
-        },
         "table": {
             "headers": {
                 "moldCode": "Mã Khuôn",
                 "moldName": "Tên Khuôn",
-                "quantity": "Số Lỗ",
-                "moldType": "Loại Khuôn",
-                "status": "Trạng Thái",
+                "outputPerShot": "Số Lỗ",
+                "operationType": "Công Đoạn",
                 "description": "Mô Tả",
                 "createdAt": "Ngày Tạo",
                 "updatedAt": "Ngày Cập Nhật",
@@ -2895,6 +3006,10 @@
             "deleteConfirmation": {
                 "title": "Xóa Khuôn",
                 "description": "Bạn có chắc chắn muốn xóa khuôn này? Hành động này không thể hoàn tác."
+            },
+            "restoreConfirmation": {
+                "title": "Khôi phục khuôn",
+                "description": "Khuôn sẽ được đưa trở lại danh sách sử dụng. Tiếp tục?"
             }
         },
         "form": {
@@ -2907,23 +3022,75 @@
             "fields": {
                 "moldCode": "Mã Khuôn",
                 "moldName": "Tên Khuôn",
-                "quantity": "Số Lỗ Khuôn",
-                "moldType": "Loại Khuôn",
-                "status": "Trạng Thái",
+                "outputPerShot": "Số Lỗ Khuôn",
+                "operationType": "Công Đoạn",
                 "description": "Mô Tả"
             },
             "placeholders": {
                 "moldCode": "Nhập mã khuôn (vd: KM001)",
                 "moldName": "Nhập tên khuôn",
-                "quantity": "Nhập số lỗ khuôn",
-                "moldType": "Chọn loại khuôn",
-                "status": "Chọn trạng thái",
+                "outputPerShot": "Nhập số lỗ khuôn",
+                "operationType": "Chọn công đoạn",
                 "description": "Nhập mô tả khuôn (tùy chọn)"
             },
             "validation": {
                 "required": "Trường này là bắt buộc",
                 "maxLength": "Độ dài tối đa là {{max}} ký tự",
-                "minQuantity": "Số lỗ khuôn phải lớn hơn hoặc bằng {{min}}"
+                "minOutputPerShot": "Số lỗ khuôn phải lớn hơn hoặc bằng {{min}}"
+            },
+            "buttons": {
+                "cancel": "Hủy",
+                "create": "Tạo Mới",
+                "save": "Lưu Thay Đổi",
+                "saving": "Đang lưu..."
+            }
+        }
+    },
+    "operationTypeManagement": {
+        "title": "Danh Sách Công Đoạn",
+        "addOperationType": "Thêm Công Đoạn",
+        "searchPlaceholder": "Tìm theo mã hoặc tên công đoạn",
+        "fetchError": "Không thể tải danh sách công đoạn. Vui lòng thử lại.",
+        "deleteSuccess": "Xóa công đoạn thành công",
+        "deleteError": "Không thể xóa công đoạn. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật công đoạn thành công",
+        "updateError": "Không thể cập nhật công đoạn. Vui lòng thử lại.",
+        "table": {
+            "headers": {
+                "operationTypeCode": "Mã Công Đoạn",
+                "operationTypeName": "Tên Công Đoạn",
+                "description": "Mô Tả",
+                "createdAt": "Ngày Tạo",
+                "updatedAt": "Ngày Cập Nhật",
+                "actions": "Thao Tác"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Xóa Công Đoạn",
+                "description": "Bạn có chắc chắn muốn xóa công đoạn này? Hành động này không thể hoàn tác và sẽ thất bại nếu công đoạn đang được máy hoặc khuôn sử dụng."
+            }
+        },
+        "form": {
+            "createTitle": "Tạo Công Đoạn Mới",
+            "editTitle": "Chỉnh Sửa Công Đoạn",
+            "createDescription": "Điền thông tin vào form bên dưới để tạo công đoạn mới.",
+            "editDescription": "Điền thông tin vào form bên dưới để chỉnh sửa công đoạn.",
+            "createSuccess": "Tạo công đoạn thành công",
+            "createError": "Không thể tạo công đoạn. Vui lòng thử lại.",
+            "fields": {
+                "operationTypeCode": "Mã Công Đoạn",
+                "operationTypeName": "Tên Công Đoạn",
+                "description": "Mô Tả"
+            },
+            "placeholders": {
+                "operationTypeCode": "Nhập mã công đoạn (vd: PRESS)",
+                "operationTypeName": "Nhập tên công đoạn",
+                "description": "Nhập mô tả công đoạn (tùy chọn)"
+            },
+            "validation": {
+                "required": "Trường này là bắt buộc",
+                "maxLength": "Độ dài tối đa là {{max}} ký tự"
             },
             "buttons": {
                 "cancel": "Hủy",
@@ -2969,11 +3136,12 @@
                 "createdAt": "Ngày tạo",
                 "updatedAt": "Ngày cập nhật",
                 "actions": "Hành động",
-                "propertyCode": "Mã tài sản",
+                "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "space": "Khu vực",
                 "displayOrder": "Thứ tự hiển thị",
-                "status": "Trạng thái"
+                "status": "Trạng thái",
+                "operationType": "Công đoạn"
             },
             "units": {
                 "hours": "Giờ"
@@ -2986,7 +3154,7 @@
             "selectLine": "Chọn băng chuyền",
             "codePlaceholder": "Nhập mã máy...",
             "namePlaceholder": "Nhập tên máy...",
-            "propertyPlaceholder": "VD: 11.xx.0001",
+            "machineCodePlaceholder": "VD: 11.xx.0001",
             "topicPlaceholder": "Nhập topic..."
         },
         "actions": {
@@ -3021,10 +3189,11 @@
                 "productionTime": "Thời gian sản xuất",
                 "zone": "Khu vực",
                 "machineImage": "Hình ảnh máy",
-                "propertyCode": "Mã tài sản",
+                "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "line": "Danh sách chuyền",
-                "displayOrder": "Thứ tự hiển thị"
+                "displayOrder": "Thứ tự hiển thị",
+                "operationType": "Công đoạn"
             },
             "placeholders": {
                 "machineName": "Nhập tên máy (vd: Máy CNC, Máy in 3D, Máy tiện)",
@@ -3034,10 +3203,11 @@
                 "topic": "Nhập chủ đề",
                 "productionTime": "Nhập thời gian sản xuất",
                 "zone": "Chọn một khu vực",
-                "propertyCode": "Nhập mã tài sản",
+                "machineCode": "Nhập mã máy",
                 "power": "Nhập mức điện",
                 "line": "Chọn một băng chuyền",
-                "machineImage": "Tải lên hình ảnh máy"
+                "machineImage": "Tải lên hình ảnh máy",
+                "operationType": "Chọn một công đoạn"
             },
             "validation": {
                 "required": "Trường này là bắt buộc",
@@ -3445,6 +3615,7 @@
         "operator": "Nhân viên",
         "machineList": "Danh sách máy",
         "moldList": "Danh sách Khuôn",
+        "operationTypeList": "Danh sách Công đoạn",
         "productionPlan": "Kế hoạch sản xuất",
         "processManagement": "Quản lý quy trình",
         "history": "Lịch sử",
@@ -4046,6 +4217,12 @@
         }
     },
     "notification": {
+        "production_plan": {
+            "incident_pause": {
+                "title": "Kế hoạch tạm dừng do sự cố",
+                "content": "Một kế hoạch sản xuất vừa chuyển sang tạm dừng do sự cố máy."
+            }
+        },
         "order": {
             "assigned_operators": {
                 "title": "Lệnh Sản Xuất Mới Được Giao",

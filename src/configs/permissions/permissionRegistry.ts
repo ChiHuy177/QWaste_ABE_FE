@@ -126,6 +126,73 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View production plan monitor',
     },
 
+    // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
+    // create/import chưa có bằng chứng BE đổi nên tạm giữ trên subject 'product' cũ.)
+    {
+        slug: 'production_plan:view',
+        subject: 'production_plan',
+        action: 'view',
+        routes: ['/admin/production-plan'],
+        menuKey: 'production-plan',
+        description: 'View production plans',
+    },
+    {
+        slug: 'product:create',
+        subject: 'product',
+        action: 'create',
+        routes: [],
+        description: 'Create production plan',
+    },
+    {
+        slug: 'production_plan:update',
+        subject: 'production_plan',
+        action: 'update',
+        routes: [],
+        description: 'Update production plan fields',
+    },
+    {
+        slug: 'production_plan:incident',
+        subject: 'production_plan',
+        action: 'incident',
+        routes: [],
+        description: 'Terminate/pause/defer production plan (incident actions)',
+    },
+    {
+        slug: 'production_plan:move',
+        subject: 'production_plan',
+        action: 'move',
+        routes: [],
+        description: 'Move a PENDING production plan to another machine/date',
+    },
+    {
+        slug: 'production_plan:delete',
+        subject: 'production_plan',
+        action: 'delete',
+        routes: [],
+        description: 'Delete production plan',
+    },
+    {
+        slug: 'production_plan:restore',
+        subject: 'production_plan',
+        action: 'restore',
+        routes: [],
+        description: 'Restore deleted production plan',
+    },
+    {
+        slug: 'production_plan:reorder',
+        subject: 'production_plan',
+        action: 'reorder',
+        routes: [],
+        description: 'Reorder production plans',
+    },
+    {
+        slug: 'product:import',
+        subject: 'product',
+        action: 'import',
+        routes: [],
+        description: 'Import production plans from Excel',
+    },
+
     // Machine List
     {
         slug: 'machine:view',
@@ -217,6 +284,44 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         action: 'delete',
         routes: [],
         description: 'Delete mold',
+    },
+    {
+        slug: 'mold:restore',
+        subject: 'mold',
+        action: 'restore',
+        routes: [],
+        description: 'Restore deleted mold',
+    },
+
+    // Operation Type
+    {
+        slug: 'operation_type:view',
+        subject: 'operation_type',
+        action: 'view',
+        routes: ['/admin/categories/operationType'],
+        menuKey: 'operation-type',
+        description: 'View operation type list',
+    },
+    {
+        slug: 'operation_type:create',
+        subject: 'operation_type',
+        action: 'create',
+        routes: [],
+        description: 'Create operation type',
+    },
+    {
+        slug: 'operation_type:update',
+        subject: 'operation_type',
+        action: 'update',
+        routes: [],
+        description: 'Update operation type',
+    },
+    {
+        slug: 'operation_type:delete',
+        subject: 'operation_type',
+        action: 'delete',
+        routes: [],
+        description: 'Delete operation type',
     },
 
     // Staffing

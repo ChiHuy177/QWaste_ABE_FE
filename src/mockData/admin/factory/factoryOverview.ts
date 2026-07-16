@@ -98,7 +98,6 @@ const machine = (
     machineId,
     machineCode,
     machineName,
-    propertyCode: options.propertyCode ?? `PROP-${machineCode}`,
     power: options.power ?? 7.5,
     machineDisplayOrder: options.machineDisplayOrder ?? 1,
     topic: options.topic ?? machineCode.toLowerCase(),

@@ -39,7 +39,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     }
 
     const productionPlanItems: MenuItem[] = [];
-    if (ability.can('view', 'tasks')) {
+    if (ability.can('view', 'production_plan')) {
         productionPlanItems.push(
             createMenuItem(
                 '/admin/production-plan',
@@ -76,6 +76,14 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     if (ability.can('view', 'mold')) {
         machineManagementItems.push(
             createMenuItem('/admin/categories/mold', t('sidebar.navigation.mold'))
+        );
+    }
+    if (ability.can('view', 'operation_type')) {
+        machineManagementItems.push(
+            createMenuItem(
+                '/admin/categories/operationType',
+                t('sidebar.navigation.operationType')
+            )
         );
     }
     // if (ability.can('view', 'machine_type')) {

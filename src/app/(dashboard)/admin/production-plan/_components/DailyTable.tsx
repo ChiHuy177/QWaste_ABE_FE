@@ -1,15 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Dropdown, Empty, Pagination, Table, Tooltip } from 'antd';
+import { Button, Empty, Pagination, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import {
-    DeleteOutlined,
-    EditOutlined,
-    MoreOutlined,
-    ScheduleOutlined,
-    SwapOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, HolderOutlined, SwapOutlined, UndoOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
     closestCenter,
@@ -27,73 +21,90 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import type { ProductionPlanStatus } from '@/types/ProductionPlan';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
-import { ProductionLine, ProductionProduct, ProductPosition } from './types';
+import { MachineGroupVM, PlanRowTarget, PlanRowVM } from './types';
 import styles from './ProductionPlanTable.module.css';
-import { getEffectiveMachine, getSortedProductsForDay } from '../_utils/planUtils';
 
-type DailyProductRow = ProductionProduct & {
-    lineIndex: number;
-    lineName: string;
-    productIndex: number;
+const STATUS_TAG_COLOR: Record<ProductionPlanStatus, string> = {
+    PENDING: 'default',
+    RUNNING: 'processing',
+    PAUSE: 'warning',
+    PARTIAL: 'gold',
+    COMPLETE: 'success',
 };
 
 type GroupHeaderRow = {
     type: 'group-header';
     groupKey: string;
-    machine: string;
-    lineName: string;
-    lineIndex: number;
+    machineCode: string;
+    spaceName: string;
     groupSize: number;
 };
 
-type ProductFlatRow = DailyProductRow & {
+type ProductFlatRow = PlanRowVM & {
     type: 'product';
     groupKey: string;
+    machineId: string;
+    machineCode: string;
 };
 
 type TotalFlatRow = {
     type: 'total';
     groupKey: string;
-    machine: string;
-    lineName: string;
-    lineIndex: number;
     totalCases: number;
-    totalPcs: number;
 };
 
 type FlatRow = GroupHeaderRow | ProductFlatRow | TotalFlatRow;
 
-interface MachineGroup {
-    key: string;
-    lineIndex: number;
-    lineName: string;
-    machine: string;
-    products: DailyProductRow[];
-}
-
 interface DailyTableProps {
-    lines: ProductionLine[];
+    groups: MachineGroupVM[];
     todayIndex: number;
     dateLabel: string;
     machineFilter: string;
-    onEdit: (position: ProductPosition) => void;
-    onDelete: (position: ProductPosition) => void;
-    onReorder: (lineIndex: number, activeCode: string, overCode: string) => void;
-    onTransferMachine?: (position: ProductPosition) => void;
-    onTransferSchedule?: (position: ProductPosition) => void;
+    canReorder?: boolean;
+    scrollY?: number;
+    isMobile?: boolean;
+    /** Còn thay đổi thứ tự chưa lưu ở page cha — khóa Sửa/Xóa/Chuyển. */
+    actionsLocked?: boolean;
+    onEdit: (target: PlanRowTarget) => void;
+    onDelete: (target: PlanRowTarget) => void;
+    onRestore: (target: PlanRowTarget) => void;
+    onReorder: (machineId: string, activeRowKey: string, overRowKey: string) => void;
+    /** Mở modal lưới tuần chuyển máy/lịch (hướng 1) — single instance, render ở page cha. */
+    onTransferOpen: (target: PlanRowTarget) => void;
 }
 
+const matchMachineFilter = (group: MachineGroupVM, normalizedFilter: string) =>
+    !normalizedFilter ||
+    group.machineCode.toLowerCase().includes(normalizedFilter) ||
+    group.machineName.toLowerCase().includes(normalizedFilter) ||
+    group.spaceName.toLowerCase().includes(normalizedFilter);
+
+// BE /reorder chỉ cho phép đổi sequence của plan PENDING/PAUSE — status khác khóa kéo-thả.
+const isReorderableStatus = (status: ProductionPlanStatus) =>
+    status === 'PENDING' || status === 'PAUSE';
+
+const toTarget = (record: ProductFlatRow): PlanRowTarget => ({
+    machineId: record.machineId,
+    machineCode: record.machineCode,
+    row: record,
+});
+
 export default function DailyTable({
-    lines,
+    groups,
     todayIndex,
     dateLabel,
     machineFilter,
+    canReorder = true,
+    scrollY,
+    isMobile = false,
+    actionsLocked = false,
     onEdit,
     onDelete,
+    onRestore,
     onReorder,
-    onTransferMachine,
-    onTransferSchedule,
+    onTransferOpen,
 }: DailyTableProps) {
     const { t } = useTranslation();
     const sensors = useSensors(
@@ -104,117 +115,80 @@ export default function DailyTable({
     );
     const normalizedMachineFilter = machineFilter.trim().toLowerCase();
 
-    const machineGroups = useMemo<MachineGroup[]>(() => {
-        const groups: MachineGroup[] = [];
-
-        lines.forEach((line, lineIndex) => {
-            const groupedProducts = new Map<string, DailyProductRow[]>();
-
-            const sortedProducts = getSortedProductsForDay(line, todayIndex);
-
-            sortedProducts.forEach((product) => {
-                if (product.schedule[todayIndex] <= 0) return;
-                const effectiveMachine = getEffectiveMachine(product, todayIndex);
-                if (
-                    normalizedMachineFilter &&
-                    !effectiveMachine.toLowerCase().includes(normalizedMachineFilter)
-                ) {
-                    return;
-                }
-
-                const originalProductIndex = line.products.findIndex((p) => p.code === product.code);
-
-                const current = groupedProducts.get(effectiveMachine) ?? [];
-                current.push({
-                    ...product,
-                    lineIndex,
-                    lineName: line.spaceName,
-                    productIndex: originalProductIndex,
-                });
-                groupedProducts.set(effectiveMachine, current);
-            });
-
-            groupedProducts.forEach((products, machine) => {
-                groups.push({
-                    key: `${line.spaceCode}-${machine}`,
-                    lineIndex,
-                    lineName: line.spaceName,
-                    machine,
-                    products,
-                });
-            });
-        });
-
-        return groups;
-    }, [lines, normalizedMachineFilter, todayIndex]);
+    const visibleGroups = useMemo(
+        () =>
+            groups.filter(
+                (group) =>
+                    group.products.length > 0 && matchMachineFilter(group, normalizedMachineFilter)
+            ),
+        [groups, normalizedMachineFilter]
+    );
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [machineGroups.length]);
+    }, [visibleGroups.length]);
 
     const paginatedGroups = useMemo(
-        () => machineGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-        [machineGroups, currentPage, pageSize]
+        () => visibleGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [visibleGroups, currentPage, pageSize]
     );
 
-    const { flatRows, sortableKeys, productGroupMap } = useMemo(() => {
+    const { flatRows, sortableKeys, rowGroupMap } = useMemo(() => {
         const rows: FlatRow[] = [];
         const keys: string[] = [];
-        const groupMap = new Map<string, { groupKey: string; lineIndex: number }>();
+        const groupMap = new Map<string, { groupKey: string; machineId: string }>();
 
         paginatedGroups.forEach((group) => {
-            const totalCases = group.products.reduce((sum, p) => sum + p.schedule[todayIndex], 0);
-            const totalPcs = group.products.reduce(
-                (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
-                0
-            );
+            const groupKey = group.machineId;
+            const totalCases = group.products
+                .filter((p) => !p.isDeleted)
+                .reduce((sum, p) => sum + p.schedule[todayIndex], 0);
 
             // Anchor row: holds the machine rowspan cell, not draggable.
             // groupSize + 2 = 1 (this row) + groupSize (products) + 1 (total).
             rows.push({
                 type: 'group-header',
-                groupKey: group.key,
-                machine: group.machine,
-                lineName: group.lineName,
-                lineIndex: group.lineIndex,
+                groupKey,
+                machineCode: group.machineCode,
+                spaceName: group.spaceName,
                 groupSize: group.products.length,
             });
 
             group.products.forEach((product) => {
-                rows.push({ ...product, type: 'product', groupKey: group.key });
-                keys.push(product.code);
-                groupMap.set(product.code, { groupKey: group.key, lineIndex: group.lineIndex });
+                rows.push({
+                    ...product,
+                    type: 'product',
+                    groupKey,
+                    machineId: group.machineId,
+                    machineCode: group.machineCode,
+                });
+                if (!product.isDeleted && isReorderableStatus(product.status)) {
+                    keys.push(product.rowKey);
+                    groupMap.set(product.rowKey, { groupKey, machineId: group.machineId });
+                }
             });
 
-            rows.push({
-                type: 'total',
-                groupKey: group.key,
-                machine: group.machine,
-                lineName: group.lineName,
-                lineIndex: group.lineIndex,
-                totalCases,
-                totalPcs,
-            });
+            rows.push({ type: 'total', groupKey, totalCases });
         });
 
-        return { flatRows: rows, sortableKeys: keys, productGroupMap: groupMap };
+        return { flatRows: rows, sortableKeys: keys, rowGroupMap: groupMap };
     }, [paginatedGroups, todayIndex]);
 
     const sameGroupCollisionDetection = useCallback<CollisionDetection>(
         (args) => {
-            const activeGroupKey = productGroupMap.get(String(args.active.id))?.groupKey;
+            const activeGroupKey = rowGroupMap.get(String(args.active.id))?.groupKey;
             if (!activeGroupKey) return [];
 
             const sameGroupContainers = args.droppableContainers.filter(
-                (c) => productGroupMap.get(String(c.id))?.groupKey === activeGroupKey
+                (c) => rowGroupMap.get(String(c.id))?.groupKey === activeGroupKey
             );
 
             return closestCenter({ ...args, droppableContainers: sameGroupContainers });
         },
-        [productGroupMap]
+        [rowGroupMap]
     );
 
     // Returns the onCell override that hides a cell inside the anchor (group-header) row.
@@ -240,7 +214,7 @@ export default function DailyTable({
                         ),
                         key: 'machine',
                         width: 170,
-                        fixed: 'left',
+                        fixed: isMobile ? undefined : 'left',
                         className: styles.dailySheetMachineColumn,
                         onCell: (record) => {
                             // Anchor row: machine cell spans itself + all products + total row.
@@ -254,8 +228,8 @@ export default function DailyTable({
                             if (record.type !== 'group-header') return null;
                             return (
                                 <div className={styles.dailySheetMachineCell}>
-                                    <strong>{record.machine}</strong>
-                                    <span>{record.lineName}</span>
+                                    <strong>{record.machineCode}</strong>
+                                    <span>{record.spaceName}</span>
                                 </div>
                             );
                         },
@@ -270,7 +244,16 @@ export default function DailyTable({
                         width: 48,
                         align: 'center',
                         onCell: anchorCell,
-                        render: (_, record) => (record.type === 'product' ? <DragHandle /> : null),
+                        render: (_, record) => {
+                            if (record.type !== 'product' || record.isDeleted || !canReorder)
+                                return null;
+                            if (isReorderableStatus(record.status)) return <DragHandle />;
+                            return (
+                                <Tooltip title={t('productionPlan.reorder.statusLockedDragHint')}>
+                                    <HolderOutlined style={{ color: 'var(--plan-color-text-tertiary)' }} />
+                                </Tooltip>
+                            );
+                        },
                     },
                     {
                         title: (
@@ -280,14 +263,23 @@ export default function DailyTable({
                             </div>
                         ),
                         key: 'code',
-                        width: 120,
-                        fixed: 'left',
+                        width: 140,
+                        fixed: isMobile ? undefined : 'left',
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
                                 return <strong>{t('productionPlan.table.total')}</strong>;
                             if (record.type === 'group-header') return null;
-                            return <strong>{record.code}</strong>;
+                            return (
+                                <>
+                                    <strong>{record.code}</strong>
+                                    {record.isDeleted && (
+                                        <Tag style={{ marginLeft: 6 }}>
+                                            {t('productionPlan.table.deletedTag')}
+                                        </Tag>
+                                    )}
+                                </>
+                            );
                         },
                     },
                     {
@@ -305,35 +297,9 @@ export default function DailyTable({
                             </div>
                         ),
                         key: 'mold',
-                        width: 100,
+                        width: 110,
                         onCell: anchorCell,
-                        render: (_, record) => (record.type === 'product' ? record.mold : null),
-                    },
-                    {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.average')}</span>
-                                <span>Average</span>
-                            </div>
-                        ),
-                        key: 'pcsMultiplier',
-                        width: 100,
-                        align: 'right',
-                        onCell: anchorCell,
-                        render: (_, record) =>
-                            record.type === 'product' ? record.pcsMultiplier : null,
-                    },
-                    {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.time')}</span>
-                                <span>Time</span>
-                            </div>
-                        ),
-                        key: 'time',
-                        width: 120,
-                        onCell: anchorCell,
-                        render: (_, record) => (record.type === 'product' ? record.time : null),
+                        render: (_, record) => (record.type === 'product' ? record.moldCode : null),
                     },
                     {
                         title: (
@@ -348,40 +314,23 @@ export default function DailyTable({
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
-                                return record.totalCases.toLocaleString('vi-VN');
+                                return <strong>{record.totalCases.toLocaleString('vi-VN')}</strong>;
                             if (record.type === 'group-header') return null;
                             return record.schedule[todayIndex];
                         },
                     },
                     {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.units.pcs')}</span>
-                                <span>(pcs)</span>
-                            </div>
-                        ),
-                        key: 'pcs',
-                        width: 100,
-                        align: 'right',
-                        className: styles.dailySheetPcsColumn,
-                        onCell: (record) => ({
-                            ...anchorCell(record),
-                            className:
-                                record.type === 'group-header'
-                                    ? styles.dailyGroupAnchorCell
-                                    : styles.dailySheetPcsColumn,
-                        }),
+                        title: t('productionPlan.table.headers.status'),
+                        key: 'status',
+                        width: 130,
+                        align: 'center',
+                        onCell: anchorCell,
                         render: (_, record) => {
-                            if (record.type === 'total') {
-                                return <strong>{record.totalPcs.toLocaleString('vi-VN')}</strong>;
-                            }
-                            if (record.type === 'group-header') return null;
+                            if (record.type !== 'product') return null;
                             return (
-                                <strong>
-                                    {(
-                                        record.schedule[todayIndex] * record.pcsMultiplier
-                                    ).toLocaleString('vi-VN')}
-                                </strong>
+                                <Tag color={STATUS_TAG_COLOR[record.status]}>
+                                    {t(`productionPlan.status.${record.status}`)}
+                                </Tag>
                             );
                         },
                     },
@@ -393,53 +342,81 @@ export default function DailyTable({
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type !== 'product') return null;
-                            const position = {
-                                lineIndex: record.lineIndex,
-                                productIndex: record.productIndex,
-                            };
+                            const target = toTarget(record);
+                            const lockedHint = t('productionPlan.reorder.lockedActionHint');
+
+                            if (record.isDeleted) {
+                                return (
+                                    <Tooltip
+                                        title={
+                                            actionsLocked
+                                                ? lockedHint
+                                                : t('productionPlan.actions.restore')
+                                        }
+                                    >
+                                        <Button
+                                            type="text"
+                                            icon={<UndoOutlined />}
+                                            disabled={actionsLocked}
+                                            onClick={() => onRestore(target)}
+                                        />
+                                    </Tooltip>
+                                );
+                            }
+
+                            // BE: update/delete chỉ cho PENDING (409 khác); transfer cho phép
+                            // PENDING (/move) và PAUSE (/incident/defer) — status khác thì ẩn.
+                            const isPending = record.status === 'PENDING';
+                            const isPause = record.status === 'PAUSE';
+                            const canEdit = !actionsLocked && isPending;
+                            const canDelete = !actionsLocked && isPending;
+                            const canTransfer = !actionsLocked && (isPending || isPause);
+                            const statusLockedHint = t('productionPlan.actions.statusLockedHint');
+
                             return (
                                 <div className={styles.actions}>
-                                    <Tooltip title={t('common.edit')}>
+                                    <Tooltip
+                                        title={
+                                            actionsLocked
+                                                ? lockedHint
+                                                : !isPending
+                                                  ? statusLockedHint
+                                                  : t('common.edit')
+                                        }
+                                    >
                                         <Button
                                             type="text"
                                             icon={<EditOutlined />}
-                                            onClick={() => onEdit(position)}
+                                            disabled={!canEdit}
+                                            onClick={() => onEdit(target)}
                                         />
                                     </Tooltip>
-                                    <Tooltip title={t('common.delete')}>
+                                    <Tooltip
+                                        title={
+                                            actionsLocked
+                                                ? lockedHint
+                                                : !isPending
+                                                  ? statusLockedHint
+                                                  : t('common.delete')
+                                        }
+                                    >
                                         <Button
                                             danger
                                             type="text"
                                             icon={<DeleteOutlined />}
-                                            onClick={() => onDelete(position)}
+                                            disabled={!canDelete}
+                                            onClick={() => onDelete(target)}
                                         />
                                     </Tooltip>
-                                    <Dropdown
-                                        trigger={['click']}
-                                        placement="bottomRight"
-                                        menu={{
-                                            items: [
-                                                {
-                                                    key: 'transfer-machine',
-                                                    label: t(
-                                                        'productionPlan.actions.transferMachine'
-                                                    ),
-                                                    icon: <SwapOutlined />,
-                                                    onClick: () => onTransferMachine?.(position),
-                                                },
-                                                {
-                                                    key: 'transfer-schedule',
-                                                    label: t(
-                                                        'productionPlan.actions.transferSchedule'
-                                                    ),
-                                                    icon: <ScheduleOutlined />,
-                                                    onClick: () => onTransferSchedule?.(position),
-                                                },
-                                            ],
-                                        }}
-                                    >
-                                        <Button type="text" icon={<MoreOutlined />} />
-                                    </Dropdown>
+                                    {canTransfer && (
+                                        <Tooltip title={t('productionPlan.actions.transfer')}>
+                                            <Button
+                                                type="text"
+                                                icon={<SwapOutlined />}
+                                                onClick={() => onTransferOpen(target)}
+                                            />
+                                        </Tooltip>
+                                    )}
                                 </div>
                             );
                         },
@@ -447,67 +424,96 @@ export default function DailyTable({
                 ],
             },
         ],
-        [dateLabel, onDelete, onEdit, onTransferMachine, onTransferSchedule, t, todayIndex]
+        [
+            actionsLocked,
+            canReorder,
+            dateLabel,
+            isMobile,
+            onDelete,
+            onEdit,
+            onRestore,
+            onTransferOpen,
+            t,
+            todayIndex,
+        ]
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
-        const activeInfo = productGroupMap.get(String(active.id));
-        const overInfo = productGroupMap.get(String(over.id));
+        const activeInfo = rowGroupMap.get(String(active.id));
+        const overInfo = rowGroupMap.get(String(over.id));
         if (!activeInfo || !overInfo || activeInfo.groupKey !== overInfo.groupKey) return;
 
-        onReorder(activeInfo.lineIndex, String(active.id), String(over.id));
+        onReorder(activeInfo.machineId, String(active.id), String(over.id));
     };
 
-    if (machineGroups.length === 0) {
+    if (visibleGroups.length === 0) {
         return <Empty description={t('productionPlan.table.emptyDaily')} />;
     }
 
     return (
-        <>
-            <DndContext
-                sensors={sensors}
-                collisionDetection={sameGroupCollisionDetection}
-                modifiers={[restrictToVerticalAxis]}
-                onDragEnd={handleDragEnd}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={sameGroupCollisionDetection}
+                    modifiers={[restrictToVerticalAxis]}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext items={sortableKeys} strategy={verticalListSortingStrategy}>
+                        <Table<FlatRow>
+                            className={`${styles.planAntTable} ${styles.dailySheetTable}`}
+                            components={{
+                                body: {
+                                    row: SmartTableRow,
+                                },
+                            }}
+                            columns={columns}
+                            dataSource={flatRows}
+                            rowKey={(record) => {
+                                if (record.type === 'product') return record.rowKey;
+                                if (record.type === 'total') return `${record.groupKey}-total`;
+                                return `${record.groupKey}-header`;
+                            }}
+                            rowClassName={(record) => {
+                                if (record.type === 'total') return styles.dailySheetTotalRow;
+                                if (record.type === 'product' && record.isDeleted) {
+                                    return styles.deletedRow;
+                                }
+                                return '';
+                            }}
+                            onRow={(record) =>
+                                ({
+                                    'data-row-type': record.type,
+                                    'data-draggable':
+                                        record.type === 'product' &&
+                                        !record.isDeleted &&
+                                        canReorder &&
+                                        isReorderableStatus(record.status),
+                                }) as React.HTMLAttributes<HTMLTableRowElement>
+                            }
+                            pagination={false}
+                            bordered
+                            size="small"
+                            scroll={{ x: 1100, y: scrollY }}
+                        />
+                    </SortableContext>
+                </DndContext>
+            </div>
+            <div
+                style={{
+                    marginTop: 16,
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    flexShrink: 0,
+                }}
             >
-                <SortableContext items={sortableKeys} strategy={verticalListSortingStrategy}>
-                    <Table<FlatRow>
-                        className={`${styles.planAntTable} ${styles.dailySheetTable}`}
-                        components={{
-                            body: {
-                                row: SmartTableRow,
-                            },
-                        }}
-                        columns={columns}
-                        dataSource={flatRows}
-                        rowKey={(record) => {
-                            if (record.type === 'product') return record.code;
-                            if (record.type === 'total') return `${record.groupKey}-total`;
-                            return `${record.groupKey}-header`;
-                        }}
-                        rowClassName={(record) =>
-                            record.type === 'total' ? styles.dailySheetTotalRow : ''
-                        }
-                        onRow={(record) =>
-                            ({
-                                'data-row-type': record.type,
-                            }) as React.HTMLAttributes<HTMLTableRowElement>
-                        }
-                        pagination={false}
-                        bordered
-                        size="small"
-                        scroll={{ x: 1330 }}
-                    />
-                </SortableContext>
-            </DndContext>
-            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
                 <Pagination
                     current={currentPage}
                     pageSize={pageSize}
-                    total={machineGroups.length}
+                    total={visibleGroups.length}
                     onChange={(page, size) => {
                         setCurrentPage(page);
                         setPageSize(size);
@@ -517,9 +523,8 @@ export default function DailyTable({
                     showTotal={(total) =>
                         t('productionPlan.table.pagination.machineGroups', { total })
                     }
-                    hideOnSinglePage
                 />
             </div>
-        </>
+        </div>
     );
 }

@@ -1,15 +1,18 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
+import { OperationType } from '@/types/OperationType';
 
 const VALIDATION = Object.freeze({
     MOLD_CODE: { max: 50 },
-    MOLD_NAME: { max: 255 },
+    MOLD_NAME: { max: 100 },
     DESCRIPTION: { max: 2000 },
-    QUANTITY: { min: 1 },
+    OUTPUT_PER_SHOT: { min: 1 },
 });
 
 export const getMoldFormFields = (
     t: (key: string, options?: any) => string,
-    mode: 'create' | 'edit'
+    mode: 'create' | 'edit',
+    operationTypeOptions: { value: number; label: string }[] = [],
+    isLoadingOperationTypes: boolean = false
 ): FormFieldConfig[] => [
     {
         name: 'moldCode',
@@ -50,48 +53,32 @@ export const getMoldFormFields = (
         span: { xs: 24, sm: 12 },
     },
     {
-        name: 'quantity',
-        label: t('moldManagement.form.fields.quantity'),
+        name: 'outputPerShot',
+        label: t('moldManagement.form.fields.outputPerShot'),
         type: 'number',
-        placeholder: t('moldManagement.form.placeholders.quantity'),
+        placeholder: t('moldManagement.form.placeholders.outputPerShot'),
         required: true,
-        min: VALIDATION.QUANTITY.min,
+        min: VALIDATION.OUTPUT_PER_SHOT.min,
         rules: [
             { required: true, message: t('moldManagement.form.validation.required') },
             {
                 type: 'number',
-                min: VALIDATION.QUANTITY.min,
-                message: t('moldManagement.form.validation.minQuantity', {
-                    min: VALIDATION.QUANTITY.min,
+                min: VALIDATION.OUTPUT_PER_SHOT.min,
+                message: t('moldManagement.form.validation.minOutputPerShot', {
+                    min: VALIDATION.OUTPUT_PER_SHOT.min,
                 }),
             },
         ],
         span: { xs: 24, sm: 12 },
     },
     {
-        name: 'moldType',
-        label: t('moldManagement.form.fields.moldType'),
+        name: 'operationTypeId',
+        label: t('moldManagement.form.fields.operationType'),
         type: 'select',
-        placeholder: t('moldManagement.form.placeholders.moldType'),
+        placeholder: t('moldManagement.form.placeholders.operationType'),
         required: true,
-        options: [
-            { value: 'PRESS', label: t('moldManagement.moldType.PRESS') },
-            { value: 'COMPRESS', label: t('moldManagement.moldType.COMPRESS') },
-        ],
-        rules: [{ required: true, message: t('moldManagement.form.validation.required') }],
-        span: { xs: 24, sm: 12 },
-    },
-    {
-        name: 'status',
-        label: t('moldManagement.form.fields.status'),
-        type: 'select',
-        placeholder: t('moldManagement.form.placeholders.status'),
-        required: true,
-        options: [
-            { value: 'ACTIVE', label: t('moldManagement.status.ACTIVE') },
-            { value: 'MAINTENANCE', label: t('moldManagement.status.MAINTENANCE') },
-            { value: 'RETIRED', label: t('moldManagement.status.RETIRED') },
-        ],
+        loading: isLoadingOperationTypes,
+        options: operationTypeOptions,
         rules: [{ required: true, message: t('moldManagement.form.validation.required') }],
         span: { xs: 24, sm: 12 },
     },
@@ -115,3 +102,9 @@ export const getMoldFormFields = (
         span: { xs: 24 },
     },
 ];
+
+export const toOperationTypeOptions = (operationTypes: OperationType[]) =>
+    operationTypes.map((operationType) => ({
+        value: operationType.operationTypeId,
+        label: `${operationType.operationTypeCode} — ${operationType.operationTypeName}`,
+    }));

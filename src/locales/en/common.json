@@ -339,6 +339,7 @@
             "electric": "Electric overview",
             "machineList": "Machine List",
             "mold": "Mold List",
+            "operationType": "Operation Type List",
             "factory": "Factory List",
             "factoryOverview": "Space Monitoring",
             "floorMap": "Floor Map",
@@ -391,6 +392,71 @@
     "productionPlan": {
         "title": "Production Plan",
         "headerTitle": "Production Plan - {{label}}",
+        "fetchError": "Failed to load production plans",
+        "moldFetchError": "Failed to load mold list",
+        "deleteSuccess": "Plan deleted successfully",
+        "deleteError": "Failed to delete plan",
+        "restoreSuccess": "Plan restored successfully",
+        "restoreError": "Failed to restore plan",
+        "reorderError": "Failed to reorder plans",
+        "reorder": {
+            "save": "Save order",
+            "saveSuccess": "Order saved successfully",
+            "discard": "Discard changes",
+            "unsavedTag": "Unsaved order",
+            "confirmTitle": "Unsaved order changes",
+            "confirmMessage": "You reordered products but haven't saved yet. Please save or discard the changes before continuing.",
+            "saveAndContinue": "Save and continue",
+            "discardAndContinue": "Discard and continue",
+            "lockedActionHint": "Save or discard the order changes before doing this",
+            "lockedFilterHint": "Save or discard the order changes before filtering",
+            "lockedCreateHint": "Save or discard the order changes before adding a product",
+            "lockedImportHint": "Save or discard the order changes before importing",
+            "statusLockedDragHint": "Only Pending or Paused plans can be reordered"
+        },
+        "status": {
+            "PENDING": "Pending",
+            "RUNNING": "Running",
+            "PAUSE": "Paused",
+            "PARTIAL": "Partially completed",
+            "COMPLETE": "Completed"
+        },
+        "trigger": {
+            "MQTT_RUN": "Machine running",
+            "MQTT_ERROR": "Machine error",
+            "MQTT_OFFLINE": "Machine offline",
+            "MQTT_IDLE": "Machine idle",
+            "AUTO_ADVANCE": "Auto advance",
+            "MANUAL": "Manual"
+        },
+        "incidentReason": {
+            "WAITING_MATERIALS": "Waiting for materials",
+            "TOOL_ADJUSTMENT": "Tool adjustment",
+            "SENSOR_CALIBRATION": "Sensor calibration",
+            "MOLD_DAMAGE": "Mold damage",
+            "MACHINE_BREAKDOWN": "Machine breakdown",
+            "QUALITY_ISSUE": "Quality issue",
+            "ORDER_CANCELLED": "Order cancelled",
+            "PRODUCTION_DISCONTINUED": "Production discontinued",
+            "OTHER": "Other"
+        },
+        "incident": {
+            "reasonLabel": "Reason",
+            "reasonPlaceholder": "Select a reason",
+            "noteLabel": "Note",
+            "notePlaceholder": "Details (required when Other is selected)",
+            "noteRequiredForOther": "Please enter details when selecting Other"
+        },
+        "transfer": {
+            "success": "Plan transferred successfully",
+            "error": "Failed to transfer plan",
+            "detailNotReady": "Plan details are still loading, please retry",
+            "title": "Transfer plan — {{code}}",
+            "noCompatibleMachine": "No machine matches this mold's operation type",
+            "prevWeek": "Previous week",
+            "nextWeek": "Next week",
+            "thisWeek": "this week"
+        },
         "days": {
             "week": "Week",
             "today": "Today",
@@ -430,9 +496,9 @@
         "actions": {
             "import": "Import",
             "addProduct": "Add product code",
+            "restore": "Restore",
             "transfer": "Transfer",
-            "transferMachine": "Transfer machine",
-            "transferSchedule": "Transfer schedule"
+            "statusLockedHint": "Only available for PENDING plans"
         },
         "panel": {
             "dailyTable": "Daily table",
@@ -448,6 +514,7 @@
         },
         "table": {
             "total": "Total",
+            "deletedTag": "Deleted",
             "emptyDaily": "No production plan for the selected day",
             "emptyFiltered": "No product codes match the filter",
             "headers": {
@@ -456,10 +523,11 @@
                 "machine": "Machine",
                 "codeVi": "Code",
                 "productName": "Product name",
-                "mold": "mold",
+                "mold": "Mold",
                 "average": "Average",
                 "avgShort": "Avg.",
-                "time": "Time"
+                "time": "Time",
+                "status": "Status"
             },
             "pagination": {
                 "machineGroups": "Total {{total}} machine groups"
@@ -470,6 +538,11 @@
             "editTitle": "Edit plan"
         },
         "form": {
+            "createSuccess": "Plan created successfully",
+            "createError": "Failed to create plan",
+            "updateSuccess": "Plan updated successfully",
+            "updateError": "Failed to update plan",
+            "fetchDetailError": "Failed to load plan details for editing",
             "sections": {
                 "productInfo": "Product information",
                 "schedule": "7-day plan (cases)"
@@ -488,12 +561,26 @@
                 "machine": {
                     "label": "Machine",
                     "placeholder": "Example: CNC-01",
-                    "required": "Please enter a machine"
+                    "required": "Please enter a machine",
+                    "selectMoldFirst": "Select a mold first"
                 },
                 "mold": {
                     "label": "Mold",
                     "placeholder": "Example: M-12A",
-                    "required": "Please enter a mold code"
+                    "required": "Please enter a mold code",
+                    "keepCurrent": "Keep current mold: {{mold}}"
+                },
+                "plannedDate": {
+                    "label": "Production date",
+                    "required": "Please select the production date"
+                },
+                "plannedQuantity": {
+                    "label": "Quantity (cases)",
+                    "required": "Please enter the quantity"
+                },
+                "note": {
+                    "label": "Note",
+                    "placeholder": "Additional note (optional)"
                 },
                 "time": {
                     "label": "Time",
@@ -527,7 +614,6 @@
             "applyOnlySelectedDay": "Only applies to {{day}}. Other days in the week will not change."
         },
         "transferSchedule": {
-            "title": "Transfer schedule - {{code}}",
             "noQuantityToday": "There is no quantity to transfer today",
             "from": "From",
             "day": "Day",
@@ -553,6 +639,13 @@
             "title": "Import production plan",
             "upload": "Upload",
             "hint": "Excel file containing the production plan - maximum 10MB",
+            "uploadError": "Failed to upload import file",
+            "confirmError": "Failed to confirm import",
+            "confirmOptions": {
+                "cancel": "Cancel import session",
+                "overwriteAll": "Overwrite all",
+                "overwriteRetain": "Overwrite, retain existing data"
+            },
             "columns": {
                 "date": "Date",
                 "reason": "Reason",
@@ -561,18 +654,34 @@
                 "error": "Error"
             },
             "result": {
-                "inserted": "Imported",
-                "records": "{{count}} records",
-                "importedDays": "Imported days",
-                "deferredDays": "Deferred days",
-                "note": "Note",
-                "requiresConfirmation": "Confirmation required - sessionToken:",
                 "skippedDays": "Skipped days ({{count}})",
-                "errors": "Errors ({{count}})"
+                "errors": "Errors ({{count}})",
+                "importedDaysCount": "Imported days ({{count}})",
+                "deferredDaysCount": "Days needing confirmation ({{count}})",
+                "banner": {
+                    "error": {
+                        "title": "Import failed — {{count}} row errors, nothing was written",
+                        "description": "The file was not imported. Fix the errors below in Excel, then re-upload the whole file."
+                    },
+                    "confirm": {
+                        "title": "Not written yet — {{count}} day(s) conflict with a pending plan",
+                        "description": "The days below already have an unfinished plan in the system. Choose how to proceed to finish the import."
+                    },
+                    "success": {
+                        "title": "{{count}} records were written to the system",
+                        "description": "The production plan for the days below has been updated successfully."
+                    },
+                    "empty": {
+                        "title": "Nothing was written",
+                        "description": "Every day in the file was skipped — there was no data to import."
+                    }
+                }
             }
         },
         "monitor": {
             "title": "Production Monitor",
+            "partialTag": "Partially completed",
+            "refresh": "Refresh",
             "statusCol": "Status",
             "lastUpdated": "Last updated",
             "filterAll": "All statuses",
@@ -585,7 +694,9 @@
             "disconnected": "Disconnected",
             "lastSync": "Last sync: {{time}}",
             "emptyGroup": "No product codes in this status",
-            "needsAction": "⚠ Needs Action",
+            "needsAction": "Needs Action",
+            "allConfirmed": "All Confirmed",
+            "confirmedTag": "Confirmed",
             "status": {
                 "TODO": "Todo",
                 "IN_PROGRESS": "In Progress",
@@ -634,6 +745,13 @@
             },
             "detail": {
                 "statusTrack": "Current Status",
+                "plannedDate": "Production date",
+                "operationType": "Operation",
+                "plannedQuantity": "Planned quantity",
+                "actualQuantity": "Produced",
+                "note": "Note",
+                "statusLogs": "Status history",
+                "noLogs": "No status history yet",
                 "productInfo": "Product Information",
                 "weeklySchedule": "Weekly Production Schedule",
                 "code": "Product Code",
@@ -1407,7 +1525,7 @@
             "offlineNote": "Not included in percentage calculation",
             "totalActiveTime": "Total Active Time",
             "excludingOffline": "Excluding offline time",
-            "propertyCode": "Property Code",
+            "machineCode": "Machine Code",
             "power": "Power Rating",
             "measuredEnergy": "Measured Energy",
             "productionMetrics": "Production Metrics",
@@ -2221,25 +2339,18 @@
         "searchPlaceholder": "Search by mold code or name",
         "fetchError": "Failed to fetch mold list. Please try again.",
         "deleteSuccess": "Mold deleted successfully",
+        "restoreSuccess": "Mold restored successfully",
+        "restoreError": "Failed to restore mold",
+        "deletedTag": "Deleted",
         "deleteError": "Failed to delete mold. Please try again.",
         "updateSuccess": "Mold updated successfully",
         "updateError": "Failed to update mold. Please try again.",
-        "moldType": {
-            "PRESS": "Press",
-            "COMPRESS": "Compress"
-        },
-        "status": {
-            "ACTIVE": "Active",
-            "MAINTENANCE": "Maintenance",
-            "RETIRED": "Retired"
-        },
         "table": {
             "headers": {
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
-                "quantity": "Cavities",
-                "moldType": "Mold Type",
-                "status": "Status",
+                "outputPerShot": "Cavities",
+                "operationType": "Operation",
                 "description": "Description",
                 "createdAt": "Created At",
                 "updatedAt": "Updated At",
@@ -2250,6 +2361,10 @@
             "deleteConfirmation": {
                 "title": "Delete Mold",
                 "description": "Are you sure you want to delete this mold? This action cannot be undone."
+            },
+            "restoreConfirmation": {
+                "title": "Restore Mold",
+                "description": "The mold will return to the active list. Continue?"
             }
         },
         "form": {
@@ -2262,23 +2377,75 @@
             "fields": {
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
-                "quantity": "Number of Cavities",
-                "moldType": "Mold Type",
-                "status": "Status",
+                "outputPerShot": "Number of Cavities",
+                "operationType": "Operation",
                 "description": "Description"
             },
             "placeholders": {
                 "moldCode": "Enter mold code (e.g. KM001)",
                 "moldName": "Enter mold name",
-                "quantity": "Enter number of cavities",
-                "moldType": "Select mold type",
-                "status": "Select status",
+                "outputPerShot": "Enter number of cavities",
+                "operationType": "Select operation",
                 "description": "Enter mold description (optional)"
             },
             "validation": {
                 "required": "This field is required",
                 "maxLength": "Maximum length is {{max}} characters",
-                "minQuantity": "Number of cavities must be at least {{min}}"
+                "minOutputPerShot": "Number of cavities must be at least {{min}}"
+            },
+            "buttons": {
+                "cancel": "Cancel",
+                "create": "Create",
+                "save": "Save Changes",
+                "saving": "Saving..."
+            }
+        }
+    },
+    "operationTypeManagement": {
+        "title": "Operation Type List",
+        "addOperationType": "Add Operation Type",
+        "searchPlaceholder": "Search by operation type code or name",
+        "fetchError": "Failed to fetch operation type list. Please try again.",
+        "deleteSuccess": "Operation type deleted successfully",
+        "deleteError": "Failed to delete operation type. Please try again.",
+        "updateSuccess": "Operation type updated successfully",
+        "updateError": "Failed to update operation type. Please try again.",
+        "table": {
+            "headers": {
+                "operationTypeCode": "Operation Type Code",
+                "operationTypeName": "Operation Type Name",
+                "description": "Description",
+                "createdAt": "Created At",
+                "updatedAt": "Updated At",
+                "actions": "Actions"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Delete Operation Type",
+                "description": "Are you sure you want to delete this operation type? This action cannot be undone and will fail if the operation type is used by any machine or mold."
+            }
+        },
+        "form": {
+            "createTitle": "Create New Operation Type",
+            "editTitle": "Edit Operation Type",
+            "createDescription": "Fill in the form below to create a new operation type.",
+            "editDescription": "Fill in the form below to edit the operation type.",
+            "createSuccess": "Operation type created successfully",
+            "createError": "Failed to create operation type. Please try again.",
+            "fields": {
+                "operationTypeCode": "Operation Type Code",
+                "operationTypeName": "Operation Type Name",
+                "description": "Description"
+            },
+            "placeholders": {
+                "operationTypeCode": "Enter operation type code (e.g. PRESS)",
+                "operationTypeName": "Enter operation type name",
+                "description": "Enter operation type description (optional)"
+            },
+            "validation": {
+                "required": "This field is required",
+                "maxLength": "Maximum length is {{max}} characters"
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -2310,7 +2477,7 @@
             "title": "Filter",
             "codePlaceholder": "Enter machine code...",
             "namePlaceholder": "Enter machine name...",
-            "propertyPlaceholder": "e.g., 11.xx.0001",
+            "machineCodePlaceholder": "e.g., 11.xx.0001",
             "topicPlaceholder": "Enter topic..."
         },
         "deleteSuccess": "Machine deleted successfully",
@@ -2334,11 +2501,12 @@
                 "createdAt": "Created At",
                 "updatedAt": "Updated At",
                 "actions": "Actions",
-                "propertyCode": "Property Code",
+                "machineCode": "Machine Code",
                 "power": "Power",
                 "space": "Space",
                 "displayOrder": "Display Order",
-                "status": "Status"
+                "status": "Status",
+                "operationType": "Operation Type"
             },
             "units": {
                 "hours": "Hours"
@@ -2375,11 +2543,12 @@
                 "productionTime": "Production Time",
                 "zone": "Zone",
                 "machineImage": "Machine Image",
-                "propertyCode": "Property Code",
+                "machineCode": "Machine Code",
                 "power": "Power",
                 "line": "Line List",
                 "space": "Space",
-                "displayOrder": "Display Order"
+                "displayOrder": "Display Order",
+                "operationType": "Operation Type"
             },
             "placeholders": {
                 "machineName": "Enter the machine name (e.g., CNC Machine, 3D Printer, Lathe)",
@@ -2389,10 +2558,11 @@
                 "productionTime": "Enter production time",
                 "zone": "Select a zone",
                 "machineImage": "Upload machine image",
-                "propertyCode": "Enter property code",
+                "machineCode": "Enter machine code",
                 "power": "Enter power",
                 "line": "Choose a line",
-                "space": "Choose a space"
+                "space": "Choose a space",
+                "operationType": "Select an operation type"
             },
             "validation": {
                 "required": "This field is required",
@@ -3667,6 +3837,7 @@
         "operator": "Staff Management",
         "machineList": "Machine List",
         "moldList": "Mold List",
+        "operationTypeList": "Operation Type List",
         "productionPlan": "Production Plan",
         "processManagement": "Process Management",
         "history": "History",
@@ -4363,6 +4534,12 @@
         }
     },
     "notification": {
+        "production_plan": {
+            "incident_pause": {
+                "title": "Plan paused due to incident",
+                "content": "A production plan has been paused due to a machine incident."
+            }
+        },
         "order": {
             "assigned_operators": {
                 "title": "New Order Assigned",

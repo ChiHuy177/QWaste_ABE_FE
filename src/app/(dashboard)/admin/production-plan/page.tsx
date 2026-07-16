@@ -1,17 +1,19 @@
 'use client';
 
-import { type CSSProperties, useCallback, useMemo, useState } from 'react';
+import { type CSSProperties, useMemo } from 'react';
 import {
     Button,
     Card,
     Col,
     DatePicker,
     Flex,
+    Grid,
     Input,
     Modal,
     Row,
     Segmented,
     Tag,
+    Tooltip,
     Typography,
     theme,
 } from 'antd';
@@ -27,71 +29,90 @@ import {
     TableOutlined,
     UploadOutlined,
 } from '@ant-design/icons';
-import dayjs, { Dayjs } from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
+import { useAppSelector } from '@/stores/hook';
 import DailyTable from './_components/DailyTable';
 import ImportModal from './_components/ImportModal';
 import WeeklyTable from './_components/WeeklyTable';
 import MachineMatrixTable from './_components/MachineMatrixTable';
 import PlanFormModal from './_components/PlanFormModal';
-import TransferMachineModal from './_components/TransferMachineModal';
-import TransferScheduleModal from './_components/TransferScheduleModal';
+import TransferGridModal from './_components/TransferGridModal';
+import { formatDailyLabel, formatWeeklyLabel, WEEK_DAY_KEYS } from './_utils/dateUtils';
+import { useMachineOptions } from './_hooks/useMachineOptions';
+import { useMoldOptions } from './_hooks/useMoldOptions';
 import {
-    formatDailyLabel,
-    formatWeeklyLabel,
-    getTodayScheduleIndex,
-    WEEK_DAY_KEYS,
-} from './_utils/dateUtils';
-import { initialProductionPlan } from './_utils/mockData';
-import {
-    PlanModalState,
-    ProductionLine,
-    ProductionProduct,
-    ProductPosition,
-    TransferMachineModalState,
-    TransferScheduleModalState,
-} from './_components/types';
-import { getAllMachineNames, getEffectiveMachine, getSortedProductsForDay } from './_utils/planUtils';
+    useNavConfirm,
+    useProductionPlanActions,
+    useProductionPlanData,
+    useReorderPlan,
+    useTransferPlan,
+} from './hooks';
+import type { PlanFormValues } from './_components/types';
 import styles from './_components/ProductionPlanTable.module.css';
-import { useTranslation } from 'react-i18next';
-
-type ActiveView = 'daily' | 'weekly' | 'matrix';
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
+const DATE_FORMAT = 'YYYY-MM-DD';
 const formatNumber = (value: number) => value.toLocaleString('vi-VN');
-
-const moveArrayItem = <T,>(items: T[], fromIndex: number, toIndex: number) => {
-    const nextItems = [...items];
-    const [movedItem] = nextItems.splice(fromIndex, 1);
-    nextItems.splice(toIndex, 0, movedItem);
-
-    return nextItems;
-};
 
 export default function ProductionPlanPage() {
     const { token } = theme.useToken();
     const { t } = useTranslation();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
     usePageTitle(t('productionPlan.title'));
 
-    const [activeView, setActiveView] = useState<ActiveView>('daily');
-    const [lines, setLines] = useState<ProductionLine[]>(initialProductionPlan);
-    const [modalState, setModalState] = useState<PlanModalState>({ open: false });
-    const [deleteState, setDeleteState] = useState<ProductPosition | null>(null);
-    const [transferMachineState, setTransferMachineState] = useState<TransferMachineModalState>({
-        open: false,
-    });
-    const [transferScheduleState, setTransferScheduleState] = useState<TransferScheduleModalState>({
-        open: false,
-    });
-    const [machineFilter, setMachineFilter] = useState('');
-    const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
-    const [importModalOpen, setImportModalOpen] = useState(false);
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
-    const selectedDateValue = useMemo(() => selectedDate.toDate(), [selectedDate]);
-    const todayIndex = useMemo(() => getTodayScheduleIndex(selectedDateValue), [selectedDateValue]);
+    const modalState = useAppSelector((state) => state.productionPlan.modalState);
+
+    const {
+        activeView,
+        selectedDate,
+        selectedDateValue,
+        todayIndex,
+        weekStart,
+        machineFilter,
+        machineGroups: fetchedMachineGroups,
+        isLoading,
+        editDetail,
+        summary,
+        setActiveView,
+        setSelectedDate,
+        setMachineFilter,
+    } = useProductionPlanData();
+
+    const { machineCodeById } = useMachineOptions();
+    const { molds, moldOptions } = useMoldOptions();
+
+    const actions = useProductionPlanActions({ machineGroups: fetchedMachineGroups, modalState });
+
+    const reorder = useReorderPlan({
+        machineGroups: fetchedMachineGroups,
+        selectedDateFormatted: selectedDate.format(DATE_FORMAT),
+        machineCodeById,
+    });
+    const machineGroups = reorder.machineGroups;
+
+    const transfer = useTransferPlan({
+        weekStart,
+        machineCodeById,
+        onMutated: actions.invalidatePlanQueries,
+    });
+
+    const navConfirm = useNavConfirm({
+        isReorderDirty: reorder.isReorderDirty,
+        handleDiscardReorder: reorder.handleDiscardReorder,
+        handleSaveReorder: reorder.handleSaveReorder,
+    });
+
+    const isReorderDirty = reorder.isReorderDirty;
+
     const fullWeekDays = useMemo(
         () => WEEK_DAY_KEYS.map((dayKey) => t(`productionPlan.days.full.${dayKey}`)),
         [t]
@@ -100,72 +121,6 @@ export default function ProductionPlanPage() {
         activeView === 'daily'
             ? formatDailyLabel(selectedDateValue, fullWeekDays)
             : formatWeeklyLabel(selectedDateValue, t('productionPlan.days.week'));
-
-    const selectedProduct = useMemo(() => {
-        if (!modalState.open || modalState.mode !== 'edit' || modalState.productIndex == null) {
-            return undefined;
-        }
-
-        return lines[modalState.lineIndex]?.products[modalState.productIndex];
-    }, [lines, modalState]);
-
-    const allMachineNames = useMemo(() => getAllMachineNames(lines), [lines]);
-
-    const transferMachineProduct = useMemo(() => {
-        if (!transferMachineState.open) return null;
-        return (
-            lines[transferMachineState.lineIndex]?.products[transferMachineState.productIndex] ??
-            null
-        );
-    }, [lines, transferMachineState]);
-
-    const transferScheduleProduct = useMemo(() => {
-        if (!transferScheduleState.open) return null;
-        return (
-            lines[transferScheduleState.lineIndex]?.products[transferScheduleState.productIndex] ??
-            null
-        );
-    }, [lines, transferScheduleState]);
-
-    const summary = useMemo(() => {
-        const normalizedMachineFilter = machineFilter.trim().toLowerCase();
-        const visibleLines = lines
-            .map((line) => ({
-                ...line,
-                products: line.products.filter(
-                    (product) =>
-                        !normalizedMachineFilter ||
-                        getEffectiveMachine(product, todayIndex)
-                            .toLowerCase()
-                            .includes(normalizedMachineFilter)
-                ),
-            }))
-            .filter((line) => line.products.length > 0);
-
-        const totalProducts = visibleLines.reduce((sum, line) => sum + line.products.length, 0);
-        const dailyCases = visibleLines.reduce(
-            (sum, line) =>
-                sum +
-                line.products.reduce(
-                    (lineSum, product) => lineSum + product.schedule[todayIndex],
-                    0
-                ),
-            0
-        );
-        const weeklyCases = visibleLines.reduce(
-            (sum, line) =>
-                sum +
-                line.products.reduce(
-                    (lineSum, product) =>
-                        lineSum +
-                        product.schedule.reduce((daySum, quantity) => daySum + quantity, 0),
-                    0
-                ),
-            0
-        );
-
-        return { totalLines: visibleLines.length, totalProducts, dailyCases, weeklyCases };
-    }, [lines, machineFilter, todayIndex]);
 
     const summaryCards = useMemo(
         () => [
@@ -223,214 +178,51 @@ export default function ProductionPlanPage() {
         ]
     );
 
-    const openCreateModal = useCallback((lineIndex: number) => {
-        setModalState({ open: true, mode: 'create', lineIndex });
-    }, []);
-
-    const openEditModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
-        setModalState({ open: true, mode: 'edit', lineIndex, productIndex });
-    }, []);
-
-    const closeModal = useCallback(() => {
-        setModalState({ open: false });
-    }, []);
-
-    const handleSubmit = useCallback(
-        (product: ProductionProduct) => {
-            if (!modalState.open) return;
-
-            setLines((currentLines) =>
-                currentLines.map((line, lineIndex) => {
-                    if (lineIndex !== modalState.lineIndex) return line;
-
-                    if (modalState.mode === 'create') {
-                        return {
-                            ...line,
-                            products: [...line.products, product],
-                        };
-                    }
-
-                    return {
-                        ...line,
-                        products: line.products.map((currentProduct, productIndex) => {
-                            if (productIndex !== modalState.productIndex) return currentProduct;
-                            return {
-                                ...product,
-                                machineOverrides: currentProduct.machineOverrides,
-                            };
-                        }),
-                    };
-                })
-            );
-            closeModal();
-        },
-        [closeModal, modalState]
+    const currentMoldCode =
+        modalState.open && modalState.mode === 'edit'
+            ? (editDetail?.snapshotMoldCode ?? modalState.row.moldCode)
+            : undefined;
+    const currentMoldId = useMemo(
+        () => molds.find((mold) => mold.moldCode === currentMoldCode)?.moldId,
+        [molds, currentMoldCode]
     );
 
-    const confirmDelete = useCallback(() => {
-        if (!deleteState) return;
+    const formInitialValues = useMemo<Partial<PlanFormValues> | undefined>(() => {
+        if (!modalState.open) return undefined;
+        if (modalState.mode === 'create') {
+            return { plannedDate: selectedDate, plannedQuantity: 1 };
+        }
+        return {
+            code: editDetail?.productionPlanCode ?? modalState.row.code,
+            name: editDetail?.productionPlanName ?? modalState.row.name,
+            plannedQuantity: editDetail?.plannedQuantity ?? modalState.row.schedule[todayIndex],
+            note: editDetail?.note ?? undefined,
+            moldId: currentMoldId,
+        };
+    }, [editDetail, modalState, selectedDate, todayIndex, currentMoldId]);
 
-        setLines((currentLines) =>
-            currentLines.map((line, lineIndex) => {
-                if (lineIndex !== deleteState.lineIndex) return line;
-
-                return {
-                    ...line,
-                    products: line.products.filter(
-                        (_product, productIndex) => productIndex !== deleteState.productIndex
-                    ),
-                };
-            })
-        );
-        setDeleteState(null);
-    }, [deleteState]);
-
-    const openTransferMachineModal = useCallback(({ lineIndex, productIndex }: ProductPosition) => {
-        setTransferMachineState({ open: true, lineIndex, productIndex });
-    }, []);
-
-    const openTransferScheduleModal = useCallback(
-        ({ lineIndex, productIndex }: ProductPosition) => {
-            setTransferScheduleState({ open: true, lineIndex, productIndex });
-        },
-        []
-    );
-
-    const handleTransferMachine = useCallback(
-        (newMachine: string) => {
-            if (!transferMachineState.open) return;
-            const { lineIndex, productIndex } = transferMachineState;
-
-            setLines((currentLines) =>
-                currentLines.map((line, li) => {
-                    if (li !== lineIndex) return line;
-                    return {
-                        ...line,
-                        products: line.products.map((product, pi) => {
-                            if (pi !== productIndex) return product;
-                            const overrides = [
-                                ...(product.machineOverrides ?? new Array(7).fill(undefined)),
-                            ];
-                            overrides[todayIndex] = newMachine;
-                            return { ...product, machineOverrides: overrides };
-                        }),
-                    };
-                })
-            );
-            setTransferMachineState({ open: false });
-        },
-        [transferMachineState, todayIndex]
-    );
-
-    const handleTransferSchedule = useCallback(
-        (newDayIndex: number, newMachine: string) => {
-            if (!transferScheduleState.open) return;
-            const { lineIndex, productIndex } = transferScheduleState;
-
-            setLines((currentLines) =>
-                currentLines.map((line, li) => {
-                    if (li !== lineIndex) return line;
-                    return {
-                        ...line,
-                        products: line.products.map((product, pi) => {
-                            if (pi !== productIndex) return product;
-                            const transferredQty = product.schedule[todayIndex];
-                            if (transferredQty <= 0) return product;
-
-                            const newSchedule = [...product.schedule] as typeof product.schedule;
-                            newSchedule[todayIndex] = 0;
-                            newSchedule[newDayIndex] =
-                                (newSchedule[newDayIndex] ?? 0) + transferredQty;
-
-                            const overrides = [
-                                ...(product.machineOverrides ?? new Array(7).fill(undefined)),
-                            ];
-                            overrides[todayIndex] = undefined;
-                            overrides[newDayIndex] = newMachine;
-
-                            return {
-                                ...product,
-                                schedule: newSchedule,
-                                machineOverrides: overrides,
-                            };
-                        }),
-                    };
-                })
-            );
-            setTransferScheduleState({ open: false });
-        },
-        [transferScheduleState, todayIndex]
-    );
-
-    const handleReorderProducts = useCallback(
-        (lineIndex: number, activeCode: string, overCode: string) => {
-            setLines((currentLines) =>
-                currentLines.map((line, currentLineIndex) => {
-                    if (currentLineIndex !== lineIndex) return line;
-
-                    if (activeView === 'daily') {
-                        const sortedProducts = getSortedProductsForDay(line, todayIndex);
-                        const codes = sortedProducts.map((p) => p.code);
-
-                        const activeIndex = codes.indexOf(activeCode);
-                        const overIndex = codes.indexOf(overCode);
-
-                        if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
-                            return line;
-                        }
-
-                        const nextCodes = moveArrayItem(codes, activeIndex, overIndex);
-                        const nextDayOrders = [...(line.dayProductOrders ?? new Array(7).fill(undefined))];
-                        nextDayOrders[todayIndex] = nextCodes;
-
-                        return {
-                            ...line,
-                            dayProductOrders: nextDayOrders,
-                        };
-                    } else {
-                        const activeIndex = line.products.findIndex(
-                            (product) => product.code === activeCode
-                        );
-                        const overIndex = line.products.findIndex(
-                            (product) => product.code === overCode
-                        );
-
-                        if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
-                            return line;
-                        }
-
-                        return {
-                            ...line,
-                            products: moveArrayItem(line.products, activeIndex, overIndex),
-                        };
-                    }
-                })
-            );
-        },
-        [activeView, todayIndex]
-    );
-
-    const activeLineName = modalState.open ? lines[modalState.lineIndex]?.spaceName : undefined;
-    const pendingDeleteProduct =
-        deleteState != null
-            ? lines[deleteState.lineIndex]?.products[deleteState.productIndex]
-            : null;
+    const pendingDeleteProduct = actions.deleteState?.row ?? null;
 
     const headerActions = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Input
-                placeholder={t('productionPlan.filters.machinePlaceholder')}
-                prefix={<SearchOutlined />}
-                value={machineFilter}
-                onChange={(event) => setMachineFilter(event.target.value)}
-                allowClear
-                style={{ width: 220, borderRadius: 8 }}
-            />
+            <Tooltip title={isReorderDirty ? t('productionPlan.reorder.lockedFilterHint') : undefined}>
+                <span style={{ display: 'inline-block' }}>
+                    <Input
+                        placeholder={t('productionPlan.filters.machinePlaceholder')}
+                        prefix={<SearchOutlined />}
+                        value={machineFilter}
+                        onChange={(event) => setMachineFilter(event.target.value)}
+                        disabled={isReorderDirty}
+                        allowClear
+                        style={{ width: 220, borderRadius: 8 }}
+                    />
+                </span>
+            </Tooltip>
             <DatePicker
                 value={selectedDate}
                 onChange={(date) => {
                     if (date) {
-                        setSelectedDate(date);
+                        navConfirm.runOrConfirm(() => setSelectedDate(date));
                     }
                 }}
                 allowClear={false}
@@ -438,9 +230,13 @@ export default function ProductionPlanPage() {
                 suffixIcon={<CalendarOutlined />}
                 style={{ width: 150, borderRadius: 8 }}
             />
-            <Segmented<ActiveView>
+            <Segmented
                 value={activeView}
-                onChange={setActiveView}
+                onChange={(value) =>
+                    navConfirm.runOrConfirm(() =>
+                        setActiveView(value as 'daily' | 'weekly' | 'matrix')
+                    )
+                }
                 options={[
                     {
                         label: t('productionPlan.views.daily'),
@@ -459,36 +255,54 @@ export default function ProductionPlanPage() {
                     },
                 ]}
             />
-            <Button icon={<UploadOutlined />} onClick={() => setImportModalOpen(true)}>
-                {t('productionPlan.actions.import')}
-            </Button>
-            <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => openCreateModal(0)}
-                disabled={lines.length === 0}
-            >
-                {t('productionPlan.actions.addProduct')}
-            </Button>
+            {actions.canImport && (
+                <Tooltip title={isReorderDirty ? t('productionPlan.reorder.lockedImportHint') : undefined}>
+                    <span style={{ display: 'inline-block' }}>
+                        <Button
+                            icon={<UploadOutlined />}
+                            onClick={() => {
+                                if (actions.blockIfReorderDirty()) return;
+                                actions.openImportModal();
+                            }}
+                            disabled={isReorderDirty}
+                            type='primary'
+                        >
+                            {t('productionPlan.actions.import')}
+                        </Button>
+                    </span>
+                </Tooltip>
+            )}
         </div>
     );
 
     return (
-        <>
+        <div
+            style={{
+                height: isMobile ? 'auto' : '100%',
+                minHeight: 0,
+                overflow: isMobile ? 'visible' : 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('productionPlan.headerTitle', { label: headerLabel })}
                 rightContent={headerActions}
-                mobileMenuItems={[
-                    {
-                        key: 'add-product',
-                        label: t('productionPlan.actions.addProduct'),
-                        icon: <PlusOutlined />,
-                        onClick: () => openCreateModal(0),
-                    },
-                ]}
+                mobileMenuItems={
+                    actions.canCreate
+                        ? [
+                            {
+                                key: 'add-product',
+                                label: t('productionPlan.actions.addProduct'),
+                                icon: <PlusOutlined />,
+                                onClick: actions.openCreateModal,
+                            },
+                        ]
+                        : []
+                }
             />
 
-            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Row gutter={[16, 16]} style={{ marginBottom: 24, flexShrink: 0 }}>
                 {summaryCards.map((item) => {
                     const Icon = item.icon;
 
@@ -552,15 +366,26 @@ export default function ProductionPlanPage() {
             </Row>
 
             <Card
+                loading={isLoading}
                 style={{
                     ...planThemeVars,
                     borderRadius: 12,
                     overflow: 'hidden',
                     boxShadow: token.boxShadow,
+                    flex: isMobile ? 'none' : 1,
+                    height: isMobile ? '60vh' : undefined,
+                    minHeight: isMobile ? 420 : 0,
+                    display: 'flex',
+                    flexDirection: 'column',
                 }}
                 styles={{
                     body: {
                         padding: 0,
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
                     },
                 }}
             >
@@ -571,14 +396,18 @@ export default function ProductionPlanPage() {
                                 {activeView === 'daily'
                                     ? t('productionPlan.panel.dailyTable')
                                     : activeView === 'weekly'
-                                    ? t('productionPlan.panel.weeklyTable')
-                                    : t('productionPlan.panel.machineMatrixTable')}
+                                        ? t('productionPlan.panel.weeklyTable')
+                                        : t('productionPlan.panel.machineMatrixTable')}
                             </Text>
                             {activeView === 'daily' && (
                                 <Button
                                     size="small"
                                     icon={<LeftOutlined />}
-                                    onClick={() => setSelectedDate((d) => d.subtract(1, 'day'))}
+                                    onClick={() =>
+                                        navConfirm.runOrConfirm(() =>
+                                            setSelectedDate(selectedDate.subtract(1, 'day'))
+                                        )
+                                    }
                                 />
                             )}
                             <Tag color={activeView === 'daily' ? 'blue' : 'geekblue'}>
@@ -588,8 +417,15 @@ export default function ProductionPlanPage() {
                                 <Button
                                     size="small"
                                     icon={<RightOutlined />}
-                                    onClick={() => setSelectedDate((d) => d.add(1, 'day'))}
+                                    onClick={() =>
+                                        navConfirm.runOrConfirm(() =>
+                                            setSelectedDate(selectedDate.add(1, 'day'))
+                                        )
+                                    }
                                 />
+                            )}
+                            {isReorderDirty && (
+                                <Tag color="warning">{t('productionPlan.reorder.unsavedTag')}</Tag>
                             )}
                         </Flex>
                         <div className={styles.panelMeta}>
@@ -599,45 +435,88 @@ export default function ProductionPlanPage() {
                             })}
                         </div>
                     </div>
-                    <Text type="secondary">
-                        {activeView === 'daily'
-                            ? t('productionPlan.panel.cases', {
-                                  count: formatNumber(summary.dailyCases),
-                              })
-                            : t('productionPlan.panel.cases', {
-                                  count: formatNumber(summary.weeklyCases),
-                              })}
-                    </Text>
+                    <Flex align="center" gap={12}>
+                        <Text type="secondary">
+                            {activeView === 'daily'
+                                ? t('productionPlan.panel.cases', {
+                                    count: formatNumber(summary.dailyCases),
+                                })
+                                : t('productionPlan.panel.cases', {
+                                    count: formatNumber(summary.weeklyCases),
+                                })}
+                        </Text>
+                        {isReorderDirty && (
+                            <>
+                                <Button size="small" onClick={reorder.handleDiscardReorder}>
+                                    {t('productionPlan.reorder.discard')}
+                                </Button>
+                                <Button
+                                    size="small"
+                                    type="primary"
+                                    loading={reorder.savingReorder}
+                                    onClick={reorder.handleSaveReorder}
+                                >
+                                    {t('productionPlan.reorder.save')}
+                                </Button>
+                            </>
+                        )}
+                        {actions.canCreate && (
+                            <Tooltip
+                                title={
+                                    isReorderDirty
+                                        ? t('productionPlan.reorder.lockedCreateHint')
+                                        : undefined
+                                }
+                            >
+                                <span style={{ display: 'inline-block' }}>
+                                    <Button
+                                        type="primary"
+                                        size="small"
+                                        icon={<PlusOutlined />}
+                                        onClick={actions.openCreateModal}
+                                        disabled={isReorderDirty}
+                                    >
+                                        {t('productionPlan.actions.addProduct')}
+                                    </Button>
+                                </span>
+                            </Tooltip>
+                        )}
+                    </Flex>
                 </div>
 
-                <div className={styles.tablePanelBody}>
+                <div ref={tableContainerRef} className={styles.tablePanelBody}>
                     {activeView === 'daily' && (
                         <DailyTable
-                            lines={lines}
+                            groups={machineGroups}
                             todayIndex={todayIndex}
                             dateLabel={headerLabel}
-                            onEdit={openEditModal}
-                            onDelete={setDeleteState}
-                            onReorder={handleReorderProducts}
-                            onTransferMachine={openTransferMachineModal}
-                            onTransferSchedule={openTransferScheduleModal}
                             machineFilter={machineFilter}
+                            canReorder={actions.canReorder}
+                            scrollY={tableScrollY}
+                            isMobile={isMobile}
+                            actionsLocked={isReorderDirty}
+                            onEdit={actions.openEditModal}
+                            onDelete={actions.requestDelete}
+                            onRestore={actions.handleRestore}
+                            onReorder={reorder.handleReorderProducts}
+                            onTransferOpen={transfer.openTransfer}
                         />
                     )}
                     {activeView === 'weekly' && (
                         <WeeklyTable
-                            lines={lines}
+                            groups={machineGroups}
                             todayIndex={todayIndex}
-                            onEdit={openEditModal}
-                            onDelete={setDeleteState}
-                            onReorder={handleReorderProducts}
                             machineFilter={machineFilter}
+                            scrollY={tableScrollY}
+                            isMobile={isMobile}
                         />
                     )}
                     {activeView === 'matrix' && (
                         <MachineMatrixTable
-                            lines={lines}
+                            groups={machineGroups}
                             machineFilter={machineFilter}
+                            scrollY={tableScrollY}
+                            isMobile={isMobile}
                         />
                     )}
                 </div>
@@ -647,42 +526,47 @@ export default function ProductionPlanPage() {
                 <PlanFormModal
                     open={modalState.open}
                     mode={modalState.mode}
-                    lineName={activeLineName}
-                    initialData={selectedProduct}
-                    onCancel={closeModal}
-                    onSubmit={handleSubmit}
+                    initialValues={formInitialValues}
+                    currentMoldCode={currentMoldCode}
+                    molds={molds}
+                    moldOptions={moldOptions}
+                    submitting={actions.formSubmitting}
+                    onCancel={actions.closeModal}
+                    onSubmit={actions.handleSubmit}
                 />
             )}
 
-            <ImportModal open={importModalOpen} onClose={() => setImportModalOpen(false)} />
-
-            <TransferMachineModal
-                open={transferMachineState.open}
-                product={transferMachineProduct}
-                todayIndex={todayIndex}
-                machineOptions={allMachineNames}
-                onCancel={() => setTransferMachineState({ open: false })}
-                onConfirm={handleTransferMachine}
+            <ImportModal
+                open={actions.importModalOpen}
+                onClose={actions.closeImportModal}
+                onImported={actions.invalidatePlanQueries}
             />
 
-            <TransferScheduleModal
-                open={transferScheduleState.open}
-                product={transferScheduleProduct}
-                todayIndex={todayIndex}
-                machineOptions={allMachineNames}
-                lines={lines}
-                onCancel={() => setTransferScheduleState({ open: false })}
-                onConfirm={handleTransferSchedule}
-            />
+            {transfer.transferState.open && (
+                <TransferGridModal
+                    open={transfer.transferState.open}
+                    target={transfer.transferState}
+                    todayIndex={todayIndex}
+                    weekStart={weekStart}
+                    gridWeekStart={transfer.gridWeekStart}
+                    gridWeekOffset={transfer.gridWeekOffset}
+                    onShiftWeek={transfer.shiftGridWeek}
+                    weeklyGroups={transfer.transferWeeklyGroups}
+                    gridLoading={transfer.transferGridLoading}
+                    submitting={transfer.transferSubmitting}
+                    onCancel={transfer.closeTransfer}
+                    onConfirm={transfer.handleTransferConfirm}
+                />
+            )}
 
             <Modal
                 title={t('productionPlan.deleteModal.title')}
-                open={deleteState != null}
+                open={actions.deleteState != null}
                 okText={t('common.delete')}
                 cancelText={t('common.cancel')}
-                okButtonProps={{ danger: true }}
-                onOk={confirmDelete}
-                onCancel={() => setDeleteState(null)}
+                okButtonProps={{ danger: true, loading: actions.deleting }}
+                onOk={actions.confirmDelete}
+                onCancel={actions.cancelDelete}
             >
                 {t('productionPlan.deleteModal.messagePrefix')}{' '}
                 <strong>
@@ -690,6 +574,30 @@ export default function ProductionPlanPage() {
                 </strong>{' '}
                 {t('productionPlan.deleteModal.messageSuffix')}
             </Modal>
-        </>
+
+            <Modal
+                title={t('productionPlan.reorder.confirmTitle')}
+                open={navConfirm.navConfirmOpen}
+                onCancel={navConfirm.closeNavConfirm}
+                footer={[
+                    <Button key="cancel" onClick={navConfirm.closeNavConfirm}>
+                        {t('common.cancel')}
+                    </Button>,
+                    <Button key="discard" danger onClick={navConfirm.handleNavConfirmDiscard}>
+                        {t('productionPlan.reorder.discardAndContinue')}
+                    </Button>,
+                    <Button
+                        key="save"
+                        type="primary"
+                        loading={reorder.savingReorder}
+                        onClick={navConfirm.handleNavConfirmSave}
+                    >
+                        {t('productionPlan.reorder.saveAndContinue')}
+                    </Button>,
+                ]}
+            >
+                {t('productionPlan.reorder.confirmMessage')}
+            </Modal>
+        </div>
     );
 }

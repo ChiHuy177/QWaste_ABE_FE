@@ -37,7 +37,7 @@ export class MachineService {
         }
 
         MachineService.appendTrimmedParam(queryParams, 'machineName', params.machineName);
-        MachineService.appendTrimmedParam(queryParams, 'propertyCode', params.propertyCode);
+        MachineService.appendTrimmedParam(queryParams, 'machineCode', params.machineCode);
         MachineService.appendTrimmedParam(queryParams, 'topic', params.topic);
 
         return queryParams;
@@ -62,6 +62,15 @@ export class MachineService {
             method: 'GET',
             url: ENDPOINTS.MACHINE.BASE,
         });
+        return response.result as Machine[];
+    }
+
+    static async getMachinesPickingByOperationType(operationTypeId: number): Promise<Machine[]> {
+        const response = await NetworkService.requestJson<Machine[]>({
+            method: 'GET',
+            url: `${ENDPOINTS.MACHINE.PICKING_BY_OPERATION_TYPE}?operationTypeId=${operationTypeId}`,
+        });
+
         return response.result as Machine[];
     }
 

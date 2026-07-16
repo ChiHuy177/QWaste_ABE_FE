@@ -1,42 +1,20 @@
 'use client';
 
-import { type CSSProperties, useMemo, useState } from 'react';
-import {
-    Badge,
-    Button,
-    Card,
-    Col,
-    Collapse,
-    Flex,
-    Input,
-    Row,
-    Table,
-    Tag,
-    Tooltip,
-    Typography,
-    theme,
-} from 'antd';
-import type { CollapseProps } from 'antd';
-import type { ColumnType, ColumnsType } from 'antd/es/table';
-import {
-    CaretRightOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
-    ExclamationCircleOutlined,
-    PauseCircleOutlined,
-    SyncOutlined,
-} from '@ant-design/icons';
+import { type CSSProperties, useMemo } from 'react';
+import { Badge, Button, Card, Col, Collapse, Flex, Input, Row, Tooltip, Typography, theme } from 'antd';
+import { CaretRightOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import type { MonitorProduct } from '@/types/ProductionPlan';
-import { useProductionMonitor } from '@/hooks/useProductionMonitor';
-import { initialProductionPlan } from '../_utils/mockData';
-import { getAllMachineNames } from '../_utils/planUtils';
-import { getTodayScheduleIndex } from '../_utils/dateUtils';
-import { ProductionStatus } from '../_components/types';
+import { usePermissionCheck } from '@/hooks/usePermissionCheck';
+import { useAppDispatch, useAppSelector } from '@/stores/hook';
+import { productionPlanMonitorActions } from '@/stores/ProductionPlanMonitorStore';
+import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../_utils/planMappers';
+import type { MonitorRowVM } from '../_components/types';
 import ProductDetailModal from '../_components/ProductDetailModal';
 import IncidentConfirmModal from '../_components/IncidentConfirmModal';
+import { useMoldOptions } from '../_hooks/useMoldOptions';
+import { useMonitorColumns, useMonitorData, useMonitorGroups } from './hooks';
 import styles from '../_components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
@@ -44,79 +22,63 @@ const { Search } = Input;
 
 const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
-const GROUP_ORDER: ProductionStatus[] = ['TODO', 'IN_PROGRESS', 'PAUSE', 'COMPLETE'];
-
-const machineOptions = getAllMachineNames(initialProductionPlan);
-
-// -------- Flat-row types (machine-grouped, mirrors DailyTable pattern) --------
-type MonitorGroupHeader = {
-    type: 'group-header';
-    groupKey: string;
-    machine: string;
-    spaceName: string;
-    groupSize: number;
-};
-type MonitorProductRow = MonitorProduct & { type: 'product'; groupKey: string };
-type MonitorTotalRow = {
-    type: 'total';
-    groupKey: string;
-    totalCases: number;
-    totalPcs: number;
-};
-type MonitorFlatRow = MonitorGroupHeader | MonitorProductRow | MonitorTotalRow;
-
-function toFlatRows(products: MonitorProduct[], todayIndex: number): MonitorFlatRow[] {
-    const groupMap = new Map<string, MonitorProduct[]>();
-    products.forEach((p) => {
-        const key = `${p.spaceName}|${p.machine}`;
-        const arr = groupMap.get(key) ?? [];
-        arr.push(p);
-        groupMap.set(key, arr);
-    });
-
-    const rows: MonitorFlatRow[] = [];
-    groupMap.forEach((group, key) => {
-        const { machine, spaceName } = group[0];
-        const totalCases = group.reduce((sum, p) => sum + p.schedule[todayIndex], 0);
-        const totalPcs = group.reduce(
-            (sum, p) => sum + p.schedule[todayIndex] * p.pcsMultiplier,
-            0
-        );
-        rows.push({
-            type: 'group-header',
-            groupKey: key,
-            machine,
-            spaceName,
-            groupSize: group.length,
-        });
-        group.forEach((p) => rows.push({ ...p, type: 'product', groupKey: key }));
-        rows.push({ type: 'total', groupKey: key, totalCases, totalPcs });
-    });
-
-    return rows;
-}
-
-const anchorCell = (record: MonitorFlatRow) =>
-    record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
-
 export default function ProductionMonitorPage() {
     const { t } = useTranslation();
     const { token } = theme.useToken();
+    const { checkPermission } = usePermissionCheck();
+    const dispatch = useAppDispatch();
 
     usePageTitle(t('productionPlan.monitor.title'));
 
-    const [searchText, setSearchText] = useState('');
-    const [selectedProduct, setSelectedProduct] = useState<MonitorProduct | null>(null);
-    const [incidentProduct, setIncidentProduct] = useState<MonitorProduct | null>(null);
-    const [activeKeys, setActiveKeys] = useState<ProductionStatus[]>(
-        GROUP_ORDER.filter((status) => status !== 'COMPLETE')
+    const selectedRowId = useAppSelector((state) => state.productionPlanMonitor.selectedRowId);
+    const incidentRowId = useAppSelector((state) => state.productionPlanMonitor.incidentRowId);
+
+    const { products, isLoading, refresh, isConnected, lastUpdate } = useMonitorData();
+    const { molds, moldOptions } = useMoldOptions();
+
+    const {
+        setSearchText,
+        activeKeys,
+        setActiveKeys,
+        statConfigs,
+        statusCounts,
+        filteredByKeyword,
+        grouped,
+        groupedFlatRows,
+        displayedActiveKeys,
+    } = useMonitorGroups({ products });
+
+    const selectedRow = useMemo(
+        () => products.find((row) => row.productionPlanId === selectedRowId) ?? null,
+        [products, selectedRowId]
+    );
+    const incidentRow = useMemo(
+        () => products.find((row) => row.productionPlanId === incidentRowId) ?? null,
+        [products, incidentRowId]
     );
 
-    const { products, isConnected, lastUpdate } = useProductionMonitor({
-        lines: initialProductionPlan,
-    });
+    // Tra trên toàn bộ list (kể cả mold hết ACTIVE) vì plan cũ vẫn giữ khuôn cũ.
+    const incidentCurrentMoldId = useMemo(() => {
+        if (!incidentRow?.moldCode) return undefined;
+        return molds.find((m) => m.moldCode === incidentRow.moldCode)?.moldId;
+    }, [incidentRow, molds]);
 
-    const todayIndex = useMemo(() => getTodayScheduleIndex(new Date()), []);
+    const openIncidentModal = (row: MonitorRowVM) => {
+        if (!checkPermission('incident', 'production_plan')) return;
+        dispatch(productionPlanMonitorActions.openIncidentModal(row.productionPlanId));
+    };
+
+    const selectRow = (row: MonitorRowVM) =>
+        dispatch(productionPlanMonitorActions.selectRow(row.productionPlanId));
+
+    const { collapseItems } = useMonitorColumns({
+        statConfigs,
+        grouped,
+        groupedFlatRows,
+        loading: isLoading,
+        onOpenIncident: openIncidentModal,
+        onSelectRow: selectRow,
+    });
 
     const planThemeVars = useMemo(
         () =>
@@ -134,306 +96,16 @@ export default function ProductionMonitorPage() {
         [token]
     );
 
-    const statConfigs = useMemo(
-        () => [
-            {
-                status: 'TODO' as ProductionStatus,
-                icon: ClockCircleOutlined,
-                color: '#722ed1',
-                bg: '#f9f0ff',
-                border: '#d3adf7',
-            },
-            {
-                status: 'IN_PROGRESS' as ProductionStatus,
-                icon: SyncOutlined,
-                color: token.colorInfo,
-                bg: token.colorInfoBg,
-                border: token.colorInfo,
-            },
-            {
-                status: 'PAUSE' as ProductionStatus,
-                icon: PauseCircleOutlined,
-                color: token.colorWarning,
-                bg: token.colorWarningBg,
-                border: token.colorWarning,
-            },
-            {
-                status: 'COMPLETE' as ProductionStatus,
-                icon: CheckCircleOutlined,
-                color: token.colorSuccess,
-                bg: token.colorSuccessBg,
-                border: token.colorSuccess,
-            },
-        ],
-        [token]
-    );
-
-    const statusCounts = useMemo(() => {
-        const counts: Record<ProductionStatus, number> = {
-            TODO: 0,
-            IN_PROGRESS: 0,
-            PAUSE: 0,
-            COMPLETE: 0,
-        };
-        products.forEach((p) => counts[p.status]++);
-        return counts;
-    }, [products]);
-
-    const filteredByKeyword = useMemo(() => {
-        const keyword = searchText.trim().toLowerCase();
-        if (!keyword) return products;
-        return products.filter(
-            (p) =>
-                p.code.toLowerCase().includes(keyword) ||
-                p.name.toLowerCase().includes(keyword) ||
-                p.machine.toLowerCase().includes(keyword) ||
-                p.spaceName.toLowerCase().includes(keyword)
-        );
-    }, [products, searchText]);
-
-    const grouped = useMemo(() => {
-        const map: Record<ProductionStatus, MonitorProduct[]> = {
-            IN_PROGRESS: [],
-            PAUSE: [],
-            TODO: [],
-            COMPLETE: [],
-        };
-        filteredByKeyword.forEach((p) => map[p.status].push(p));
-        return map;
-    }, [filteredByKeyword]);
-
-    const groupedFlatRows = useMemo(() => {
-        const result = {} as Record<ProductionStatus, MonitorFlatRow[]>;
-        GROUP_ORDER.forEach((status) => {
-            result[status] = toFlatRows(grouped[status], todayIndex);
-        });
-        return result;
-    }, [grouped, todayIndex]);
-
-    // While searching, force-open every group that has matches so results are never hidden
-    const displayedActiveKeys = useMemo(() => {
-        if (!searchText.trim()) return activeKeys;
-        const withMatches = GROUP_ORDER.filter((status) => grouped[status].length > 0);
-        return Array.from(new Set([...activeKeys, ...withMatches]));
-    }, [activeKeys, grouped, searchText]);
-
-    const columns: ColumnsType<MonitorFlatRow> = useMemo(() => {
-        return [
-            {
-                key: 'machine',
-                width: 160,
-                fixed: 'left',
-                className: styles.dailySheetMachineColumn,
-                onCell: (record) => {
-                    if (record.type === 'group-header') return { rowSpan: record.groupSize + 2 };
-                    return { rowSpan: 0 };
-                },
-                render: (_, record) => {
-                    if (record.type !== 'group-header') return null;
-                    return (
-                        <div className={styles.dailySheetMachineCell}>
-                            <strong>{record.machine}</strong>
-                            <span>{record.spaceName}</span>
-                        </div>
-                    );
-                },
-            },
-            {
-                title: t('productionPlan.table.headers.codeVi'),
-                key: 'code',
-                width: 110,
-                onCell: anchorCell,
-                render: (_, record) => {
-                    if (record.type === 'total')
-                        return <Text strong>{t('productionPlan.table.total')}</Text>;
-                    if (record.type === 'group-header') return null;
-                    return <Text strong>{record.code}</Text>;
-                },
-            },
-            {
-                title: t('productionPlan.table.headers.productName'),
-                key: 'name',
-                ellipsis: true,
-                onCell: anchorCell,
-                render: (_, record) => (record.type === 'product' ? record.name : null),
-            },
-            {
-                title: t('productionPlan.table.headers.mold'),
-                key: 'mold',
-                width: 120,
-                onCell: anchorCell,
-                render: (_, record) => (record.type === 'product' ? record.mold : null),
-            },
-            {
-                title: t('productionPlan.table.headers.time'),
-                key: 'time',
-                width: 140,
-                onCell: anchorCell,
-                render: (_, record) => (record.type === 'product' ? record.time : null),
-            },
-            {
-                title: t('productionPlan.units.cases'),
-                key: 'cases',
-                width: 90,
-                align: 'right',
-                onCell: anchorCell,
-                render: (_, record) => {
-                    if (record.type === 'total') return formatNumber(record.totalCases);
-                    if (record.type === 'group-header') return null;
-                    return record.schedule[todayIndex];
-                },
-            },
-            {
-                title: t('productionPlan.units.pcs'),
-                key: 'pcs',
-                width: 90,
-                align: 'right',
-                className: styles.dailySheetPcsColumn,
-                onCell: (record) => ({
-                    ...anchorCell(record),
-                    className:
-                        record.type === 'group-header'
-                            ? styles.dailyGroupAnchorCell
-                            : styles.dailySheetPcsColumn,
-                }),
-                render: (_, record) => {
-                    if (record.type === 'total')
-                        return <Text strong>{formatNumber(record.totalPcs)}</Text>;
-                    if (record.type === 'group-header') return null;
-                    return (
-                        <Text strong>
-                            {formatNumber(record.schedule[todayIndex] * record.pcsMultiplier)}
-                        </Text>
-                    );
-                },
-            },
-            {
-                title: t('productionPlan.monitor.lastUpdated'),
-                key: 'updatedAt',
-                width: 150,
-                onCell: anchorCell,
-                render: (_, record) => {
-                    if (record.type !== 'product') return null;
-                    return (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {record.updatedAt ? record.updatedAt.toLocaleTimeString('vi-VN') : '—'}
-                        </Text>
-                    );
-                },
-            },
-        ];
-    }, [t, todayIndex]);
-
-    const pauseActionColumn: ColumnType<MonitorFlatRow> = useMemo(
-        () => ({
-            key: 'action',
-            width: 160,
-            onCell: anchorCell,
-            render: (_: unknown, record: MonitorFlatRow) => {
-                if (record.type !== 'product') return null;
-                return (
-                    <Button
-                        size="small"
-                        icon={<ExclamationCircleOutlined />}
-                        style={{
-                            color: token.colorWarning,
-                            borderColor: token.colorWarningBorder,
-                            background: token.colorWarningBg,
-                            fontWeight: 600,
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIncidentProduct(record);
-                        }}
-                    >
-                        {t('productionPlan.monitor.incident.actionBtn')}
-                    </Button>
-                );
-            },
-        }),
-        [token, t]
-    );
-
-    const pauseColumns: ColumnsType<MonitorFlatRow> = useMemo(
-        () => [...columns, pauseActionColumn],
-        [columns, pauseActionColumn]
-    );
-
-    const handleStatCardClick = (status: ProductionStatus) => {
-        setActiveKeys((prev) => (prev.includes(status) ? prev : [...prev, status]));
+    const handleStatCardClick = (status: MonitorGroupKey) => {
+        if (!activeKeys.includes(status)) {
+            setActiveKeys([...activeKeys, status]);
+        }
         requestAnimationFrame(() => {
             document
                 .getElementById(`monitor-group-${status}`)
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     };
-
-    const collapseItems = useMemo<CollapseProps['items']>(
-        () =>
-            GROUP_ORDER.map((status) => {
-                const config = statConfigs.find((c) => c.status === status)!;
-                const rows = grouped[status];
-                const isPause = status === 'PAUSE' && rows.length > 0;
-
-                return {
-                    key: status,
-                    classNames: isPause ? { header: styles.monitorPauseHeader } : undefined,
-                    label: (
-                        <Flex align="center" gap={10} id={`monitor-group-${status}`}>
-                            <span
-                                className={styles.monitorStatusPill}
-                                style={{ background: config.color }}
-                            >
-                                {t(`productionPlan.monitor.status.${status}`)}
-                            </span>
-                            <Text type="secondary" style={{ fontSize: 13, fontWeight: 600 }}>
-                                {rows.length}
-                            </Text>
-                        </Flex>
-                    ),
-                    extra: isPause ? (
-                        <Tag color="warning" style={{ margin: 0, fontWeight: 600 }}>
-                            {t('productionPlan.monitor.needsAction')}
-                        </Tag>
-                    ) : undefined,
-                    children: (
-                        // CSS vars inherit from the Collapse root wrapper below
-                        <div className={`${styles.planAntTable} ${styles.dailySheetTable}`}>
-                            <Table<MonitorFlatRow>
-                                columns={status === 'PAUSE' ? pauseColumns : columns}
-                                dataSource={groupedFlatRows[status]}
-                                rowKey={(record) => {
-                                    if (record.type === 'product') return record.code;
-                                    if (record.type === 'total') return `${record.groupKey}-total`;
-                                    return `${record.groupKey}-header`;
-                                }}
-                                rowClassName={(record) =>
-                                    record.type === 'total' ? styles.dailySheetTotalRow : ''
-                                }
-                                size="small"
-                                onRow={(record) => ({
-                                    onClick:
-                                        record.type === 'product'
-                                            ? () => setSelectedProduct(record)
-                                            : undefined,
-                                    style: record.type === 'product' ? { cursor: 'pointer' } : {},
-                                })}
-                                pagination={false}
-                                scroll={{ x: status === 'PAUSE' ? 1200 : 1000 }}
-                                locale={{
-                                    emptyText: (
-                                        <Text type="secondary">
-                                            {t('productionPlan.monitor.emptyGroup')}
-                                        </Text>
-                                    ),
-                                }}
-                            />
-                        </div>
-                    ),
-                };
-            }),
-        [statConfigs, grouped, groupedFlatRows, columns, pauseColumns, t]
-    );
 
     const headerExtra = (
         <Flex align="center" gap={8}>
@@ -462,6 +134,14 @@ export default function ProductionMonitorPage() {
                     })}
                 </Text>
             )}
+            <Tooltip title={t('productionPlan.monitor.refresh')}>
+                <Button
+                    size="small"
+                    icon={<ReloadOutlined />}
+                    loading={isLoading}
+                    onClick={refresh}
+                />
+            </Tooltip>
         </Flex>
     );
 
@@ -550,7 +230,11 @@ export default function ProductionMonitorPage() {
                     })}
                 </Text>
                 <Flex gap={4} style={{ marginLeft: 'auto' }}>
-                    <Button type="text" size="small" onClick={() => setActiveKeys([...GROUP_ORDER])}>
+                    <Button
+                        type="text"
+                        size="small"
+                        onClick={() => setActiveKeys([...MONITOR_GROUP_ORDER])}
+                    >
                         {t('productionPlan.monitor.expandAll')}
                     </Button>
                     <Button type="text" size="small" onClick={() => setActiveKeys([])}>
@@ -565,7 +249,7 @@ export default function ProductionMonitorPage() {
                 style={planThemeVars}
                 items={collapseItems}
                 activeKey={displayedActiveKeys}
-                onChange={(keys) => setActiveKeys(keys as ProductionStatus[])}
+                onChange={(keys) => setActiveKeys(keys as MonitorGroupKey[])}
                 collapsible="header"
                 expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
                 classNames={{
@@ -575,17 +259,19 @@ export default function ProductionMonitorPage() {
             />
 
             <ProductDetailModal
-                product={selectedProduct}
-                open={!!selectedProduct}
-                onClose={() => setSelectedProduct(null)}
+                row={selectedRow}
+                open={!!selectedRow}
+                onClose={() => dispatch(productionPlanMonitorActions.selectRow(null))}
             />
 
             <IncidentConfirmModal
-                product={incidentProduct}
-                open={!!incidentProduct}
-                machineOptions={machineOptions}
-                lines={initialProductionPlan}
-                onClose={() => setIncidentProduct(null)}
+                open={!!incidentRow}
+                row={incidentRow}
+                molds={molds}
+                moldOptions={moldOptions}
+                currentMoldId={incidentCurrentMoldId}
+                onClose={() => dispatch(productionPlanMonitorActions.closeIncidentModal())}
+                onDone={refresh}
             />
         </>
     );

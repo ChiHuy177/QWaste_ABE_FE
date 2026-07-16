@@ -3,43 +3,33 @@
 import { useEffect } from 'react';
 import { Form, Modal, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ProductionProduct, Schedule } from './types';
+import type { Mold } from '@/types/Mold';
+import type { PlanFormValues, SelectOptionVM } from './types';
 import ProductForm from './ProductForm';
 
 interface PlanFormModalProps {
     open: boolean;
     mode: 'create' | 'edit';
-    initialData?: ProductionProduct;
-    lineName?: string;
+    /** Giá trị khởi tạo — page build từ PlanRowVM (edit) hoặc default date (create). */
+    initialValues?: Partial<PlanFormValues>;
+    /** Mã khuôn hiện tại của plan (edit) — hiển thị khi không đổi khuôn. */
+    currentMoldCode?: string | null;
+    /** Danh sách khuôn đầy đủ — ProductForm dùng tra operationType để lọc máy tương thích. */
+    molds: Mold[];
+    moldOptions: SelectOptionVM[];
+    submitting?: boolean;
     onCancel: () => void;
-    onSubmit: (product: ProductionProduct) => void;
+    onSubmit: (values: PlanFormValues) => void;
 }
-
-interface PlanFormValues {
-    code: string;
-    name: string;
-    machine: string;
-    mold: string;
-    time: string;
-    pcsMultiplier: number;
-    schedule: number[];
-}
-
-const createEmptyValues = (): PlanFormValues => ({
-    code: '',
-    name: '',
-    machine: '',
-    mold: '',
-    time: '',
-    pcsMultiplier: 1,
-    schedule: [0, 0, 0, 0, 0, 0, 0],
-});
 
 export default function PlanFormModal({
     open,
     mode,
-    initialData,
-    lineName,
+    initialValues,
+    currentMoldCode,
+    molds,
+    moldOptions,
+    submitting,
     onCancel,
     onSubmit,
 }: PlanFormModalProps) {
@@ -48,18 +38,18 @@ export default function PlanFormModal({
 
     useEffect(() => {
         if (!open) return;
-        form.setFieldsValue(initialData ?? createEmptyValues());
-    }, [form, initialData, open]);
+        form.resetFields();
+        if (initialValues) {
+            form.setFieldsValue(initialValues);
+        }
+    }, [form, initialValues, open]);
 
     const handleFinish = (values: PlanFormValues) => {
         onSubmit({
+            ...values,
             code: values.code.trim(),
             name: values.name.trim(),
-            machine: values.machine.trim(),
-            mold: values.mold.trim(),
-            time: values.time.trim(),
-            pcsMultiplier: values.pcsMultiplier,
-            schedule: values.schedule.map((q) => q ?? 0) as Schedule,
+            note: values.note?.trim() || undefined,
         });
     };
 
@@ -68,14 +58,9 @@ export default function PlanFormModal({
             {mode === 'create'
                 ? t('productionPlan.formModal.createTitle')
                 : t('productionPlan.formModal.editTitle')}
-            {lineName && (
-                <Tag color="blue" style={{ marginLeft: 8, fontWeight: 400, fontSize: 12 }}>
-                    {lineName}
-                </Tag>
-            )}
-            {mode === 'edit' && initialData?.code && (
-                <Tag color="processing" style={{ marginLeft: 4, fontWeight: 400, fontSize: 12 }}>
-                    {initialData.code}
+            {mode === 'edit' && initialValues?.code && (
+                <Tag color="processing" style={{ marginLeft: 8, fontWeight: 400, fontSize: 12 }}>
+                    {initialValues.code}
                 </Tag>
             )}
         </span>
@@ -87,18 +72,20 @@ export default function PlanFormModal({
             open={open}
             onCancel={onCancel}
             onOk={() => form.submit()}
-            okText={t('common.save')}
+            okText={mode === 'create' ? t('common.create') : t('common.save')}
             cancelText={t('common.cancel')}
-            width={800}
+            confirmLoading={submitting}
             destroyOnHidden
+            width={720}
         >
-            <Form<PlanFormValues>
-                form={form}
-                layout="vertical"
-                requiredMark={false}
-                onFinish={handleFinish}
-            >
-                <ProductForm form={form} mode={mode} />
+            <Form form={form} layout="vertical" onFinish={handleFinish}>
+                <ProductForm
+                    form={form}
+                    mode={mode}
+                    molds={molds}
+                    moldOptions={moldOptions}
+                    currentMoldCode={currentMoldCode}
+                />
             </Form>
         </Modal>
     );

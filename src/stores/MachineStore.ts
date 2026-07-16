@@ -33,7 +33,6 @@ const adaptMachine = (m: MachineWithStatusLogsSummary): MachineOverview => ({
     machineId: m.machineId,
     machineName: m.machineName,
     machineCode: m.machineCode,
-    propertyCode: m.propertyCode,
     power: m.power,
     topic: m.topic,
     status:

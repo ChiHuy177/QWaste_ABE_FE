@@ -20,11 +20,9 @@ export const useApiErrorHandler = () => {
 
             if (status && options?.customMappings?.[status]) {
                 errorMessage = t(options.customMappings[status]);
-            }
-            else if (shouldUseServerMessage(status)) {
+            } else if (shouldUseServerMessage(status)) {
                 errorMessage = apiMessage || t('common.server.conflict');
-            }
-            else {
+            } else {
                 switch (status) {
                     case 400: // Validation failure
                         errorMessage = t('common.server.badRequest');

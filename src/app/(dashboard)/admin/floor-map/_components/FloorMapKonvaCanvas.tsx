@@ -245,7 +245,7 @@ function createMachineNode({
     });
 
     const label = new Konva.Text({
-        text: machine.propertyCode,
+        text: machine.machineCode,
         width: rect.width,
         height: rect.height,
         align: 'center',
@@ -256,7 +256,7 @@ function createMachineNode({
         listening: false,
         wrap: 'none',
     });
-    label.fontSize(fitMachineLabelFontSize(label, machine.propertyCode, rect.width, rect.height));
+    label.fontSize(fitMachineLabelFontSize(label, machine.machineCode, rect.width, rect.height));
 
     group.add(body);
     group.add(label);
@@ -315,7 +315,7 @@ function createMachineNode({
             body.size({ width: nextRect.width, height: nextRect.height });
             label.size({ width: nextRect.width, height: nextRect.height });
             label.fontSize(
-                fitMachineLabelFontSize(label, machine.propertyCode, nextRect.width, nextRect.height)
+                fitMachineLabelFontSize(label, machine.machineCode, nextRect.width, nextRect.height)
             );
             onUpdate(pixelRectToRatio(nextRect, imageRect));
         });
@@ -891,7 +891,7 @@ export default function FloorMapKonvaCanvas({
                             flexShrink: 0,
                         }}
                     />
-                    <span style={{ fontWeight: 600 }}>{hoveredMachine.machine.propertyCode}</span>
+                    <span style={{ fontWeight: 600 }}>{hoveredMachine.machine.machineCode}</span>
                     <span style={{ color: token.colorTextSecondary }}>
                         {t(`floorMap.status.${hoveredMachine.machine.currentStatus}`, {
                             defaultValue: hoveredMachine.machine.currentStatus ?? '',
