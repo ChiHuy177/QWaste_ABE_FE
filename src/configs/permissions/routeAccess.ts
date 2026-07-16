@@ -34,16 +34,24 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'staff',
         action: 'view',
     },
+    '/admin/categories/space': {
+        subject: 'space',
+        action: 'view',
+    },
     '/admin/categories/spaceLevel': {
         subject: 'space_level',
         action: 'view',
     },
-    '/admin/categories/step': {
-        subject: 'step',
+    '/admin/categories/mold': {
+        subject: 'mold',
         action: 'view',
     },
-    '/admin/categories/drawingCode': {
-        subject: 'drawing_code',
+    '/admin/categories/operationType': {
+        subject: 'operation_type',
+        action: 'view',
+    },
+    '/admin/categories/step': {
+        subject: 'step',
         action: 'view',
     },
     '/admin/setting': {
@@ -57,11 +65,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Floor map
-    '/admin/floor-map/status': {
-        subject: 'floor_map',
-        action: 'view',
-    },
     '/admin/floor-map': {
         subject: 'floor_map',
         action: 'update',
@@ -87,20 +90,6 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Operator
-    '/operator': {
-        subject: 'operator_dashboard',
-        action: 'view',
-    },
-    '/operator/tasks': {
-        subject: 'operator_dashboard',
-        action: 'view',
-    },
-    '/operator/my-reviews': {
-        subject: 'operator_reviews',
-        action: 'view',
-    },
-
     // Manager
     '/manager/review-dashboard': {
         subject: 'manager_reviews',
@@ -113,21 +102,9 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
-    // Order Management
-    '/admin/order': {
-        subject: 'order',
-        action: 'view',
-    },
-
     // Process Management
     '/admin/process': {
         subject: 'process',
-        action: 'view',
-    },
-
-    // Staff Management
-    '/admin/staff': {
-        subject: 'staff',
         action: 'view',
     },
 
@@ -136,12 +113,19 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'tasks',
         action: 'view',
     },
+    '/admin/production-plan': {
+        subject: 'production_plan',
+        action: 'view',
+    },
+    '/admin/production-plan/monitor': {
+        subject: 'production_monitor',
+        action: 'view',
+    },
 };
 
 const DEFAULT_ROUTE_PRIORITY: string[] = [
     '/admin/space-monitoring',
     '/admin/machines',
-    '/operator/tasks',
     '/qc',
     '/admin/categories/machineList',
     '/admin/categories/spaceLevel',
@@ -154,7 +138,7 @@ export function getDefaultRoute(ability: AppAbility): string {
             return route;
         }
     }
-    // Fallback to the primary admin landing route.
+    // Fallback to the primary admin route.
     return '/admin/space-monitoring';
 }
 

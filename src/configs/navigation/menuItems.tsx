@@ -3,12 +3,8 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ShoppingOutlined,
-    ProjectOutlined,
-    TeamOutlined,
-    CheckSquareOutlined,
     AppstoreOutlined,
-    PartitionOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -36,20 +32,36 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
         );
     }
 
-    if (ability.can('view', 'floor_map')) {
-        items.push(
-            createMenuItem(
-                '/admin/floor-map/status',
-                t('sidebar.navigation.floorMapStatus'),
-                <PartitionOutlined />
-            )
-        );
-    }
-
     if (ability.can('view', 'machine_overview') || ability.can('update', 'machine_overview')) {
         items.push(
             createMenuItem('/admin/machines', t('sidebar.navigation.machine'), <LaptopOutlined />)
         );
+    }
+
+    const productionPlanItems: MenuItem[] = [];
+    if (ability.can('view', 'production_plan')) {
+        productionPlanItems.push(
+            createMenuItem(
+                '/admin/production-plan',
+                t('sidebar.navigation.productionPlan')
+            )
+        );
+    }
+    if (ability.can('view', 'production_monitor')) {
+        productionPlanItems.push(
+            createMenuItem(
+                '/admin/production-plan/monitor',
+                t('sidebar.navigation.productionMonitor')
+            )
+        );
+    }
+    if (productionPlanItems.length > 0) {
+        items.push({
+            key: 'production_plan_group',
+            icon: <CalendarOutlined />,
+            label: t('sidebar.navigation.productionPlan'),
+            children: productionPlanItems,
+        });
     }
 
     const categoryItems: MenuItem[] = [];
@@ -59,6 +71,19 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     if (ability.can('view', 'machine')) {
         machineManagementItems.push(
             createMenuItem('/admin/categories/machineList', t('sidebar.navigation.machineList'))
+        );
+    }
+    if (ability.can('view', 'mold')) {
+        machineManagementItems.push(
+            createMenuItem('/admin/categories/mold', t('sidebar.navigation.mold'))
+        );
+    }
+    if (ability.can('view', 'operation_type')) {
+        machineManagementItems.push(
+            createMenuItem(
+                '/admin/categories/operationType',
+                t('sidebar.navigation.operationType')
+            )
         );
     }
     // if (ability.can('view', 'machine_type')) {
@@ -94,11 +119,11 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             createMenuItem('/admin/categories/space', t('sidebar.navigation.space'))
         );
     }
-    if (ability.can('update', 'floor_map') && ability.can('view', 'floor_map')) {
-        spaceConfigurationItems.push(
-            createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
-        );
-    }
+    // if (ability.can('update', 'floor_map')) {
+    //     spaceConfigurationItems.push(
+    //         createMenuItem('/admin/floor-map', t('sidebar.navigation.floorMapConfig'))
+    //     );
+    // }
     if (spaceConfigurationItems.length > 0) {
         categoryItems.push({
             key: 'space_configuration',
@@ -127,11 +152,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             )
         );
     }
-    if (ability.can('view', 'drawing_code')) {
-        staffAndOthersItems.push(
-            createMenuItem('/admin/categories/drawingCode', t('sidebar.navigation.drawingCode'))
-        );
-    }
     if (staffAndOthersItems.length > 0) {
         categoryItems.push({
             key: 'staff_others',
@@ -147,48 +167,6 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             label: t('sidebar.navigation.catalog'),
             children: categoryItems,
         });
-    }
-
-    if (ability.can('view', 'order')) {
-        items.push(
-            createMenuItem('/admin/order', t('sidebar.navigation.order'), <ShoppingOutlined />)
-        );
-    }
-
-    if (ability.can('view', 'process')) {
-        items.push(
-            createMenuItem('/admin/process', t('sidebar.navigation.process'), <ProjectOutlined />)
-        );
-    }
-
-    if (ability.can('view', 'staff')) {
-        items.push(createMenuItem('/admin/staff', t('sidebar.navigation.staff'), <TeamOutlined />));
-    }
-
-    // if (ability.can('view', 'tasks')) {
-    //     items.push(
-    //         createMenuItem('/admin/tasks', t('sidebar.navigation.tasks'), <CheckSquareOutlined />)
-    //     );
-    // }
-
-    if (ability.can('view', 'operator_dashboard')) {
-        items.push(
-            createMenuItem(
-                '/operator/tasks',
-                t('operatorTasks.page.title', { defaultValue: 'Operator Tasks' }),
-                <CheckSquareOutlined />
-            )
-        );
-    }
-
-    if (ability.can('view', 'operator_reviews')) {
-        items.push(
-            createMenuItem(
-                '/operator/my-reviews',
-                t('operatorReview.page.title'),
-                <CheckSquareOutlined />
-            )
-        );
     }
 
     const rbacItems: MenuItem[] = [];

@@ -9,7 +9,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 export const REFRESH_TOKEN_URL = '/api/authentication/v1/refresh';
 
 const apiClient: AxiosInstance = axios.create({
-    baseURL: '/api/bff',
+    baseURL: '/qwaste',
     timeout: 30000,
     withCredentials: true,
 });

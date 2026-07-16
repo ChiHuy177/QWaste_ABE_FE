@@ -26,10 +26,6 @@
         "overview_view": "Xem tổng quan",
         "store": "Lưu kho",
         "update_sensitive": "Cập nhật nhạy cảm",
-        "update_info": "Cập nhật thông tin",
-        "update_plan": "Cập nhật kế hoạch",
-        "operator_view": "Góc nhìn Vận hành",
-        "manager_review_view": "Góc nhìn Quản lý Đánh giá",
         "decline": "Từ chối",
         "manage": "Quản lý",
         "confirm": "Xác nhận",
@@ -45,6 +41,8 @@
         "clear": "Xóa",
         "apply": "Áp dụng",
         "reset": "Đặt lại",
+        "activeFilters": "Đang lọc",
+        "advancedFilters": "Bộ lọc nâng cao",
         "submit": "Gửi",
         "total": "Tổng",
         "download": "Tải xuống",
@@ -316,10 +314,11 @@
             "machineStatus": "Trạng thái máy",
             "machineDashboard": "Bảng điều khiển máy",
             "staff": "Nhân viên",
-            "drawingCode": "Danh sách mã bản vẽ",
             "process": "Quy trình sản xuất",
             "order": "Đơn hàng",
             "tasks": "Nhiệm vụ",
+            "productionPlan": "Kế hoạch sản xuất",
+            "productionMonitor": "Giám sát sản xuất",
             "history": "Lịch sử",
             "reports": "Báo cáo",
             "settings": "Cài đặt",
@@ -329,15 +328,16 @@
             "zone": "Danh sách khu vực",
             "machineType": "Danh sách loại máy",
             "machineList": "Danh sách máy",
+            "mold": "Danh sách Khuôn",
+            "operationType": "Danh sách Công đoạn",
             "electric": "Công suất tiêu thụ điện",
             "factory": "Danh sách nhà máy",
             "factoryOverview": "Tổng quan nhà máy",
             "floorMap": "Sơ đồ mặt bằng",
-            "floorMapStatus": "Trạng thái sơ đồ mặt bằng",
             "floorMapConfig": "Cấu hình sơ đồ mặt bằng",
             "machineStaffing": "Danh sách nhân sự máy",
             "line": "Danh sách chuyền",
-            "rbac": "Quản lý RBAC",
+            "rbac": "Quản lý quyền truy cập",
             "rbacPermissions": "Quyền hạn",
             "rbacRoles": "Vai trò",
             "rbacUsers": "Người dùng",
@@ -378,6 +378,396 @@
             "message": "Bạn chắc chắn muốn đăng xuất? Bạn cần đăng nhập lại để truy cập bảng điều khiển",
             "confirmText": "Xác nhận Đăng xuất",
             "cancelText": "Hủy"
+        }
+    },
+    "productionPlan": {
+        "title": "Kế hoạch sản xuất",
+        "headerTitle": "Kế hoạch sản xuất - {{label}}",
+        "fetchError": "Không thể tải kế hoạch sản xuất",
+        "moldFetchError": "Không thể tải danh sách khuôn",
+        "deleteSuccess": "Xóa kế hoạch thành công",
+        "deleteError": "Xóa kế hoạch thất bại",
+        "restoreSuccess": "Khôi phục kế hoạch thành công",
+        "restoreError": "Khôi phục kế hoạch thất bại",
+        "reorderError": "Sắp xếp thứ tự thất bại",
+        "reorder": {
+            "save": "Lưu thứ tự",
+            "saveSuccess": "Lưu thứ tự thành công",
+            "discard": "Hủy thay đổi",
+            "unsavedTag": "Thứ tự chưa lưu",
+            "confirmTitle": "Có thay đổi thứ tự chưa lưu",
+            "confirmMessage": "Bạn vừa sắp xếp lại thứ tự sản phẩm nhưng chưa lưu. Vui lòng lưu hoặc hủy thay đổi trước khi tiếp tục.",
+            "saveAndContinue": "Lưu và tiếp tục",
+            "discardAndContinue": "Hủy và tiếp tục",
+            "lockedActionHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thao tác",
+            "lockedFilterHint": "Lưu hoặc hủy thay đổi thứ tự trước khi lọc",
+            "lockedCreateHint": "Lưu hoặc hủy thay đổi thứ tự trước khi thêm mã hàng",
+            "lockedImportHint": "Lưu hoặc hủy thay đổi thứ tự trước khi import",
+            "statusLockedDragHint": "Chỉ có thể kéo-thả sắp xếp lại các kế hoạch đang Chờ sản xuất hoặc Tạm dừng"
+        },
+        "status": {
+            "PENDING": "Chờ sản xuất",
+            "RUNNING": "Đang chạy",
+            "PAUSE": "Tạm dừng",
+            "PARTIAL": "Hoàn thành một phần",
+            "COMPLETE": "Hoàn thành"
+        },
+        "trigger": {
+            "MQTT_RUN": "Máy chạy",
+            "MQTT_ERROR": "Máy lỗi",
+            "MQTT_OFFLINE": "Mất kết nối máy",
+            "MQTT_IDLE": "Máy chờ",
+            "AUTO_ADVANCE": "Tự động chuyển",
+            "MANUAL": "Thao tác tay"
+        },
+        "incidentReason": {
+            "WAITING_MATERIALS": "Chờ nguyên liệu",
+            "TOOL_ADJUSTMENT": "Chỉnh dụng cụ",
+            "SENSOR_CALIBRATION": "Hiệu chuẩn cảm biến",
+            "MOLD_DAMAGE": "Hỏng khuôn",
+            "MACHINE_BREAKDOWN": "Hỏng máy",
+            "QUALITY_ISSUE": "Lỗi chất lượng",
+            "ORDER_CANCELLED": "Hủy đơn hàng",
+            "PRODUCTION_DISCONTINUED": "Ngừng sản xuất",
+            "OTHER": "Lý do khác"
+        },
+        "incident": {
+            "reasonLabel": "Lý do",
+            "reasonPlaceholder": "Chọn lý do",
+            "noteLabel": "Ghi chú",
+            "notePlaceholder": "Mô tả chi tiết (bắt buộc khi chọn Lý do khác)",
+            "noteRequiredForOther": "Vui lòng nhập chi tiết khi chọn Lý do khác"
+        },
+        "transfer": {
+            "success": "Chuyển kế hoạch thành công",
+            "error": "Chuyển kế hoạch thất bại",
+            "detailNotReady": "Đang tải thông tin kế hoạch, vui lòng thử lại",
+            "title": "Chuyển kế hoạch — {{code}}",
+            "noCompatibleMachine": "Không có máy phù hợp với công đoạn của khuôn này",
+            "prevWeek": "Tuần trước",
+            "nextWeek": "Tuần sau",
+            "thisWeek": "tuần này"
+        },
+        "days": {
+            "week": "Tuần",
+            "today": "Hôm nay",
+            "short": {
+                "monday": "T2",
+                "tuesday": "T3",
+                "wednesday": "T4",
+                "thursday": "T5",
+                "friday": "T6",
+                "saturday": "T7",
+                "sunday": "CN"
+            },
+            "full": {
+                "monday": "Thứ 2",
+                "tuesday": "Thứ 3",
+                "wednesday": "Thứ 4",
+                "thursday": "Thứ 5",
+                "friday": "Thứ 6",
+                "saturday": "Thứ 7",
+                "sunday": "Chủ nhật"
+            }
+        },
+        "summary": {
+            "lines": "Khu vực",
+            "products": "Mã hàng",
+            "dailyCases": "Thùng hôm nay",
+            "weeklyCases": "Thùng trong tuần"
+        },
+        "filters": {
+            "machinePlaceholder": "Tìm theo máy"
+        },
+        "views": {
+            "daily": "Ngày",
+            "weekly": "Tuần",
+            "matrix": "Theo máy"
+        },
+        "actions": {
+            "import": "Import",
+            "addProduct": "Thêm mã hàng",
+            "restore": "Khôi phục",
+            "transfer": "Chuyển",
+            "statusLockedHint": "Chỉ áp dụng cho kế hoạch đang chờ (PENDING)"
+        },
+        "panel": {
+            "dailyTable": "Bảng ngày",
+            "weeklyTable": "Bảng tuần",
+            "machineMatrixTable": "Bảng theo máy",
+            "meta": "{{lines}} khu vực / {{products}} mã hàng",
+            "cases": "{{count}} thùng"
+        },
+        "units": {
+            "cases": "Thùng",
+            "pcs": "Cái",
+            "pcsPerCase": "cái/thùng"
+        },
+        "table": {
+            "total": "Tổng",
+            "deletedTag": "Đã xóa",
+            "emptyDaily": "Không có kế hoạch sản xuất cho ngày đã chọn",
+            "emptyFiltered": "Không có mã hàng phù hợp với bộ lọc",
+            "headers": {
+                "date": "Ngày",
+                "line": "Khu vực (Space)",
+                "machine": "Máy",
+                "codeVi": "Mã",
+                "productName": "Tên hàng",
+                "mold": "Khuôn",
+                "average": "Trung bình",
+                "avgShort": "T.bình",
+                "time": "Thời gian",
+                "status": "Trạng thái"
+            },
+            "pagination": {
+                "machineGroups": "Tổng {{total}} nhóm máy"
+            }
+        },
+        "formModal": {
+            "createTitle": "Thêm kế hoạch",
+            "editTitle": "Chỉnh sửa kế hoạch"
+        },
+        "form": {
+            "createSuccess": "Tạo kế hoạch thành công",
+            "createError": "Tạo kế hoạch thất bại",
+            "updateSuccess": "Cập nhật kế hoạch thành công",
+            "updateError": "Cập nhật kế hoạch thất bại",
+            "fetchDetailError": "Không thể tải chi tiết kế hoạch để chỉnh sửa",
+            "sections": {
+                "productInfo": "Thông tin sản phẩm",
+                "schedule": "Kế hoạch 7 ngày (thùng)"
+            },
+            "fields": {
+                "code": {
+                    "label": "Mã Code",
+                    "placeholder": "VD: P-1001",
+                    "required": "Vui lòng nhập mã code"
+                },
+                "name": {
+                    "label": "Tên hàng",
+                    "placeholder": "Tên sản phẩm",
+                    "required": "Vui lòng nhập tên hàng"
+                },
+                "machine": {
+                    "label": "Máy",
+                    "placeholder": "VD: CNC-01",
+                    "required": "Vui lòng nhập máy",
+                    "selectMoldFirst": "Chọn khuôn trước"
+                },
+                "mold": {
+                    "label": "Khuôn",
+                    "placeholder": "VD: M-12A",
+                    "required": "Vui lòng nhập mã khuôn",
+                    "keepCurrent": "Giữ khuôn hiện tại: {{mold}}"
+                },
+                "plannedDate": {
+                    "label": "Ngày sản xuất",
+                    "required": "Vui lòng chọn ngày sản xuất"
+                },
+                "plannedQuantity": {
+                    "label": "Số lượng (thùng)",
+                    "required": "Vui lòng nhập số lượng"
+                },
+                "note": {
+                    "label": "Ghi chú",
+                    "placeholder": "Ghi chú thêm (không bắt buộc)"
+                },
+                "time": {
+                    "label": "Thời gian",
+                    "placeholder": "08:00 - 10:30",
+                    "required": "Vui lòng nhập thời gian"
+                },
+                "pcsMultiplier": {
+                    "label": "Cái / thùng",
+                    "required": "Vui lòng nhập hệ số"
+                }
+            },
+            "summary": {
+                "totalCasesWeek": "Tổng thùng / tuần",
+                "totalPcsWeek": "Tổng cái / tuần"
+            }
+        },
+        "deleteModal": {
+            "title": "Xóa mã hàng",
+            "messagePrefix": "Bạn có chắc chắn muốn xóa",
+            "fallbackProduct": "mã hàng này",
+            "messageSuffix": "khỏi kế hoạch?"
+        },
+        "transferMachine": {
+            "title": "Chuyển máy - {{code}}",
+            "applyDate": "Ngày áp dụng",
+            "currentMachine": "Máy hiện tại",
+            "newMachine": "Máy mới",
+            "newMachinePlaceholder": "Chọn máy mới...",
+            "machineNotFound": "Không tìm thấy máy",
+            "duplicateMachine": "Máy được chọn trùng với máy hiện tại",
+            "applyOnlySelectedDay": "Chỉ áp dụng cho {{day}}. Các ngày khác trong tuần không thay đổi."
+        },
+        "transferSchedule": {
+            "noQuantityToday": "Không có sản lượng để chuyển hôm nay",
+            "from": "Từ",
+            "day": "Ngày",
+            "caseQuantity": "Số thùng",
+            "to": "Đến",
+            "newDay": "Ngày mới",
+            "newDayPlaceholder": "Chọn ngày...",
+            "newMachine": "Máy mới",
+            "newMachinePlaceholder": "Chọn máy...",
+            "caseCount": "{{count}} thùng",
+            "targetAlreadyHasPrefix": "Ngày đích đã có",
+            "targetAlreadyHasMiddle": "sẽ thành",
+            "targetAlreadyHasSuffix": "thùng sau khi chuyển.",
+            "tomorrow": "Ngày mai",
+            "dayAfterTomorrow": "Ngày kia",
+            "selectInstruction": "Nhấn vào ô để chọn ngày & máy đích",
+            "emptySchedule": "(Trống lịch)",
+            "sourceLocked": "Đây là nguồn",
+            "selectTransferTo": "Chọn dời vào",
+            "selected": "Đã chọn"
+        },
+        "import": {
+            "title": "Import kế hoạch sản xuất",
+            "upload": "Tải lên",
+            "hint": "File Excel chứa kế hoạch sản xuất - tối đa 10MB",
+            "uploadError": "Tải lên import thất bại",
+            "confirmError": "Xác nhận import thất bại",
+            "confirmOptions": {
+                "cancel": "Hủy phiên import",
+                "overwriteAll": "Ghi đè tất cả",
+                "overwriteRetain": "Ghi đè, giữ dữ liệu hiện tại"
+            },
+            "columns": {
+                "date": "Ngày",
+                "reason": "Lý do",
+                "row": "Dòng",
+                "column": "Cột",
+                "error": "Lỗi"
+            },
+            "result": {
+                "skippedDays": "Ngày bị bỏ qua ({{count}})",
+                "errors": "Lỗi ({{count}})",
+                "importedDaysCount": "Ngày đã nhập ({{count}})",
+                "deferredDaysCount": "Ngày cần xác nhận ({{count}})",
+                "banner": {
+                    "error": {
+                        "title": "Import thất bại — {{count}} dòng lỗi, chưa có dữ liệu nào được ghi",
+                        "description": "File chưa được nhập vào hệ thống. Sửa các lỗi bên dưới trong Excel rồi tải lên lại toàn bộ file."
+                    },
+                    "confirm": {
+                        "title": "Chưa ghi dữ liệu — {{count}} ngày bị trùng với kế hoạch đang chờ xử lý",
+                        "description": "Các ngày bên dưới đã có kế hoạch chưa hoàn tất trong hệ thống. Chọn cách xử lý bên dưới để hoàn tất import."
+                    },
+                    "success": {
+                        "title": "{{count}} bản ghi đã được ghi vào hệ thống",
+                        "description": "Kế hoạch sản xuất cho các ngày bên dưới đã cập nhật thành công."
+                    },
+                    "empty": {
+                        "title": "Không có dòng nào được ghi",
+                        "description": "Tất cả ngày trong file đã bị bỏ qua, không có dữ liệu nào để nhập."
+                    }
+                }
+            }
+        },
+        "monitor": {
+            "title": "Giám sát sản xuất",
+            "partialTag": "Hoàn thành một phần",
+            "refresh": "Tải lại",
+            "statusCol": "Trạng thái",
+            "lastUpdated": "Cập nhật lần cuối",
+            "filterAll": "Tất cả trạng thái",
+            "searchPlaceholder": "Tìm theo mã hàng, tên, máy...",
+            "showing": "Hiển thị {{count}} / {{total}}",
+            "expandAll": "Mở rộng tất cả",
+            "collapseAll": "Thu gọn tất cả",
+            "productCodes": "mã hàng",
+            "connected": "Đã kết nối",
+            "disconnected": "Mất kết nối",
+            "lastSync": "Đồng bộ lúc: {{time}}",
+            "emptyGroup": "Không có mã hàng nào ở trạng thái này",
+            "needsAction": "Cần xử lý",
+            "allConfirmed": "Đã xác nhận tất cả",
+            "confirmedTag": "Đã xác nhận",
+            "status": {
+                "TODO": "Chờ làm",
+                "IN_PROGRESS": "Đang chạy",
+                "PAUSE": "Tạm dừng",
+                "COMPLETE": "Hoàn thành"
+            },
+            "incident": {
+                "actionBtn": "Xác nhận sự cố",
+                "title": "Xác nhận sự cố",
+                "subtitle": "Máy {{machine}} · {{name}}",
+                "alert": "Chọn một phương án xử lý. Hành động này sẽ ảnh hưởng đến hàng đợi sản xuất và log dữ liệu thực tế.",
+                "option1Title": "Kết thúc kế hoạch",
+                "option1UseCase": "Đơn hàng bị hủy, hoặc xưởng quyết định dừng vĩnh viễn",
+                "option1Desc": "Đóng kế hoạch hiện tại với trạng thái PARTIAL. Kế hoạch tiếp theo trong hàng đợi sẽ được kích hoạt.",
+                "option1Warning": "Hành động không thể hoàn tác. Kế hoạch sẽ bị đóng với {{remaining}} cái chưa hoàn thành.",
+                "option2Title": "Hoãn / Chuyển kế hoạch",
+                "option2UseCase": "Khuôn hỏng nặng, máy sự cố dài hạn — cần dời sang ngày/máy khác",
+                "option2Desc": "Đóng kế hoạch hiện tại (PARTIAL), tạo sub-plan mới với số lượng còn lại theo lịch mới.",
+                "option3Title": "Tạm dừng chờ sửa chữa ngắn hạn",
+                "option3UseCase": "Chờ vật tư, hiệu chỉnh nhỏ — máy sẽ resume sớm",
+                "option3Desc": "Giữ nguyên trạng thái PAUSE. Khi MQTT gửi tín hiệu tiếp theo, hệ thống tự chuyển về IN_PROGRESS.",
+                "option3AutoResume": "Đang lắng nghe MQTT (shot_signal=1) → tự chuyển IN_PROGRESS và tiếp tục đếm sản lượng.",
+                "planQty": "Kế hoạch (planQuantity)",
+                "produced": "Đã sản xuất (calculatedPcs)",
+                "remainingQty": "Còn lại (sub-plan mới)",
+                "willSkip": "Sẽ bị bỏ qua",
+                "newDate": "Ngày mới",
+                "newMachine": "Máy mới",
+                "newMold": "Khuôn mới",
+                "moldPlaceholder": "Nhập mã khuôn (BE sẽ cung cấp danh sách sau)",
+                "deferReason": "Lý do sự cố / Ghi chú downtime",
+                "deferReasonPh": "VD: Khuôn M-13B bị nứt vỡ, cần thay thế khuôn dự phòng...",
+                "queueSeq": "Vị trí hàng đợi",
+                "queueSeqHint": "1 = đưa lên đầu hàng đợi ngày mới",
+                "pauseReason": "Lý do tạm dừng",
+                "pauseReasonPh": "VD: Chờ cấp vật tư, Hiệu chỉnh cảm biến, Nghỉ giải lao...",
+                "pauseReasonHint": "Không bắt buộc — dùng để log KPI downtime",
+                "selectHint": "Chọn một phương án để tiếp tục",
+                "hintOpt1": "Kết thúc và đóng kế hoạch vĩnh viễn",
+                "hintOpt2": "Tạo sub-plan mới với {{remaining}} cái còn lại",
+                "hintOpt3": "Giữ PAUSE, chờ MQTT tự resume",
+                "confirm": "Xác nhận",
+                "successTerminate": "Kế hoạch {{code}} đã kết thúc — trạng thái chuyển PARTIAL",
+                "successDefer": "Sub-plan mới đã tạo cho {{code}} với {{remaining}} cái còn lại",
+                "successRepair": "Đã log sự cố cho {{code}} — đang lắng nghe MQTT để tự resume"
+            },
+            "detail": {
+                "statusTrack": "Trạng thái hiện tại",
+                "plannedDate": "Ngày sản xuất",
+                "operationType": "Công đoạn",
+                "plannedQuantity": "Số lượng kế hoạch",
+                "actualQuantity": "Đã sản xuất",
+                "note": "Ghi chú",
+                "statusLogs": "Lịch sử trạng thái",
+                "noLogs": "Chưa có lịch sử trạng thái",
+                "productInfo": "Thông tin sản phẩm",
+                "weeklySchedule": "Kế hoạch sản xuất tuần",
+                "code": "Mã hàng",
+                "name": "Tên sản phẩm",
+                "machine": "Máy",
+                "line": "Chuyền",
+                "mold": "Khuôn",
+                "time": "Ca sản xuất",
+                "pcsMultiplier": "Hệ số sản lượng",
+                "pcs": "cái",
+                "lot": "lô",
+                "lots": "lô",
+                "noUpdate": "Chưa nhận tín hiệu từ phần cứng",
+                "totalWeeklyLots": "Tổng lô/tuần",
+                "totalWeeklyPcs": "Tổng sản lượng/tuần",
+                "days": {
+                    "mon": "T2",
+                    "tue": "T3",
+                    "wed": "T4",
+                    "thu": "T5",
+                    "fri": "T6",
+                    "sat": "T7",
+                    "sun": "CN"
+                }
+            }
         }
     },
     "notFound": {
@@ -435,7 +825,6 @@
     },
     "floorMap": {
         "title": "Sơ đồ mặt bằng",
-        "viewTitle": "Trạng thái sơ đồ mặt bằng",
         "filters": {
             "selectSpace": "Chọn khu vực"
         },
@@ -468,13 +857,6 @@
             "OPEN_DOOR": "Mở cửa",
             "WARNING": "Cảnh báo",
             "UNKNOWN": "Không xác định"
-        },
-        "statusSummary": {
-            "totalMachines": "Tổng số máy",
-            "placedMachines": "Máy đã đặt",
-            "liveConnected": "Đang kết nối trực tiếp",
-            "liveDisconnected": "Mất kết nối trực tiếp",
-            "viewDetails": "Xem chi tiết"
         },
         "machines": {
             "title": "Máy trong khu vực",
@@ -842,6 +1224,7 @@
             "allStatus": "Tất Cả Trạng Thái",
             "itemsPerPage": "Số lượng mỗi trang",
             "activeFilters": "Bộ lọc đang hoạt động:",
+            "advancedFilters": "Bộ lọc nâng cao",
             "searchFilter": "Tìm kiếm: {{term}}",
             "statusFilter": "Trạng thái: {{status}}",
             "resultsFound": "Tìm thấy {{count}} máy",
@@ -1100,7 +1483,7 @@
             "offlineNote": "Không tính vào tỷ lệ phần trăm",
             "totalActiveTime": "Tổng Thời Gian Hoạt Động",
             "excludingOffline": "Không bao gồm thời gian offline",
-            "propertyCode": "Mã Tài Sản",
+            "machineCode": "Mã Máy",
             "power": "Công Suất",
             "measuredEnergy": "Năng Lượng Đo",
             "productionMetrics": "Chỉ Số Sản Xuất",
@@ -1861,9 +2244,6 @@
             "status": "Trạng thái",
             "taskStatus": "Trạng thái Công việc",
             "allStatuses": "Tất cả Trạng thái",
-            "drawingCode": "Mã Bản vẽ",
-            "selectDrawingCode": "Chọn Mã Bản vẽ",
-            "allDrawingCodes": "Tất cả Mã Bản vẽ",
             "machine": "Máy gia công",
             "selectMachine": "Chọn Máy gia công",
             "allMachines": "Tất cả Máy",
@@ -1880,7 +2260,6 @@
             "headers": {
                 "processName": "Tên Quy trình",
                 "processId": "ID Quy trình",
-                "drawingCode": "Mã Bản vẽ",
                 "machine": "Máy gia công",
                 "taskStatus": "Trạng thái",
                 "approved": "Tình trạng QC",
@@ -1907,7 +2286,6 @@
             "editTitle": "Chỉnh sửa Quy trình",
             "fields": {
                 "name": "Tên Quy trình",
-                "drawingCode": "Mã Bản vẽ",
                 "machine": "Máy gia công",
                 "predictedEndTime": "Ngày Giờ Kết thúc Dự kiến",
                 "time": "Thời gian",
@@ -1917,7 +2295,6 @@
             },
             "placeholders": {
                 "name": "Nhập tên quy trình...",
-                "selectDrawingCode": "Chọn mã bản vẽ",
                 "selectMachine": "Chọn máy gia công",
                 "predictedEndTime": "Chọn ngày giờ hoàn thành dự kiến",
                 "qcRemarks": "Nhập nhận xét QC"
@@ -1930,13 +2307,11 @@
             },
             "validation": {
                 "nameRequired": "Yêu cầu tên quy trình",
-                "drawingCodeRequired": "Yêu cầu mã bản vẽ",
                 "machineRequired": "Yêu cầu chọn máy gia công",
                 "predictedEndTimeRequired": "Yêu cầu thời gian kết thúc dự kiến",
                 "predictedEndTimeInvalid": "Vui lòng chọn ngày giờ hợp lệ"
             },
             "options": {
-                "selectDrawingCode": "Chọn Mã Bản vẽ",
                 "selectMachine": "Chọn Máy gia công",
                 "selectTaskStatus": "Chọn Trạng thái",
                 "selectApproval": "Chọn Tình trạng QC",
@@ -1989,14 +2364,11 @@
                 "notFound": "Không tìm thấy quy trình",
                 "alreadyExists": "Quy trình đã tồn tại",
                 "unexpectedError": "Đã xảy ra lỗi không xác định",
-                "drawingCodeLoadFailed": "Tải mã bản vẽ thất bại",
                 "machineLoadFailed": "Tải danh sách máy thất bại",
-                "invalidDrawingCode": "Vui lòng chọn mã bản vẽ hợp lệ",
                 "invalidMachine": "Vui lòng chọn máy gia công hợp lệ"
             }
         },
         "display": {
-            "unknownDrawingCode": "Mã Bản vẽ Không xác định",
             "unknownMachine": "Máy Không xác định",
             "loadingDetails": "Đang tải...",
             "errorLoadingDetails": "Lỗi tải chi tiết"
@@ -2130,7 +2502,6 @@
                 "timeline": "Dòng thời gian",
                 "qcInfo": "Kiểm soát Chất lượng",
                 "process": "Quy trình",
-                "drawingCode": "Mã Bản vẽ",
                 "machine": "Máy",
                 "operator": "Người vận hành",
                 "created": "Tạo lúc",
@@ -2607,6 +2978,128 @@
             "updatedBy": "Người Cập Nhật Cuối"
         }
     },
+    "moldManagement": {
+        "title": "Danh Sách Khuôn",
+        "addMold": "Thêm Khuôn",
+        "searchPlaceholder": "Tìm theo mã hoặc tên khuôn",
+        "fetchError": "Không thể tải danh sách khuôn. Vui lòng thử lại.",
+        "deleteSuccess": "Xóa khuôn thành công",
+        "restoreSuccess": "Khôi phục khuôn thành công",
+        "restoreError": "Khôi phục khuôn thất bại",
+        "deletedTag": "Đã xóa",
+        "deleteError": "Không thể xóa khuôn. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật khuôn thành công",
+        "updateError": "Không thể cập nhật khuôn. Vui lòng thử lại.",
+        "table": {
+            "headers": {
+                "moldCode": "Mã Khuôn",
+                "moldName": "Tên Khuôn",
+                "outputPerShot": "Số Lỗ",
+                "operationType": "Công Đoạn",
+                "description": "Mô Tả",
+                "createdAt": "Ngày Tạo",
+                "updatedAt": "Ngày Cập Nhật",
+                "actions": "Thao Tác"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Xóa Khuôn",
+                "description": "Bạn có chắc chắn muốn xóa khuôn này? Hành động này không thể hoàn tác."
+            },
+            "restoreConfirmation": {
+                "title": "Khôi phục khuôn",
+                "description": "Khuôn sẽ được đưa trở lại danh sách sử dụng. Tiếp tục?"
+            }
+        },
+        "form": {
+            "createTitle": "Tạo Khuôn Mới",
+            "editTitle": "Chỉnh Sửa Khuôn",
+            "createDescription": "Điền thông tin vào form bên dưới để tạo khuôn mới.",
+            "editDescription": "Điền thông tin vào form bên dưới để chỉnh sửa khuôn.",
+            "createSuccess": "Tạo khuôn thành công",
+            "createError": "Không thể tạo khuôn. Vui lòng thử lại.",
+            "fields": {
+                "moldCode": "Mã Khuôn",
+                "moldName": "Tên Khuôn",
+                "outputPerShot": "Số Lỗ Khuôn",
+                "operationType": "Công Đoạn",
+                "description": "Mô Tả"
+            },
+            "placeholders": {
+                "moldCode": "Nhập mã khuôn (vd: KM001)",
+                "moldName": "Nhập tên khuôn",
+                "outputPerShot": "Nhập số lỗ khuôn",
+                "operationType": "Chọn công đoạn",
+                "description": "Nhập mô tả khuôn (tùy chọn)"
+            },
+            "validation": {
+                "required": "Trường này là bắt buộc",
+                "maxLength": "Độ dài tối đa là {{max}} ký tự",
+                "minOutputPerShot": "Số lỗ khuôn phải lớn hơn hoặc bằng {{min}}"
+            },
+            "buttons": {
+                "cancel": "Hủy",
+                "create": "Tạo Mới",
+                "save": "Lưu Thay Đổi",
+                "saving": "Đang lưu..."
+            }
+        }
+    },
+    "operationTypeManagement": {
+        "title": "Danh Sách Công Đoạn",
+        "addOperationType": "Thêm Công Đoạn",
+        "searchPlaceholder": "Tìm theo mã hoặc tên công đoạn",
+        "fetchError": "Không thể tải danh sách công đoạn. Vui lòng thử lại.",
+        "deleteSuccess": "Xóa công đoạn thành công",
+        "deleteError": "Không thể xóa công đoạn. Vui lòng thử lại.",
+        "updateSuccess": "Cập nhật công đoạn thành công",
+        "updateError": "Không thể cập nhật công đoạn. Vui lòng thử lại.",
+        "table": {
+            "headers": {
+                "operationTypeCode": "Mã Công Đoạn",
+                "operationTypeName": "Tên Công Đoạn",
+                "description": "Mô Tả",
+                "createdAt": "Ngày Tạo",
+                "updatedAt": "Ngày Cập Nhật",
+                "actions": "Thao Tác"
+            }
+        },
+        "dialogs": {
+            "deleteConfirmation": {
+                "title": "Xóa Công Đoạn",
+                "description": "Bạn có chắc chắn muốn xóa công đoạn này? Hành động này không thể hoàn tác và sẽ thất bại nếu công đoạn đang được máy hoặc khuôn sử dụng."
+            }
+        },
+        "form": {
+            "createTitle": "Tạo Công Đoạn Mới",
+            "editTitle": "Chỉnh Sửa Công Đoạn",
+            "createDescription": "Điền thông tin vào form bên dưới để tạo công đoạn mới.",
+            "editDescription": "Điền thông tin vào form bên dưới để chỉnh sửa công đoạn.",
+            "createSuccess": "Tạo công đoạn thành công",
+            "createError": "Không thể tạo công đoạn. Vui lòng thử lại.",
+            "fields": {
+                "operationTypeCode": "Mã Công Đoạn",
+                "operationTypeName": "Tên Công Đoạn",
+                "description": "Mô Tả"
+            },
+            "placeholders": {
+                "operationTypeCode": "Nhập mã công đoạn (vd: PRESS)",
+                "operationTypeName": "Nhập tên công đoạn",
+                "description": "Nhập mô tả công đoạn (tùy chọn)"
+            },
+            "validation": {
+                "required": "Trường này là bắt buộc",
+                "maxLength": "Độ dài tối đa là {{max}} ký tự"
+            },
+            "buttons": {
+                "cancel": "Hủy",
+                "create": "Tạo Mới",
+                "save": "Lưu Thay Đổi",
+                "saving": "Đang lưu..."
+            }
+        }
+    },
     "machineListManagement": {
         "title": "Quản lý danh sách máy",
         "addMachine": "Thêm máy",
@@ -2643,11 +3136,12 @@
                 "createdAt": "Ngày tạo",
                 "updatedAt": "Ngày cập nhật",
                 "actions": "Hành động",
-                "propertyCode": "Mã tài sản",
+                "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "space": "Khu vực",
                 "displayOrder": "Thứ tự hiển thị",
-                "status": "Trạng thái"
+                "status": "Trạng thái",
+                "operationType": "Công đoạn"
             },
             "units": {
                 "hours": "Giờ"
@@ -2660,7 +3154,7 @@
             "selectLine": "Chọn băng chuyền",
             "codePlaceholder": "Nhập mã máy...",
             "namePlaceholder": "Nhập tên máy...",
-            "propertyPlaceholder": "VD: 11.xx.0001",
+            "machineCodePlaceholder": "VD: 11.xx.0001",
             "topicPlaceholder": "Nhập topic..."
         },
         "actions": {
@@ -2695,10 +3189,11 @@
                 "productionTime": "Thời gian sản xuất",
                 "zone": "Khu vực",
                 "machineImage": "Hình ảnh máy",
-                "propertyCode": "Mã tài sản",
+                "machineCode": "Mã máy",
                 "power": "Mức điện",
                 "line": "Danh sách chuyền",
-                "displayOrder": "Thứ tự hiển thị"
+                "displayOrder": "Thứ tự hiển thị",
+                "operationType": "Công đoạn"
             },
             "placeholders": {
                 "machineName": "Nhập tên máy (vd: Máy CNC, Máy in 3D, Máy tiện)",
@@ -2708,10 +3203,11 @@
                 "topic": "Nhập chủ đề",
                 "productionTime": "Nhập thời gian sản xuất",
                 "zone": "Chọn một khu vực",
-                "propertyCode": "Nhập mã tài sản",
+                "machineCode": "Nhập mã máy",
                 "power": "Nhập mức điện",
                 "line": "Chọn một băng chuyền",
-                "machineImage": "Tải lên hình ảnh máy"
+                "machineImage": "Tải lên hình ảnh máy",
+                "operationType": "Chọn một công đoạn"
             },
             "validation": {
                 "required": "Trường này là bắt buộc",
@@ -3091,7 +3587,6 @@
         "unitPrice": "Đơn giá",
         "totalPrice": "Tổng tiền",
         "quantity": "Số lượng",
-        "drawingCode": "Mã bản vẽ",
         "machine": "Máy móc",
         "operator": "Người vận hành",
         "notAssigned": "Chưa phân công",
@@ -3117,11 +3612,12 @@
         "groupList": "Danh sách nhóm",
         "zoneList": "Quản Lý Khu Vực",
         "machineTypeList": "Quản Lý Loại Máy",
-        "drawingCodeList": "Quản lý Mã Bản Vẽ",
         "operator": "Nhân viên",
         "machineList": "Danh sách máy",
+        "moldList": "Danh sách Khuôn",
+        "operationTypeList": "Danh sách Công đoạn",
+        "productionPlan": "Kế hoạch sản xuất",
         "processManagement": "Quản lý quy trình",
-        "orderManagement": "Quản lý đơn hàng",
         "history": "Lịch sử",
         "settings": "Cài đặt",
         "factoryList": "Quản Lý Nhà máy",
@@ -3133,12 +3629,8 @@
     },
     "addTaskForm": {
         "title": "Thêm Công việc Mới",
-        "selectDrawingCode": "Chọn Mã Bản vẽ",
         "taskDetails": "Chi tiết Công việc",
         "costEstimation": "Ước tính Chi phí",
-        "selectedDrawingCode": "Mã Bản vẽ Đã chọn",
-        "noDrawingCodesFound": "Không tìm thấy mã bản vẽ",
-        "searchDrawingCodes": "Tìm kiếm mã bản vẽ...",
         "fields": {
             "title": "Tiêu đề Công việc",
             "description": "Mô tả",
@@ -3180,11 +3672,6 @@
             "create": "Tạo Công việc",
             "creating": "Đang tạo...",
             "cancel": "Hủy"
-        },
-        "drawingCodeInfo": {
-            "category": "Danh mục",
-            "unitPrice": "Đơn giá",
-            "estimatedTime": "Thời gian ước tính"
         }
     },
     "orderForm": {
@@ -3730,6 +4217,12 @@
         }
     },
     "notification": {
+        "production_plan": {
+            "incident_pause": {
+                "title": "Kế hoạch tạm dừng do sự cố",
+                "content": "Một kế hoạch sản xuất vừa chuyển sang tạm dừng do sự cố máy."
+            }
+        },
         "order": {
             "assigned_operators": {
                 "title": "Lệnh Sản Xuất Mới Được Giao",
@@ -3756,6 +4249,12 @@
             "alarm_error": {
                 "title": "Cảnh Báo Máy",
                 "content": "Máy {0} đã kích hoạt cảnh báo lỗi. Cần kiểm tra ngay."
+            }
+        },
+        "product": {
+            "queue_empty": {
+                "title": "Hàng đợi sản phẩm trống",
+                "content": "Hàng đợi sản phẩm hiện đang trống. Vui lòng thêm sản phẩm để tiếp tục."
             }
         }
     },
@@ -4127,919 +4626,6 @@
             }
         }
     },
-    "landing": {
-        "nav": {
-            "features": "Tính năng",
-            "howItWorks": "Cách hoạt động",
-            "pricing": "Bảng giá",
-            "faq": "Câu hỏi",
-            "login": "Đăng nhập",
-            "getStarted": "Bắt đầu",
-            "watchDemo": "Xem Demo"
-        },
-        "hero": {
-            "title": "Quản Lý Nhà Máy Thông Minh, Vận Hành Bởi Trí Tuệ",
-            "subtitle": "Giám sát máy CNC theo thời gian thực, quản lý đơn hàng sản xuất, kiểm soát chất lượng và tối ưu hóa năng lượng — tất cả trong một nền tảng.",
-            "cta": "Bắt đầu miễn phí",
-            "ctaSecondary": "Xem Demo"
-        },
-        "trustedBy": {
-            "title": "Được Tin Tưởng Bởi Các Doanh Nghiệp Hàng Đầu"
-        },
-        "features": {
-            "title": "Tất Cả Những Gì Bạn Cần Để Vận Hành Nhà Máy",
-            "subtitle": "Bộ công cụ toàn diện cho quản lý sản xuất hiện đại",
-            "machineMonitoring": {
-                "title": "Giám Sát Máy Thời Gian Thực",
-                "description": "Theo dõi trạng thái, hiệu suất và mức sử dụng máy CNC theo thời gian thực với bảng điều khiển trực tiếp."
-            },
-            "productionManagement": {
-                "title": "Quản Lý Đơn Hàng Sản Xuất",
-                "description": "Quản lý đơn hàng sản xuất với bảng Kanban, phân công nhiệm vụ và theo dõi tiến độ liền mạch."
-            },
-            "qualityControl": {
-                "title": "Kiểm Soát Chất Lượng",
-                "description": "Quy trình QC toàn diện với các điểm kiểm tra và theo dõi đạt/không đạt."
-            },
-            "energyMonitoring": {
-                "title": "Giám Sát Năng Lượng",
-                "description": "Theo dõi mức tiêu thụ điện từng máy và tối ưu hóa chi phí năng lượng toàn nhà máy."
-            },
-            "staffManagement": {
-                "title": "Phân Công Nhân Sự & Vận Hành",
-                "description": "Phân công công nhân vào máy và nhiệm vụ, theo dõi ca làm và cân bằng khối lượng công việc."
-            },
-            "accessControl": {
-                "title": "Phân Quyền Truy Cập",
-                "description": "Quyền hạn chi tiết với các vai trò cho quản trị viên, vận hành, kiểm tra QC và quản lý."
-            },
-            "aiOptimization": {
-                "title": "Phân Tích AI Thông Minh",
-                "description": "Tận dụng AI để xác định điểm nghẽn, dự đoán bảo trì và giảm lãng phí."
-            },
-            "analytics": {
-                "title": "Phân Tích Dữ Liệu Toàn Diện",
-                "description": "Bảng điều khiển phong phú với biểu đồ, KPI và báo cáo xuất để ra quyết định dựa trên dữ liệu."
-            }
-        },
-        "howItWorks": {
-            "title": "Cách Hoạt Động",
-            "subtitle": "Bắt đầu chỉ với bốn bước đơn giản",
-            "connect": {
-                "title": "Kết Nối",
-                "description": "Kết nối máy CNC và dây chuyền sản xuất của bạn với nền tảng Qwaste."
-            },
-            "monitor": {
-                "title": "Giám Sát",
-                "description": "Xem trạng thái thời gian thực của máy móc, nhiệm vụ sản xuất và chỉ số chất lượng."
-            },
-            "optimize": {
-                "title": "Tối Ưu",
-                "description": "Sử dụng phân tích AI để giảm lãng phí và cải thiện hiệu suất."
-            },
-            "scale": {
-                "title": "Mở Rộng",
-                "description": "Mở rộng hoạt động trên nhiều phân xưởng và dây chuyền sản xuất."
-            }
-        },
-        "comparison": {
-            "badge": "Truyền Thống vs Thông Minh",
-            "title": "Thấy Rõ Sự Khác Biệt",
-            "subtitle": "Khám phá cách Qwaste chuyển đổi quản lý nhà máy truyền thống thành hoạt động thông minh, dựa trên dữ liệu",
-            "traditional": {
-                "title": "Quản Lý Truyền Thống",
-                "description": "Quy trình thủ công, quyết định phản ứng, khả năng hiển thị hạn chế",
-                "items": {
-                    "paperBased": {
-                        "title": "Hồ Sơ Giấy Tờ",
-                        "description": "Clipboard, bảng tính, nhập dữ liệu thủ công"
-                    },
-                    "manualTracking": {
-                        "title": "Theo Dõi Thủ Công",
-                        "description": "Kiểm tra đi bộ, báo cáo chậm trễ"
-                    },
-                    "spreadsheets": {
-                        "title": "Bảng Tính Rời Rạc",
-                        "description": "Dữ liệu bị phân tán, xung đột phiên bản, không đồng bộ thời gian thực"
-                    },
-                    "reactive": {
-                        "title": "Giải Quyết Vấn Đề Phản Ứng",
-                        "description": "Khắc phục sự cố sau khi xảy ra, chi phí ngừng hoạt động cao"
-                    }
-                }
-            },
-            "qwaste": {
-                "badge": "Khuyến Nghị",
-                "title": "Quản Lý Thông Minh Qwaste",
-                "description": "Quy trình tự động, thông tin chi tiết dự đoán, hiển thị hoàn toàn",
-                "items": {
-                    "realTimeData": {
-                        "title": "Thu Thập Dữ Liệu Thời Gian Thực",
-                        "description": "Tự động thu thập dữ liệu từ tất cả máy móc và cảm biến"
-                    },
-                    "automated": {
-                        "title": "Quy Trình Tự Động",
-                        "description": "Phân công nhiệm vụ thông minh, thông báo tức thì, phối hợp liền mạch"
-                    },
-                    "aiPowered": {
-                        "title": "Phân Tích Được Hỗ Trợ Bởi AI",
-                        "description": "Bảng điều khiển tập trung, KPI trực tiếp, thông tin chi tiết có thể thực hiện"
-                    },
-                    "predictive": {
-                        "title": "Bảo Trì Dự Đoán",
-                        "description": "Ngăn chặn sự cố trước khi xảy ra, giảm thiểu thời gian ngừng hoạt động"
-                    }
-                }
-            }
-        },
-        "integrations": {
-            "badge": "Tích Hợp Liền Mạch",
-            "title": "Hoạt Động Với Các Hệ Thống Hiện Có",
-            "subtitle": "Kết nối Qwaste với máy móc, phần mềm và cơ sở hạ tầng hiện tại của bạn để có trải nghiệm quản lý nhà máy thống nhất",
-            "categories": {
-                "cncMachines": {
-                    "title": "Máy CNC",
-                    "description": "Tích hợp trực tiếp với các thương hiệu máy CNC và bộ điều khiển chính",
-                    "items": {
-                        "fanuc": "Fanuc",
-                        "siemens": "Siemens",
-                        "haas": "Haas",
-                        "mazak": "Mazak"
-                    }
-                },
-                "erpSystems": {
-                    "title": "Hệ Thống ERP",
-                    "description": "Đồng bộ dữ liệu sản xuất với phần mềm hoạch định nguồn lực doanh nghiệp",
-                    "items": {
-                        "sap": "SAP",
-                        "oracle": "Oracle",
-                        "microsoft": "Microsoft Dynamics",
-                        "odoo": "Odoo"
-                    }
-                },
-                "iotDevices": {
-                    "title": "IoT & Cảm Biến",
-                    "description": "Kết nối các thiết bị IoT công nghiệp và hệ thống tự động hóa",
-                    "items": {
-                        "sensors": "Cảm Biến Thông Minh",
-                        "plc": "PLCs",
-                        "scada": "SCADA",
-                        "actuators": "Bộ Truyền Động"
-                    }
-                },
-                "cloudPlatforms": {
-                    "title": "Nền Tảng Đám Mây",
-                    "description": "Triển khai trên cơ sở hạ tầng đám mây ưa thích của bạn",
-                    "items": {
-                        "aws": "AWS",
-                        "azure": "Azure",
-                        "gcp": "Google Cloud",
-                        "alibaba": "Alibaba Cloud"
-                    }
-                }
-            },
-            "apiAccess": {
-                "title": "Truy Cập API Đầy Đủ",
-                "description": "Xây dựng tích hợp tùy chỉnh với REST API toàn diện, webhooks và giao thức dữ liệu thời gian thực của chúng tôi",
-                "protocols": {
-                    "restApi": "REST API",
-                    "webhooks": "Webhooks",
-                    "graphql": "GraphQL",
-                    "mqtt": "MQTT"
-                }
-            }
-        },
-        "preview": {
-            "title": "Trải Nghiệm Qwaste Ngay",
-            "subtitle": "Bảng điều khiển mạnh mẽ được xây dựng cho quản lý nhà máy"
-        },
-        "metrics": {
-            "title": "Được Tin Tưởng Bởi Các Nhà Sản Xuất Toàn Cầu",
-            "factories": "Nhà máy",
-            "tasks": "Nhiệm vụ đã quản lý",
-            "uptime": "Thời gian hoạt động",
-            "wasteReduction": "Giảm lãng phí"
-        },
-        "testimonials": {
-            "title": "Khách Hàng Nói Gì Về Chúng Tôi",
-            "items": {
-                "0": {
-                    "quote": "Qwaste đã thay đổi hoàn toàn quy trình sản xuất của chúng tôi. Thời gian chết giảm 40% trong tháng đầu tiên.",
-                    "name": "Nguyễn Văn A",
-                    "role": "Quản lý Sản xuất",
-                    "company": "Woodsland Furniture"
-                },
-                "1": {
-                    "quote": "Giám sát thời gian thực mang lại cho chúng tôi tầm nhìn toàn diện về hoạt động CNC. Một bước ngoặt thực sự.",
-                    "name": "Trần Thị B",
-                    "role": "Giám đốc Nhà máy",
-                    "company": "IIC Manufacturing"
-                },
-                "2": {
-                    "quote": "Chi phí năng lượng giảm 25% sau khi triển khai module giám sát của Qwaste trên toàn nhà máy.",
-                    "name": "Lê Văn C",
-                    "role": "Quản lý Vận hành",
-                    "company": "EIU Industrial"
-                }
-            }
-        },
-        "pricing": {
-            "title": "Bảng Giá Đơn Giản, Minh Bạch",
-            "subtitle": "Chọn gói phù hợp với nhà máy của bạn",
-            "monthly": "/tháng",
-            "perMachine": "/máy",
-            "popular": "Phổ biến nhất",
-            "basic": {
-                "name": "Cơ bản",
-                "price": "Liên hệ",
-                "description": "Cho xưởng nhỏ mới bắt đầu",
-                "features": {
-                    "0": "Tối đa 5 máy",
-                    "1": "Bảng giám sát cơ bản",
-                    "2": "Hỗ trợ qua email",
-                    "3": "1 tài khoản quản trị"
-                },
-                "cta": "Liên hệ tư vấn"
-            },
-            "pro": {
-                "name": "Chuyên nghiệp",
-                "price": "Liên hệ",
-                "description": "Cho nhà máy đang phát triển",
-                "features": {
-                    "0": "Không giới hạn máy",
-                    "1": "Phân tích AI thông minh",
-                    "2": "Module kiểm soát chất lượng",
-                    "3": "Giám sát năng lượng",
-                    "4": "Tối đa 25 người dùng",
-                    "5": "Hỗ trợ ưu tiên"
-                },
-                "cta": "Liên hệ tư vấn"
-            },
-            "enterprise": {
-                "name": "Doanh nghiệp",
-                "price": "Liên hệ",
-                "description": "Cho hoạt động quy mô lớn",
-                "features": {
-                    "0": "Tất cả tính năng Pro",
-                    "1": "Triển khai tại chỗ",
-                    "2": "Quản lý tài khoản riêng",
-                    "3": "Tích hợp tùy chỉnh",
-                    "4": "Cam kết SLA",
-                    "5": "Không giới hạn người dùng"
-                },
-                "cta": "Liên hệ tư vấn"
-            }
-        },
-        "faq": {
-            "title": "Câu Hỏi Thường Gặp",
-            "items": {
-                "0": {
-                    "question": "Qwaste hỗ trợ những loại máy nào?",
-                    "answer": "Qwaste hỗ trợ tất cả máy CNC và thiết bị sản xuất có thể xuất tín hiệu số. Chúng tôi cung cấp hướng dẫn tích hợp cho các bộ điều khiển CNC phổ biến."
-                },
-                "1": {
-                    "question": "Mất bao lâu để cài đặt?",
-                    "answer": "Hầu hết nhà máy có thể hoạt động trong 1-2 ngày. Đội ngũ của chúng tôi hỗ trợ cài đặt trực tiếp."
-                },
-                "2": {
-                    "question": "Dữ liệu của tôi có an toàn không?",
-                    "answer": "Có. Tất cả dữ liệu được mã hóa khi truyền và lưu trữ. Chúng tôi hỗ trợ triển khai tại chỗ cho doanh nghiệp có chính sách dữ liệu nghiêm ngặt."
-                },
-                "3": {
-                    "question": "Tôi có thể dùng thử trước khi mua không?",
-                    "answer": "Hoàn toàn có thể. Gói Cơ bản miễn phí mãi mãi, và gói Pro có 14 ngày dùng thử miễn phí."
-                },
-                "4": {
-                    "question": "Hỗ trợ nhiều ngôn ngữ không?",
-                    "answer": "Có. Qwaste hiện hỗ trợ giao diện Tiếng Việt, Tiếng Anh và Tiếng Trung."
-                },
-                "5": {
-                    "question": "Có những hình thức hỗ trợ nào?",
-                    "answer": "Gói Cơ bản bao gồm hỗ trợ email. Gói Pro và Doanh nghiệp bao gồm hỗ trợ ưu tiên với thời gian phản hồi cam kết."
-                }
-            }
-        },
-        "cta": {
-            "title": "Sẵn Sàng Chuyển Đổi Nhà Máy Của Bạn?",
-            "subtitle": "Tham gia cùng hàng trăm nhà sản xuất tin tưởng Qwaste để tối ưu hóa sản xuất.",
-            "primary": "Dùng Thử Miễn Phí",
-            "secondary": "Liên Hệ Tư Vấn"
-        },
-        "footer": {
-            "description": "Quản lý nhà máy thông minh cho sản xuất hiện đại.",
-            "product": {
-                "title": "Sản phẩm",
-                "features": "Tính năng",
-                "pricing": "Bảng giá",
-                "demo": "Yêu cầu Demo",
-                "changelog": "Nhật ký thay đổi"
-            },
-            "resources": {
-                "title": "Tài nguyên",
-                "docs": "Tài liệu",
-                "api": "API tham khảo",
-                "guides": "Hướng dẫn tích hợp",
-                "blog": "Blog"
-            },
-            "company": {
-                "title": "Công ty",
-                "about": "Về chúng tôi",
-                "careers": "Tuyển dụng",
-                "contact": "Liên hệ",
-                "partners": "Đối tác"
-            },
-            "legal": {
-                "title": "Pháp lý",
-                "privacy": "Chính sách bảo mật",
-                "terms": "Điều khoản dịch vụ",
-                "cookies": "Chính sách cookie"
-            },
-            "copyright": "Qwaste. Bảo lưu mọi quyền.",
-            "poweredBy": "Được vận hành bởi IIC 4.0"
-        }
-    },
-    "drawingCodeManagement": {
-        "title": "Quản lý Mã Bản Vẽ",
-        "addDrawingCode": "Thêm Mã Bản Vẽ",
-        "searchPlaceholder": "Tìm theo mã hoặc tên...",
-        "fetchError": "Tải danh sách mã bản vẽ thất bại",
-        "deleteSuccess": "Xóa mã bản vẽ thành công",
-        "deleteError": "Xóa mã bản vẽ thất bại",
-        "updateSuccess": "Cập nhật mã bản vẽ thành công",
-        "updateError": "Cập nhật mã bản vẽ thất bại",
-        "restoreSuccess": "Khôi phục mã bản vẽ thành công",
-        "restoreError": "Khôi phục mã bản vẽ thất bại",
-        "fetchDetailsError": "Tải chi tiết mã bản vẽ thất bại",
-        "table": {
-            "headers": {
-                "drawingCode": "Mã bản vẽ",
-                "drawingCodeName": "Tên bản vẽ",
-                "description": "Mô tả",
-                "pdfLink": "PDF",
-                "stepsCount": "Bước",
-                "completionTime": "Thời gian",
-                "createdBy": "Người tạo",
-                "createdAt": "Ngày tạo",
-                "status": "Trạng thái",
-                "actions": "Thao tác",
-                "ofCustomer": "Khách hàng"
-            },
-            "steps": "bước",
-            "active": "Hoạt động",
-            "deleted": "Đã xóa",
-            "actions": {
-                "viewPdf": "Xem PDF"
-            }
-        },
-        "form": {
-            "createTitle": "Thêm Mã Bản Vẽ Mới",
-            "editTitle": "Chỉnh Sửa Mã Bản Vẽ",
-            "viewTitle": "Chi Tiết Mã Bản Vẽ",
-            "createDescription": "Điền đầy đủ thông tin bên dưới. Cần ít nhất một bước sản xuất.",
-            "editDescription": "Cập nhật thông tin mã bản vẽ.",
-            "editNote": "Lưu ý: Để cập nhật các bước sản xuất, hãy sử dụng modal Xem Chi Tiết.",
-            "fields": {
-                "drawingCode": "Mã bản vẽ",
-                "drawingCodeName": "Tên bản vẽ",
-                "description": "Mô tả",
-                "pdfLink": "Bản vẽ kỹ thuật (PDF)",
-                "defaultCompletionTime": "Tổng thời gian hoàn thành dự kiến",
-                "defaultCompletionTimeHint": "Tổng thời gian tất cả các bước tính bằng giây (ví dụ: 7200 = 2 giờ)",
-                "ofCustomer": "Khách hàng"
-            },
-            "placeholders": {
-                "drawingCode": "Ví dụ: DC-001",
-                "drawingCodeName": "Ví dụ: Gia công Khung chính",
-                "description": "Nhập mô tả (không bắt buộc)...",
-                "defaultCompletionTime": "Ví dụ: 7200",
-                "ofCustomer": "Ví dụ: AMC"
-            },
-            "validation": {
-                "drawingCodeRequired": "Mã bản vẽ là bắt buộc",
-                "nameRequired": "Tên bản vẽ là bắt buộc",
-                "maxLength": "Tối đa {{max}} ký tự",
-                "noWhitespaceOnly": "Không được chỉ chứa khoảng trắng",
-                "completionTimeMin": "Thời gian hoàn thành phải lớn hơn 0",
-                "pdfRequired": "Bản vẽ kỹ thuật (PDF) là bắt buộc",
-                "pdfLink": "Bản vẽ kỹ thuật (PDF) là bắt buộc",
-                "customerRequired": "Vui lòng chọn khách hàng"
-            },
-            "buttons": {
-                "cancel": "Hủy",
-                "create": "Tạo mới",
-                "update": "Cập nhật",
-                "saving": "Đang lưu...",
-                "close": "Đóng",
-                "viewDetails": "Xem chi tiết",
-                "edit": "Chỉnh sửa",
-                "delete": "Xóa",
-                "restore": "Khôi phục"
-            },
-            "createSuccess": "Tạo mã bản vẽ thành công",
-            "createError": "Tạo mã bản vẽ thất bại"
-        },
-        "steps": {
-            "title": "Các bước sản xuất",
-            "stepLabel": "Bước {{number}}",
-            "minRequired": "tối thiểu 1 bước",
-            "addStep": "Thêm bước",
-            "emptyHint": "Chưa có bước nào. Cần ít nhất 1 bước sản xuất.",
-            "continueAddingHint": "Bạn có thể tiếp tục sử dụng dropdown ở trên để thêm các bước tiếp theo.",
-            "searchStep": "Tìm kiếm và thêm một bước tiêu chuẩn...",
-            "searchAnotherStep": "Tìm kiếm và thêm một bước khác...",
-            "createNewStandardStep": "Tạo bước tiêu chuẩn mới",
-            "addedSuccess": "Đã thêm bước \"{{stepName}}\" thành công",
-            "headers": {
-                "stepName": "Tên bước",
-                "description": "Mô tả",
-                "materialName": "Vật liệu",
-                "requiresQc": "Cần QC",
-                "defaultTime": "Thời gian (giây)"
-            },
-            "placeholders": {
-                "stepName": "Ví dụ: Chuẩn bị vật liệu",
-                "description": "Mô tả không bắt buộc...",
-                "defaultTime": "Ví dụ: 1800",
-                "materialName": "Nhập tên vật liệu",
-                "searchStep": "Tìm kiếm và thêm một bước tiêu chuẩn...",
-                "searchAnotherStep": "Tìm kiếm và thêm một bước khác...",
-                "createNewStandardStep": "Tạo bước tiêu chuẩn mới"
-            },
-            "validation": {
-                "minOne": "Cần ít nhất một bước sản xuất",
-                "stepNameRequired": "Tất cả các bước phải có tên",
-                "stepInvalid": "Một số bước có dữ liệu không hợp lệ. Vui lòng kiểm tra các trường màu đỏ.",
-                "stepTimeRequired": "Thời gian hoàn thành là bắt buộc",
-                "materialRequired": "Vật liệu là bắt buộc",
-                "atLeastOneStep": "Cần ít nhất một bước sản xuất"
-            },
-            "createError": "Tạo bước tiêu chuẩn thất bại: {{error}}",
-            "createSuccess": "Tạo bước tiêu chuẩn thành công",
-            "fetchError": "Không thể tải danh sách bước tiêu chuẩn: {{error}}"
-        },
-        "dialogs": {
-            "deleteConfirmation": {
-                "title": "Xóa Mã Bản Vẽ",
-                "description": "Bạn có chắc muốn xóa mã bản vẽ này? Hành động này không thể hoàn tác."
-            }
-        }
-    },
-    "orderManagement": {
-        "page": {
-            "title": "Quản lý đơn hàng"
-        },
-        "stats": {
-            "total": "Tổng đơn hàng",
-            "draft": "Bản nháp (Draft)",
-            "inProduction": "Đang sản xuất",
-            "inProgress": "Đang sản xuất",
-            "completed": "Đã hoàn thành",
-            "reviewing": "Đang duyệt",
-            "cancelled": "Đã hủy"
-        },
-        "list": {
-            "title": "Danh sách đơn hàng",
-            "subtitle": "Quản lý và theo dõi trạng thái sản xuất",
-            "refresh": "Làm mới",
-            "create": "Tạo đơn mới",
-            "searchPlaceholder": "Tìm mã đơn, tên đơn, khách hàng...",
-            "filters": {
-                "allStatus": "Tất cả trạng thái",
-                "allPriority": "Mọi ưu tiên"
-            },
-            "table": {
-                "orderCode": "Mã đơn",
-                "orderName": "Tên đơn hàng",
-                "productionType": "Loại sản xuất",
-                "batch": "Sản xuất hàng loạt",
-                "single": "Đơn lẻ",
-                "quantity": "SL",
-                "customer": "Khách hàng",
-                "status": "Trạng thái",
-                "priority": "Ưu tiên",
-                "deliveryDate": "Hạn giao",
-                "actions": "Thao tác"
-            },
-            "tooltips": {
-                "view": "Xem chi tiết",
-                "edit": "Chỉnh sửa",
-                "onlyDraftEdit": "Chỉ có thể sửa kế hoạch khi đơn ở trạng thái REVIEWING",
-                "completedCancelledEdit": "Không thể sửa đơn đã hủy hoặc đã hoàn thành",
-                "delete": "Xóa đơn hàng",
-                "cancel": "Hủy đơn hàng",
-                "restore": "Khôi phục đơn hàng"
-            },
-            "messages": {
-                "deleteConfirm": "Bạn có chắc muốn xóa đơn {{code}} không?",
-                "restoreConfirm": "Bạn có chắc muốn khôi phục đơn {{code}} không?",
-                "cancelTitle": "Lý do hủy đơn hàng",
-                "cancelReasonPlaceholder": "Nhập lý do hủy đơn hàng..."
-            }
-        },
-        "form": {
-            "createTitle": "Tạo đơn hàng mới",
-            "editTitle": "Sửa đơn hàng",
-            "sections": {
-                "orderInfo": "Thông tin đơn hàng",
-                "productionConfig": "Cấu hình sản xuất",
-                "customerInfo": "Thông tin khách hàng",
-                "drawingConfig": "Cấu hình bản vẽ & bước sản xuất",
-                "productionPlan": "Quy trình sản xuất dự kiến",
-                "productionPlanDesc": "Cấu hình bản vẽ, bước công việc và phân công nhiệm vụ",
-                "orderOverview": "TỔNG QUAN ĐƠN HÀNG",
-                "additionalInfo": "Thông tin thêm (tuỳ chọn)"
-            },
-            "fields": {
-                "orderCode": "Mã đơn hàng",
-                "orderName": "Tên đơn hàng",
-                "productionType": "Loại sản xuất",
-                "priority": "Độ ưu tiên",
-                "orderQuantity": "Số lượng",
-                "customerName": "Tên khách hàng",
-                "customerPhone": "Số điện thoại",
-                "deadline": "Ngày giao hàng",
-                "expectedStartDate": "Ngày Bắt Đầu Dự Kiến",
-                "expectedEndDate": "Ngày Kết Thúc Dự Kiến",
-                "customerNote": "Ghi chú đơn hàng",
-                "attachments": "File đính kèm",
-                "status": "Trạng thái",
-                "totalEstimatedLeadtime": "Tổng thời gian dự kiến",
-                "requestedQuantity": "SL yêu cầu",
-                "plannedQuantity": "SL kế hoạch",
-                "actualQuantity": "SL thực tế",
-                "cancellationReason": "Lý do hủy",
-                "penaltyAmount": "Phạt trễ hạn (VNĐ)"
-            },
-            "placeholders": {
-                "orderCode": "VD: ORD-2026-001",
-                "orderName": "VD: Main Frame Batch April",
-                "productionType": "Chọn loại sản xuất",
-                "customerName": "Nhập tên khách hàng",
-                "customerPhone": "VD: 0901234567",
-                "customerNote": "Nhập các lưu ý đặc biệt cho đơn hàng này...",
-                "penaltyAmount": "Nhập số tiền phạt"
-            },
-            "validation": {
-                "orderCodeRequired": "Vui lòng nhập mã đơn hàng",
-                "orderCodeMin": "Mã đơn hàng phải từ 3 ký tự",
-                "orderCodeMax": "Mã đơn hàng không quá 50 ký tự",
-                "orderNameRequired": "Vui lòng nhập tên đơn hàng",
-                "orderNameMin": "Tên đơn hàng phải từ 3 ký tự",
-                "orderNameMax": "Tên đơn hàng không quá 200 ký tự",
-                "customerNameRequired": "Vui lòng nhập tên khách hàng",
-                "customerNameMin": "Tên khách hàng phải từ 2 ký tự",
-                "customerNameMax": "Tên khách hàng không quá 200 ký tự",
-                "customerPhoneRequired": "Vui lòng nhập số điện thoại",
-                "phonePattern": "Chỉ được nhập số",
-                "phoneMaxLength": "Số điện thoại không quá 20 ký tự",
-                "customerNoteRequired": "Vui lòng nhập ghi chú đơn hàng",
-                "customerNoteMax": "Ghi chú không quá 2000 ký tự",
-                "orderPriorityRequired": "Vui lòng chọn độ ưu tiên",
-                "orderDrawingsRequired": "Vui lòng cấu hình ít nhất 1 bản vẽ",
-                "minOneDrawing": "Vui lòng cấu hình ít nhất 1 bản vẽ cho đơn hàng",
-                "endDateBeforeStart": "Ngày kết thúc phải sau ngày bắt đầu",
-                "formErrors": "Vui lòng kiểm tra {{count}} lỗi trong form",
-                "requiredFields": "Vui lòng điền đầy đủ thông tin bắt buộc",
-                "stepNameRequired": "Vui lòng nhập tên bước",
-                "stepNameMax": "Tên bước không quá 100 ký tự",
-                "stepDescriptionRequired": "Vui lòng nhập mô tả bước",
-                "stepDescriptionMax": "Mô tả bước không quá 2000 ký tự",
-                "requiresQcRequired": "Vui lòng chọn yêu cầu QC",
-                "defaultCompletionTimeRequired": "Vui lòng nhập thời gian hoàn thành",
-                "defaultCompletionTimePositive": "Thời gian phải lớn hơn 0",
-                "materialNameRequired": "Vui lòng nhập tên vật liệu",
-                "materialNameMax": "Tên vật liệu không quá 2000 ký tự",
-                "stepTasksRequired": "Vui lòng thêm ít nhất 1 task",
-                "taskNameRequired": "Vui lòng nhập tên task",
-                "taskNameMax": "Tên task không quá 100 ký tự",
-                "taskRequestedQuantityRequired": "Vui lòng nhập số lượng yêu cầu",
-                "taskRequestedQuantityPositive": "Số lượng phải lớn hơn 0",
-                "taskPlannedQuantityRequired": "Vui lòng nhập số lượng dự kiến",
-                "taskPlannedQuantityPositive": "Số lượng dự kiến phải lớn hơn 0",
-                "maxCharacters": "Tối đa {{count}} ký tự"
-            },
-            "productionTypes": {
-                "batch": "Sản xuất hàng loạt (BATCH)",
-                "single": "Làm đơn lẻ (SINGLE_PIECE)"
-            },
-            "priorities": {
-                "low": "Thấp",
-                "medium": "Trung bình",
-                "high": "Cao",
-                "urgent": "Khẩn cấp"
-            },
-            "buttons": {
-                "submitCreate": "Tạo đơn hàng",
-                "submitUpdate": "Lưu cập nhật"
-            },
-            "messages": {
-                "fetchTemplatesError": "Lỗi lấy template bản vẽ",
-                "onlyDraftEditWarning": "Chỉ được phép sửa kế hoạch khi đơn hàng ở trạng thái REVIEWING",
-                "infoEditNotAllowed": "Không thể cập nhật thông tin đơn hàng khi đơn đã hủy hoặc đã hoàn thành.",
-                "createSuccess": "Tạo đơn hàng thành công!",
-                "updateSuccess": "Cập nhật thành công!",
-                "validationError": "Vui lòng kiểm tra lại thông tin đã nhập",
-                "fixDrawingPlanErrors": "Vui lòng sửa lỗi kế hoạch bản vẽ trước khi gửi.",
-                "uploadError": "Tải file đính kèm thất bại",
-                "fetchDrawingDetailsError": "Tải chi tiết bản vẽ thất bại"
-            },
-            "attachments": {
-                "uploadButton": "Tải file đính kèm"
-            },
-            "plan": {
-                "planConfiguration": "Cấu hình kế hoạch",
-                "drawingDetails": "Chi tiết bản vẽ",
-                "stepDetails": "Chi tiết bước",
-                "taskDetails": "Chi tiết task",
-                "drawingCodeRequired": "Mã bản vẽ",
-                "selectDrawingCode": "Chọn mã bản vẽ",
-                "totalRequestedQuantity": "Tổng số lượng yêu cầu",
-                "totalRequestedQuantityRequired": "Tổng số lượng yêu cầu",
-                "requestedQuantityRequired": "Số lượng yêu cầu",
-                "plannedQuantityRequired": "Số lượng kế hoạch",
-                "estimatedTimeRequired": "Thời gian dự kiến",
-                "drawingWorkload": "Khối lượng bản vẽ",
-                "drawingsCount": "{{count}} bản vẽ",
-                "stepsCount": "{{count}} bước",
-                "tasksCount": "{{count}} task",
-                "requestedCount": "{{allocated}}/{{total}} yêu cầu",
-                "quantityBalanceDescription": "Tổng số lượng yêu cầu của task phải bằng tổng số lượng yêu cầu của bản vẽ này.",
-                "stepBalanceCount": "{{balanced}}/{{total}} bước đủ số lượng",
-                "stepQuantityBalanceDescription": "Trong mỗi bước, tổng số lượng yêu cầu của các task phải bằng tổng số lượng yêu cầu của bản vẽ.",
-                "quickActions": "Thao tác nhanh",
-                "addStepToDrawing": "Thêm bước vào bản vẽ này",
-                "addTaskToStep": "Thêm task vào bước này",
-                "selectNodeHint": "Chọn bản vẽ, bước hoặc task để xem chi tiết",
-                "expandAll": "Mở tất cả",
-                "collapse": "Thu gọn",
-                "noDrawingsConfigured": "Chưa cấu hình bản vẽ nào.",
-                "addDrawingHint": "Thêm bản vẽ để bắt đầu.",
-                "addStep": "Thêm bước",
-                "deleteDrawing": "Xóa bản vẽ",
-                "addTask": "Thêm task",
-                "deleteStep": "Xóa bước",
-                "incompleteTooltip": "Thiếu thông tin bắt buộc hoặc có lỗi",
-                "completeTooltip": "Thông tin đã hoàn tất",
-                "newTag": "MỚI",
-                "unnamedDrawing": "Bản vẽ chưa đặt tên",
-                "unnamedStep": "Bước chưa đặt tên",
-                "unnamedTask": "Task chưa đặt tên",
-                "plannedQuantityHint": "Phải >= số lượng yêu cầu",
-                "taskSummary": "Tổng quan task",
-                "requestedUnits": "Yêu cầu: {{quantity}} đơn vị",
-                "noRequestedQuantity": "Chưa có số lượng yêu cầu",
-                "assignedCount": "{{count}} đã phân công",
-                "tasksInStep": "Task trong bước này"
-            },
-            "planValidation": {
-                "addDrawing": "Vui lòng thêm ít nhất một bản vẽ.",
-                "selectDrawingCode": "Vui lòng chọn mã bản vẽ.",
-                "totalRequestedQuantityRequired": "Vui lòng nhập tổng số lượng yêu cầu.",
-                "quantityMismatch": "Tổng số lượng yêu cầu của task ({{taskTotal}}) phải bằng tổng số lượng yêu cầu của bản vẽ ({{drawingTotal}}).",
-                "stepQuantityMismatch": "Tổng số lượng task trong bước này là {{stepTotal}}, chưa khớp với số lượng yêu cầu của bản vẽ là {{drawingTotal}}.",
-                "singlePieceTaskCountMismatch": "Sản xuất đơn chiếc cần {{drawingTotal}} task trong mỗi bước. Bước này hiện có {{taskCount}} task.",
-                "singlePieceRequestedQuantity": "Số lượng yêu cầu của task trong sản xuất đơn chiếc luôn là 1.",
-                "singlePieceLargeTaskWarningTitle": "Số lượng task lớn",
-                "singlePieceLargeTaskWarningContent": "Thao tác này sẽ tạo {{taskCount}} task ({{quantity}} sản phẩm × {{steps}} bước), vượt ngưỡng cảnh báo {{threshold}} task. Bạn có muốn tiếp tục không?",
-                "changeDrawingWarningTitle": "Đổi mã bản vẽ?",
-                "changeDrawingWarningContent": "Đổi mã bản vẽ sẽ thay thế toàn bộ steps và tasks hiện tại của bản vẽ này. Các thông tin đã nhập trong steps hoặc tasks đó sẽ bị mất.",
-                "productionTypeRequired": "Vui lòng chọn loại sản xuất.",
-                "addStep": "Vui lòng thêm ít nhất một bước.",
-                "stepNameRequired": "Vui lòng nhập tên bước.",
-                "stepDescriptionRequired": "Vui lòng nhập mô tả bước.",
-                "materialRequired": "Vui lòng nhập vật liệu.",
-                "estimatedTimeRequired": "Vui lòng nhập thời gian dự kiến.",
-                "qcRequired": "Vui lòng chọn yêu cầu QC.",
-                "addTask": "Vui lòng thêm ít nhất một task.",
-                "taskNameRequired": "Vui lòng nhập tên task.",
-                "requestedQuantityRequired": "Vui lòng nhập số lượng yêu cầu.",
-                "plannedQuantityRequired": "Vui lòng nhập số lượng kế hoạch.",
-                "plannedQuantityMinRequested": "Số lượng kế hoạch phải >= số lượng yêu cầu.",
-                "minOne": "Phải ít nhất là 1",
-                "timeGreaterThanZero": "Thời gian phải lớn hơn 0",
-                "quantityAllocatedMissing": "Bước này còn thiếu {{missing}} sản phẩm. Vui lòng tăng số lượng yêu cầu của các task trong bước.",
-                "quantityAllocatedOver": "Bước này đang vượt {{over}} sản phẩm. Vui lòng giảm số lượng yêu cầu của các task trong bước."
-            },
-            "tabs": {
-                "basicInfo": "Thông tin cơ bản",
-                "planInfo": "Kế hoạch sản xuất & Nhiệm vụ"
-            },
-            "unsavedChanges": {
-                "title": "Có thay đổi chưa lưu",
-                "message": "Bạn có thay đổi chưa được lưu ở tab hiện tại. Bạn có muốn lưu chúng trước khi chuyển tab không?",
-                "save": "Lưu & Chuyển tab",
-                "discard": "Bỏ thay đổi"
-            },
-            "steps": {
-                "info": "Thông tin đơn hàng",
-                "drawing": "Cấu hình bản vẽ",
-                "confirm": "Xác nhận"
-            },
-            "confirm": {
-                "title": "Xác nhận thông tin đơn hàng",
-                "subtitle": "Vui lòng kiểm tra lại thông tin trước khi tạo đơn hàng",
-                "orderSummary": "Thông tin đơn hàng",
-                "customerSummary": "Thông tin khách hàng",
-                "drawingSummary": "Danh sách bản vẽ ({{count}})",
-                "editButton": "Chỉnh sửa",
-                "stepLabel": "Bước {{order}}",
-                "taskCount": "{{count}} task"
-            }
-        },
-        "detail": {
-            "tabs": {
-                "overview": "Tổng quan",
-                "kanban": "Bảng công việc (Kanban)",
-                "orderDetail": "Chi tiết Đơn hàng",
-                "drawingPlan": "Kế hoạch Quy trình & Bản vẽ"
-            },
-            "overview": {
-                "customer": "Khách hàng",
-                "phone": "SĐT Khách",
-                "deadline": "Hạn giao hàng",
-                "productionType": "Loại sản xuất",
-                "quantity": "Tổng số lượng",
-                "noteLabel": "Ghi chú của khách:",
-                "drawingList": "Danh sách Bản vẽ",
-                "expectedCompletion": "Thời gian hoàn thành dự kiến (Mặc định):",
-                "minutes": "phút",
-                "createdAt": "Thời gian tạo",
-                "createdBy": "Người tạo",
-                "updatedAt": "Cập nhật lúc",
-                "updatedBy": "Người cập nhật",
-                "expectedStartDate": "Ngày bắt đầu dự kiến",
-                "expectedEndDate": "Ngày kết thúc dự kiến",
-                "totalEstimatedLeadtime": "Thời gian gia công dự kiến",
-                "cancellationReason": "Lý do hủy đơn",
-                "penaltyAmount": "Tiền phạt vi phạm",
-                "attachments": "Tài liệu đính kèm",
-                "actualQty": "Số lượng thực tế"
-            },
-            "drawing": {
-                "assignments": "Danh sách phân công",
-                "operatorReviews": "Nhận xét của Operator",
-                "startedAt": "Bắt đầu",
-                "endedAt": "Kết thúc",
-                "operator": "Thợ vận hành",
-                "machine": "Máy móc",
-                "empty": "Trống",
-                "noAssignments": "Chưa có phân công",
-                "noReviews": "Chưa có nhận xét"
-            },
-            "kanban": {
-                "locked": "Khóa",
-                "todo": "Cần làm",
-                "inProgress": "Đang làm",
-                "paused": "Tạm dừng",
-                "qcCheck": "Chờ QC",
-                "complete": "Hoàn thành",
-                "rework": "Làm lại",
-                "requiresQc": "Cần QC",
-                "unassigned": "Chưa phân công",
-                "empty": "Trống"
-            },
-            "actions": {
-                "confirmProduction": "Xác nhận sản xuất",
-                "confirmProductionPopTitle": "Xác nhận đưa vào sản xuất?",
-                "confirmProductionPopDesc": "Hành động này sẽ mở khóa các công việc Bước 1. Bạn sẽ không thể sửa lại cấu trúc đơn hàng sau khi xác nhận."
-            },
-            "messages": {
-                "confirmSuccess": "Đã xác nhận sản xuất thành công!",
-                "notFound": "Không tìm thấy thông tin đơn hàng."
-            },
-            "tasks": {
-                "taskName": "Tên công việc"
-            }
-        },
-        "drawing": {
-            "item": "Bản vẽ",
-            "drawings": "Bản vẽ",
-            "drawingLabel": "Bản vẽ #{{index}}",
-            "templateLabel": "Template bản vẽ",
-            "selectTitle": "Chọn Mẫu Bản Vẽ",
-            "selectPlaceholder": "Tìm và chọn bản vẽ...",
-            "selectRequired": "Chọn template",
-            "selectError": "Vui lòng chọn bản vẽ",
-            "prodTypeLabel": "Loại Sản Xuất",
-            "createNew": "Tạo mới",
-            "productionProgress": "Tiến độ thực hiện sản xuất",
-            "expectedSteps": "Các bước sản xuất dự kiến",
-            "expectedProcess": "Quy trình sản xuất dự kiến",
-            "add": "Thêm bản vẽ",
-            "empty": "Chưa có bản vẽ nào. Nhấn nút trên để thêm.",
-            "noReviews": "Chưa có nhận xét",
-            "code": "Mã bản vẽ",
-            "name": "Tên bản vẽ",
-            "ofCustomer": "Khách hàng",
-            "version": "Phiên bản",
-            "totalExpectedTime": "Tổng thời gian dự kiến",
-            "description": "Chi tiết",
-            "document": "Tài liệu",
-            "pdfLink": "Liên kết PDF",
-            "viewDocument": "Xem tài liệu",
-            "viewPdfDocument": "Xem tài liệu PDF",
-            "clickToExpand": "Nhấn để mở",
-            "errorTag": "Lỗi",
-            "noDescription": "Chưa có mô tả"
-        },
-        "step": {
-            "stepLabel": "BƯỚC",
-            "steps": "Bước",
-            "nameLabel": "Tên bước công việc",
-            "namePlaceholder": "Nhập tên bước công việc...",
-            "nameRequired": "Vui lòng nhập tên bước",
-            "errorTag": "Lỗi",
-            "delete": "Xóa",
-            "showDetails": "+ Thêm thông tin chi tiết",
-            "hideDetails": "− Ẩn thông tin chi tiết",
-            "descriptionLabel": "Mô tả",
-            "descriptionPlaceholder": "Mô tả chi tiết bước này...",
-            "descriptionRequired": "Vui lòng nhập mô tả bước",
-            "materialLabel": "Vật liệu",
-            "materialPlaceholder": "Tên vật liệu",
-            "materialRequired": "Vui lòng nhập vật liệu",
-            "timeLabel": "Thời gian (giây)",
-            "timePlaceholder": "Nhập thời gian",
-            "timeRequired": "Vui lòng nhập thời gian",
-            "timeMinError": "Phải > 0",
-            "qcLabel": "Yêu cầu QC",
-            "qcRequired": "Vui lòng chọn yêu cầu QC",
-            "taskListTitle": "Danh sách Task",
-            "minOneStep": "Phải có ít nhất 1 bước công việc",
-            "addStep": "Thêm Bước Công Việc"
-        },
-        "task": {
-            "taskLabel": "TASK",
-            "tasks": "Nhiệm vụ",
-            "deleteTooltip": "Xóa task",
-            "nameLabel": "Tên Task",
-            "nameRequired": "Vui lòng nhập tên task",
-            "namePlaceholder": "Nhập tên task...",
-            "reqQtyLabel": "Số lượng yêu cầu (SL YC)",
-            "planQtyLabel": "Số lượng kế hoạch (SL KH)",
-            "qtyRequired": "Bắt buộc",
-            "qtyMinError": "≥ SL YC",
-            "assignOperator": "Phân công thợ",
-            "selectOperatorPlaceholder": "Chọn thợ...",
-            "noOperatorFound": "Không tìm thấy thợ",
-            "operatorsAssigned": "thợ",
-            "operators": "thợ",
-            "Operators": "Thợ",
-            "minOneTask": "Phải có ít nhất 1 task",
-            "addTask": "Thêm Task",
-            "errorTag": "Lỗi"
-        }
-    },
-    "operatorReview": {
-        "drawer": {
-            "title": "Đánh giá Công việc",
-            "subtitle": "Đánh giá và xác nhận các công việc được giao cho bạn",
-            "submitAll": "Gửi Tất cả Đánh giá",
-            "cancel": "Hủy",
-            "order": "Đơn hàng",
-            "priority": "Độ ưu tiên",
-            "expectedStart": "Ngày Bắt Đầu Dự Kiến",
-            "code": "Mã Đơn",
-            "reviewDecision": "Quyết định Đánh giá",
-            "confirm": "Xác nhận",
-            "decline": "Từ chối",
-            "readyForProduction": "Sẵn sàng sản xuất",
-            "declineReason": "Lý do Từ chối",
-            "required": "Bắt buộc",
-            "comments": "Ghi chú",
-            "provideDetails": "Cung cấp thêm thông tin...",
-            "pleaseSelectReason": "Vui lòng chọn lý do từ chối",
-            "tasksNeedReview": "{{count}} công việc cần bạn đánh giá",
-            "allTasksReviewed": "Đã đánh giá tất cả công việc",
-            "loadingData": "Đang tải dữ liệu đánh giá...",
-            "noData": "Không tìm thấy dữ liệu",
-            "qty": "SL",
-            "unassigned": "Chưa giao",
-            "reEvaluate": "Đánh giá lại",
-            "confirmDecline": "Xác nhận từ chối"
-        },
-        "page": {
-            "title": "Đánh giá của Tôi",
-            "subtitle": "Quản lý và xác nhận các công việc sản xuất được giao",
-            "pendingReviews": "Chờ Đánh giá",
-            "waitingForConfirmation": "Đang chờ bạn xác nhận",
-            "confirmedTasks": "Đã Xác nhận",
-            "readyForProduction": "Sẵn sàng sản xuất",
-            "declinedTasks": "Đã Từ chối",
-            "needReassignment": "Cần phân công lại",
-            "searchPlaceholder": "Tìm kiếm theo tên hoặc mã đơn hàng",
-            "columns": {
-                "orderName": "Tên Đơn hàng",
-                "code": "Mã Đơn",
-                "priority": "Độ ưu tiên",
-                "expectedStart": "Bắt đầu dự kiến",
-                "tasks": "Số công việc",
-                "action": "Thao tác"
-            },
-            "reviewAction": "Đánh giá",
-            "operator": "Người vận hành"
-        }
-    },
     "managerReview": {
         "drawer": {
             "title": "Đánh giá của Quản lý",
@@ -5091,15 +4677,12 @@
         "group": "Tổ/Nhóm",
         "industry_filter": "Bộ lọc ngành",
         "industry_config": "Cấu hình ngành",
-        "drawing_code": "Mã bản vẽ",
         "factory_overview": "Tổng quan nhà máy",
         "energy": "Năng lượng",
         "machine_overview": "Tổng quan máy móc",
         "machine_monitoring": "Giám sát máy",
         "machine_operator_history": "Lịch sử vận hành máy",
         "profile": "Hồ sơ cá nhân",
-        "operator_dashboard": "Dashboard Vận hành",
-        "operator_reviews": "Đánh giá Vận hành",
         "qc_dashboard": "Dashboard QC",
         "manager_reviews": "Đánh giá Quản lý",
         "user": "Người dùng",
@@ -5108,75 +4691,10 @@
         "order": "Đơn hàng",
         "process": "Quy trình",
         "tasks": "Nhiệm vụ",
-        "task_review": "Đánh giá công việc",
         "space_monitoring": "Giám sát khu vực",
+        "production_monitor": "Giám sát sản xuất",
         "floor_map": "Sơ đồ mặt bằng",
         "all": "Tất cả"
-    },
-    "operatorTasks": {
-        "page": {
-            "title": "Công việc của tôi"
-        },
-        "columns": {
-            "todo": {
-                "title": "Cần làm",
-                "description": "Công việc đã giao đang chờ bắt đầu"
-            },
-            "in_progress": {
-                "title": "Đang thực hiện",
-                "description": "Công việc đang được xử lý"
-            },
-            "qc_check": {
-                "title": "Chờ QC",
-                "description": "Công việc đã sẵn sàng kiểm tra chất lượng"
-            },
-            "complete": {
-                "title": "Hoàn thành",
-                "description": "Công việc đã hoàn tất"
-            }
-        },
-        "status": {
-            "todo": "Cần làm",
-            "in_progress": "Đang thực hiện",
-            "qc_check": "Chờ QC",
-            "complete": "Hoàn thành"
-        },
-        "priority": {
-            "high": "Cao",
-            "medium": "Trung bình",
-            "low": "Thấp"
-        },
-        "filters": {
-            "searchPlaceholder": "Tìm công việc, đơn hàng, máy...",
-            "allPriority": "Tất cả độ ưu tiên"
-        },
-        "actions": {
-            "drag": "Kéo"
-        },
-        "legend": {
-            "cardAccent": "Màu viền card"
-        },
-        "empty": {
-            "noTasks": "Không có công việc"
-        },
-        "detail": {
-            "title": "Chi tiết công việc",
-            "description": "Mô tả",
-            "notes": "Ghi chú",
-            "sections": {
-                "production": "Thông tin sản xuất",
-                "context": "Đơn hàng và lịch"
-            },
-            "fields": {
-                "order": "Đơn hàng",
-                "customer": "Khách hàng",
-                "machine": "Máy",
-                "drawing": "Bản vẽ",
-                "location": "Vị trí",
-                "dueDate": "Hạn hoàn thành",
-                "estimate": "Thời lượng dự kiến"
-            }
-        }
     },
     "stepTemplates": "Các bước làm"
 }

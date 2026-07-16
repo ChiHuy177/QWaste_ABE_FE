@@ -54,7 +54,11 @@ const buildNotificationFromMessage = (message: WebSocketMessage, fallbackTitle: 
     return {
         notificationId: Date.now(),
         title,
+        titleKey: message.titleKey,
+        titleArgs: message.titleArgs,
         content,
+        contentKey: message.contentKey,
+        contentArgs: message.contentArgs,
         isRead: false,
         createdAt: message.timestamp,
         payload: message.payload ?? {},
@@ -202,8 +206,10 @@ export const notificationActions = {
                     if (shouldShowToast(message)) {
                         showNotificationToast(notification, 'error');
                         try {
-                            new Audio('/sounds/notification.mp3').play().catch(() => { });
-                        } catch { }
+                            new Audio('/sounds/notification.mp3').play().catch(() => undefined);
+                        } catch {
+                            // Ignore audio playback errors caused by browser restrictions.
+                        }
                     }
                     break;
                 }

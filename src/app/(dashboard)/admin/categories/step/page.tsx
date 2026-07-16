@@ -5,7 +5,7 @@ import { StandardStepService } from '@/services/StepService';
 import { toast } from 'sonner';
 import { Button, Card, Table, Grid, Spin, Typography, Modal, Descriptions, Tag } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { ClockCircleOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { StepDTO, CreateStepRequest, UpdateStepRequest } from '@/types/Step';
 import { getStepTableColumns, StepTableColumnProps } from './_components/Columns';
@@ -16,6 +16,7 @@ import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
@@ -269,9 +270,18 @@ const StepListPage = () => {
     };
 
     const formFields = useMemo(() => getStepFormFields(t), [t]);
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('stepManagement.title')}
                 loading={loading}
@@ -389,29 +399,23 @@ const StepListPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                 }}
                 styles={{ body: {
                     flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    overflowY: isMobile ? 'auto' : 'hidden',
                 } }}
             >
-                {stepData === null ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<StepDTO>
                         columns={columns}
                         dataSource={filteredData}
@@ -419,6 +423,7 @@ const StepListPage = () => {
                         rowKey="standardStepId"
                         pagination={{
                             defaultPageSize: 10,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
@@ -427,11 +432,12 @@ const StepListPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? undefined : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<any>
@@ -468,7 +474,7 @@ const StepListPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

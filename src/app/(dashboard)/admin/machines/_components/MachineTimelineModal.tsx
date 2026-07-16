@@ -853,10 +853,10 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
                                     marginBottom: 4,
                                 }}
                             >
-                                {t('machineManagement.timeline.propertyCode')}
+                                {t('machineManagement.timeline.machineCode')}
                             </Text>
                             <Text style={{ fontSize: 15, fontWeight: 500, color: token.colorText }}>
-                                {machine.propertyCode || t('common.notAvailable')}
+                                {machine.machineCode || t('common.notAvailable')}
                             </Text>
                         </Col>
                         <Col xs={24} sm={12} md={8} lg={5}>

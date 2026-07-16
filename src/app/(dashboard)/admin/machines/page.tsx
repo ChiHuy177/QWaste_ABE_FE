@@ -1,16 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Row, Col, Input, Select, Empty, Spin, Button } from 'antd';
+import { Input, Select, Empty, Spin, Button, Flex, Segmented, Row, Col } from 'antd';
+import { AppstoreOutlined, TableOutlined, AimOutlined } from '@ant-design/icons';
 import MachineStatsCards from './_components/MachineStatsCards';
 import MachineCard from './_components/MachineCard';
 import MachineFilterInfo from './_components/MachineFilterInfo';
+import MachineFocusView from './_components/MachineFocusView';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { useTranslation } from 'react-i18next';
 import { SearchOutlined, InboxOutlined } from '@ant-design/icons';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import MachineTimelineModal from './_components/MachineTimelineModal';
+import MachineDashboardSummary from './_components/MachineDashboardSummary';
+import MachineDurationSummaryTable from './_components/MachineDurationSummaryTable';
 import { MachineOverview } from '@/types/Machine';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { machineActions } from '@/stores';
@@ -21,6 +25,10 @@ import {
 } from '@/components/shared/filters/SpaceTreeSelect';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
+import {
+    DemoFactoryOverviewService,
+    USE_MOCK_FACTORY_OVERVIEW,
+} from '@/mockData/admin/factory';
 
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -46,10 +54,12 @@ const MachinesPage: React.FC = () => {
     } = useAppSelector((state) => state.machine);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
+    const [cardStatusFilter, setCardStatusFilter] = useState<string>('ALL');
+    const [cardSortBy, setCardSortBy] = useState<string>('default');
+    const [viewMode, setViewMode] = useState<'card' | 'table' | 'focus'>('card');
     const [isLoadingIndustryFilters, setIsLoadingIndustryFilters] = useState(false);
     const selectedTimePeriodRef = useRef<number | null>(selectedTimePeriod);
 
-    // Helper to find space path for display
     const findSpacePathNodes = (
         tree: SpaceWithChildrenResponse[],
         targetId: number,
@@ -78,7 +88,6 @@ const MachinesPage: React.FC = () => {
 
     const timePeriodOptions = useMemo(() => {
         const currentLang = i18n.language;
-
         return industryFilters.map((filter) => ({
             label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
             value: filter.filterId,
@@ -87,7 +96,6 @@ const MachinesPage: React.FC = () => {
 
     usePageTitle(t('machineManagement.header.title'));
 
-    // Step 1: Fetch full spaces tree when component mounts
     useEffect(() => {
         dispatch(machineActions.fetchFactories());
     }, [dispatch]);
@@ -99,11 +107,11 @@ const MachinesPage: React.FC = () => {
     useEffect(() => {
         const fetchIndustryFilters = async () => {
             setIsLoadingIndustryFilters(true);
-
             try {
-                const filters = await IndustryFilterService.getAllIndustryFilters();
+                const filters = USE_MOCK_FACTORY_OVERVIEW
+                    ? await DemoFactoryOverviewService.getIndustryFilters()
+                    : await IndustryFilterService.getAllIndustryFilters();
                 setIndustryFilters(filters);
-
                 if (filters.length > 0 && selectedTimePeriodRef.current == null) {
                     dispatch(machineActions.setSelectedTimePeriod(filters[0].filterId));
                 }
@@ -114,7 +122,6 @@ const MachinesPage: React.FC = () => {
                 setIsLoadingIndustryFilters(false);
             }
         };
-
         fetchIndustryFilters();
     }, [dispatch]);
 
@@ -123,54 +130,33 @@ const MachinesPage: React.FC = () => {
 
         const zoneIdParam = searchParams.get('zoneId');
         const factoryIdParam = searchParams.get('factoryId');
+        const spaceIdFromQuery = zoneIdParam ?? factoryIdParam;
 
-        // Priority: zone > factory > random space from tree
-        if (zoneIdParam) {
-            dispatch(machineActions.setSelectedSpaceId(Number(zoneIdParam)));
-        } else if (factoryIdParam) {
-            dispatch(machineActions.setSelectedSpaceId(Number(factoryIdParam)));
-        } else if (selectedSpaceId === undefined) {
-            const getAllSpaceIds = (nodes: SpaceWithChildrenResponse[]): number[] => {
-                const ids: number[] = [];
-                const traverse = (treeNodes: SpaceWithChildrenResponse[]) => {
-                    for (const node of treeNodes) {
-                        ids.push(node.spaceId);
-                        if (node.children && node.children.length > 0) {
-                            traverse(node.children);
-                        }
-                    }
-                };
-                traverse(nodes);
-                return ids;
-            };
-
-            const allIds = getAllSpaceIds(spacesTree);
-            if (allIds.length > 0) {
-                const randomId = allIds[Math.floor(Math.random() * allIds.length)];
-                dispatch(machineActions.setSelectedSpaceId(randomId));
+        if (spaceIdFromQuery) {
+            const nextSpaceId = Number(spaceIdFromQuery);
+            if (selectedSpaceId !== nextSpaceId) {
+                dispatch(machineActions.setSelectedSpaceId(nextSpaceId));
             }
-        }
-    }, [searchParams, dispatch, spacesTree, selectedSpaceId]);
-
-    const hasSelectedSpace = selectedSpaceId !== undefined;
-
-    // Step 2: Fetch machines với spaceId ngay sau khi load xong filter
-    useEffect(() => {
-        if (!hasSelectedSpace || selectedSpaceId === undefined || selectedTimePeriod == null) {
             return;
         }
 
+        if (selectedSpaceId === undefined) {
+            dispatch(machineActions.setSelectedSpaceId(spacesTree[0].spaceId));
+        }
+    }, [searchParams, dispatch, selectedSpaceId, spacesTree]);
+
+    const hasSelectedSpace = selectedSpaceId !== undefined;
+
+    useEffect(() => {
+        if (!hasSelectedSpace || selectedSpaceId === undefined || selectedTimePeriod == null) return;
         if (isFirstLoad) {
             dispatch(machineActions.fetchMachines(selectedSpaceId, selectedTimePeriod));
             setIsFirstLoad(false);
         }
     }, [hasSelectedSpace, selectedSpaceId, selectedTimePeriod, isFirstLoad, dispatch]);
 
-    // Step 3: Subscribe to WebSocket energy topic
     useEffect(() => {
         if (!wsConnected || selectedSpaceId === undefined) return;
-
-        // Use the selected space ID for subscription (might need adjustment based on your WS logic)
         const topic = `/topic/energy/zone/${selectedSpaceId}`;
         if (isDev) console.log('[Machine Page] Subscribing to:', topic);
 
@@ -178,7 +164,6 @@ const MachinesPage: React.FC = () => {
             if (message.payload?.type === 'MACHINES_CURRENT_POWER') {
                 dispatch(machineActions.updateMachinesPower(message.payload.machines));
             }
-
             if (message.payload?.type === 'MACHINES_FULL_POWER') {
                 const { data } = message.payload;
                 if (Array.isArray(data)) {
@@ -190,17 +175,14 @@ const MachinesPage: React.FC = () => {
         return () => unsubscribe();
     }, [wsConnected, selectedSpaceId, dispatch, wsService]);
 
-    // Step 4: Subscribe to individual machine status topics
     useEffect(() => {
         if (!wsConnected || machines.length === 0) return;
-
         const unsubscribes: (() => void)[] = [];
 
         if (isDev) console.log(`[Machine Page] Subscribing to ${machines.length} machine status topics`);
 
         machines.forEach((machine: MachineOverview) => {
             const statusTopic = `/topic/machines/status/${machine.machineId}`;
-
             const unsubscribe = wsService.subscribe<{
                 type: string;
                 payload: {
@@ -209,49 +191,27 @@ const MachinesPage: React.FC = () => {
                         previousLog: {
                             startTime: string;
                             endTime: string;
-                            logStatus:
-                            | 'RUNTIME'
-                            | 'IDLE'
-                            | 'ERROR'
-                            | 'COMPLETE'
-                            | 'OFFLINE'
-                            | 'UNKNOWN';
+                            logStatus: 'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
                         };
-                        newStatus:
-                        | 'RUNTIME'
-                        | 'IDLE'
-                        | 'ERROR'
-                        | 'COMPLETE'
-                        | 'OFFLINE'
-                        | 'UNKNOWN';
+                        newStatus: 'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
             }>(statusTopic, (message) => {
                 if (message.type !== 'DATA') return;
-
                 const { machineId, data } = message.payload;
                 const { newStatus, productionCounter } = data;
-
                 if (!machineId || !newStatus || newStatus === 'UNKNOWN') return;
-
-                dispatch(
-                    machineActions.updateMachineStatus(machineId, newStatus, productionCounter)
-                );
+                dispatch(machineActions.updateMachineStatus(machineId, newStatus, productionCounter));
             });
-
             unsubscribes.push(unsubscribe);
         });
 
-        return () => {
-            unsubscribes.forEach((unsub) => unsub());
-        };
+        return () => { unsubscribes.forEach((unsub) => unsub()); };
     }, [wsConnected, machines.length, dispatch, wsService]);
 
     const handleSearchChange = useCallback(
-        (value: string) => {
-            dispatch(machineActions.setSearchText(value));
-        },
+        (value: string) => { dispatch(machineActions.setSearchText(value)); },
         [dispatch]
     );
 
@@ -265,9 +225,7 @@ const MachinesPage: React.FC = () => {
     );
 
     const handleCardClick = useCallback(
-        (machine: MachineOverview) => {
-            dispatch(machineActions.openMachineModal(machine));
-        },
+        (machine: MachineOverview) => { dispatch(machineActions.openMachineModal(machine)); },
         [dispatch]
     );
 
@@ -280,33 +238,61 @@ const MachinesPage: React.FC = () => {
             toast.warning(t('common.selectSpace') || 'Please select a space');
             return;
         }
-
         if (selectedTimePeriod == null) {
             toast.warning(t('common.filter') || 'Please select a filter');
             return;
         }
-
         if (selectedSpaceId !== undefined) {
             dispatch(machineActions.fetchMachines(selectedSpaceId, selectedTimePeriod));
         }
     }, [hasSelectedSpace, selectedSpaceId, selectedTimePeriod, dispatch, t]);
 
     const handleTimePeriodChange = useCallback(
-        (value: number) => {
-            dispatch(machineActions.setSelectedTimePeriod(value));
-        },
+        (value: number) => { dispatch(machineActions.setSelectedTimePeriod(value)); },
         [dispatch]
     );
 
     const filteredMachines = useMemo(() => {
         if (!searchText) return machines;
-
         const search = searchText.toString().toLowerCase();
         return machines.filter(
             (machine: MachineOverview) =>
                 machine.machineName?.toString().toLowerCase().includes(search)
         );
     }, [machines, searchText]);
+
+    const displayedMachines = useMemo(() => {
+        const statusGroups: Record<string, string[]> = {
+            Running: ['RUNTIME'],
+            Stopped: ['IDLE', 'TEMPORARY_STOP', 'COMPLETE'],
+            Error: ['ERROR', 'WARNING'],
+            Offline: ['OFFLINE'],
+        };
+
+        let result = filteredMachines;
+
+        if (cardStatusFilter !== 'ALL') {
+            const allowed = statusGroups[cardStatusFilter] ?? [];
+            result = result.filter((m: MachineOverview) => allowed.includes(m.currentStatus ?? 'OFFLINE'));
+        }
+
+        if (cardSortBy === 'production_desc') {
+            result = [...result].sort((a, b) => (b.totalProductions ?? 0) - (a.totalProductions ?? 0));
+        } else if (cardSortBy === 'online_desc') {
+            const onlineSec = (m: MachineOverview) =>
+                Object.entries(m.runtimeByStatus ?? {}).reduce(
+                    (sum, [s, v]) => (s !== 'OFFLINE' ? sum + (v as number) : sum), 0
+                );
+            result = [...result].sort((a, b) => onlineSec(b) - onlineSec(a));
+        } else if (cardSortBy === 'error_desc') {
+            const errorSec = (m: MachineOverview) =>
+                ((m.runtimeByStatus as Record<string, number> | undefined)?.['ERROR'] ?? 0) +
+                ((m.runtimeByStatus as Record<string, number> | undefined)?.['WARNING'] ?? 0);
+            result = [...result].sort((a, b) => errorSec(b) - errorSec(a));
+        }
+
+        return result;
+    }, [filteredMachines, cardStatusFilter, cardSortBy]);
 
     const headerActions = useMemo(
         () => (
@@ -317,12 +303,8 @@ const MachinesPage: React.FC = () => {
                     value={searchText}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     allowClear
-                    style={{
-                        width: 280,
-                        borderRadius: 8,
-                    }}
+                    style={{ width: 280, borderRadius: 8 }}
                 />
-
                 <Select
                     value={selectedTimePeriod}
                     onChange={handleTimePeriodChange}
@@ -331,7 +313,6 @@ const MachinesPage: React.FC = () => {
                     loading={isLoadingIndustryFilters}
                     disabled={timePeriodOptions.length === 0}
                 />
-
                 <SpaceTreeSelect
                     value={selectedSpaceId}
                     onChange={handleSpaceChange}
@@ -339,7 +320,6 @@ const MachinesPage: React.FC = () => {
                     loading={isLoadingFactories}
                     style={{ width: 280, minWidth: 180 }}
                 />
-
                 <Button
                     type="primary"
                     icon={<SearchOutlined />}
@@ -352,29 +332,18 @@ const MachinesPage: React.FC = () => {
             </>
         ),
         [
-            t,
-            searchText,
-            selectedTimePeriod,
-            selectedSpaceId,
-            isLoading,
-            isLoadingFactories,
-            isLoadingIndustryFilters,
-            handleSearchChange,
-            handleTimePeriodChange,
-            handleSpaceChange,
-            handleSearch,
-            spaceTreeSelectData,
-            timePeriodOptions,
+            t, searchText, selectedTimePeriod, selectedSpaceId, isLoading,
+            isLoadingFactories, isLoadingIndustryFilters, handleSearchChange,
+            handleTimePeriodChange, handleSpaceChange, handleSearch,
+            spaceTreeSelectData, timePeriodOptions,
         ]
     );
 
-    // Check initial loading state
     const isInitialLoading =
         isLoadingFactories ||
         isLoadingIndustryFilters ||
         (isLoading && machines.length === 0) ||
         (isFirstLoad && selectedTimePeriod != null && hasSelectedSpace);
-
 
     return (
         <>
@@ -396,7 +365,6 @@ const MachinesPage: React.FC = () => {
                 <>
                     <MachineStatsCards stats={machineStats} />
 
-                    {/* Machine Filter Info */}
                     {!isLoading && machines.length > 0 && (
                         <MachineFilterInfo
                             totalMachines={machines.length}
@@ -404,11 +372,14 @@ const MachinesPage: React.FC = () => {
                             factoryName={selectedNodes[0]?.spaceName}
                             zoneCode={selectedNodes[1]?.spaceCode}
                             timePeriod={
-                                timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)
-                                    ?.label
+                                timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)?.label
                             }
                             isFiltered={searchText.length > 0}
                         />
+                    )}
+
+                    {!isLoading && machines.length > 0 && (
+                        <MachineDashboardSummary machines={machines} />
                     )}
 
                     {isLoading ? (
@@ -416,13 +387,70 @@ const MachinesPage: React.FC = () => {
                             <Spin size="large" />
                         </div>
                     ) : filteredMachines.length > 0 ? (
-                        <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-                            {filteredMachines.map((machine: MachineOverview) => (
-                                <Col xs={24} sm={12} lg={6} key={machine.machineId}>
-                                    <MachineCard machine={machine} onCardClick={handleCardClick} />
-                                </Col>
-                            ))}
-                        </Row>
+                        <>
+                            <Flex
+                                justify="space-between"
+                                align="center"
+                                gap={12}
+                                style={{ marginTop: 24, marginBottom: 12, flexWrap: 'wrap' }}
+                            >
+                                <Flex gap={12} align="center" wrap="wrap">
+                                    <Select
+                                        value={cardStatusFilter}
+                                        onChange={setCardStatusFilter}
+                                        style={{ width: 160 }}
+                                        options={[
+                                            { label: 'All Statuses', value: 'ALL' },
+                                            { label: 'Running', value: 'Running' },
+                                            { label: 'Stopped', value: 'Stopped' },
+                                            { label: 'Error', value: 'Error' },
+                                            { label: 'Offline', value: 'Offline' },
+                                        ]}
+                                    />
+                                    <Select
+                                        value={cardSortBy}
+                                        onChange={setCardSortBy}
+                                        style={{ width: 200 }}
+                                        options={[
+                                            { label: 'Sort: Default', value: 'default' },
+                                            { label: 'Production count ↓', value: 'production_desc' },
+                                            { label: 'Online time ↓', value: 'online_desc' },
+                                            { label: 'Error time ↓', value: 'error_desc' },
+                                        ]}
+                                    />
+                                </Flex>
+                                <Segmented
+                                    value={viewMode}
+                                    onChange={(v) => setViewMode(v as typeof viewMode)}
+                                    options={[
+                                        { value: 'card', icon: <AppstoreOutlined /> },
+                                        { value: 'table', icon: <TableOutlined /> },
+                                        { value: 'focus', icon: <AimOutlined /> },
+                                    ]}
+                                />
+                            </Flex>
+
+                            {viewMode === 'card' && (
+                                <Row gutter={[16, 16]}>
+                                    {displayedMachines.map((machine: MachineOverview) => (
+                                        <Col key={machine.machineId} xs={24} sm={12} lg={8} xl={6}>
+                                            <MachineCard machine={machine} onCardClick={handleCardClick} />
+                                        </Col>
+                                    ))}
+                                </Row>
+                            )}
+
+                            {viewMode === 'table' && (
+                                <MachineDurationSummaryTable machines={displayedMachines} />
+                            )}
+
+                            {viewMode === 'focus' && (
+                                <MachineFocusView
+                                    machines={displayedMachines}
+                                    onCardClick={handleCardClick}
+                                />
+                            )}
+                        </>
                     ) : (
                         <Empty
                             image={<InboxOutlined style={{ fontSize: 64, color: '#bfbfbf' }} />}
@@ -434,10 +462,7 @@ const MachinesPage: React.FC = () => {
                                         : t('machineManagement.emptyStates.noMachines.title')}
                                 </span>
                             }
-                            style={{
-                                marginTop: 80,
-                                marginBottom: 80,
-                            }}
+                            style={{ marginTop: 80, marginBottom: 80 }}
                         />
                     )}
                 </>
@@ -450,8 +475,7 @@ const MachinesPage: React.FC = () => {
                 filterInfo={{
                     factoryName: selectedNodes[0]?.spaceName,
                     zoneCode: selectedNodes[1]?.spaceCode,
-                    timePeriod: timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)
-                        ?.label,
+                    timePeriod: timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)?.label,
                 }}
             />
         </>

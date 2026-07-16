@@ -12,6 +12,7 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { EntityFormModal } from '../../../../../components/shared/FormModal';
 import { getGroupFormFields } from './_components/groupFormConfig';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { CategoryViewModal } from '../_components/CategoryViewModal';
 
 const GroupListPage = () => {
@@ -32,6 +33,7 @@ const GroupListPage = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
     usePageTitle(t('electricManagement.electricOverview'));
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     // Handle Edit Action
     const handleEditGroup = useCallback((group: UserGroup) => {
@@ -132,7 +134,15 @@ const GroupListPage = () => {
     const formFields = useMemo(() => getGroupFormFields(t, modalState.mode), [t, modalState.mode]);
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('groupManagement.title')}
                 icon={<ToolOutlined />}
@@ -162,37 +172,47 @@ const GroupListPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                 }}
                 styles={{ body: {
                     flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
                 } }}
             >
-                <Table<UserGroup>
-                    columns={columns}
-                    dataSource={groupData}
-                    rowSelection={rowSelection}
-                    loading={loading}
-                    rowKey={(record) => record.groupId}
-                    pagination={{
-                        defaultPageSize: 10,
-                        showSizeChanger: true,
-                        showTotal: (total, range) =>
-                            `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
-                                'common.items'
-                            )}`,
-                        pageSizeOptions: ['10', '20', '50', '100'],
-                        position: ['bottomCenter'],
-                    }}
-                    scroll={{ x: 'max-content', y: 'calc(100vh - 420px)' }}
-                    sticky
-                    bordered
-                />
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
+                    <Table<UserGroup>
+                        columns={columns}
+                        dataSource={groupData}
+                        rowSelection={rowSelection}
+                        loading={loading}
+                        rowKey={(record) => record.groupId}
+                        pagination={{
+                            defaultPageSize: 10,
+                            hideOnSinglePage: false,
+                            showSizeChanger: true,
+                            showTotal: (total, range) =>
+                                `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
+                                    'common.items'
+                                )}`,
+                            pageSizeOptions: ['10', '20', '50', '100'],
+                            position: ['bottomCenter'],
+                        }}
+                        scroll={{ x: 'max-content', y: tableScrollY }}
+                        style={{ height: '100%' }}
+                        sticky
+                        bordered
+                    />
+                </div>
             </Card>
 
             <EntityFormModal<GroupFormData>
@@ -245,7 +265,7 @@ const GroupListPage = () => {
                     },
                 ]}
             />
-        </>
+        </div>
     );
 };
 

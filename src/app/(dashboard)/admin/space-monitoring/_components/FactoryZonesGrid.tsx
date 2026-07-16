@@ -89,7 +89,7 @@ const FactoryZonesGrid: React.FC<FactoryZonesGridProps> = ({
         const machineOverview: MachineOverview = {
             machineId: machine.machineId,
             machineName: machine.machineName,
-            propertyCode: machine.propertyCode,
+            machineCode: machine.machineCode,
             power: machine.power,
             status: mapStatus(machine.currentStatus),
             currentStatus: machine.currentStatus,

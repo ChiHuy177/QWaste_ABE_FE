@@ -10,13 +10,12 @@ export type Action =
     | 'overview_view'
     | 'store'
     | 'update_sensitive'
-    | 'update_info'
-    | 'update_plan'
     | 'confirm'
-    | 'cancel'
-    | 'operator_view'
-    | 'manager_review_view'
-    | 'decline';
+    | 'decline'
+    | 'reorder'
+    | 'import'
+    | 'incident'
+    | 'move';
 
 export type Subject =
     // Overview
@@ -24,6 +23,8 @@ export type Subject =
     // Categories
     | 'machine_type'
     | 'machine'
+    | 'mold'
+    | 'operation_type'
     | 'staffing'
     | 'factory'
     | 'space'
@@ -34,7 +35,6 @@ export type Subject =
     | 'staff'
     | 'group'
     | 'industry_filter'
-    | 'drawing_code'
     // Factory
     | 'energy'
     | 'industry_config'
@@ -44,9 +44,6 @@ export type Subject =
     | 'machine_operator_history'
     // Settings
     | 'profile'
-    // Operator
-    | 'operator_dashboard'
-    | 'operator_reviews'
     // QC
     | 'qc_dashboard'
     // Manager
@@ -55,8 +52,6 @@ export type Subject =
     | 'user'
     | 'role'
     | 'permission'
-    // Order Management
-    | 'order'
     // Process Management
     | 'process'
     | 'standard_step'
@@ -64,7 +59,10 @@ export type Subject =
     | 'staff'
     // Tasks Management
     | 'tasks'
-    | 'task_review'
+    | 'production_monitor'
+    // Production plan — BE dùng slug production_plan:* (create/import vẫn tạm trên 'product')
+    | 'production_plan'
+    | 'product'
     // Space
     | 'space_monitoring'
     | 'floor_map'

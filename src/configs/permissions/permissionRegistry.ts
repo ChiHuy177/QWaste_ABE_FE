@@ -116,6 +116,82 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         menuKey: 'space-monitoring',
         description: 'View space monitoring',
     },
+    // Production Monitor
+    {
+        slug: 'production_monitor:view',
+        subject: 'production_monitor',
+        action: 'view',
+        routes: ['/admin/production-plan/monitor'],
+        menuKey: 'production-plan-monitor',
+        description: 'View production plan monitor',
+    },
+
+    // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
+    // create/import chưa có bằng chứng BE đổi nên tạm giữ trên subject 'product' cũ.)
+    {
+        slug: 'production_plan:view',
+        subject: 'production_plan',
+        action: 'view',
+        routes: ['/admin/production-plan'],
+        menuKey: 'production-plan',
+        description: 'View production plans',
+    },
+    {
+        slug: 'product:create',
+        subject: 'product',
+        action: 'create',
+        routes: [],
+        description: 'Create production plan',
+    },
+    {
+        slug: 'production_plan:update',
+        subject: 'production_plan',
+        action: 'update',
+        routes: [],
+        description: 'Update production plan fields',
+    },
+    {
+        slug: 'production_plan:incident',
+        subject: 'production_plan',
+        action: 'incident',
+        routes: [],
+        description: 'Terminate/pause/defer production plan (incident actions)',
+    },
+    {
+        slug: 'production_plan:move',
+        subject: 'production_plan',
+        action: 'move',
+        routes: [],
+        description: 'Move a PENDING production plan to another machine/date',
+    },
+    {
+        slug: 'production_plan:delete',
+        subject: 'production_plan',
+        action: 'delete',
+        routes: [],
+        description: 'Delete production plan',
+    },
+    {
+        slug: 'production_plan:restore',
+        subject: 'production_plan',
+        action: 'restore',
+        routes: [],
+        description: 'Restore deleted production plan',
+    },
+    {
+        slug: 'production_plan:reorder',
+        subject: 'production_plan',
+        action: 'reorder',
+        routes: [],
+        description: 'Reorder production plans',
+    },
+    {
+        slug: 'product:import',
+        subject: 'product',
+        action: 'import',
+        routes: [],
+        description: 'Import production plans from Excel',
+    },
 
     // Machine List
     {
@@ -177,6 +253,75 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         action: 'delete',
         routes: [],
         description: 'Delete machine type',
+    },
+
+    // Mold
+    {
+        slug: 'mold:view',
+        subject: 'mold',
+        action: 'view',
+        routes: ['/admin/categories/mold'],
+        menuKey: 'mold',
+        description: 'View mold list',
+    },
+    {
+        slug: 'mold:create',
+        subject: 'mold',
+        action: 'create',
+        routes: [],
+        description: 'Create mold',
+    },
+    {
+        slug: 'mold:update',
+        subject: 'mold',
+        action: 'update',
+        routes: [],
+        description: 'Update mold',
+    },
+    {
+        slug: 'mold:delete',
+        subject: 'mold',
+        action: 'delete',
+        routes: [],
+        description: 'Delete mold',
+    },
+    {
+        slug: 'mold:restore',
+        subject: 'mold',
+        action: 'restore',
+        routes: [],
+        description: 'Restore deleted mold',
+    },
+
+    // Operation Type
+    {
+        slug: 'operation_type:view',
+        subject: 'operation_type',
+        action: 'view',
+        routes: ['/admin/categories/operationType'],
+        menuKey: 'operation-type',
+        description: 'View operation type list',
+    },
+    {
+        slug: 'operation_type:create',
+        subject: 'operation_type',
+        action: 'create',
+        routes: [],
+        description: 'Create operation type',
+    },
+    {
+        slug: 'operation_type:update',
+        subject: 'operation_type',
+        action: 'update',
+        routes: [],
+        description: 'Update operation type',
+    },
+    {
+        slug: 'operation_type:delete',
+        subject: 'operation_type',
+        action: 'delete',
+        routes: [],
+        description: 'Delete operation type',
     },
 
     // Staffing
@@ -430,43 +575,6 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Update profile',
     },
 
-    // Drawing Code
-    {
-        slug: 'drawing_code:view',
-        subject: 'drawing_code',
-        action: 'view',
-        routes: ['/admin/categories/drawingCode'],
-        menuKey: 'drawingCode',
-        description: 'View drawing codes',
-    },
-    {
-        slug: 'drawing_code:create',
-        subject: 'drawing_code',
-        action: 'create',
-        routes: [],
-        description: 'Create drawing code',
-    },
-    {
-        slug: 'drawing_code:update',
-        subject: 'drawing_code',
-        action: 'update',
-        routes: [],
-        description: 'Update drawing code',
-    },
-    {
-        slug: 'drawing_code:delete',
-        subject: 'drawing_code',
-        action: 'delete',
-        routes: [],
-        description: 'Delete drawing code',
-    },
-    {
-        slug: 'drawing_code:restore',
-        subject: 'drawing_code',
-        action: 'restore',
-        routes: [],
-        description: 'Restore drawing code',
-    },
     // Energy
     {
         slug: 'energy:overview_view',
@@ -528,108 +636,7 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Update sensitive machine info',
     },
-    // Order
-    {
-        slug: 'order:view',
-        subject: 'order',
-        action: 'view',
-        routes: [],
-        description: 'View orders',
-    },
-    {
-        slug: 'order:create',
-        subject: 'order',
-        action: 'create',
-        routes: [],
-        description: 'Create orders',
-    },
-    {
-        slug: 'order:update',
-        subject: 'order',
-        action: 'update',
-        routes: [],
-        description: 'Edit orders',
-    },
-    {
-        slug: 'order:update_info',
-        subject: 'order',
-        action: 'update_info',
-        routes: [],
-        description: 'Update order info',
-    },
-    {
-        slug: 'order:update_plan',
-        subject: 'order',
-        action: 'update_plan',
-        routes: [],
-        description: 'Update order plan',
-    },
-    {
-        slug: 'order:confirm',
-        subject: 'order',
-        action: 'confirm',
-        routes: [],
-        description: 'Confirm order',
-    },
-    {
-        slug: 'order:cancel',
-        subject: 'order',
-        action: 'cancel',
-        routes: [],
-        description: 'Cancel order',
-    },
-    {
-        slug: 'order:operator_view',
-        subject: 'order',
-        action: 'operator_view',
-        routes: [],
-        description: 'View orders as operator',
-    },
-    {
-        slug: 'order:manager_review_view',
-        subject: 'order',
-        action: 'manager_review_view',
-        routes: [],
-        description: 'View manager reviews',
-    },
-    {
-        slug: 'order:delete',
-        subject: 'order',
-        action: 'delete',
-        routes: [],
-        description: 'Delete order',
-    },
-    {
-        slug: 'order:restore',
-        subject: 'order',
-        action: 'restore',
-        routes: [],
-        description: 'Restore order',
-    },
-    // Task Review
-    {
-        slug: 'task_review:confirm',
-        subject: 'task_review',
-        action: 'confirm',
-        routes: [],
-        description: 'Confirm task review',
-    },
-    {
-        slug: 'task_review:decline',
-        subject: 'task_review',
-        action: 'decline',
-        routes: [],
-        description: 'Decline task review',
-    },
     // Floor Map
-    {
-        slug: 'floor_map:view',
-        subject: 'floor_map',
-        action: 'view',
-        routes: ['/admin/floor-map/status'],
-        menuKey: 'floor-map-status',
-        description: 'View floor map',
-    },
     {
         slug: 'floor_map:update',
         subject: 'floor_map',

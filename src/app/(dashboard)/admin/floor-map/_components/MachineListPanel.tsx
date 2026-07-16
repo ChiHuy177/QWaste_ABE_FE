@@ -55,7 +55,7 @@ export function MachineListPanel({
             const matchesFilter =
                 filter === 'all' || (filter === 'placed' ? placed : !placed);
             const searchableText = [
-                machine.propertyCode,
+                machine.machineCode,
                 machine.spaceCode,
                 machine.spaceName,
                 machine.spaceLevelName,
@@ -277,7 +277,7 @@ export function MachineListPanel({
                                         FLOOR_MAP_MACHINE_DRAG_DATA_TYPE,
                                         createFloorMapMachineDragPayload(machine.machineId)
                                     );
-                                    event.dataTransfer.setData('text/plain', machine.propertyCode);
+                                    event.dataTransfer.setData('text/plain', machine.machineCode);
                                 }}
                                 style={{
                                     padding: '12px 16px',
@@ -336,7 +336,7 @@ export function MachineListPanel({
                                                 whiteSpace: 'normal',
                                             }}
                                         >
-                                            {machine.propertyCode}
+                                            {machine.machineCode}
                                         </Typography.Text>
                                         <Tag
                                             style={{

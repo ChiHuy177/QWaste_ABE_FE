@@ -1,5 +1,5 @@
 'use client';
-import { Input } from 'antd';
+import { Badge, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { CSSProperties, useState, useEffect, useRef } from 'react';
 
@@ -15,6 +15,7 @@ export interface SearchInputProps {
     showFilterIcon?: boolean;
     onFilterClick?: () => void;
     isFilterActive?: boolean;
+    activeFilterCount?: number;
 }
 
 export const SearchInput = ({
@@ -29,6 +30,7 @@ export const SearchInput = ({
     showFilterIcon = false,
     onFilterClick,
     isFilterActive = false,
+    activeFilterCount = 0,
 }: SearchInputProps) => {
     const [inputValue, setInputValue] = useState(value);
     const [prevValue, setPrevValue] = useState(value);
@@ -56,7 +58,6 @@ export const SearchInput = ({
         return () => clearTimeout(timer);
     }, [inputValue, debounceMs, onChange]);
 
-    // Lazy load the icon if used
     const FilterIcon = showFilterIcon ? require('@ant-design/icons').FilterOutlined : null;
 
     return (
@@ -65,19 +66,21 @@ export const SearchInput = ({
             prefix={<SearchOutlined />}
             suffix={
                 showFilterIcon && FilterIcon ? (
-                    <FilterIcon
-                        aria-label="Open filters"
-                        style={{
-                            color: isFilterActive ? '#1677ff' : '#bfbfbf',
-                            cursor: 'pointer',
-                            fontSize: 16,
-                            transition: 'color 0.3s',
-                        }}
-                        onClick={(e: any) => {
-                            e.stopPropagation();
-                            onFilterClick?.();
-                        }}
-                    />
+                    <Badge count={activeFilterCount} size="small" offset={[-2, 2]}>
+                        <FilterIcon
+                            aria-label="Open filters"
+                            style={{
+                                color: isFilterActive ? '#1677ff' : '#bfbfbf',
+                                cursor: 'pointer',
+                                fontSize: 16,
+                                transition: 'color 0.3s',
+                            }}
+                            onClick={(e: any) => {
+                                e.stopPropagation();
+                                onFilterClick?.();
+                            }}
+                        />
+                    </Badge>
                 ) : undefined
             }
             value={inputValue}

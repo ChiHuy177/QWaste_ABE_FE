@@ -43,6 +43,9 @@ next-env.d.ts
 
 .claude
 
+.next-dev.err.log
+.next-dev.out.log
+
 # document (nextra)
 docs/.next/
 docs/out/

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button, Card, Table, Select, Grid, Spin, Typography, Modal, Descriptions } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import {
     MachineOperatorHistory,
@@ -24,6 +24,7 @@ import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 
 const { useBreakpoint } = Grid;
@@ -236,9 +237,18 @@ const MachineStaffingPage = () => {
         () => getMachineStaffingFormFields(t, modalState.data),
         [t, modalState.data]
     );
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('machineStaffing.title')}
                 loading={loading}
@@ -382,30 +392,24 @@ const MachineStaffingPage = () => {
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                 }}
                 styles={{ body: {
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
                     paddingBottom: 0,
                 } }}
             >
-                {historyData === null ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+                >
                     <Table<MachineOperatorHistory>
                         columns={columns}
                         dataSource={filteredHistoryData}
@@ -413,6 +417,7 @@ const MachineStaffingPage = () => {
                         rowKey={(record) => record.machineId}
                         pagination={{
                             defaultPageSize: 10,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
@@ -423,12 +428,13 @@ const MachineStaffingPage = () => {
                         }}
                         scroll={{
                             x: 'max-content',
-                            y: isMobile ? 'calc(100vh - 280px)' : 'calc(112vh - 420px)',
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         sticky
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<MachineOperatorHistoryFormData>
@@ -464,7 +470,7 @@ const MachineStaffingPage = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

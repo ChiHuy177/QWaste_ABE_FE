@@ -5,17 +5,17 @@ export const statusColors = {
     light: {
         runtime: {
             base: '#1F7A4D',
-            bg: 'rgba(31, 122, 77, 0.14)',
+            bg: 'rgba(31, 122, 77, 0.20)',
             border: 'rgba(31, 122, 77, 0.38)',
         },
         idle: {
             base: '#A96500',
-            bg: '#fffbe6',
+            bg: '#fff3cd',
             border: 'rgba(169, 101, 0, 0.42)',
         },
         error: {
             base: '#B42318',
-            bg: '#fff1f0',
+            bg: '#fde8e8',
             border: 'rgba(180, 35, 24, 0.38)',
         },
         offline: {
@@ -27,17 +27,17 @@ export const statusColors = {
     dark: {
         runtime: {
             base: '#5FAE85',
-            bg: 'rgba(95, 174, 133, 0.16)',
+            bg: 'rgba(95, 174, 133, 0.26)',
             border: 'rgba(95, 174, 133, 0.4)',
         },
         idle: {
             base: '#D9A03F',
-            bg: 'rgba(217, 160, 63, 0.16)',
+            bg: 'rgba(217, 160, 63, 0.26)',
             border: 'rgba(217, 160, 63, 0.4)',
         },
         error: {
             base: '#E06B62',
-            bg: 'rgba(224, 107, 98, 0.16)',
+            bg: 'rgba(224, 107, 98, 0.26)',
             border: 'rgba(224, 107, 98, 0.4)',
         },
         offline: {
@@ -81,7 +81,7 @@ export const lightTheme: ThemeConfig = {
         colorWarning: L_WARNING,
         colorError: L_ERROR,
         colorInfo: '#074695',
-        colorInfoBg: '#DDEBFF',
+        colorInfoBg: '#c8dbf8',
         colorInfoBorder: '#8EB7EA',
         colorSuccessBg: L_SUCCESS_BG,
         colorSuccessBorder: L_SUCCESS_BD,
@@ -94,7 +94,7 @@ export const lightTheme: ThemeConfig = {
         colorText: 'rgba(0, 0, 0, 0.88)',
         colorTextSecondary: 'rgba(0, 0, 0, 0.65)',
         colorTextTertiary: 'rgba(0, 0, 0, 0.45)',
-        colorTextQuaternary: 'rgba(0, 0, 0, 0.25)',
+        colorTextQuaternary: 'rgba(0, 0, 0, 0.38)',
 
         colorBgContainer: '#ffffff',
         colorBgElevated: '#ffffff',
@@ -102,7 +102,8 @@ export const lightTheme: ThemeConfig = {
         colorBgSpotlight: 'rgba(0, 0, 0, 0.85)',
 
         colorBorder: '#d9d9d9',
-        colorBorderSecondary: '#f0f0f0',
+        colorBorderSecondary: '#d0d0d0',
+        colorFillSecondary: 'rgba(0, 0, 0, 0.12)',
 
         borderRadius: 8,
         borderRadiusLG: 12,
@@ -200,7 +201,7 @@ export const lightTheme: ThemeConfig = {
         },
         Progress: {
             defaultColor: '#074695',
-            remainingColor: 'rgba(0, 0, 0, 0.06)',
+            remainingColor: 'rgba(0, 0, 0, 0.12)',
         },
         Alert: {
             colorSuccessBg: L_SUCCESS_BG,
@@ -246,7 +247,7 @@ export const darkTheme: ThemeConfig = {
         colorText: 'rgba(255, 255, 255, 0.85)',
         colorTextSecondary: 'rgba(255, 255, 255, 0.65)',
         colorTextTertiary: 'rgba(255, 255, 255, 0.45)',
-        colorTextQuaternary: 'rgba(255, 255, 255, 0.25)',
+        colorTextQuaternary: 'rgba(255, 255, 255, 0.38)',
 
         colorBgContainer: '#282828',
         colorBgElevated: '#2F2F2F',
@@ -254,7 +255,8 @@ export const darkTheme: ThemeConfig = {
         colorBgSpotlight: '#424242',
 
         colorBorder: '#424242',
-        colorBorderSecondary: '#303030',
+        colorBorderSecondary: '#3e3e3e',
+        colorFillSecondary: 'rgba(255, 255, 255, 0.14)',
 
         borderRadius: 8,
         borderRadiusLG: 12,
@@ -352,7 +354,7 @@ export const darkTheme: ThemeConfig = {
         },
         Progress: {
             defaultColor: '#3D7DD2',
-            remainingColor: 'rgba(255, 255, 255, 0.08)',
+            remainingColor: 'rgba(255, 255, 255, 0.14)',
         },
         Alert: {
             colorSuccessBg: D_SUCCESS_BG,

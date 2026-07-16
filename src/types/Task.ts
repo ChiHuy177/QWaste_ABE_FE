@@ -1,4 +1,3 @@
-import type { TaskReview } from './Order';
 import type { AuditMetaData as GlobalAuditMetaData } from './Metadata';
 
 export type TaskStatus = 'DRAFT' | 'LOCKED' | 'TO_DO' | 'IN_PROGRESS' | 'PAUSED' | 'QC_CHECK' | 'COMPLETE' | 'CANCELLED';
@@ -53,7 +52,6 @@ export interface TaskResponse {
     createdAt?: string;
     completedAt?: string | null;
     taskAssignments: TaskAssignment[];
-    taskReviews?: TaskReview[];
     defectRecords?: TaskDefectRecordResponse[];
     auditMetaData?: GlobalAuditMetaData;
 }

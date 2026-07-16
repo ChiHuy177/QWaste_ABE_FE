@@ -1,106 +1,56 @@
-# Product modules
+# Product modules
+
+This page summarizes the main Qwaste v2 modules and their code locations.
+
+## Admin overview
+
+| Location | Content |
+| --- | --- |
+| `src/app/(dashboard)/admin/page.tsx` | Admin overview page |
+| `src/app/(dashboard)/admin/_components` | Cards, charts, panels |
+
+This screen shows operational snapshots, machine status, error distribution, and error trends.
+
+## Space monitoring
+
+| Location | Content |
+| --- | --- |
+| `src/app/(dashboard)/admin/space-monitoring/page.tsx` | Main page |
+| `_components/FactoryCardsGrid.tsx` | Factory grid |
+| `_components/SpaceOverviewGrid.tsx` | Space tree |
+| `_components/MachineCardGrid.tsx` | Machine list |
+| `_components/ErrorAnalyticsModal.tsx` | Error analytics |
+
+This module depends heavily on the production space hierarchy: factory, zone, line, space, machine.
+
+## Machine monitoring
+
+| Location | Content |
+| --- | --- |
+| `src/app/(dashboard)/admin/machines/page.tsx` | Machine screen |
+| `MachineCard.tsx` | Machine status card |
+| `MachineTimelineModal.tsx` | Activity/error timeline |
+| `MachineService.ts` | Machine API |
+
+Monitoring charts use endpoints from `SPACES.MONITORING` and `MACHINE`.
+
+## Energy
+
+| Location | Content |
+| --- | --- |
+| `src/app/(dashboard)/admin/electric/page.tsx` | Energy page |
+| `ElectricService` | Energy API |
+| `useEnergyWebSocket` | Realtime power updates |
+
+Realtime energy subscribes by selected zone or all zones. See [Realtime WebSocket](/en/realtime).
 
-This page summarizes the main Qwaste v2 modules and their code locations.
 
-## Admin overview
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/admin/page.tsx` | Admin overview page |
-| `src/app/(dashboard)/admin/_components` | Cards, charts, panels |
-
-This screen shows operational snapshots, machine status, error distribution, and error trends.
-
-## Space monitoring
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/admin/space-monitoring/page.tsx` | Main page |
-| `_components/FactoryCardsGrid.tsx` | Factory grid |
-| `_components/SpaceOverviewGrid.tsx` | Space tree |
-| `_components/MachineCardGrid.tsx` | Machine list |
-| `_components/ErrorAnalyticsModal.tsx` | Error analytics |
-
-This module depends heavily on the production space hierarchy: factory, zone, line, space, machine.
-
-## Machine monitoring
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/admin/machines/page.tsx` | Machine screen |
-| `MachineCard.tsx` | Machine status card |
-| `MachineTimelineModal.tsx` | Activity/error timeline |
-| `MachineService.ts` | Machine API |
-
-Monitoring charts use endpoints from `SPACES.MONITORING` and `MACHINE`.
-
-## Energy
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/admin/electric/page.tsx` | Energy page |
-| `ElectricService` | Energy API |
-| `useEnergyWebSocket` | Realtime power updates |
-
-Realtime energy subscribes by selected zone or all zones. See [Realtime WebSocket](/en/realtime).
-
-## Order management
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/admin/order/page.tsx` | Order list |
-| `OrderForm/` | Multi-step create/edit form |
-| `OrderDetailDrawer.tsx` | Detail drawer |
-| `ManagerReviewDrawer.tsx` | Manager review |
-| `OrderService.ts` | Order API |
-
-Order form sections:
-
-| Section | Role |
-| --- | --- |
-| Basic info | Order metadata |
-| Drawing config | Select drawing code and configure steps |
-| Plan tree | Drawing -> step -> task tree |
-| Review | Final check before submit |
-
-Important APIs:
-
-- `GET /api/orders/v1`
-- `POST /api/orders/v1`
-- `PUT /api/orders/v1/info`
-- `PUT /api/orders/v1/plan`
-- `PUT /api/orders/v1/{id}/confirm`
-- `GET /api/orders/v1/{id}/planForEdit`
-- `GET /api/orders/v1/{id}/export`
-
-## Operator tasks
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/operator/tasks/page.tsx` | Operator task board |
-| `OperatorTaskBoard.tsx` | Kanban board |
-| `TaskColumn.tsx` | Status column |
-| `TaskCard.tsx` | Task card |
-| `useKanbanTasks.ts` | Task data hook |
-
-This module uses a kanban board so operators can track and act on tasks by status.
-
-## Operator reviews
-
-| Location | Content |
-| --- | --- |
-| `src/app/(dashboard)/operator/my-reviews/page.tsx` | Review order list |
-| `[orderId]/page.tsx` | Review detail |
-| `OperatorReviewDrawer.tsx` | Review drawer |
-
-Review APIs are in `OrderService` and the `TASK_REVIEWS` endpoint group.
-
-## RBAC
-
-| Location | Content |
-| --- | --- |
-| `/admin/rbac/users` | User, role, and custom permission management |
-| `/admin/rbac/roles` | Role management |
-| `/admin/rbac/permissions` | Permission management |
-
-RBAC directly affects `AbilityContext`, `routeAccess.ts`, and the sidebar.
+## RBAC
+
+| Location | Content |
+| --- | --- |
+| `/admin/rbac/users` | User, role, and custom permission management |
+| `/admin/rbac/roles` | Role management |
+| `/admin/rbac/permissions` | Permission management |
+
+RBAC directly affects `AbilityContext`, `routeAccess.ts`, and the sidebar.

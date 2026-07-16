@@ -1,321 +1,324 @@
-# Clean code
+# Clean code
+
+This page defines Qwaste v2 coding guidelines. The point is not style for its own sake, but code that is easier to read, test, and extend as business workflows grow.
+
+## Core principles
+
+| Principle | Project application |
+| --- | --- |
+| One primary responsibility per file | Pages compose UI, services call APIs, hooks orchestrate state, utils contain pure logic |
+| Keep code close to usage | Move to shared only when reuse is real |
+| Clear boundaries | UI does not know token/API details; services do not know modals/toasts |
+| Types before cleverness | Important responses, requests, props, and state should be typed |
+| Optimize real issues | Avoid broad `useMemo`/`useCallback` usage for cheap logic |
+
+## Components
+
+A component should read in this order:
+
+1. Props type.
+2. Hooks/state.
+3. Derived values.
+4. Event handlers.
+5. Render.
+
+Example:
+
+```tsx
+interface StatusBadgeProps {
 
-This page defines Qwaste v2 coding guidelines. The point is not style for its own sake, but code that is easier to read, test, and extend as business workflows grow.
+  color: string
 
-## Core principles
+  label: string
 
-| Principle | Project application |
-| --- | --- |
-| One primary responsibility per file | Pages compose UI, services call APIs, hooks orchestrate state, utils contain pure logic |
-| Keep code close to usage | Move to shared only when reuse is real |
-| Clear boundaries | UI does not know token/API details; services do not know modals/toasts |
-| Types before cleverness | Important responses, requests, props, and state should be typed |
-| Optimize real issues | Avoid broad `useMemo`/`useCallback` usage for cheap logic |
-
-## Components
-
-A component should read in this order:
-
-1. Props type.
-2. Hooks/state.
-3. Derived values.
-4. Event handlers.
-5. Render.
-
-Example:
-
-```tsx
-interface OrderStatusBadgeProps {
-  status: OrderStatus
 }
 
-export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const color = getOrderStatusColor(status)
-  const label = getOrderStatusLabel(status)
+
+
+export function StatusBadge({ color, label }: StatusBadgeProps) {
 
   return <Tag color={color}>{label}</Tag>
-}
-```
 
-Avoid:
-
-- A component that calls APIs, transforms data, and renders a large modal at the same time.
-- Passing an entire `order` object when only `order.status` is needed.
-- Defining child components inside parent components.
-- Large inline objects/arrays/functions passed to memoized components.
-- `condition && <Component />` when `condition` can be a number or empty string.
-
-Prefer:
-
-- Split components by meaningful business UI blocks.
-- Name components by domain: `OrderDetailDrawer`, `MachineTimelineModal`.
-- Use early returns for loading/empty/error states.
-- Keep shared components independent from a specific page.
-
-## Props
-
-Props should be small and intentional.
-
-```tsx
-interface TaskCardProps {
-  task: TaskResponse
-  onOpenDetail: (taskId: string) => void
-}
-```
-
-If a component only needs three fields, consider passing those fields instead of a large object:
-
-```tsx
-interface UserNameProps {
-  fullname: string
-  roleNames: string[]
-}
-```
-
-Avoid long prop drilling for callbacks that intermediate components do not use. Use composition or a narrow context when the chain becomes long.
-
-## Hooks
-
-Hooks should hide orchestration complexity without becoming god hooks.
-
-Good:
-
-```ts
-function useOrderFilters() {
-  const [keyword, setKeyword] = useState('')
-  const [status, setStatus] = useState<OrderStatus | null>(null)
-
-  const query = useMemo(
-    () => ({ keyword: keyword.trim(), status }),
-    [keyword, status]
-  )
-
-  return { keyword, setKeyword, status, setStatus, query }
-}
-```
-
-Avoid:
-
-- A hook that manages filters, modals, selected rows, submit, permission, and export behavior together.
-- `useEffect` for simple derived state.
-- Dependency arrays containing objects/functions that change every render.
-- Global event subscriptions without cleanup.
-
-Practical rules:
-
-| Situation | Preferred approach |
-| --- | --- |
-| State can be derived from other state | Compute during render, or use `useMemo` if expensive |
-| Logic runs only on click/submit | Put it in the event handler, not `useEffect` |
-| Callback updates from previous state | Use functional setState |
-| Frequent value changes should not render | Use `useRef` |
-| Heavy search/filter UI | Use debounce or `useDeferredValue` |
-
-## useEffect
-
-Use `useEffect` only for real side effects:
-
-- Subscribe/unsubscribe WebSocket or event listeners.
-- Sync with browser APIs.
-- Trigger fetches when dependencies change if no data library is used.
-- Clean up timers, subscriptions, and abort controllers.
-
-Do not use `useEffect` to set simple derived state:
-
-```tsx
-// Avoid
-useEffect(() => {
-  setFullName(`${firstName} ${lastName}`)
-}, [firstName, lastName])
-
-// Prefer
-const fullName = `${firstName} ${lastName}`
-```
-
-If an effect grows beyond roughly 20-30 lines, extract a function or a hook.
-
-## Services and API
-
-Components should not call `apiClient` directly. The standard flow is:
-
-```txt
-Component/Hook -> DomainService -> NetworkService -> apiClient -> /api/bff
-```
-
-Good service method:
-
-```ts
-static async cancelOrder(orderId: string, reason: string): Promise<string> {
-  const response = await NetworkService.requestJson<void>({
-    method: 'PUT',
-    url: ENDPOINTS.ORDERS.CANCEL(orderId),
-    data: { cancellationReason: reason }
+}
+```
+
+Avoid:
+
+- A component that calls APIs, transforms data, and renders a large modal at the same time.
+- Passing an entire `machine` object when only `machine.status` is needed.
+- Defining child components inside parent components.
+- Large inline objects/arrays/functions passed to memoized components.
+- `condition && <Component />` when `condition` can be a number or empty string.
+
+Prefer:
+
+- Split components by meaningful business UI blocks.
+- Name components by domain: `OrderDetailDrawer`, `MachineTimelineModal`.
+- Use early returns for loading/empty/error states.
+- Keep shared components independent from a specific page.
+
+## Props
+
+Props should be small and intentional.
+
+```tsx
+interface TaskCardProps {
+  task: TaskResponse
+  onOpenDetail: (taskId: string) => void
+}
+```
+
+If a component only needs three fields, consider passing those fields instead of a large object:
+
+```tsx
+interface UserNameProps {
+  fullname: string
+  roleNames: string[]
+}
+```
+
+Avoid long prop drilling for callbacks that intermediate components do not use. Use composition or a narrow context when the chain becomes long.
+
+## Hooks
+
+Hooks should hide orchestration complexity without becoming god hooks.
+
+Good:
+
+```ts
+function useOrderFilters() {
+  const [keyword, setKeyword] = useState('')
+  const [status, setStatus] = useState<string | null>(null)
+
+  const query = useMemo(
+    () => ({ keyword: keyword.trim(), status }),
+    [keyword, status]
+  )
+
+  return { keyword, setKeyword, status, setStatus, query }
+}
+```
+
+Avoid:
+
+- A hook that manages filters, modals, selected rows, submit, permission, and export behavior together.
+- `useEffect` for simple derived state.
+- Dependency arrays containing objects/functions that change every render.
+- Global event subscriptions without cleanup.
+
+Practical rules:
+
+| Situation | Preferred approach |
+| --- | --- |
+| State can be derived from other state | Compute during render, or use `useMemo` if expensive |
+| Logic runs only on click/submit | Put it in the event handler, not `useEffect` |
+| Callback updates from previous state | Use functional setState |
+| Frequent value changes should not render | Use `useRef` |
+| Heavy search/filter UI | Use debounce or `useDeferredValue` |
+
+## useEffect
+
+Use `useEffect` only for real side effects:
+
+- Subscribe/unsubscribe WebSocket or event listeners.
+- Sync with browser APIs.
+- Trigger fetches when dependencies change if no data library is used.
+- Clean up timers, subscriptions, and abort controllers.
+
+Do not use `useEffect` to set simple derived state:
+
+```tsx
+// Avoid
+useEffect(() => {
+  setFullName(`${firstName} ${lastName}`)
+}, [firstName, lastName])
+
+// Prefer
+const fullName = `${firstName} ${lastName}`
+```
+
+If an effect grows beyond roughly 20-30 lines, extract a function or a hook.
+
+## Services and API
+
+Components should not call `apiClient` directly. The standard flow is:
+
+```txt
+Component/Hook -> DomainService -> NetworkService -> apiClient -> /api/bff
+```
+
+Good service method:
+
+```ts
+static async getMachineById(machineId: string): Promise<MachineResponse> {
+  const response = await NetworkService.requestJson<MachineResponse>({
+    method: 'GET',
+    url: ENDPOINTS.MACHINE.DETAIL(machineId)
   })
 
-  return response.message as string
-}
-```
-
-Services should not:
-
-- Show toasts/modals.
-- Navigate routes.
-- Read React/Redux state directly.
-- Hard-code URLs outside `endpoints.ts`.
-- Swallow errors that the UI needs to handle.
-
-## Async and performance
-
-Run independent requests in parallel:
-
-```ts
-const [orders, operators, drawingCodes] = await Promise.all([
-  OrderService.getAllOrders(),
-  OperatorService.getAllOperators(),
-  DrawingCodeService.getPickingDrawingCodes()
-])
-```
-
-Avoid unnecessary waterfalls:
-
-```ts
-// Slower if the two requests are independent
-const orders = await OrderService.getAllOrders()
-const operators = await OperatorService.getAllOperators()
-```
-
-High-value performance rules:
-
-| Problem | Approach |
-| --- | --- |
-| Heavy component/chart | Dynamic import or split the component |
-| Large list | Pagination, virtualization, or content visibility |
-| Repeated lookup | Use `Map`/`Set` instead of repeated `find` |
-| Expensive computation | `useMemo` with primitive dependencies |
-| Laggy input | `useDeferredValue` or debounce |
-| Large bundle | Import directly, avoid broad barrel imports |
-
-## State
-
-Choose state location by scope:
-
-| Scope | Location |
-| --- | --- |
-| One input/modal | Local state |
-| One complex page | Route-local hook |
-| Several components in one module | Module-local context/hook |
-| Several screens | Redux store |
-| Server/API data | Service + query/cache layer if available |
-
-Do not lift state just to make it easy to access. The more global the state, the higher the cost of understanding and debugging it.
-
-## Forms
-
-Forms should separate:
-
-- Field UI.
-- Validation.
-- Mapping from form values to request payload.
-- Submit action.
-
-For complex forms, keep mappers outside JSX:
-
-```ts
-function mapOrderFormToRequest(values: OrderFormValues): OrderCreationRequest {
-  return {
-    orderCode: values.orderCode.trim(),
-    drawings: values.drawings.map(mapDrawingFormValue)
-  }
-}
-```
-
-Do not build large request payloads directly inside JSX submit handlers.
-
-## Error handling
-
-Error handling should be consistent:
-
-| Layer | Responsibility |
-| --- | --- |
-| `apiClient` | Refresh token, session expired, forbidden event |
-| Service | Throw errors or return a clear contract |
-| Hook/page | Show toast, modal, empty/error state |
-| Global handler | Global auth/permission failures |
-
-Do not `catch` and only `console.error` when the UI needs to know the action failed.
-
-## Naming
-
-| Type | Convention |
-| --- | --- |
-| Component | `PascalCase`: `OrderDetailDrawer` |
-| Hook | `useSomething`: `useOrderFormData` |
-| Service | `{Domain}Service`: `OrderService` |
-| Response type | `{Domain}Response`, `{Domain}SummaryResponse` |
-| Request type | `{Domain}CreationRequest`, `{Domain}UpdationRequest` |
-| Boolean | `is`, `has`, `can`, `should`: `isLoading`, `canEdit` |
-| Handler | `handleSomething`: `handleSubmit`, `handleCancel` |
-
-Names should speak in business terms, not only UI terms. `OrderDetailDrawer` is better than `DetailDrawer` when the drawer belongs to orders.
-
-## Comments
-
-Comments should explain why, not repeat what the code does.
-
-```ts
-// The BFF keeps the token in an httpOnly cookie, so WebSocket gets it through a server endpoint.
-const tokenResponse = await fetch('/api/bff/ws-token')
-```
-
-Avoid:
-
-```ts
-// Set loading to true
-setLoading(true)
-```
-
-## Testable code
-
-Testable code usually has:
-
-- Mappers as pure functions.
-- API calls in services.
-- Components with clear props.
-- Hooks separated from rendering.
-- No module-level mutable state unless it is an intentional cache.
-
-Prioritize tests for:
-
-| Test target | Example |
-| --- | --- |
-| Request/response mappers | Order form mapper |
-| Permission parser | `permissionParser.test.ts` |
-| Calculation utilities | `calculateElectricBill.test.ts` |
-| Stateful UI components | Filter, tree, kanban column |
-
-## Review checklist
-
-Before merging, ask:
-
-1. Is the new file in the right layer.
-2. Does the component have too many responsibilities.
-3. Is the API URL in `endpoints.ts`.
-4. Are request/response types clear enough.
-5. Was state made global too early.
-6. Does every `useEffect` have a real side effect and cleanup.
-7. Are independent requests accidentally awaited sequentially.
-8. Is any hard-coded text missing i18n.
-9. Do route/menu permissions need updates.
-10. Does any mapper/logic deserve a test.
-
-## Project anti-patterns
-
-| Anti-pattern | Fix |
-| --- | --- |
-| 700-line page | Split `_components`, `_hooks`, mappers |
-| Component calls `apiClient` | Add a service method |
-| API URL hard-coded in component | Move it to `endpoints.ts` |
-| `any` flows from API to UI | Add a minimal response type |
-| Modal state in Redux | Move it to local/page hook state |
-| `useEffect` sets derived state | Compute directly or with `useMemo` |
-| Shared component embeds one page's rules | Move it back to the route or pass explicit rules through props |
+  return response.result as MachineResponse
+}
+```
+
+Services should not:
+
+- Show toasts/modals.
+- Navigate routes.
+- Read React/Redux state directly.
+- Hard-code URLs outside `endpoints.ts`.
+- Swallow errors that the UI needs to handle.
+
+## Async and performance
+
+Run independent requests in parallel:
+
+```ts
+const [machines, spaces] = await Promise.all([
+  MachineService.getMachines(),
+  SpaceService.getSpaces()
+])
+```
+
+Avoid unnecessary waterfalls:
+
+```ts
+// Slower if the two requests are independent
+const machines = await MachineService.getMachines()
+const spaces = await SpaceService.getSpaces()
+```
+
+High-value performance rules:
+
+| Problem | Approach |
+| --- | --- |
+| Heavy component/chart | Dynamic import or split the component |
+| Large list | Pagination, virtualization, or content visibility |
+| Repeated lookup | Use `Map`/`Set` instead of repeated `find` |
+| Expensive computation | `useMemo` with primitive dependencies |
+| Laggy input | `useDeferredValue` or debounce |
+| Large bundle | Import directly, avoid broad barrel imports |
+
+## State
+
+Choose state location by scope:
+
+| Scope | Location |
+| --- | --- |
+| One input/modal | Local state |
+| One complex page | Route-local hook |
+| Several components in one module | Module-local context/hook |
+| Several screens | Redux store |
+| Server/API data | Service + query/cache layer if available |
+
+Do not lift state just to make it easy to access. The more global the state, the higher the cost of understanding and debugging it.
+
+## Forms
+
+Forms should separate:
+
+- Field UI.
+- Validation.
+- Mapping from form values to request payload.
+- Submit action.
+
+For complex forms, keep mappers outside JSX:
+
+```ts
+function mapOrderFormToRequest(values: OrderFormValues): OrderCreationRequest {
+  return {
+    orderCode: values.orderCode.trim(),
+    drawings: values.drawings.map(mapDrawingFormValue)
+  }
+}
+```
+
+Do not build large request payloads directly inside JSX submit handlers.
+
+## Error handling
+
+Error handling should be consistent:
+
+| Layer | Responsibility |
+| --- | --- |
+| `apiClient` | Refresh token, session expired, forbidden event |
+| Service | Throw errors or return a clear contract |
+| Hook/page | Show toast, modal, empty/error state |
+| Global handler | Global auth/permission failures |
+
+Do not `catch` and only `console.error` when the UI needs to know the action failed.
+
+## Naming
+
+| Type | Convention |
+| --- | --- |
+| Component | `PascalCase`: `OrderDetailDrawer` |
+| Hook | `useSomething`: `useOrderFormData` |
+| Service | `{Domain}Service`: `MachineService` |
+| Response type | `{Domain}Response`, `{Domain}SummaryResponse` |
+| Request type | `{Domain}CreationRequest`, `{Domain}UpdationRequest` |
+| Boolean | `is`, `has`, `can`, `should`: `isLoading`, `canEdit` |
+| Handler | `handleSomething`: `handleSubmit`, `handleCancel` |
+
+Names should speak in business terms, not only UI terms. `OrderDetailDrawer` is better than `DetailDrawer` when the drawer belongs to orders.
+
+## Comments
+
+Comments should explain why, not repeat what the code does.
+
+```ts
+// The BFF keeps the token in an httpOnly cookie, so WebSocket gets it through a server endpoint.
+const tokenResponse = await fetch('/api/bff/ws-token')
+```
+
+Avoid:
+
+```ts
+// Set loading to true
+setLoading(true)
+```
+
+## Testable code
+
+Testable code usually has:
+
+- Mappers as pure functions.
+- API calls in services.
+- Components with clear props.
+- Hooks separated from rendering.
+- No module-level mutable state unless it is an intentional cache.
+
+Prioritize tests for:
+
+| Test target | Example |
+| --- | --- |
+| Request/response mappers | Order form mapper |
+| Permission parser | `permissionParser.test.ts` |
+| Calculation utilities | `calculateElectricBill.test.ts` |
+| Stateful UI components | Filter, tree, kanban column |
+
+## Review checklist
+
+Before merging, ask:
+
+1. Is the new file in the right layer.
+2. Does the component have too many responsibilities.
+3. Is the API URL in `endpoints.ts`.
+4. Are request/response types clear enough.
+5. Was state made global too early.
+6. Does every `useEffect` have a real side effect and cleanup.
+7. Are independent requests accidentally awaited sequentially.
+8. Is any hard-coded text missing i18n.
+9. Do route/menu permissions need updates.
+10. Does any mapper/logic deserve a test.
+
+## Project anti-patterns
+
+| Anti-pattern | Fix |
+| --- | --- |
+| 700-line page | Split `_components`, `_hooks`, mappers |
+| Component calls `apiClient` | Add a service method |
+| API URL hard-coded in component | Move it to `endpoints.ts` |
+| `any` flows from API to UI | Add a minimal response type |
+| Modal state in Redux | Move it to local/page hook state |
+| `useEffect` sets derived state | Compute directly or with `useMemo` |
+| Shared component embeds one page's rules | Move it back to the route or pass explicit rules through props |

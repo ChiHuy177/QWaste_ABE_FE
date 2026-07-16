@@ -3,11 +3,10 @@ import {
     ApartmentOutlined,
     SettingOutlined,
     SafetyOutlined,
-    ShoppingOutlined,
     ProjectOutlined,
-    TeamOutlined,
     CheckSquareOutlined,
     AppstoreOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import type { Action, Subject } from '@/configs/permissions/caslAbility';
 
@@ -53,27 +52,11 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         alternativeAction: 'update', // Show if can view OR update
     },
     {
-        key: 'order',
-        route: '/admin/order',
-        i18nKey: 'sidebar.navigation.order',
-        icon: <ShoppingOutlined />,
-        subject: 'order',
-        action: 'view',
-    },
-    {
         key: 'process',
         route: '/admin/process',
         i18nKey: 'sidebar.navigation.process',
         icon: <ProjectOutlined />,
         subject: 'process',
-        action: 'view',
-    },
-    {
-        key: 'staff',
-        route: '/admin/staff',
-        i18nKey: 'sidebar.navigation.staff',
-        icon: <TeamOutlined />,
-        subject: 'staff',
         action: 'view',
     },
     {
@@ -85,19 +68,19 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         action: 'view',
     },
     {
-        key: 'operator-tasks',
-        route: '/operator/tasks',
-        i18nKey: 'operatorTasks.page.title',
-        icon: <CheckSquareOutlined />,
-        subject: 'operator_dashboard',
+        key: 'production-plan',
+        route: '/admin/production-plan',
+        i18nKey: 'sidebar.navigation.productionPlan',
+        icon: <CalendarOutlined />,
+        subject: 'tasks',
         action: 'view',
     },
     {
-        key: 'operator-reviews',
-        route: '/operator/my-reviews',
-        i18nKey: 'operatorReview.page.title',
-        icon: <CheckSquareOutlined />,
-        subject: 'operator_reviews',
+        key: 'production-plan-monitor',
+        route: '/admin/production-plan/monitor',
+        i18nKey: 'sidebar.navigation.productionMonitor',
+        icon: <CalendarOutlined />,
+        subject: 'production_monitor',
         action: 'view',
     },
     {
@@ -178,16 +161,6 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         group: 'categories',
         subGroup: 'staff_others',
     },
-    {
-        key: 'drawing-code',
-        route: '/admin/categories/drawingCode',
-        i18nKey: 'sidebar.navigation.drawingCode',
-        subject: 'drawing_code',
-        action: 'view',
-        group: 'categories',
-        subGroup: 'staff_others',
-    },
-
     // RBAC items
     {
         key: 'rbac-permissions',

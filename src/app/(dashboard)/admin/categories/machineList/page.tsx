@@ -4,8 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
+    Badge,
     Button,
     Card,
+    Flex,
     Table,
     Grid,
     Spin,
@@ -19,19 +21,21 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { FilterOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Machine } from '@/types/Machine';
 import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
 import { MachineService } from '@/services/MachineService';
+import { OperationTypeService } from '@/services/OperationTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
-import { getMachineListFormFields } from './_components/machineListFormConfig';
+import { getMachineListFormFields, toOperationTypeOptions } from './_components/machineListFormConfig';
 import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { SpaceWithChildrenResponse } from '@/types/Space';
 import {
     mapSpaceTreeToTreeSelect,
@@ -41,7 +45,8 @@ import { SpaceService } from '@/services';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import MachineFilterInfo from '@/app/(dashboard)/admin/machines/_components/MachineFilterInfo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
+import FilterDrawer from '@/components/shared/filters/FilterDrawer';
 import { useUploadThing } from '@/utils/uploadthing';
 
 const { useBreakpoint } = Grid;
@@ -58,15 +63,19 @@ const machineQueryKeys = {
         sort: string | string[],
         search: string,
         name: string | undefined,
-        prop: string | undefined,
+        code: string | undefined,
         topic: string | undefined
-    ) => ['machines', 'list', spaceId, page, size, sort, search, name, prop, topic] as const,
+    ) => ['machines', 'list', spaceId, page, size, sort, search, name, code, topic] as const,
     detail: (machineId: string) => ['machines', 'detail', machineId] as const,
 };
 
 const spaceQueryKeys = {
     levelWithChildren: (level: number) => ['spaces', 'level-with-children', level] as const,
     tree: ['spaces', 'tree'] as const,
+};
+
+const operationTypeQueryKeys = {
+    lists: ['operationTypes', 'list'] as const,
 };
 
 const isLocalFile = (value: unknown): value is File => {
@@ -115,13 +124,12 @@ const MachineListPageContent = () => {
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
 
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [tempMachineName, setTempMachineName] = useState('');
-    const [tempPropertyCode, setTempPropertyCode] = useState('');
-    const [tempMqttTopic, setTempMqttTopic] = useState('');
-
     const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
-    const [propertyCodeFilter, setPropertyCodeFilter] = useState<string | undefined>(undefined);
+    const [machineCodeFilter, setMachineCodeFilter] = useState<string | undefined>(undefined);
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
+    const { tableContainerRef, tableScrollY } = useAntdTableScroll();
+
+    const activeFilterCount = [machineNameFilter, machineCodeFilter, mqttTopicFilter].filter(Boolean).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -164,7 +172,7 @@ const MachineListPageContent = () => {
             sort,
             debouncedSearch,
             machineNameFilter,
-            propertyCodeFilter,
+            machineCodeFilter,
             mqttTopicFilter
         ),
         queryFn: async () => MachineService.getMachinesPaginated({
@@ -174,7 +182,7 @@ const MachineListPageContent = () => {
             search: debouncedSearch,
             spaceId: selectedSpaceId,
             machineName: machineNameFilter,
-            propertyCode: propertyCodeFilter,
+            machineCode: machineCodeFilter,
             topic: mqttTopicFilter,
         }),
         enabled: selectedSpaceId !== undefined,
@@ -295,6 +303,16 @@ const MachineListPageContent = () => {
     const spaceTreeSelectData = useMemo(
         () => mapSpaceTreeToTreeSelect(spacesTree),
         [spacesTree]
+    );
+
+    const operationTypesQuery = useQuery({
+        queryKey: operationTypeQueryKeys.lists,
+        queryFn: () => OperationTypeService.getAllOperationTypes(),
+    });
+
+    const operationTypeOptions = useMemo(
+        () => toOperationTypeOptions(operationTypesQuery.data ?? []),
+        [operationTypesQuery.data]
     );
 
     useEffect(() => {
@@ -538,9 +556,24 @@ const MachineListPageContent = () => {
 
     const formFields = useMemo(
         () =>
-            getMachineListFormFields(t, modalState.mode),
-        [t, modalState.mode]
+            getMachineListFormFields(
+                t,
+                modalState.mode,
+                operationTypeOptions,
+                operationTypesQuery.isLoading
+            ),
+        [t, modalState.mode, operationTypeOptions, operationTypesQuery.isLoading]
     );
+
+    // Form field tên 'operationTypeId' (phẳng) nhưng Machine trả 'operationType' (nested) —
+    // map lại để EntityFormModal.setFieldsValue điền đúng Select khi edit.
+    const machineFormInitialData = useMemo(() => {
+        if (!modalState.data) return modalState.data;
+        return {
+            ...modalState.data,
+            operationTypeId: modalState.data.operationType?.operationTypeId,
+        };
+    }, [modalState.data]);
 
     const machineFilterFields: FilterField[] = useMemo(
         () => [
@@ -548,25 +581,22 @@ const MachineListPageContent = () => {
                 key: 'machineName',
                 label: t('machineListManagement.table.headers.machineName'),
                 placeholder: t('machineListManagement.filters.namePlaceholder'),
-                value: tempMachineName,
-                onChange: setTempMachineName,
+                value: machineNameFilter ?? '',
             },
             {
-                key: 'propertyCode',
-                label: t('machineListManagement.table.headers.propertyCode'),
-                placeholder: t('machineListManagement.filters.propertyPlaceholder'),
-                value: tempPropertyCode,
-                onChange: setTempPropertyCode,
+                key: 'machineCode',
+                label: t('machineListManagement.table.headers.machineCode'),
+                placeholder: t('machineListManagement.filters.machineCodePlaceholder'),
+                value: machineCodeFilter ?? '',
             },
             {
                 key: 'mqttTopic',
                 label: t('machineListManagement.form.fields.topic'),
                 placeholder: t('machineListManagement.filters.topicPlaceholder'),
-                value: tempMqttTopic,
-                onChange: setTempMqttTopic,
+                value: mqttTopicFilter ?? '',
             },
         ],
-        [t, tempMachineName, tempPropertyCode, tempMqttTopic]
+        [t, machineNameFilter, machineCodeFilter, mqttTopicFilter]
     );
 
     const findSpacePath = (
@@ -591,24 +621,29 @@ const MachineListPageContent = () => {
     }, [selectedSpaceId, spacesTree]);
 
     const handleResetFilters = useCallback(() => {
-        setTempMachineName('');
-        setTempPropertyCode('');
-        setTempMqttTopic('');
         setMachineNameFilter(undefined);
-        setPropertyCodeFilter(undefined);
+        setMachineCodeFilter(undefined);
         setMqttTopicFilter(undefined);
         setPage(0);
     }, []);
 
-    const handleApplyFilters = useCallback(() => {
-        setMachineNameFilter(tempMachineName || undefined);
-        setPropertyCodeFilter(tempPropertyCode || undefined);
-        setMqttTopicFilter(tempMqttTopic || undefined);
+    const handleApplyFilters = useCallback((values: Record<string, string>) => {
+        setMachineNameFilter(values.machineName?.trim() || undefined);
+        setMachineCodeFilter(values.machineCode?.trim() || undefined);
+        setMqttTopicFilter(values.mqttTopic?.trim() || undefined);
         setPage(0);
-    }, [tempMachineName, tempPropertyCode, tempMqttTopic]);
+    }, []);
 
     return (
-        <>
+        <div
+            style={{
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <ResponsivePageHeader
                 title={t('machineListManagement.title')}
                 loading={loading}
@@ -626,10 +661,25 @@ const MachineListPageContent = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
-                            showFilterIcon={true}
-                            onFilterClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                            isFilterActive={showAdvancedFilters}
                         />
+                        <FilterDrawer
+                            open={showAdvancedFilters}
+                            onClose={() => setShowAdvancedFilters(false)}
+                            fields={machineFilterFields}
+                            onReset={handleResetFilters}
+                            onApply={handleApplyFilters}
+                            resetLabel={t('common.reset')}
+                            applyLabel={t('common.search')}
+                            title={t('common.advancedFilters')}
+                        >
+                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
+                                <Button
+                                    icon={<FilterOutlined />}
+                                    type={showAdvancedFilters ? 'primary' : 'default'}
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                />
+                            </Badge>
+                        </FilterDrawer>
 
                         <SpaceTreeSelect
                             value={selectedSpaceId}
@@ -687,10 +737,10 @@ const MachineListPageContent = () => {
                                 <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
                                     <Descriptions.Item
                                         label={t(
-                                            'machineListManagement.table.headers.propertyCode'
+                                            'machineListManagement.table.headers.machineCode'
                                         )}
                                     >
-                                        {viewModalState.data.propertyCode || '-'}
+                                        {viewModalState.data.machineCode || '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item
                                         label={t('machineListManagement.table.headers.space')}
@@ -703,6 +753,13 @@ const MachineListPageContent = () => {
                                         {viewModalState.data.power
                                             ? `${viewModalState.data.power} kW`
                                             : '-'}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item
+                                        label={t(
+                                            'machineListManagement.table.headers.operationType'
+                                        )}
+                                    >
+                                        {viewModalState.data.operationType?.operationTypeName ?? '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item
                                         label={t('machineListManagement.table.headers.status')}
@@ -795,19 +852,34 @@ const MachineListPageContent = () => {
                 isFiltered={searchTerm.trim().length > 0}
             />
 
-            {showAdvancedFilters && (
-                <AdvancedFilterPanel
-                    fields={machineFilterFields}
-                    onReset={handleResetFilters}
-                    onApply={handleApplyFilters}
-                    resetLabel={t('common.reset')}
-                    applyLabel={t('common.search')}
-                />
+            {activeFilterCount > 0 && (
+                <Flex gap={8} align="center" wrap style={{ marginBottom: 12 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        <FilterOutlined style={{ marginRight: 4 }} />
+                        {t('common.activeFilters')}:
+                    </Typography.Text>
+                    {machineNameFilter && (
+                        <Tag closable onClose={() => { setMachineNameFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.table.headers.machineName')}: {machineNameFilter}
+                        </Tag>
+                    )}
+                    {machineCodeFilter && (
+                        <Tag closable onClose={() => { setMachineCodeFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.table.headers.machineCode')}: {machineCodeFilter}
+                        </Tag>
+                    )}
+                    {mqttTopicFilter && (
+                        <Tag closable onClose={() => { setMqttTopicFilter(undefined); setPage(0); }}>
+                            {t('machineListManagement.form.fields.topic')}: {mqttTopicFilter}
+                        </Tag>
+                    )}
+                </Flex>
             )}
 
             <Card
                 style={{
                     flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
@@ -815,24 +887,22 @@ const MachineListPageContent = () => {
                 styles={{
                     body: {
                         flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
                         paddingBottom: 0,
                     }
                 }}
             >
-                {machinesQuery.isLoading ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: 300,
-                        }}
-                    >
-                        <Spin size="large" indicator={<LoadingOutlined spin />} />
-                    </div>
-                ) : (
+                <div
+                    ref={tableContainerRef}
+                    style={{
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                    }}
+                >
                     <Table<Machine>
                         columns={columns}
                         dataSource={filteredMachineData}
@@ -843,6 +913,7 @@ const MachineListPageContent = () => {
                             current: page + 1,
                             pageSize: pageSize,
                             total: totalElements,
+                            hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t(
@@ -852,13 +923,14 @@ const MachineListPageContent = () => {
                             placement: ['bottomCenter'],
                         }}
                         scroll={{
-                            x: 1520,
-                            y: isMobile ? 'calc(100vh - 280px)' : 'calc(109vh - 420px)',
+                            x: 1670,
+                            y: tableScrollY,
                         }}
+                        style={{ height: '100%' }}
                         sticky
                         bordered
                     />
-                )}
+                </div>
             </Card>
 
             <EntityFormModal<MachineFormData>
@@ -866,7 +938,7 @@ const MachineListPageContent = () => {
                 onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
-                initialData={modalState.data}
+                initialData={machineFormInitialData}
                 fields={formFields}
                 title={{
                     create: t('machineListManagement.form.createTitle'),
@@ -895,7 +967,7 @@ const MachineListPageContent = () => {
                 onCancel={handleCancelConfirm}
                 t={t}
             />
-        </>
+        </div>
     );
 };
 

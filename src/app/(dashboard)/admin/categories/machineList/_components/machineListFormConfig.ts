@@ -1,22 +1,24 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { SelectOption } from '@/types/Common';
+import { OperationType } from '@/types/OperationType';
 
 const VALIDATION_CONFIG = Object.freeze({
     MACHINE_NAME: { required: true, minLength: 2, maxLength: 50 },
-    PROPERTY_CODE: { required: true, maxLength: 15 },
+    MACHINE_CODE: { required: true, maxLength: 50 },
     POWER: { required: true, min: 0.1, maxLength: 10 },
     DESCRIPTION: { required: true, maxLength: 255 },
     TOPIC: { required: true, maxLength: 255 },
     LINE_ID: { required: true },
     MACHINE_TYPE_ID: { required: true },
+    OPERATION_TYPE: { required: true },
     MACHINE_IMAGE: { required: true },
 });
 
 export const getMachineListFormFields = (
     t: any,
     mode: 'create' | 'edit',
-    _machineTypeOptions: SelectOption[] = [],
-    _isLoadingMachineTypes: boolean = false
+    operationTypeOptions: SelectOption[] = [],
+    isLoadingOperationTypes: boolean = false
 ): FormFieldConfig[] => {
     return [
         // Machine Name
@@ -48,21 +50,21 @@ export const getMachineListFormFields = (
             span: { xs: 24, md: 12 },
         },
         {
-            name: 'propertyCode',
-            label: t('machineListManagement.form.fields.propertyCode'),
+            name: 'machineCode',
+            label: t('machineListManagement.form.fields.machineCode'),
             type: 'text',
-            placeholder: t('machineListManagement.form.placeholders.propertyCode'),
-            required: VALIDATION_CONFIG.PROPERTY_CODE.required,
-            maxLength: VALIDATION_CONFIG.PROPERTY_CODE.maxLength,
+            placeholder: t('machineListManagement.form.placeholders.machineCode'),
+            required: VALIDATION_CONFIG.MACHINE_CODE.required,
+            maxLength: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
             rules: [
                 {
-                    required: VALIDATION_CONFIG.PROPERTY_CODE.required,
+                    required: VALIDATION_CONFIG.MACHINE_CODE.required,
                     message: t('machineListManagement.form.validation.required'),
                 },
                 {
-                    max: VALIDATION_CONFIG.PROPERTY_CODE.maxLength,
+                    max: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
                     message: t('machineListManagement.form.validation.maxLength', {
-                        max: VALIDATION_CONFIG.PROPERTY_CODE.maxLength,
+                        max: VALIDATION_CONFIG.MACHINE_CODE.maxLength,
                     }),
                 },
             ],
@@ -113,23 +115,23 @@ export const getMachineListFormFields = (
             span: { xs: 24, md: 8 },
         },
 
-        // {
-        //     name: 'machineTypeId',
-        //     label: t('machineListManagement.form.fields.machineType'),
-        //     type: 'select',
-        //     placeholder: t('machineListManagement.form.placeholders.machineType'),
-        //     required: VALIDATION_CONFIG.MACHINE_TYPE_ID.required,
-        //     options: machineTypeOptions,
-        //     loading: isLoadingMachineTypes,
-        //     disabled: isLoadingMachineTypes,
-        //     rules: [
-        //         {
-        //             required: VALIDATION_CONFIG.MACHINE_TYPE_ID.required,
-        //             message: t('machineListManagement.form.validation.required'),
-        //         },
-        //     ],
-        //     span: { xs: 24, md: 12 },
-        // },
+        {
+            name: 'operationTypeId',
+            label: t('machineListManagement.form.fields.operationType'),
+            type: 'select',
+            placeholder: t('machineListManagement.form.placeholders.operationType'),
+            required: VALIDATION_CONFIG.OPERATION_TYPE.required,
+            options: operationTypeOptions,
+            loading: isLoadingOperationTypes,
+            disabled: isLoadingOperationTypes,
+            rules: [
+                {
+                    required: VALIDATION_CONFIG.OPERATION_TYPE.required,
+                    message: t('machineListManagement.form.validation.required'),
+                },
+            ],
+            span: { xs: 24, md: 12 },
+        },
         // Line
         {
             name: 'spaceId',
@@ -179,3 +181,9 @@ export const getMachineListFormFields = (
         },
     ];
 };
+
+export const toOperationTypeOptions = (operationTypes: OperationType[]): SelectOption[] =>
+    operationTypes.map((operationType) => ({
+        value: operationType.operationTypeId,
+        label: `${operationType.operationTypeCode} — ${operationType.operationTypeName}`,
+    }));

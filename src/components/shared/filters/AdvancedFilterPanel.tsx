@@ -19,14 +19,14 @@ export interface FilterField {
     label: string;
     placeholder?: string;
     value: string;
-    onChange: (value: string) => void;
+    onChange?: (value: string) => void;
     /** Override responsive column widths. Defaults to xs=24 sm=12 md=6 */
     colProps?: FilterFieldColProps;
 }
 
 interface AdvancedFilterPanelProps {
     fields: FilterField[];
-    onApply: () => void;
+    onApply: (values: Record<string, string>) => void;
     onReset: () => void;
     applyLabel?: string;
     resetLabel?: string;
@@ -40,54 +40,35 @@ const AdvancedFilterPanel = ({
     resetLabel,
 }: AdvancedFilterPanelProps) => {
     const { token } = theme.useToken();
+    const firstInputRef = useRef<any>(null);
 
-    // Store input values locally to prevent parent re-renders on every keystroke
     const [localValues, setLocalValues] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};
-        fields.forEach((f) => {
-            initial[f.key] = f.value;
-        });
+        fields.forEach((f) => { initial[f.key] = f.value; });
         return initial;
     });
 
-    // Keep local values in sync with parent value changes (e.g. when Reset is called)
+    // Sync local values when parent resets (applied state → '' propagates back via value prop)
     useEffect(() => {
         setLocalValues((prev) => {
             const next = { ...prev };
-            fields.forEach((f) => {
-                next[f.key] = f.value;
-            });
+            fields.forEach((f) => { next[f.key] = f.value; });
             return next;
         });
     }, [fields]);
 
-    const isApplying = useRef(false);
-
-    // Run apply callback after parent states have updated and re-rendered (updating the props)
+    // Focus first input when panel mounts
     useEffect(() => {
-        if (isApplying.current) {
-            isApplying.current = false;
-            onApply();
-        }
-    }, [fields, onApply]);
+        const timer = setTimeout(() => firstInputRef.current?.focus(), 50);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleApply = () => {
-        let hasChanges = false;
-        // Sync all local values back to the parent state before applying the filters
-        fields.forEach((f) => {
-            const newValue = localValues[f.key] ?? '';
-            if (f.value !== newValue) {
-                f.onChange(newValue);
-                hasChanges = true;
-            }
-        });
-
-        if (hasChanges) {
-            isApplying.current = true;
-        } else {
-            onApply();
-        }
+        fields.forEach((f) => f.onChange?.(localValues[f.key] ?? ''));
+        onApply(localValues);
     };
+
+    const hasAnyLocal = fields.some((f) => (localValues[f.key] ?? '').trim().length > 0);
 
     return (
         <div
@@ -98,44 +79,54 @@ const AdvancedFilterPanel = ({
                 borderRadius: '8px',
                 marginBottom: '20px',
                 boxShadow: token.boxShadowSecondary || '0 8px 32px 0 rgba(0, 0, 0, 0.08)',
-                transition: 'all 0.3s ease-in-out',
             }}
         >
             <Row gutter={[16, 16]}>
-                {fields.map((field) => (
-                    <Col
-                        key={field.key}
-                        xs={field.colProps?.xs ?? DEFAULT_COL_XS}
-                        sm={field.colProps?.sm ?? DEFAULT_COL_SM}
-                        md={field.colProps?.md ?? DEFAULT_COL_MD}
-                        lg={field.colProps?.lg}
-                        xl={field.colProps?.xl}
-                    >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            <span
-                                style={{
-                                    fontWeight: 500,
-                                    fontSize: 13,
-                                    color: token.colorTextSecondary,
-                                }}
-                            >
-                                {field.label}
-                            </span>
-                            <Input
-                                placeholder={field.placeholder}
-                                value={localValues[field.key] ?? ''}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    setLocalValues((prev) => ({
-                                        ...prev,
-                                        [field.key]: val,
-                                    }));
-                                }}
-                                style={{ borderRadius: 6, height: 38 }}
-                            />
-                        </div>
-                    </Col>
-                ))}
+                {fields.map((field, index) => {
+                    const localVal = localValues[field.key] ?? '';
+                    const hasValue = localVal.trim().length > 0;
+
+                    return (
+                        <Col
+                            key={field.key}
+                            xs={field.colProps?.xs ?? DEFAULT_COL_XS}
+                            sm={field.colProps?.sm ?? DEFAULT_COL_SM}
+                            md={field.colProps?.md ?? DEFAULT_COL_MD}
+                            lg={field.colProps?.lg}
+                            xl={field.colProps?.xl}
+                        >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <span
+                                    style={{
+                                        fontWeight: 500,
+                                        fontSize: 13,
+                                        color: hasValue ? token.colorPrimary : token.colorTextSecondary,
+                                        transition: 'color 0.2s',
+                                    }}
+                                >
+                                    {field.label}
+                                </span>
+                                <Input
+                                    ref={index === 0 ? firstInputRef : undefined}
+                                    placeholder={field.placeholder}
+                                    value={localVal}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setLocalValues((prev) => ({ ...prev, [field.key]: val }));
+                                    }}
+                                    onPressEnter={handleApply}
+                                    allowClear
+                                    style={{
+                                        borderRadius: 6,
+                                        height: 38,
+                                        borderColor: hasValue ? token.colorPrimaryBorder : undefined,
+                                        transition: 'border-color 0.2s',
+                                    }}
+                                />
+                            </div>
+                        </Col>
+                    );
+                })}
             </Row>
             <div
                 style={{
@@ -148,6 +139,7 @@ const AdvancedFilterPanel = ({
                 <Button
                     onClick={onReset}
                     icon={<CloseOutlined />}
+                    disabled={!hasAnyLocal}
                     style={{
                         borderRadius: 6,
                         height: 38,

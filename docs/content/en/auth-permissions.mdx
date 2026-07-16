@@ -1,89 +1,89 @@
-# Auth & permissions
-
-Qwaste v2 uses httpOnly cookies through the BFF for authentication and CASL for route/screen authorization.
-
-## Login
-
-Login flow:
-
-```txt
-LoginForm
-  -> AuthContext.login
-  -> AuthService.login
-  -> POST /api/bff/api/authentication/v1/login
-  -> BFF receives tokens from backend
-  -> BFF sets bff_access_token httpOnly cookie
-  -> UserService.getMe
-  -> hydrate user settings + permissions
-```
-
-The client does not read the access token directly. The BFF attaches the token to the `Authorization` header when forwarding requests.
-
-## Session initialization
-
-`AuthContext` checks the current route:
-
-| Route | Behavior |
-| --- | --- |
-| `/`, `/login`, `/register` | Skip `getMe` |
-| Dashboard route | Call `/api/users/v1/me` to verify the user |
-
-When the session expires, `apiClient` dispatches `sessionExpired`; the global error handler redirects to login.
-
-## Ability
-
-`src/configs/permissions/defineAbility.ts` builds ability in this order:
-
-1. Use backend custom permissions if present.
-2. Grant full access when permission includes `manage all`.
-3. Fall back to role-based permissions when no custom permissions are returned.
-4. Always grant operator dashboard/review access when role is `operator` or `op`.
-
-Example permission rule:
-
-```ts
+# Auth & permissions
+
+Qwaste v2 uses httpOnly cookies through the BFF for authentication and CASL for route/screen authorization.
+
+## Login
+
+Login flow:
+
+```txt
+LoginForm
+  -> AuthContext.login
+  -> AuthService.login
+  -> POST /api/bff/api/authentication/v1/login
+  -> BFF receives tokens from backend
+  -> BFF sets bff_access_token httpOnly cookie
+  -> UserService.getMe
+  -> hydrate user settings + permissions
+```
+
+The client does not read the access token directly. The BFF attaches the token to the `Authorization` header when forwarding requests.
+
+## Session initialization
+
+`AuthContext` checks the current route:
+
+| Route | Behavior |
+| --- | --- |
+| `/`, `/login`, `/register` | Skip `getMe` |
+| Dashboard route | Call `/api/users/v1/me` to verify the user |
+
+When the session expires, `apiClient` dispatches `sessionExpired`; the global error handler redirects to login.
+
+## Ability
+
+`src/configs/permissions/defineAbility.ts` builds ability in this order:
+
+1. Use backend custom permissions if present.
+2. Grant full access when permission includes `manage all`.
+3. Fall back to role-based permissions when no custom permissions are returned.
+4. Always grant operator dashboard/review access when role is `operator` or `op`.
+
+Example permission rule:
+
+```ts
 {
   action: 'view',
-  subject: 'order'
-}
-```
-
-## Route access
-
-`src/configs/permissions/routeAccess.ts` maps routes to `subject` and `action`.
-
-```ts
-'/admin/order': {
-  subject: 'order',
+  subject: 'space_monitoring'
+}
+```
+
+## Route access
+
+`src/configs/permissions/routeAccess.ts` maps routes to `subject` and `action`.
+
+```ts
+'/admin/space-monitoring': {
+  subject: 'space_monitoring',
   action: 'view'
-}
-```
-
-The app checks:
-
-```ts
-ability.can(action, subject)
-```
-
-If a route has no config and is not public, access is denied by default.
-
-## Sidebar
-
-The sidebar in `src/configs/navigation/menuItems.tsx` renders items only when ability allows them.
-
-```ts
-if (ability.can('view', 'order')) {
-  items.push(createMenuItem('/admin/order', t('sidebar.navigation.order')))
-}
-```
-
-When adding a new route, update both `ROUTE_ACCESS` and the menu if users should see it.
-
-## New permission checklist
-
-1. Add the CASL subject/action type if needed.
-2. Make sure the backend returns the new permission.
-3. Update `defineAbility.ts` if role fallback is needed.
-4. Update `routeAccess.ts`.
-5. Update the menu or component guard.
-6. Test with a user who has access and a user who does not.
+}
+```
+
+The app checks:
+
+```ts
+ability.can(action, subject)
+```
+
+If a route has no config and is not public, access is denied by default.
+
+## Sidebar
+
+The sidebar in `src/configs/navigation/menuItems.tsx` renders items only when ability allows them.
+
+```ts
+if (ability.can('view', 'space_monitoring')) {
+  items.push(createMenuItem('/admin/space-monitoring', t('permissionSubjects.space_monitoring')))
+}
+```
+
+When adding a new route, update both `ROUTE_ACCESS` and the menu if users should see it.
+
+## New permission checklist
+
+1. Add the CASL subject/action type if needed.
+2. Make sure the backend returns the new permission.
+3. Update `defineAbility.ts` if role fallback is needed.
+4. Update `routeAccess.ts`.
+5. Update the menu or component guard.
+6. Test with a user who has access and a user who does not.

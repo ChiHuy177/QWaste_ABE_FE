@@ -1,9 +1,55 @@
 import { createSlice, PayloadAction, Dispatch } from '@reduxjs/toolkit';
-import { MachineOverview, MachineStats } from '@/types/Machine';
-import { SpaceWithChildrenResponse } from '@/types/Space';
+import { MachineOverview, MachineStats, MachineWithStatusLogsSummary } from '@/types/Machine';
+import { SpaceOverview, SpacePickingWithChildren, SpaceWithChildrenResponse } from '@/types/Space';
 import { MachineService } from '@services/MachineService';
 import { calculateMachineStats } from '@/utils/machineUtils';
 import { SpaceService } from '@/services/SpaceService';
+import {
+    DemoFactoryOverviewService,
+    USE_MOCK_FACTORY_OVERVIEW,
+} from '@/mockData/admin/factory';
+
+const adaptSpacePicking = (s: SpacePickingWithChildren): SpaceWithChildrenResponse => ({
+    spaceId: s.spaceId,
+    parentId: s.parentId,
+    spaceCode: s.spaceCode,
+    spaceName: s.spaceName,
+    description: s.description,
+    displayOrder: s.displayOrder,
+    spaceLevel: s.spaceLevel,
+    auditMetaData: { createdAt: '', updatedAt: '', createdBy: null, updatedBy: null },
+    children: s.children.map(adaptSpacePicking),
+});
+
+const extractMachines = (space: SpaceOverview): MachineWithStatusLogsSummary[] => {
+    const result: MachineWithStatusLogsSummary[] = [...(space.machineChildren ?? [])];
+    for (const child of space.children ?? []) {
+        result.push(...extractMachines(child));
+    }
+    return result;
+};
+
+const adaptMachine = (m: MachineWithStatusLogsSummary): MachineOverview => ({
+    machineId: m.machineId,
+    machineName: m.machineName,
+    machineCode: m.machineCode,
+    power: m.power,
+    topic: m.topic,
+    status:
+        m.currentStatus === 'RUNTIME'
+            ? 'running'
+            : m.currentStatus === 'IDLE' || m.currentStatus === 'TEMPORARY_STOP'
+            ? 'idle'
+            : m.currentStatus === 'ERROR' || m.currentStatus === 'WARNING'
+            ? 'error'
+            : 'empty',
+    logs: [],
+    currentEnergyConsumption: 0,
+    currentStatus: m.currentStatus,
+    operatorCount: m.operatorCount,
+    totalProductions: m.totalProductions,
+    runtimeByStatus: m.runtimeByStatus,
+});
 
 export interface IMachineStoreState {
     // Loading states
@@ -165,8 +211,13 @@ export const machineActions = {
         dispatch(slice.actions.setLoadingFactories(true));
 
         try {
-            const spacesTree = await SpaceService.getAllSpacesTree();
-            dispatch(slice.actions.setSpacesTree(spacesTree));
+            if (USE_MOCK_FACTORY_OVERVIEW) {
+                const spaces = await DemoFactoryOverviewService.getSpaces();
+                dispatch(slice.actions.setSpacesTree(spaces.map(adaptSpacePicking)));
+            } else {
+                const spacesTree = await SpaceService.getAllSpacesTree();
+                dispatch(slice.actions.setSpacesTree(spacesTree));
+            }
         } catch (error) {
             console.error('Error fetching spaces tree:', error);
             dispatch(slice.actions.setError('Failed to load spaces tree'));
@@ -181,11 +232,17 @@ export const machineActions = {
                 dispatch(slice.actions.setFetching(true));
 
                 try {
-                    const machines = await MachineService.getMachinesWithLogs(
-                        spaceId,
-                        filterId
-                    );
-                    dispatch(slice.actions.setMachines(machines));
+                    if (USE_MOCK_FACTORY_OVERVIEW) {
+                        const overview = await DemoFactoryOverviewService.getSpaceOverview();
+                        const machines = extractMachines(overview).map(adaptMachine);
+                        dispatch(slice.actions.setMachines(machines));
+                    } else {
+                        const machines = await MachineService.getMachinesWithLogs(
+                            spaceId,
+                            filterId
+                        );
+                        dispatch(slice.actions.setMachines(machines));
+                    }
                 } catch (error) {
                     console.error('Error fetching machines:', error);
                     dispatch(slice.actions.setError('Failed to load machines'));

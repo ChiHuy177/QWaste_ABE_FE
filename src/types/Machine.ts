@@ -1,5 +1,6 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
 import { SpaceDetailResponse } from './Space';
+import { OperationType } from './OperationType';
 
 export type currentStatus =
     | 'RUNTIME'
@@ -19,22 +20,24 @@ export interface MachinePaginatedParams {
     search?: string;
     spaceId?: number;
     machineName?: string;
-    propertyCode?: string;
+    machineCode?: string;
     topic?: string;
 }
 
 export interface Machine {
     machineId: string;
     machineName: string;
+    /** Mã máy (BE Machine.machine_code, nullable ở DB nhưng bắt buộc khi tạo/sửa). */
+    machineCode?: string | null;
     description: string;
     topic: string;
     displayOrder: number;
     productionTime: number;
     machineImage: string;
     space: SpaceDetailResponse;
-    propertyCode?: string;
     operatorCount?: number;
     power?: number;
+    operationType: OperationType;
     auditMetaData?: AuditMetaData;
     softDeleteMetaData?: SoftDeleteMetaData;
 }
@@ -45,8 +48,9 @@ export interface MachineFormData {
     topic: string;
     machineImage: string;
     spaceId: number;
-    propertyCode?: string;
+    machineCode: string;
     power?: number;
+    operationTypeId: number;
 }
 
 export interface MachineUpdateFormData {
@@ -56,8 +60,9 @@ export interface MachineUpdateFormData {
     topic: string;
     machineImage: string;
     spaceId: number;
-    propertyCode?: string;
+    machineCode: string;
     power?: number;
+    operationTypeId: number;
 }
 export interface MachineLog {
     totalLogStateTime: number;
@@ -67,7 +72,7 @@ export interface MachineLog {
 export interface MachineOverview {
     machineId: string;
     machineName: string;
-    propertyCode?: string;
+    machineCode?: string;
     power?: number;
     status: 'running' | 'idle' | 'error' | 'empty';
     machineImage?: string;
@@ -96,7 +101,7 @@ export interface MachineOverview {
 export interface MachineCurrentShiftOverview {
     machineId: string;
     machineName: string;
-    propertyCode?: string;
+    machineCode?: string;
     power?: number;
     topic?: string;
     currentStatus: currentStatus;
@@ -117,7 +122,7 @@ export type ZoneFilter = 'all' | 'zone1' | 'zone2' | 'zone3';
 export interface MachineWithStatusLogsSummary {
     machineId: string;
     machineName: string;
-    propertyCode: string;
+    machineCode: string;
     power: number;
     machineDisplayOrder: number;
     topic: string;
