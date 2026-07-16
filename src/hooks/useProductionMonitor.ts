@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import type { WebSocketMessage } from '@/types/WebSocket';
 import type {
+    IncidentReason,
     ProductionPlanStatus,
     ProductionPlanStatusChangedPayload,
+    ProductionPlanStatusTrigger,
 } from '@/types/ProductionPlan';
 
 // BE broadcast theo từng máy: WebSocketDestinations.PRODUCTION_PLAN_STATUS + machineId.
@@ -14,6 +16,8 @@ const WS_TOPIC_PRODUCTION_PLAN_STATUS = '/topic/productionPlans/status/';
 export interface PlanStatusEntry {
     status: ProductionPlanStatus;
     updatedAt: Date;
+    trigger: ProductionPlanStatusTrigger;
+    incidentReason: IncidentReason | null;
 }
 
 interface UseProductionMonitorOptions {
@@ -68,6 +72,8 @@ export function useProductionMonitor({
             next.set(payload.productionPlanId, {
                 status: payload.toStatus,
                 updatedAt: new Date(),
+                trigger: payload.trigger,
+                incidentReason: payload.incidentReason,
             });
             return next;
         });

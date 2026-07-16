@@ -523,7 +523,7 @@
                 "machine": "Machine",
                 "codeVi": "Code",
                 "productName": "Product name",
-                "mold": "mold",
+                "mold": "Mold",
                 "average": "Average",
                 "avgShort": "Avg.",
                 "time": "Time",
@@ -695,6 +695,8 @@
             "lastSync": "Last sync: {{time}}",
             "emptyGroup": "No product codes in this status",
             "needsAction": "Needs Action",
+            "allConfirmed": "All Confirmed",
+            "confirmedTag": "Confirmed",
             "status": {
                 "TODO": "Todo",
                 "IN_PROGRESS": "In Progress",

@@ -1,5 +1,10 @@
 import type { Dayjs } from 'dayjs';
-import type { ProductionPlanStatus, Schedule } from '@/types/ProductionPlan';
+import type {
+    IncidentReason,
+    ProductionPlanStatus,
+    ProductionPlanStatusTrigger,
+    Schedule,
+} from '@/types/ProductionPlan';
 
 export type { Schedule } from '@/types/ProductionPlan';
 
@@ -58,6 +63,13 @@ export interface MonitorRowVM {
     plannedQuantity: number;
     status: ProductionPlanStatus;
     updatedAt: Date | null;
+    /**
+     * Trigger của lần đổi status gần nhất qua WS (chỉ có trong phiên đang mở, fetch REST
+     * không trả field này). PAUSE + trigger MANUAL + incidentReason khác null nghĩa là
+     * staff đã xác nhận sự cố (tạm dừng chờ sửa chữa) — phân biệt với PAUSE tự động do MQTT.
+     */
+    trigger?: ProductionPlanStatusTrigger | null;
+    incidentReason?: IncidentReason | null;
 }
 
 // ─── Form & modal states (id-based — dữ liệu refetch được, index dễ lệch) ────

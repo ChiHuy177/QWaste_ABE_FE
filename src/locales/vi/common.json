@@ -514,7 +514,7 @@
                 "machine": "Máy",
                 "codeVi": "Mã",
                 "productName": "Tên hàng",
-                "mold": "khuôn",
+                "mold": "Khuôn",
                 "average": "Trung bình",
                 "avgShort": "T.bình",
                 "time": "Thời gian",
@@ -686,6 +686,8 @@
             "lastSync": "Đồng bộ lúc: {{time}}",
             "emptyGroup": "Không có mã hàng nào ở trạng thái này",
             "needsAction": "Cần xử lý",
+            "allConfirmed": "Đã xác nhận tất cả",
+            "confirmedTag": "Đã xác nhận",
             "status": {
                 "TODO": "Chờ làm",
                 "IN_PROGRESS": "Đang chạy",

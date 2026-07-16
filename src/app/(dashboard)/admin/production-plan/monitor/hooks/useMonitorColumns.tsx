@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Button, Table, Tag, theme, Typography, Flex } from 'antd';
 import type { CollapseProps } from 'antd';
 import type { ColumnType, ColumnsType } from 'antd/es/table';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../_utils/planMappers';
 import styles from '../../_components/ProductionPlanTable.module.css';
@@ -17,6 +17,13 @@ const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
 const anchorCell = (record: MonitorFlatRow) =>
     record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
+
+/**
+ * PAUSE do MQTT (máy tự báo lỗi/mất kết nối) có trigger MQTT_* và incidentReason null.
+ * PAUSE do staff xác nhận (tạm dừng chờ sửa chữa) có trigger MANUAL + incidentReason — BE
+ * chỉ set incidentReason qua flow xác nhận sự cố thủ công (xem IncidentConfirmModal).
+ */
+const isIncidentConfirmed = (row: MonitorRowVM) => row.trigger === 'MANUAL' && !!row.incidentReason;
 
 interface UseMonitorColumnsParams {
     statConfigs: MonitorStatConfig[];
@@ -63,29 +70,30 @@ export const useMonitorColumns = ({
             {
                 title: t('productionPlan.table.headers.codeVi'),
                 key: 'code',
-                width: 140,
+                width: 150,
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type === 'total')
                         return <Text strong>{t('productionPlan.table.total')}</Text>;
                     if (record.type === 'group-header') return null;
                     return (
-                        <>
+                        <Flex vertical align="flex-start" gap={2}>
                             <Text strong>{record.code}</Text>
                             {record.status === 'PARTIAL' && (
                                 <Tag
                                     style={{
-                                        marginLeft: 6,
+                                        margin: 0,
                                         border: 'none',
                                         color: '#fff',
                                         fontWeight: 600,
+                                        whiteSpace: 'normal',
                                         background: monitorGroupColor('COMPLETE', token),
                                     }}
                                 >
                                     {t('productionPlan.monitor.partialTag')}
                                 </Tag>
                             )}
-                        </>
+                        </Flex>
                     );
                 },
             },
@@ -123,11 +131,7 @@ export const useMonitorColumns = ({
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type !== 'product') return null;
-                    return (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {record.updatedAt ? record.updatedAt.toLocaleTimeString('vi-VN') : '—'}
-                        </Text>
-                    );
+                    return record.updatedAt ? record.updatedAt.toLocaleTimeString('vi-VN') : '—';
                 },
             },
         ];
@@ -140,6 +144,17 @@ export const useMonitorColumns = ({
             onCell: anchorCell,
             render: (_: unknown, record: MonitorFlatRow) => {
                 if (record.type !== 'product') return null;
+                if (isIncidentConfirmed(record)) {
+                    return (
+                        <Tag
+                            icon={<CheckCircleOutlined />}
+                            color="success"
+                            style={{ margin: 0, fontWeight: 600 }}
+                        >
+                            {t('productionPlan.monitor.confirmedTag')}
+                        </Tag>
+                    );
+                }
                 return (
                     <Button
                         size="small"
@@ -173,6 +188,8 @@ export const useMonitorColumns = ({
             MONITOR_GROUP_ORDER.map((status) => {
                 const config = statConfigs.find((c) => c.status === status)!;
                 const rows = grouped[status];
+                const unconfirmedCount =
+                    status === 'PAUSE' ? rows.filter((row) => !isIncidentConfirmed(row)).length : 0;
                 const isPause = status === 'PAUSE' && rows.length > 0;
 
                 return {
@@ -192,9 +209,15 @@ export const useMonitorColumns = ({
                         </Flex>
                     ),
                     extra: isPause ? (
-                        <Tag color="warning" style={{ margin: 0, fontWeight: 600 }}>
-                            {t('productionPlan.monitor.needsAction')}
-                        </Tag>
+                        unconfirmedCount > 0 ? (
+                            <Tag color="warning" style={{ margin: 0, fontWeight: 600 }}>
+                                {t('productionPlan.monitor.needsAction')}
+                            </Tag>
+                        ) : (
+                            <Tag color="success" style={{ margin: 0, fontWeight: 600 }}>
+                                {t('productionPlan.monitor.allConfirmed')}
+                            </Tag>
+                        )
                     ) : undefined,
                     children: (
                         // CSS vars inherit from the Collapse root wrapper below

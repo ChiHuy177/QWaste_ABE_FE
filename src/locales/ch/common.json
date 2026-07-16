@@ -2027,6 +2027,8 @@
             "lastSync": "最后同步：{{time}}",
             "emptyGroup": "此状态下无产品编码",
             "needsAction": "⚠ 需要处理",
+            "allConfirmed": "已全部确认",
+            "confirmedTag": "已确认",
             "status": {
                 "TODO": "待处理",
                 "IN_PROGRESS": "进行中",

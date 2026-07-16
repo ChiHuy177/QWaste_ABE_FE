@@ -94,7 +94,13 @@ export const useMonitorData = () => {
             baseRows.map((row) => {
                 const entry = statusMap.get(row.productionPlanId);
                 if (!entry) return row;
-                return { ...row, status: entry.status, updatedAt: entry.updatedAt };
+                return {
+                    ...row,
+                    status: entry.status,
+                    updatedAt: entry.updatedAt,
+                    trigger: entry.trigger,
+                    incidentReason: entry.incidentReason,
+                };
             }),
         [baseRows, statusMap]
     );
