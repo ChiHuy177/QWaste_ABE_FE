@@ -10,7 +10,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { getMenuItems } from '@/configs/navigation/menuItems';
 import { useError } from '@/contexts/ErrorContext';
 import { useAbility } from '@/contexts/AbilityContext';
-import { Footer } from 'antd/es/layout/layout';
 import { useBrandingConfig } from '@/configs/brandingConfig';
 
 const { Sider, Content } = Layout;
@@ -60,7 +59,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
     const isMobile = !screens.xl;
 
     useEffect(() => {
-        console.log(isMobile);
         if (!isMobile) {
             setMobileDrawerOpen(false);
 
@@ -114,6 +112,7 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                     alt={config.appName}
                     width={collapsed && !isMobile ? 40 : 180}
                     height={collapsed && !isMobile ? 40 : 80}
+                    priority={true}
                     style={{
                         transition: 'all 0.3s',
                         borderRadius: '5px',
@@ -141,74 +140,43 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                     }}
                 />
             </div>
-
-            {/* <div
-                style={{
-                    textAlign: 'center',
-                    padding: collapsed && !isMobile ? '12px 8px' : '16px',
-                    borderTop: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
-                    background: colorBgContainer,
-                    flexShrink: 0,
-                    fontSize: collapsed && !isMobile ? '10px' : '12px',
-                    transition: 'all 0.3s',
-                }}
-            >
-                {collapsed && !isMobile ? (
-                    <div>
-                        IIC 4.0
-                        <br />©{new Date().getFullYear()}
-                    </div>
-                ) : (
-                    <div>IIC 4.0 ©{new Date().getFullYear()}</div>
-                )}
-            </div> */}
         </div>
     );
 
     return (
         <Layout style={{ minHeight: '100vh' }} suppressHydrationWarning>
-            {!isMobile && (
-                <Sider
-                    suppressHydrationWarning
-                    width={250}
-                    trigger={null}
-                    collapsible
-                    collapsed={collapsed}
-                    theme="light"
-                    style={{
-                        borderRight: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
-                        position: 'fixed',
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        height: '100vh',
-                        zIndex: 10,
-                    }}
-                >
-                    {menuContent}
-                </Sider>
-            )}
+            <Sider
+                suppressHydrationWarning
+                width={250}
+                trigger={null}
+                collapsible
+                collapsed={collapsed}
+                theme="light"
+                className="responsive-sider"
+                style={{
+                    borderRight: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
+                    height: '100vh',
+                }}
+            >
+                {menuContent}
+            </Sider>
 
-            {isMobile && (
-                <Drawer
-                    placement="left"
-                    onClose={() => setMobileDrawerOpen(false)}
-                    open={mobileDrawerOpen}
-                    styles={{
-                        body: { padding: 0 },
-                    }}
-                    size={300}
-                    closable={false}
-                >
-                    {menuContent}
-                </Drawer>
-            )}
+            <Drawer
+                placement="left"
+                onClose={() => setMobileDrawerOpen(false)}
+                open={mobileDrawerOpen}
+                styles={{
+                    body: { padding: 0 },
+                }}
+                size={300}
+                closable={false}
+            >
+                {menuContent}
+            </Drawer>
 
             <Layout
                 suppressHydrationWarning
                 style={{
-                    marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
-                    transition: 'margin-left 0.2s',
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100vh',
@@ -228,7 +196,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                     }}
                 >
                     {error403 ? (
-                        // Show 403 error content
                         <div
                             style={{
                                 display: 'flex',
@@ -244,7 +211,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                                     padding: '24px',
                                 }}
                             >
-                                {/* Icon with animated background */}
                                 <div
                                     style={{
                                         marginBottom: '32px',
@@ -253,7 +219,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                                         position: 'relative',
                                     }}
                                 >
-                                    {/* Animated glow effect */}
                                     <div
                                         style={{
                                             position: 'absolute',
@@ -267,7 +232,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                                                 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                                         }}
                                     />
-                                    {/* Icon container */}
                                     <div
                                         style={{
                                             position: 'relative',
@@ -275,7 +239,7 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                                             height: '96px',
                                             borderRadius: '50%',
                                             backgroundColor: token.colorErrorBg,
-                                            border: `2px solid ${token.colorErrorBorder}`,
+                                            border: `2px solid ${token.colorErrorBorder} `,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
@@ -298,7 +262,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                                     </div>
                                 </div>
 
-                                {/* Title */}
                                 <h1
                                     style={{
                                         fontSize: '32px',
@@ -311,7 +274,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                                     {t('forbidden403.title')}
                                 </h1>
 
-                                {/* Description */}
                                 <p
                                     style={{
                                         fontSize: '16px',
@@ -328,27 +290,10 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                         children
                     )}
                 </Content>
-                {/* <Footer
-                    style={{
-                        padding: '8px 24px',
-                        backgroundColor: token.colorBgContainer,
-                        borderTop: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
-                    }}
-                >
-                    <div
-                        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                    >
-                        <img
-                            src="/img/LogoEIU.png"
-                            alt="Powered by"
-                            width={150}
-                            height={40}
-                        />
-                    </div>
-                </Footer> */}
             </Layout>
         </Layout>
     );
 }
 
 export default AppLayoutWithHeader;
+

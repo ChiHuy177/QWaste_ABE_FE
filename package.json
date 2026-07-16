@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "next dev --turbopack",
         "build": "next build",
-        "start": "next start -p 1708",
+        "start": "next start",
         "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
         "lint:check": "eslint . --ext .ts,.tsx,.js,.jsx",
         "docker:build": "docker build -t qwaste-v2 .",
