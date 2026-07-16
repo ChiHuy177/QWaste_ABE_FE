@@ -2035,7 +2035,6 @@
             "tabs": {
                 "list": "列表",
                 "kanban": "看板",
-                "machineWall": "机台墙",
                 "timeline": "班次时间轴"
             },
             "kanban": {
@@ -2043,16 +2042,6 @@
                 "plannedQty": "计划",
                 "producedQty": "已完成",
                 "noProducedData": "暂无实际产量数据"
-            },
-            "machineWall": {
-                "currentLabel": "运行中",
-                "pauseLabel": "已暂停",
-                "idleTitle": "尚未开始",
-                "idleDesc": "{{count}} 个计划等待中",
-                "doneTitle": "今日完成",
-                "doneDesc": "今日无其他计划",
-                "queueLabel": "下一个",
-                "dayTotal": "今日合计：{{qty}} · {{count}} 个计划"
             },
             "timeline": {
                 "recentlyConfirmed": "最近已确认",

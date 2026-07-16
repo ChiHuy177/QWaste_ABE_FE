@@ -703,7 +703,6 @@
             "tabs": {
                 "list": "List",
                 "kanban": "Board",
-                "machineWall": "Machine Wall",
                 "timeline": "Shift Timeline"
             },
             "kanban": {
@@ -711,16 +710,6 @@
                 "plannedQty": "Planned",
                 "producedQty": "Produced",
                 "noProducedData": "No actual output data yet"
-            },
-            "machineWall": {
-                "currentLabel": "Running",
-                "pauseLabel": "Paused",
-                "idleTitle": "Not started",
-                "idleDesc": "{{count}} plan(s) waiting",
-                "doneTitle": "Day complete",
-                "doneDesc": "No more plans today",
-                "queueLabel": "Up next",
-                "dayTotal": "Today: {{qty}} · {{count}} plan(s)"
             },
             "timeline": {
                 "recentlyConfirmed": "Recently confirmed",

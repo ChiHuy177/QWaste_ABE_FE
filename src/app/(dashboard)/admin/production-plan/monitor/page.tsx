@@ -15,7 +15,6 @@ import ProductDetailModal from '../_components/ProductDetailModal';
 import IncidentConfirmModal from '../_components/IncidentConfirmModal';
 import { useMoldOptions } from '../_hooks/useMoldOptions';
 import MonitorKanbanTab from './_components/MonitorKanbanTab';
-import MonitorMachineWallTab from './_components/MonitorMachineWallTab';
 import MonitorTimelineTab from './_components/MonitorTimelineTab';
 import {
     useMonitorColumns,
@@ -100,8 +99,6 @@ export default function ProductionMonitorPage() {
                 '--plan-color-text': token.colorText,
                 '--plan-color-text-secondary': token.colorTextSecondary,
                 '--plan-color-text-tertiary': token.colorTextTertiary,
-                '--plan-color-warning': token.colorWarning,
-                '--plan-color-warning-bg': token.colorWarningBg,
             }) as CSSProperties,
         [token]
     );
@@ -277,18 +274,6 @@ export default function ProductionMonitorPage() {
                 <MonitorKanbanTab
                     statConfigs={statConfigs}
                     grouped={grouped}
-                    loading={isLoading}
-                    onOpenIncident={openIncidentModal}
-                    onSelectRow={selectRow}
-                />
-            ),
-        },
-        {
-            key: 'machineWall',
-            label: t('productionPlan.monitor.tabs.machineWall'),
-            children: (
-                <MonitorMachineWallTab
-                    groups={machineGroups}
                     loading={isLoading}
                     onOpenIncident={openIncidentModal}
                     onSelectRow={selectRow}

@@ -694,7 +694,6 @@
             "tabs": {
                 "list": "Danh sách",
                 "kanban": "Bảng điều phối",
-                "machineWall": "Sơ đồ máy",
                 "timeline": "Nhật trình ca"
             },
             "kanban": {
@@ -702,16 +701,6 @@
                 "plannedQty": "Kế hoạch",
                 "producedQty": "Đã làm",
                 "noProducedData": "Chưa có dữ liệu sản lượng thực tế"
-            },
-            "machineWall": {
-                "currentLabel": "Đang sản xuất",
-                "pauseLabel": "Tạm dừng",
-                "idleTitle": "Chưa vào ca",
-                "idleDesc": "{{count}} kế hoạch đang chờ",
-                "doneTitle": "Xong ngày",
-                "doneDesc": "Không còn kế hoạch nào khác hôm nay",
-                "queueLabel": "Tiếp theo",
-                "dayTotal": "Tổng ngày: {{qty}} · {{count}} kế hoạch"
             },
             "timeline": {
                 "recentlyConfirmed": "Đã xác nhận gần đây",

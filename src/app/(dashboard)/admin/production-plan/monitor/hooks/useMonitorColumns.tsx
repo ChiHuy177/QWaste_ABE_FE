@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { Button, Table, Tag, theme, Typography, Flex } from 'antd';
-import type { CollapseProps } from 'antd';
+import type { CollapseProps, GlobalToken } from 'antd';
 import type { ColumnType, ColumnsType } from 'antd/es/table';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,28 @@ import type { MonitorFlatRow, MonitorStatConfig } from './useMonitorGroups';
 const { Text } = Typography;
 
 const formatNumber = (v: number) => v.toLocaleString('vi-VN');
+
+/** Khung nền tint theo màu riêng của từng nhóm — cùng motif hộp viền như "Tạm dừng" trước đây. */
+function monitorGroupHeaderStyle(status: MonitorGroupKey, token: GlobalToken): CSSProperties {
+    const border =
+        status === 'TODO'
+            ? '#2f54eb' // Chàm (antd geekblue-6) — trùng với monitorGroupColor('TODO', ...)
+            : status === 'IN_PROGRESS'
+              ? token.colorInfo
+              : status === 'PAUSE'
+                ? token.colorWarning
+                : token.colorSuccess;
+    const background =
+        status === 'TODO'
+            ? '#f0f5ff' // geekblue-1
+            : status === 'IN_PROGRESS'
+              ? token.colorInfoBg
+              : status === 'PAUSE'
+                ? token.colorWarningBg
+                : token.colorSuccessBg;
+
+    return { background, border: `1px solid ${border}`, borderRadius: 8 };
+}
 
 const anchorCell = (record: MonitorFlatRow) =>
     record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
@@ -188,7 +210,7 @@ export const useMonitorColumns = ({
 
                 return {
                     key: status,
-                    classNames: isPause ? { header: styles.monitorPauseHeader } : undefined,
+                    styles: { header: monitorGroupHeaderStyle(status, token) },
                     label: (
                         <Flex align="center" gap={10} id={`monitor-group-${status}`}>
                             <span
@@ -248,7 +270,7 @@ export const useMonitorColumns = ({
                     ),
                 };
             }),
-        [statConfigs, grouped, groupedFlatRows, columns, loading, pauseColumns, onSelectRow, t]
+        [statConfigs, grouped, groupedFlatRows, columns, loading, pauseColumns, onSelectRow, t, token]
     );
 
     return { collapseItems };
