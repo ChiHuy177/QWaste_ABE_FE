@@ -697,6 +697,42 @@
             "needsAction": "Needs Action",
             "allConfirmed": "All Confirmed",
             "confirmedTag": "Confirmed",
+            "notAvailable": "Not available",
+            "minutesAgo": "{{count}} min ago",
+            "pausedFor": "Paused for {{count}} min",
+            "tabs": {
+                "list": "List",
+                "kanban": "Board",
+                "machineWall": "Machine Wall",
+                "timeline": "Shift Timeline"
+            },
+            "kanban": {
+                "groupBy": "Group by",
+                "plannedQty": "Planned",
+                "producedQty": "Produced",
+                "noProducedData": "No actual output data yet"
+            },
+            "machineWall": {
+                "currentLabel": "Running",
+                "pauseLabel": "Paused",
+                "idleTitle": "Not started",
+                "idleDesc": "{{count}} plan(s) waiting",
+                "doneTitle": "Day complete",
+                "doneDesc": "No more plans today",
+                "queueLabel": "Up next",
+                "dayTotal": "Today: {{qty}} · {{count}} plan(s)"
+            },
+            "timeline": {
+                "recentlyConfirmed": "Recently confirmed",
+                "noIncidents": "No incidents need action",
+                "orderNote": "Ordered by queue sequence — no real duration data yet",
+                "legendComplete": "Complete",
+                "legendProgress": "Running",
+                "legendPauseBad": "Paused — needs action",
+                "legendPauseOk": "Paused — confirmed",
+                "legendTodo": "Todo",
+                "legendEmpty": "No schedule"
+            },
             "status": {
                 "TODO": "Todo",
                 "IN_PROGRESS": "In Progress",

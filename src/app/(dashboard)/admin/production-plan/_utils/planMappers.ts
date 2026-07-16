@@ -245,7 +245,9 @@ export interface MonitorGroupColorToken {
 export function monitorGroupColor(group: MonitorGroupKey, token: MonitorGroupColorToken): string {
     switch (group) {
         case 'TODO':
-            return '#722ed1';
+            // Chàm (antd geekblue-6) — không có token semantic riêng nên hardcode,
+            // đủ tương phản trên cả nền sáng lẫn tối.
+            return '#2f54eb';
         case 'IN_PROGRESS':
             return token.colorInfo;
         case 'PAUSE':

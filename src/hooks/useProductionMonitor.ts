@@ -18,6 +18,7 @@ export interface PlanStatusEntry {
     updatedAt: Date;
     trigger: ProductionPlanStatusTrigger;
     incidentReason: IncidentReason | null;
+    reason: string | null;
 }
 
 interface UseProductionMonitorOptions {
@@ -74,6 +75,7 @@ export function useProductionMonitor({
                 updatedAt: new Date(),
                 trigger: payload.trigger,
                 incidentReason: payload.incidentReason,
+                reason: payload.reason,
             });
             return next;
         });

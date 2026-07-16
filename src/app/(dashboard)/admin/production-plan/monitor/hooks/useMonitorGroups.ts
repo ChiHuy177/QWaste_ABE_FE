@@ -81,9 +81,11 @@ export const useMonitorGroups = ({ products }: UseMonitorGroupsParams) => {
             {
                 status: 'TODO',
                 icon: ClockCircleOutlined,
+                // Không có token semantic riêng cho Chàm — mix với nền/viền hiện tại của theme
+                // (thay vì hex tĩnh) để tự thích ứng dark mode giống 3 trạng thái còn lại.
                 color: monitorGroupColor('TODO', token),
-                bg: '#f9f0ff',
-                border: '#d3adf7',
+                bg: `color-mix(in srgb, ${monitorGroupColor('TODO', token)} 12%, ${token.colorBgContainer})`,
+                border: `color-mix(in srgb, ${monitorGroupColor('TODO', token)} 45%, ${token.colorBorder})`,
             },
             {
                 status: 'IN_PROGRESS',

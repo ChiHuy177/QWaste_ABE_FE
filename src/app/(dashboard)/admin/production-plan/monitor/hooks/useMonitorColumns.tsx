@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../_utils/planMappers';
 import styles from '../../_components/ProductionPlanTable.module.css';
 import type { MonitorRowVM } from '../../_components/types';
+import { isIncidentConfirmed } from '../_utils/incidentStatus';
 import type { MonitorFlatRow, MonitorStatConfig } from './useMonitorGroups';
 
 const { Text } = Typography;
@@ -17,13 +18,6 @@ const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
 const anchorCell = (record: MonitorFlatRow) =>
     record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
-
-/**
- * PAUSE do MQTT (máy tự báo lỗi/mất kết nối) có trigger MQTT_* và incidentReason null.
- * PAUSE do staff xác nhận (tạm dừng chờ sửa chữa) có trigger MANUAL + incidentReason — BE
- * chỉ set incidentReason qua flow xác nhận sự cố thủ công (xem IncidentConfirmModal).
- */
-const isIncidentConfirmed = (row: MonitorRowVM) => row.trigger === 'MANUAL' && !!row.incidentReason;
 
 interface UseMonitorColumnsParams {
     statConfigs: MonitorStatConfig[];

@@ -100,6 +100,7 @@ export const useMonitorData = () => {
                     updatedAt: entry.updatedAt,
                     trigger: entry.trigger,
                     incidentReason: entry.incidentReason,
+                    reason: entry.reason,
                 };
             }),
         [baseRows, statusMap]

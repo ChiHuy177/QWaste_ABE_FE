@@ -493,6 +493,140 @@ th.stickyName {
     white-space: nowrap;
 }
 
+/* ---- Monitor: Kanban tab ---- */
+.monitorKanbanBoard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.monitorKanbanColumn {
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    min-height: 160px;
+    overflow: hidden;
+}
+
+.monitorKanbanColumnBody {
+    padding: 4px 10px 12px;
+    overflow-y: auto;
+    max-height: 640px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.monitorKanbanCard {
+    border-radius: 12px;
+    padding: 10px 11px 9px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px -2px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.15s, transform 0.15s;
+    /* Flex containers with non-visible overflow reset children's automatic
+       min-size to 0 (CSS flexbox spec) — without this, many cards get
+       squeezed to fit the column's max-height instead of scrolling, and
+       overflow:hidden above silently clips the squeezed-out content. */
+    flex-shrink: 0;
+}
+
+.monitorKanbanCard:hover {
+    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.22);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 1100px) {
+    .monitorKanbanBoard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .monitorKanbanBoard {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- Monitor: Machine wall tab ---- */
+.monitorWallGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+}
+
+.monitorWallTile {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+/* ---- Monitor: Timeline tab ---- */
+.monitorTimelineLayout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 16px;
+    align-items: start;
+}
+@media (max-width: 980px) {
+    .monitorTimelineLayout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.monitorTimelineRail {
+    border: 1px solid var(--plan-color-border);
+    border-radius: 16px;
+    background: var(--plan-color-bg-container);
+    padding: 16px;
+    position: sticky;
+    top: 16px;
+    box-shadow: 0 1px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.monitorTimelineCard {
+    border: 1px solid var(--plan-color-border);
+    border-radius: 16px;
+    background: var(--plan-color-bg-container);
+    padding: 16px 18px 18px;
+    overflow-x: auto;
+    box-shadow: 0 1px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.monitorTimelineRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--plan-color-border);
+}
+
+.monitorTimelineRow:last-child {
+    border-bottom: 0;
+}
+
+.monitorTimelineLabel {
+    width: 104px;
+    flex: none;
+}
+
+.monitorTimelineLane {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.monitorTimelineBlock {
+    flex: 1 1 90px;
+    min-width: 90px;
+    border-radius: 7px;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
 /* Soft-deleted plan rows (daily management view) */
 .deletedRow > :global(td) {
     opacity: 0.5;

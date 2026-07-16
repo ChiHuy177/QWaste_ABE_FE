@@ -688,6 +688,42 @@
             "needsAction": "Cần xử lý",
             "allConfirmed": "Đã xác nhận tất cả",
             "confirmedTag": "Đã xác nhận",
+            "notAvailable": "Chưa có",
+            "minutesAgo": "{{count}} phút trước",
+            "pausedFor": "Đã tạm dừng {{count}} phút",
+            "tabs": {
+                "list": "Danh sách",
+                "kanban": "Bảng điều phối",
+                "machineWall": "Sơ đồ máy",
+                "timeline": "Nhật trình ca"
+            },
+            "kanban": {
+                "groupBy": "Nhóm theo",
+                "plannedQty": "Kế hoạch",
+                "producedQty": "Đã làm",
+                "noProducedData": "Chưa có dữ liệu sản lượng thực tế"
+            },
+            "machineWall": {
+                "currentLabel": "Đang sản xuất",
+                "pauseLabel": "Tạm dừng",
+                "idleTitle": "Chưa vào ca",
+                "idleDesc": "{{count}} kế hoạch đang chờ",
+                "doneTitle": "Xong ngày",
+                "doneDesc": "Không còn kế hoạch nào khác hôm nay",
+                "queueLabel": "Tiếp theo",
+                "dayTotal": "Tổng ngày: {{qty}} · {{count}} kế hoạch"
+            },
+            "timeline": {
+                "recentlyConfirmed": "Đã xác nhận gần đây",
+                "noIncidents": "Không có sự cố cần xử lý",
+                "orderNote": "Sắp xếp theo thứ tự hàng đợi — chưa có dữ liệu thời lượng thực tế",
+                "legendComplete": "Hoàn thành",
+                "legendProgress": "Đang chạy",
+                "legendPauseBad": "Tạm dừng — cần xử lý",
+                "legendPauseOk": "Tạm dừng — đã xác nhận",
+                "legendTodo": "Chờ làm",
+                "legendEmpty": "Trống lịch"
+            },
             "status": {
                 "TODO": "Chờ làm",
                 "IN_PROGRESS": "Đang chạy",

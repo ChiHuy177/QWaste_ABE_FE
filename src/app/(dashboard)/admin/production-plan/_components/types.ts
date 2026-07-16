@@ -70,6 +70,8 @@ export interface MonitorRowVM {
      */
     trigger?: ProductionPlanStatusTrigger | null;
     incidentReason?: IncidentReason | null;
+    /** Ghi chú tự do đi kèm status log (vd "Chờ vật tư", hoặc "CONNECTION_LOST" tự động từ MQTT). */
+    reason?: string | null;
 }
 
 // ─── Form & modal states (id-based — dữ liệu refetch được, index dễ lệch) ────
