@@ -215,7 +215,7 @@ export function mapWeeklyGroups(
     });
 }
 
-// ─── Monitor status grouping (G1 đã chốt: PARTIAL gộp vào nhóm PAUSE) ────────
+// ─── Monitor status grouping (PARTIAL gộp vào nhóm COMPLETE — plan đã đóng, không còn thao tác được) ───
 
 /** Key nhóm hiển thị trên monitor — trùng key i18n productionPlan.monitor.status.* hiện có. */
 export type MonitorGroupKey = 'TODO' | 'IN_PROGRESS' | 'PAUSE' | 'COMPLETE';
@@ -226,6 +226,31 @@ export const MONITOR_GROUP_BY_STATUS: Record<ProductionPlanStatus, MonitorGroupK
     PENDING: 'TODO',
     RUNNING: 'IN_PROGRESS',
     PAUSE: 'PAUSE',
-    PARTIAL: 'PAUSE',
+    PARTIAL: 'COMPLETE',
     COMPLETE: 'COMPLETE',
 };
+
+/** Token theme cần để suy ra màu nhóm — subset của antd GlobalToken. */
+export interface MonitorGroupColorToken {
+    colorInfo: string;
+    colorWarning: string;
+    colorSuccess: string;
+}
+
+/**
+ * Mã màu chủ đạo của mỗi nhóm monitor — nguồn dùng chung cho pill trạng thái trên header
+ * Collapse (`useMonitorGroups.ts`) và mọi nơi khác cần hiển thị màu đồng bộ với nó (vd Timeline
+ * lịch sử trạng thái ở `ProductDetailModal.tsx`).
+ */
+export function monitorGroupColor(group: MonitorGroupKey, token: MonitorGroupColorToken): string {
+    switch (group) {
+        case 'TODO':
+            return '#722ed1';
+        case 'IN_PROGRESS':
+            return token.colorInfo;
+        case 'PAUSE':
+            return token.colorWarning;
+        case 'COMPLETE':
+            return token.colorSuccess;
+    }
+}

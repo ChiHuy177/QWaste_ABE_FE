@@ -14,6 +14,7 @@ import { productionPlanMonitorActions } from '@/stores/ProductionPlanMonitorStor
 import {
     MONITOR_GROUP_BY_STATUS,
     MONITOR_GROUP_ORDER,
+    monitorGroupColor,
     type MonitorGroupKey,
 } from '../../_utils/planMappers';
 import type { MonitorRowVM } from '../../_components/types';
@@ -80,28 +81,28 @@ export const useMonitorGroups = ({ products }: UseMonitorGroupsParams) => {
             {
                 status: 'TODO',
                 icon: ClockCircleOutlined,
-                color: '#722ed1',
+                color: monitorGroupColor('TODO', token),
                 bg: '#f9f0ff',
                 border: '#d3adf7',
             },
             {
                 status: 'IN_PROGRESS',
                 icon: SyncOutlined,
-                color: token.colorInfo,
+                color: monitorGroupColor('IN_PROGRESS', token),
                 bg: token.colorInfoBg,
                 border: token.colorInfo,
             },
             {
                 status: 'PAUSE',
                 icon: PauseCircleOutlined,
-                color: token.colorWarning,
+                color: monitorGroupColor('PAUSE', token),
                 bg: token.colorWarningBg,
                 border: token.colorWarning,
             },
             {
                 status: 'COMPLETE',
                 icon: CheckCircleOutlined,
-                color: token.colorSuccess,
+                color: monitorGroupColor('COMPLETE', token),
                 bg: token.colorSuccessBg,
                 border: token.colorSuccess,
             },

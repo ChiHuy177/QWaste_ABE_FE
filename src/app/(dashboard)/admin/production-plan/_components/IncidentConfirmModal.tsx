@@ -25,6 +25,8 @@ import { useTranslation } from 'react-i18next';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { IncidentReason } from '@/types/ProductionPlan';
+import type { Mold } from '@/types/Mold';
+import { useCompatibleMachines } from '../_hooks/useCompatibleMachines';
 import { MonitorRowVM, SelectOptionVM } from './types';
 import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/incidentOptions';
 
@@ -38,7 +40,8 @@ type IncidentOption = 1 | 2 | 3; // 1 = terminate, 2 = defer, 3 = temp pause
 interface Props {
     open: boolean;
     row: MonitorRowVM | null;
-    machineOptions: SelectOptionVM[];
+    /** Danh sách khuôn đầy đủ — dùng tra operationType để lọc máy tương thích khi chọn khuôn. */
+    molds: Mold[];
     moldOptions: SelectOptionVM[];
     /** moldId hiện tại của plan (resolve từ moldCode) — default cho defer. */
     currentMoldId?: string;
@@ -50,7 +53,7 @@ interface Props {
 export default function IncidentConfirmModal({
     open,
     row,
-    machineOptions,
+    molds,
     moldOptions,
     currentMoldId,
     onClose,
@@ -68,6 +71,13 @@ export default function IncidentConfirmModal({
     const [deferMoldId, setDeferMoldId] = useState<string | undefined>(undefined);
     const [submitting, setSubmitting] = useState(false);
     const [actualQuantity, setActualQuantity] = useState<number | null>(null);
+
+    // Chọn khuôn trước → tra operationType của khuôn đó → chỉ hiện máy tương thích
+    // (GET /machines/v1/pickingByOperationType), giống form tạo mới và modal chuyển kế hoạch.
+    const deferMold = molds.find((mold) => mold.moldId === deferMoldId);
+    const deferOperationTypeId = deferMold?.operationType?.operationTypeId;
+    const { machineOptions: compatibleMachineOptions, isLoading: compatibleMachinesLoading } =
+        useCompatibleMachines(deferOperationTypeId, open && selected === 2);
 
     useEffect(() => {
         if (!open) {
@@ -293,7 +303,8 @@ export default function IncidentConfirmModal({
                                             showIcon
                                             style={{ marginTop: 8 }}
                                             message={t(
-                                                'productionPlan.monitor.incident.option1Warning'
+                                                'productionPlan.monitor.incident.option1Warning',
+                                                { remaining }
                                             )}
                                         />
                                     )}
@@ -338,19 +349,20 @@ export default function IncidentConfirmModal({
                                                             marginBottom: 4,
                                                         }}
                                                     >
-                                                        {t(
-                                                            'productionPlan.monitor.incident.newMachine'
-                                                        )}
+                                                        {t('productionPlan.monitor.incident.newMold')}
                                                     </Text>
                                                     <Select
                                                         style={{ width: '100%' }}
                                                         showSearch
                                                         placeholder={t(
-                                                            'productionPlan.transferMachine.newMachinePlaceholder'
+                                                            'productionPlan.monitor.incident.moldPlaceholder'
                                                         )}
-                                                        value={deferMachineId}
-                                                        onChange={setDeferMachineId}
-                                                        options={machineOptions}
+                                                        value={deferMoldId}
+                                                        onChange={(value) => {
+                                                            setDeferMoldId(value);
+                                                            setDeferMachineId(undefined);
+                                                        }}
+                                                        options={moldOptions}
                                                         filterOption={(input, option) =>
                                                             (option?.label ?? '')
                                                                 .toLowerCase()
@@ -367,17 +379,32 @@ export default function IncidentConfirmModal({
                                                         marginBottom: 4,
                                                     }}
                                                 >
-                                                    {t('productionPlan.monitor.incident.newMold')}
+                                                    {t(
+                                                        'productionPlan.monitor.incident.newMachine'
+                                                    )}
                                                 </Text>
                                                 <Select
                                                     style={{ width: '100%' }}
                                                     showSearch
-                                                    placeholder={t(
-                                                        'productionPlan.monitor.incident.moldPlaceholder'
-                                                    )}
-                                                    value={deferMoldId}
-                                                    onChange={setDeferMoldId}
-                                                    options={moldOptions}
+                                                    loading={compatibleMachinesLoading}
+                                                    disabled={!deferMoldId}
+                                                    placeholder={
+                                                        !deferMoldId
+                                                            ? t(
+                                                                  'productionPlan.form.fields.machine.selectMoldFirst'
+                                                              )
+                                                            : t(
+                                                                  'productionPlan.transferMachine.newMachinePlaceholder'
+                                                              )
+                                                    }
+                                                    notFoundContent={
+                                                        deferMoldId
+                                                            ? t('productionPlan.transfer.noCompatibleMachine')
+                                                            : null
+                                                    }
+                                                    value={deferMachineId}
+                                                    onChange={setDeferMachineId}
+                                                    options={compatibleMachineOptions}
                                                     filterOption={(input, option) =>
                                                         (option?.label ?? '')
                                                             .toLowerCase()

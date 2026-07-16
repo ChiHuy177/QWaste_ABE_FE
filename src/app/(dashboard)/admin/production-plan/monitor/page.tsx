@@ -13,7 +13,6 @@ import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../_utils/planMappers
 import type { MonitorRowVM } from '../_components/types';
 import ProductDetailModal from '../_components/ProductDetailModal';
 import IncidentConfirmModal from '../_components/IncidentConfirmModal';
-import { useMachineOptions } from '../_hooks/useMachineOptions';
 import { useMoldOptions } from '../_hooks/useMoldOptions';
 import { useMonitorColumns, useMonitorData, useMonitorGroups } from './hooks';
 import styles from '../_components/ProductionPlanTable.module.css';
@@ -35,7 +34,6 @@ export default function ProductionMonitorPage() {
     const incidentRowId = useAppSelector((state) => state.productionPlanMonitor.incidentRowId);
 
     const { products, isLoading, refresh, isConnected, lastUpdate } = useMonitorData();
-    const { machineOptions } = useMachineOptions();
     const { molds, moldOptions } = useMoldOptions();
 
     const {
@@ -269,7 +267,7 @@ export default function ProductionMonitorPage() {
             <IncidentConfirmModal
                 open={!!incidentRow}
                 row={incidentRow}
-                machineOptions={machineOptions}
+                molds={molds}
                 moldOptions={moldOptions}
                 currentMoldId={incidentCurrentMoldId}
                 onClose={() => dispatch(productionPlanMonitorActions.closeIncidentModal())}

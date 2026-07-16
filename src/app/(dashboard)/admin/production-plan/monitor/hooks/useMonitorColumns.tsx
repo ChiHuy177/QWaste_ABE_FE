@@ -6,7 +6,7 @@ import type { CollapseProps } from 'antd';
 import type { ColumnType, ColumnsType } from 'antd/es/table';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../../_utils/planMappers';
+import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../_utils/planMappers';
 import styles from '../../_components/ProductionPlanTable.module.css';
 import type { MonitorRowVM } from '../../_components/types';
 import type { MonitorFlatRow, MonitorStatConfig } from './useMonitorGroups';
@@ -73,7 +73,15 @@ export const useMonitorColumns = ({
                         <>
                             <Text strong>{record.code}</Text>
                             {record.status === 'PARTIAL' && (
-                                <Tag color="warning" style={{ marginLeft: 6 }}>
+                                <Tag
+                                    style={{
+                                        marginLeft: 6,
+                                        border: 'none',
+                                        color: '#fff',
+                                        fontWeight: 600,
+                                        background: monitorGroupColor('COMPLETE', token),
+                                    }}
+                                >
                                     {t('productionPlan.monitor.partialTag')}
                                 </Tag>
                             )}
@@ -123,7 +131,7 @@ export const useMonitorColumns = ({
                 },
             },
         ];
-    }, [t]);
+    }, [t, token]);
 
     const pauseActionColumn: ColumnType<MonitorFlatRow> = useMemo(
         () => ({

@@ -12,8 +12,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
-import type { ProductionPlanDetail, ProductionPlanStatusLog } from '@/types/ProductionPlan';
-import { MONITOR_GROUP_BY_STATUS, MonitorGroupKey } from '../_utils/planMappers';
+import type {
+    ProductionPlanDetail,
+    ProductionPlanStatus,
+    ProductionPlanStatusLog,
+} from '@/types/ProductionPlan';
+import { MONITOR_GROUP_BY_STATUS, MonitorGroupKey, monitorGroupColor } from '../_utils/planMappers';
 import type { MonitorRowVM } from './types';
 
 const { Text } = Typography;
@@ -56,6 +60,10 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
     const { t } = useTranslation();
     const { token } = theme.useToken();
     const { handleError } = useApiErrorHandler();
+
+    /** Cùng mã màu với pill trạng thái trên header Collapse của trang monitor. */
+    const statusLogColor = (status: ProductionPlanStatus): string =>
+        monitorGroupColor(MONITOR_GROUP_BY_STATUS[status], token);
 
     const [detail, setDetail] = useState<ProductionPlanDetail | null>(null);
     const [logs, setLogs] = useState<ProductionPlanStatusLog[]>([]);
@@ -136,7 +144,15 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                         {row.name}
                     </Text>
                     {isPartial && (
-                        <Tag color="warning" style={{ margin: 0 }}>
+                        <Tag
+                            style={{
+                                margin: 0,
+                                border: 'none',
+                                color: '#fff',
+                                fontWeight: 600,
+                                background: monitorGroupColor('COMPLETE', token),
+                            }}
+                        >
                             {t('productionPlan.monitor.partialTag')}
                         </Tag>
                     )}
@@ -224,7 +240,6 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                     styles={{
                         label: {
                             fontWeight: 500,
-                            whiteSpace: 'nowrap',
                             color: token.colorTextSecondary,
                             width: 110,
                         },
@@ -311,65 +326,88 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                 {/* ── Section 3: Status logs ── */}
                 <SectionLabel>{t('productionPlan.monitor.detail.statusLogs')}</SectionLabel>
 
-                {logs.length === 0 ? (
-                    <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description={t('productionPlan.monitor.detail.noLogs')}
-                    />
-                ) : (
-                    <Timeline
-                        items={logs.map((log) => ({
-                            key: log.productionPlanStatusLogId,
-                            color:
-                                log.toStatus === 'PAUSE'
-                                    ? 'orange'
-                                    : log.toStatus === 'COMPLETE'
-                                      ? 'green'
-                                      : 'blue',
-                            children: (
-                                <div>
-                                    <Flex gap={6} align="center" wrap="wrap">
-                                        {log.fromStatus && (
-                                            <>
-                                                <Tag style={{ margin: 0 }}>
-                                                    {t(
-                                                        `productionPlan.status.${log.fromStatus}`
-                                                    )}
-                                                </Tag>
-                                                <RightOutlined
-                                                    style={{
-                                                        fontSize: 10,
-                                                        color: token.colorTextQuaternary,
-                                                    }}
-                                                />
-                                            </>
+                <div style={{ height: 260, overflowY: 'auto', paddingRight: 4 }}>
+                    {logs.length === 0 ? (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={t('productionPlan.monitor.detail.noLogs')}
+                        />
+                    ) : (
+                        <Timeline
+                            items={logs.map((log) => ({
+                                key: log.productionPlanStatusLogId,
+                                dot: (
+                                    <span
+                                        style={{
+                                            display: 'block',
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            background: statusLogColor(log.toStatus),
+                                        }}
+                                    />
+                                ),
+                                children: (
+                                    <div>
+                                        <Flex gap={6} align="center" wrap="wrap">
+                                            {log.fromStatus && (
+                                                <>
+                                                    <Tag
+                                                        style={{
+                                                            margin: 0,
+                                                            border: 'none',
+                                                            color: '#fff',
+                                                            fontWeight: 600,
+                                                            background: statusLogColor(log.fromStatus),
+                                                        }}
+                                                    >
+                                                        {t(
+                                                            `productionPlan.status.${log.fromStatus}`
+                                                        )}
+                                                    </Tag>
+                                                    <RightOutlined
+                                                        style={{
+                                                            fontSize: 10,
+                                                            color: token.colorTextQuaternary,
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
+                                            <Tag
+                                                style={{
+                                                    margin: 0,
+                                                    border: 'none',
+                                                    color: '#fff',
+                                                    fontWeight: 600,
+                                                    background: statusLogColor(log.toStatus),
+                                                }}
+                                            >
+                                                {t(`productionPlan.status.${log.toStatus}`)}
+                                            </Tag>
+                                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                                {t(`productionPlan.trigger.${log.trigger}`)}
+                                            </Text>
+                                        </Flex>
+                                        <Text
+                                            type="secondary"
+                                            style={{ fontSize: 12, display: 'block', marginTop: 2 }}
+                                        >
+                                            {new Date(log.timestamp).toLocaleString('vi-VN')}
+                                            {log.changedBy && ` · ${log.changedBy}`}
+                                            {log.incidentReason &&
+                                                ` · ${t(`productionPlan.incidentReason.${log.incidentReason}`)}`}
+                                        </Text>
+                                        {log.reason && (
+                                            <Text style={{ fontSize: 12, display: 'block' }}>
+                                                {log.reason}
+                                            </Text>
                                         )}
-                                        <Tag color="processing" style={{ margin: 0 }}>
-                                            {t(`productionPlan.status.${log.toStatus}`)}
-                                        </Tag>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>
-                                            {t(`productionPlan.trigger.${log.trigger}`)}
-                                        </Text>
-                                    </Flex>
-                                    <Text
-                                        type="secondary"
-                                        style={{ fontSize: 12, display: 'block', marginTop: 2 }}
-                                    >
-                                        {new Date(log.timestamp).toLocaleString('vi-VN')}
-                                        {log.changedBy && ` · ${log.changedBy}`}
-                                        {log.incidentReason &&
-                                            ` · ${t(`productionPlan.incidentReason.${log.incidentReason}`)}`}
-                                    </Text>
-                                    {log.reason && (
-                                        <Text style={{ fontSize: 12, display: 'block' }}>
-                                            {log.reason}
-                                        </Text>
-                                    )}
-                                </div>
-                            ),
-                        }))}
-                    />
-                )}
+                                    </div>
+                                ),
+                            }))}
+                        />
+                    )}
+                </div>
             </Spin>
         </Modal>
     );

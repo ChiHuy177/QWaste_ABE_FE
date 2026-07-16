@@ -694,7 +694,7 @@
             "disconnected": "Disconnected",
             "lastSync": "Last sync: {{time}}",
             "emptyGroup": "No product codes in this status",
-            "needsAction": "⚠ Needs Action",
+            "needsAction": "Needs Action",
             "status": {
                 "TODO": "Todo",
                 "IN_PROGRESS": "In Progress",
