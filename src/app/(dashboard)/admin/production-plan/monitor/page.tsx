@@ -284,25 +284,27 @@ export default function ProductionMonitorPage() {
             key: 'timeline',
             label: t('productionPlan.monitor.tabs.timeline'),
             children: (
-                <MonitorTimelineTab
-                    groups={machineGroups}
-                    products={filteredByKeyword}
-                    loading={isLoading}
-                    onOpenIncident={openIncidentModal}
-                    onSelectRow={selectRow}
-                />
+                <div className={styles.monitorTimelinePaneFill}>
+                    <MonitorTimelineTab
+                        groups={machineGroups}
+                        products={filteredByKeyword}
+                        loading={isLoading}
+                        onOpenIncident={openIncidentModal}
+                        onSelectRow={selectRow}
+                    />
+                </div>
             ),
         },
     ];
 
     return (
-        <>
+        <div style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <ResponsivePageHeader
                 title={t('productionPlan.monitor.title')}
                 rightContent={headerExtra}
             />
 
-            <Tabs items={tabItems} style={planThemeVars} />
+            <Tabs items={tabItems} style={planThemeVars} className={styles.monitorTabsFill} />
 
             <ProductDetailModal
                 row={selectedRow}
@@ -319,6 +321,6 @@ export default function ProductionMonitorPage() {
                 onClose={() => dispatch(productionPlanMonitorActions.closeIncidentModal())}
                 onDone={refresh}
             />
-        </>
+        </div>
     );
 }

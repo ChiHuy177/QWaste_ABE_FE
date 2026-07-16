@@ -15,7 +15,7 @@ const initialState: IProductionPlanMonitorStoreState = {
     searchText: '',
     selectedRowId: null,
     incidentRowId: null,
-    activeKeys: MONITOR_GROUP_ORDER.filter((status) => status !== 'COMPLETE'),
+    activeKeys: [MONITOR_GROUP_ORDER[0]],
 };
 
 const slice = createSlice({

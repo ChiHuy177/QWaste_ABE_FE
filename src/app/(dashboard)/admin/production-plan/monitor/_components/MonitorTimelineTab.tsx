@@ -44,8 +44,17 @@ export default function MonitorTimelineTab({
             key: 'legendProgress',
             swatch: { background: token.colorInfoBg, border: `1.5px solid ${token.colorInfo}` },
         },
-        { key: 'legendPauseBad', swatch: { background: token.colorWarning } },
-        { key: 'legendPauseOk', swatch: { background: token.colorWarning } },
+        {
+            key: 'legendPauseBad',
+            swatch: { background: token.colorWarningBg, border: `1.5px solid ${token.colorError}` },
+        },
+        {
+            key: 'legendPauseOk',
+            swatch: {
+                background: token.colorWarningBg,
+                border: `1.5px solid ${token.colorWarningBorder}`,
+            },
+        },
         {
             key: 'legendTodo',
             swatch: {
@@ -239,7 +248,11 @@ export default function MonitorTimelineTab({
                                         color: token.colorInfo,
                                     };
                                 } else if (row.status === 'PAUSE') {
-                                    blockStyle = { background: token.colorWarning, color: '#402b00' };
+                                    blockStyle = {
+                                        background: token.colorWarningBg,
+                                        border: `1.5px solid ${confirmed ? token.colorWarningBorder : token.colorError}`,
+                                        color: token.colorWarningText,
+                                    };
                                     icon = confirmed ? (
                                         <CheckCircleOutlined
                                             style={{ marginRight: 4, color: token.colorSuccess }}

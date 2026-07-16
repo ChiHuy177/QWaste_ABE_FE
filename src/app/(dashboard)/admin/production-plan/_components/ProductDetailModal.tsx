@@ -343,7 +343,7 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                         <Timeline
                             items={logs.map((log) => ({
                                 key: log.productionPlanStatusLogId,
-                                dot: (
+                                icon: (
                                     <span
                                         style={{
                                             display: 'block',
@@ -354,7 +354,7 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                                         }}
                                     />
                                 ),
-                                children: (
+                                content: (
                                     <div>
                                         <Flex gap={6} align="center" wrap="wrap">
                                             {log.fromStatus && (
