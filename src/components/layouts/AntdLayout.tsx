@@ -112,6 +112,7 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                     alt={config.appName}
                     width={collapsed && !isMobile ? 40 : 180}
                     height={collapsed && !isMobile ? 40 : 80}
+                    fetchPriority='high'
                     priority={true}
                     style={{
                         transition: 'all 0.3s',

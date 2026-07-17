@@ -59,14 +59,14 @@ export default function MonitorKanbanTab({
                             >
                                 <Icon style={{ fontSize: 16 }} />
                             </span>
-                            <Text strong style={{ fontSize: 13.5, color: token.colorPrimary }}>
+                            <Text strong style={{ fontSize: 13.5, color: config.color }}>
                                 {t(`productionPlan.monitor.status.${status}`)}
                             </Text>
                             <Text
                                 strong
                                 style={{
                                     fontSize: 11.5,
-                                    color: token.colorPrimary,
+                                    color: config.color,
                                     background: token.colorBgContainer,
                                     borderRadius: 999,
                                     padding: '1px 8px',

@@ -139,15 +139,15 @@ export default function ProductionPlanPage() {
                 backgroundColor: token.colorSuccessBg,
             },
             {
-                label: t('productionPlan.summary.dailyCases'),
-                value: summary.dailyCases,
+                label: t('productionPlan.summary.dailyPieces'),
+                value: summary.dailyPieces,
                 icon: InboxOutlined,
                 borderColor: token.colorWarning,
                 backgroundColor: token.colorWarningBg,
             },
             {
-                label: t('productionPlan.summary.weeklyCases'),
-                value: summary.weeklyCases,
+                label: t('productionPlan.summary.weeklyPieces'),
+                value: summary.weeklyPieces,
                 icon: CalendarOutlined,
                 borderColor: token.colorInfo,
                 backgroundColor: token.colorPrimaryBg,
@@ -338,7 +338,7 @@ export default function ProductionPlanPage() {
                                     <div style={{ minWidth: 0 }}>
                                         <div
                                             style={{
-                                                color: token.colorPrimary,
+                                                color: item.borderColor,
                                                 fontSize: 14,
                                                 fontWeight: 500,
                                                 marginBottom: 4,
@@ -348,7 +348,7 @@ export default function ProductionPlanPage() {
                                         </div>
                                         <div
                                             style={{
-                                                color: token.colorPrimary,
+                                                color: item.borderColor,
                                                 fontSize: 30,
                                                 fontWeight: 700,
                                                 lineHeight: 1,
@@ -371,6 +371,10 @@ export default function ProductionPlanPage() {
                     ...planThemeVars,
                     borderRadius: 12,
                     overflow: 'hidden',
+                    // Card border khớp với --plan-color-border dùng xuyên suốt panel (header,
+                    // table) — mặc định antd dùng colorBorderSecondary, lệch tông với các border
+                    // còn lại trong panel này.
+                    border: `1px solid ${token.colorBorder}`,
                     boxShadow: token.boxShadow,
                     flex: isMobile ? 'none' : 1,
                     height: isMobile ? '60vh' : undefined,
@@ -438,11 +442,11 @@ export default function ProductionPlanPage() {
                     <Flex align="center" gap={12}>
                         <Text type="secondary">
                             {activeView === 'daily'
-                                ? t('productionPlan.panel.cases', {
-                                    count: formatNumber(summary.dailyCases),
+                                ? t('productionPlan.panel.pieces', {
+                                    count: formatNumber(summary.dailyPieces),
                                 })
-                                : t('productionPlan.panel.cases', {
-                                    count: formatNumber(summary.weeklyCases),
+                                : t('productionPlan.panel.pieces', {
+                                    count: formatNumber(summary.weeklyPieces),
                                 })}
                         </Text>
                         {isReorderDirty && (

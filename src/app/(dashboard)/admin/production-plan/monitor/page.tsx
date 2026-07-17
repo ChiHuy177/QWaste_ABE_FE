@@ -190,7 +190,7 @@ export default function ProductionMonitorPage() {
                                 <div style={{ minWidth: 0 }}>
                                     <div
                                         style={{
-                                            color: token.colorPrimary,
+                                            color,
                                             fontSize: 14,
                                             fontWeight: 500,
                                             marginBottom: 4,
@@ -200,7 +200,7 @@ export default function ProductionMonitorPage() {
                                     </div>
                                     <div
                                         style={{
-                                            color: token.colorPrimary,
+                                            color,
                                             fontSize: 30,
                                             fontWeight: 700,
                                             lineHeight: 1,

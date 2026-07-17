@@ -52,7 +52,7 @@ type ProductFlatRow = PlanRowVM & {
 type TotalFlatRow = {
     type: 'total';
     groupKey: string;
-    totalCases: number;
+    totalPieces: number;
 };
 
 type FlatRow = GroupHeaderRow | ProductFlatRow | TotalFlatRow;
@@ -143,7 +143,7 @@ export default function DailyTable({
 
         paginatedGroups.forEach((group) => {
             const groupKey = group.machineId;
-            const totalCases = group.products
+            const totalPieces = group.products
                 .filter((p) => !p.isDeleted)
                 .reduce((sum, p) => sum + p.schedule[todayIndex], 0);
 
@@ -171,7 +171,7 @@ export default function DailyTable({
                 }
             });
 
-            rows.push({ type: 'total', groupKey, totalCases });
+            rows.push({ type: 'total', groupKey, totalPieces });
         });
 
         return { flatRows: rows, sortableKeys: keys, rowGroupMap: groupMap };
@@ -304,17 +304,17 @@ export default function DailyTable({
                     {
                         title: (
                             <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.units.cases')}</span>
-                                <span>(case)</span>
+                                <span>{t('productionPlan.units.pieces')}</span>
+                                <span>(piece)</span>
                             </div>
                         ),
-                        key: 'caseQuantity',
+                        key: 'pieceQuantity',
                         width: 100,
                         align: 'right',
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
-                                return <strong>{record.totalCases.toLocaleString('vi-VN')}</strong>;
+                                return <strong>{record.totalPieces.toLocaleString('vi-VN')}</strong>;
                             if (record.type === 'group-header') return null;
                             return record.schedule[todayIndex];
                         },

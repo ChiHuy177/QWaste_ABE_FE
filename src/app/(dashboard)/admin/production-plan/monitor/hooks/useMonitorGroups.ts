@@ -27,7 +27,7 @@ export type MonitorGroupHeader = {
     groupSize: number;
 };
 export type MonitorProductRow = MonitorRowVM & { type: 'product'; groupKey: string };
-export type MonitorTotalRow = { type: 'total'; groupKey: string; totalCases: number };
+export type MonitorTotalRow = { type: 'total'; groupKey: string; totalPieces: number };
 export type MonitorFlatRow = MonitorGroupHeader | MonitorProductRow | MonitorTotalRow;
 
 export interface MonitorStatConfig {
@@ -50,7 +50,7 @@ function toFlatRows(products: MonitorRowVM[]): MonitorFlatRow[] {
     const rows: MonitorFlatRow[] = [];
     groupMap.forEach((group, machineId) => {
         const { machineCode, spaceName } = group[0];
-        const totalCases = group.reduce((sum, p) => sum + p.plannedQuantity, 0);
+        const totalPieces = group.reduce((sum, p) => sum + p.plannedQuantity, 0);
         rows.push({
             type: 'group-header',
             groupKey: machineId,
@@ -59,7 +59,7 @@ function toFlatRows(products: MonitorRowVM[]): MonitorFlatRow[] {
             groupSize: group.length,
         });
         group.forEach((p) => rows.push({ ...p, type: 'product', groupKey: machineId }));
-        rows.push({ type: 'total', groupKey: machineId, totalCases });
+        rows.push({ type: 'total', groupKey: machineId, totalPieces });
     });
 
     return rows;

@@ -381,6 +381,16 @@ th.stickyName {
     padding: 16px;
 }
 
+/* Bảng nằm trong panel Card (đã có viền + bo góc riêng) không cần thêm 1 khung viền/bo
+   góc lồng bên trong nữa — 2 hộp bo góc lệch tâm (12px ngoài, 8px trong, cách 16px) tạo
+   cảm giác "lệch" ở góc. Chỉ áp dụng trong ngữ cảnh này; bảng dùng .dailySheetTable ở
+   trang monitor (trong Collapse ghost, không có Card bao ngoài) vẫn giữ viền riêng. */
+.tablePanelBody .dailySheetTable,
+.tablePanelBody .weeklySheetTable {
+    border: none;
+    border-radius: 0;
+}
+
 .weeklySheetTable {
     overflow: hidden;
     border: 1px solid var(--plan-color-border);

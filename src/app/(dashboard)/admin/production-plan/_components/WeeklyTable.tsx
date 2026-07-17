@@ -210,7 +210,7 @@ export default function WeeklyTable({
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
                         <span>{t('common.total')}</span>
-                        <span>{t('productionPlan.units.cases')}</span>
+                        <span>{t('productionPlan.units.pieces')}</span>
                     </div>
                 ),
                 key: 'grandTotal',

@@ -18,9 +18,12 @@ const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
 /** Khung nền tint theo màu riêng của từng nhóm — cùng motif hộp viền như "Tạm dừng" trước đây. */
 function monitorGroupHeaderStyle(status: MonitorGroupKey, token: GlobalToken): CSSProperties {
+    const todoColor = monitorGroupColor('TODO', token);
     const border =
         status === 'TODO'
-            ? '#2f54eb' // Chàm (antd geekblue-6) — trùng với monitorGroupColor('TODO', ...)
+            ? // Không có token semantic riêng cho Chàm — mix với viền hiện tại của theme
+              // (thay vì hex tĩnh) để tự thích ứng dark mode giống 3 trạng thái còn lại.
+              `color-mix(in srgb, ${todoColor} 45%, ${token.colorBorder})`
             : status === 'IN_PROGRESS'
               ? token.colorInfo
               : status === 'PAUSE'
@@ -28,7 +31,7 @@ function monitorGroupHeaderStyle(status: MonitorGroupKey, token: GlobalToken): C
                 : token.colorSuccess;
     const background =
         status === 'TODO'
-            ? '#f0f5ff' // geekblue-1
+            ? `color-mix(in srgb, ${todoColor} 12%, ${token.colorBgContainer})`
             : status === 'IN_PROGRESS'
               ? token.colorInfoBg
               : status === 'PAUSE'
@@ -128,14 +131,14 @@ export const useMonitorColumns = ({
                 render: (_, record) => (record.type === 'product' ? record.moldCode : null),
             },
             {
-                title: t('productionPlan.units.cases'),
-                key: 'cases',
+                title: t('productionPlan.units.pieces'),
+                key: 'pieces',
                 width: 100,
                 align: 'right',
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type === 'total')
-                        return <Text strong>{formatNumber(record.totalCases)}</Text>;
+                        return <Text strong>{formatNumber(record.totalPieces)}</Text>;
                     if (record.type === 'group-header') return null;
                     return record.plannedQuantity;
                 },

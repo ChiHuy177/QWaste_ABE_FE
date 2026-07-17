@@ -237,12 +237,12 @@ export default function TransferGridModal({
                         <div style={{ width: 1, alignSelf: 'stretch', background: borderColor }} />
                         <div>
                             <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
-                                {t('productionPlan.transferSchedule.caseQuantity')}
+                                {t('productionPlan.transferSchedule.pieceQuantity')}
                             </Text>
                             <div style={{ fontWeight: 700, fontSize: 16, marginTop: 2 }}>
                                 {currentQty}
                                 <Text type="secondary" style={{ fontSize: 11, fontWeight: 400, marginLeft: 4 }}>
-                                    {t('productionPlan.units.cases').toLowerCase()}
+                                    {t('productionPlan.units.pieces').toLowerCase()}
                                 </Text>
                             </div>
                         </div>
@@ -510,7 +510,7 @@ export default function TransferGridModal({
                             <span>
                                 {t('productionPlan.transferSchedule.targetAlreadyHasPrefix')}{' '}
                                 <strong>{existingQtyOnTarget}</strong>{' '}
-                                {t('productionPlan.units.cases').toLowerCase()},{' '}
+                                {t('productionPlan.units.pieces').toLowerCase()},{' '}
                                 {t('productionPlan.transferSchedule.targetAlreadyHasMiddle')}{' '}
                                 <strong>{existingQtyOnTarget + currentQty}</strong>{' '}
                                 {t('productionPlan.transferSchedule.targetAlreadyHasSuffix')}

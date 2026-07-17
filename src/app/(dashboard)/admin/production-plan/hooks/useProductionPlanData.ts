@@ -30,8 +30,8 @@ const getWeekStart = (date: Dayjs) => date.subtract((date.day() + 6) % 7, 'day')
 export interface ProductionPlanSummary {
     totalLines: number;
     totalProducts: number;
-    dailyCases: number;
-    weeklyCases: number;
+    dailyPieces: number;
+    weeklyPieces: number;
 }
 
 export const useProductionPlanData = () => {
@@ -111,20 +111,20 @@ export const useProductionPlanData = () => {
         );
 
         let totalProducts = 0;
-        let dailyCases = 0;
-        let weeklyCases = 0;
+        let dailyPieces = 0;
+        let weeklyPieces = 0;
 
         visibleGroups.forEach((group) => {
             group.products
                 .filter((product) => !product.isDeleted)
                 .forEach((product) => {
                     totalProducts += 1;
-                    dailyCases += product.schedule[todayIndex];
-                    weeklyCases += product.schedule.reduce((sum, qty) => sum + qty, 0);
+                    dailyPieces += product.schedule[todayIndex];
+                    weeklyPieces += product.schedule.reduce((sum, qty) => sum + qty, 0);
                 });
         });
 
-        return { totalLines: visibleGroups.length, totalProducts, dailyCases, weeklyCases };
+        return { totalLines: visibleGroups.length, totalProducts, dailyPieces, weeklyPieces };
     }, [machineGroups, normalizedMachineFilter, todayIndex]);
 
     const setActiveView = (view: ProductionPlanActiveView) =>

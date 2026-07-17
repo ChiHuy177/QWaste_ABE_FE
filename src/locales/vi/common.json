@@ -473,8 +473,8 @@
         "summary": {
             "lines": "Khu vực",
             "products": "Mã hàng",
-            "dailyCases": "Thùng hôm nay",
-            "weeklyCases": "Thùng trong tuần"
+            "dailyPieces": "Miếng hôm nay",
+            "weeklyPieces": "Miếng trong tuần"
         },
         "filters": {
             "machinePlaceholder": "Tìm theo máy"
@@ -496,10 +496,10 @@
             "weeklyTable": "Bảng tuần",
             "machineMatrixTable": "Bảng theo máy",
             "meta": "{{lines}} khu vực / {{products}} mã hàng",
-            "cases": "{{count}} thùng"
+            "pieces": "{{count}} miếng"
         },
         "units": {
-            "cases": "Thùng",
+            "pieces": "Miếng",
             "pcs": "Cái",
             "pcsPerCase": "cái/thùng"
         },
@@ -536,7 +536,7 @@
             "fetchDetailError": "Không thể tải chi tiết kế hoạch để chỉnh sửa",
             "sections": {
                 "productInfo": "Thông tin sản phẩm",
-                "schedule": "Kế hoạch 7 ngày (thùng)"
+                "schedule": "Kế hoạch 7 ngày (miếng)"
             },
             "fields": {
                 "code": {
@@ -566,7 +566,7 @@
                     "required": "Vui lòng chọn ngày sản xuất"
                 },
                 "plannedQuantity": {
-                    "label": "Số lượng (thùng)",
+                    "label": "Số lượng (miếng)",
                     "required": "Vui lòng nhập số lượng"
                 },
                 "note": {
@@ -584,7 +584,7 @@
                 }
             },
             "summary": {
-                "totalCasesWeek": "Tổng thùng / tuần",
+                "totalPiecesWeek": "Tổng miếng / tuần",
                 "totalPcsWeek": "Tổng cái / tuần"
             }
         },
@@ -608,16 +608,16 @@
             "noQuantityToday": "Không có sản lượng để chuyển hôm nay",
             "from": "Từ",
             "day": "Ngày",
-            "caseQuantity": "Số thùng",
+            "pieceQuantity": "Số miếng",
             "to": "Đến",
             "newDay": "Ngày mới",
             "newDayPlaceholder": "Chọn ngày...",
             "newMachine": "Máy mới",
             "newMachinePlaceholder": "Chọn máy...",
-            "caseCount": "{{count}} thùng",
+            "pieceCount": "{{count}} miếng",
             "targetAlreadyHasPrefix": "Ngày đích đã có",
             "targetAlreadyHasMiddle": "sẽ thành",
-            "targetAlreadyHasSuffix": "thùng sau khi chuyển.",
+            "targetAlreadyHasSuffix": "miếng sau khi chuyển.",
             "tomorrow": "Ngày mai",
             "dayAfterTomorrow": "Ngày kia",
             "selectInstruction": "Nhấn vào ô để chọn ngày & máy đích",
@@ -720,8 +720,8 @@
                 "COMPLETE": "Hoàn thành"
             },
             "incident": {
-                "actionBtn": "Xác nhận sự cố",
-                "title": "Xác nhận sự cố",
+                "actionBtn": "Xác nhận",
+                "title": "Xác nhận",
                 "subtitle": "Máy {{machine}} · {{name}}",
                 "alert": "Chọn một phương án xử lý. Hành động này sẽ ảnh hưởng đến hàng đợi sản xuất và log dữ liệu thực tế.",
                 "option1Title": "Kết thúc kế hoạch",
