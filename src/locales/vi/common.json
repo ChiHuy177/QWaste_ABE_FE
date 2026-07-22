@@ -489,7 +489,8 @@
             "addProduct": "Thêm mã hàng",
             "restore": "Khôi phục",
             "transfer": "Chuyển",
-            "statusLockedHint": "Chỉ áp dụng cho kế hoạch đang chờ (PENDING)"
+            "statusLockedHint": "Chỉ áp dụng cho kế hoạch đang chờ (PENDING)",
+            "viewHistory": "Xem lịch sử thực hiện"
         },
         "panel": {
             "dailyTable": "Bảng ngày",
@@ -518,7 +519,8 @@
                 "average": "Trung bình",
                 "avgShort": "T.bình",
                 "time": "Thời gian",
-                "status": "Trạng thái"
+                "status": "Trạng thái",
+                "actualPieces": "Số lượng thực tế"
             },
             "pagination": {
                 "machineGroups": "Tổng {{total}} nhóm máy"

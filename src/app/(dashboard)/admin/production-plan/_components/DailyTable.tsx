@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Empty, Pagination, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, EditOutlined, HolderOutlined, SwapOutlined, UndoOutlined } from '@ant-design/icons';
+import {
+    DeleteOutlined,
+    EditOutlined,
+    HistoryOutlined,
+    HolderOutlined,
+    SwapOutlined,
+    UndoOutlined,
+} from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
     closestCenter,
@@ -23,7 +30,8 @@ import {
 } from '@dnd-kit/sortable';
 import type { ProductionPlanStatus } from '@/types/ProductionPlan';
 import { DragHandle, SmartTableRow } from './DraggableTableRow';
-import { MachineGroupVM, PlanRowTarget, PlanRowVM } from './types';
+import ProductDetailModal from './ProductDetailModal';
+import { MachineGroupVM, MonitorRowVM, PlanRowTarget, PlanRowVM } from './types';
 import styles from './ProductionPlanTable.module.css';
 
 const STATUS_TAG_COLOR: Record<ProductionPlanStatus, string> = {
@@ -47,12 +55,14 @@ type ProductFlatRow = PlanRowVM & {
     groupKey: string;
     machineId: string;
     machineCode: string;
+    spaceName: string;
 };
 
 type TotalFlatRow = {
     type: 'total';
     groupKey: string;
     totalPieces: number;
+    totalActualPieces: number;
 };
 
 type FlatRow = GroupHeaderRow | ProductFlatRow | TotalFlatRow;
@@ -126,6 +136,7 @@ export default function DailyTable({
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
+    const [historyTarget, setHistoryTarget] = useState<ProductFlatRow | null>(null);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -143,9 +154,12 @@ export default function DailyTable({
 
         paginatedGroups.forEach((group) => {
             const groupKey = group.machineId;
-            const totalPieces = group.products
-                .filter((p) => !p.isDeleted)
-                .reduce((sum, p) => sum + p.schedule[todayIndex], 0);
+            const activeProducts = group.products.filter((p) => !p.isDeleted);
+            const totalPieces = activeProducts.reduce((sum, p) => sum + p.schedule[todayIndex], 0);
+            const totalActualPieces = activeProducts.reduce(
+                (sum, p) => sum + (p.actualQuantity ?? 0),
+                0
+            );
 
             // Anchor row: holds the machine rowspan cell, not draggable.
             // groupSize + 2 = 1 (this row) + groupSize (products) + 1 (total).
@@ -164,6 +178,7 @@ export default function DailyTable({
                     groupKey,
                     machineId: group.machineId,
                     machineCode: group.machineCode,
+                    spaceName: group.spaceName,
                 });
                 if (!product.isDeleted && isReorderableStatus(product.status)) {
                     keys.push(product.rowKey);
@@ -171,7 +186,7 @@ export default function DailyTable({
                 }
             });
 
-            rows.push({ type: 'total', groupKey, totalPieces });
+            rows.push({ type: 'total', groupKey, totalPieces, totalActualPieces });
         });
 
         return { flatRows: rows, sortableKeys: keys, rowGroupMap: groupMap };
@@ -320,6 +335,28 @@ export default function DailyTable({
                         },
                     },
                     {
+                        title: (
+                            <div className={styles.dailySheetHeaderStack}>
+                                <span>{t('productionPlan.table.headers.actualPieces')}</span>
+                                <span>(actual)</span>
+                            </div>
+                        ),
+                        key: 'actualPieceQuantity',
+                        width: 100,
+                        align: 'right',
+                        onCell: anchorCell,
+                        render: (_, record) => {
+                            if (record.type === 'total')
+                                return (
+                                    <strong>{record.totalActualPieces.toLocaleString('vi-VN')}</strong>
+                                );
+                            if (record.type === 'group-header') return null;
+                            return record.actualQuantity != null
+                                ? record.actualQuantity.toLocaleString('vi-VN')
+                                : '—';
+                        },
+                    },
+                    {
                         title: t('productionPlan.table.headers.status'),
                         key: 'status',
                         width: 130,
@@ -368,10 +405,25 @@ export default function DailyTable({
                             // PENDING (/move) và PAUSE (/incident/defer) — status khác thì ẩn.
                             const isPending = record.status === 'PENDING';
                             const isPause = record.status === 'PAUSE';
+                            const isFinished = record.status === 'COMPLETE' || record.status === 'PARTIAL';
                             const canEdit = !actionsLocked && isPending;
                             const canDelete = !actionsLocked && isPending;
                             const canTransfer = !actionsLocked && (isPending || isPause);
                             const statusLockedHint = t('productionPlan.actions.statusLockedHint');
+
+                            if (isFinished) {
+                                return (
+                                    <div className={styles.actions}>
+                                        <Tooltip title={t('productionPlan.actions.viewHistory')}>
+                                            <Button
+                                                type="text"
+                                                icon={<HistoryOutlined />}
+                                                onClick={() => setHistoryTarget(record)}
+                                            />
+                                        </Tooltip>
+                                    </div>
+                                );
+                            }
 
                             return (
                                 <div className={styles.actions}>
@@ -437,6 +489,26 @@ export default function DailyTable({
             todayIndex,
         ]
     );
+
+    // ProductDetailModal đọc MonitorRowVM — dựng lại từ record daily (đủ field cần cho modal:
+    // status track + product info + status logs; không có realtime trigger/incidentReason vì
+    // đây là plan đã COMPLETE/PARTIAL, không còn nằm trong phiên WS đang mở).
+    const historyRow = useMemo<MonitorRowVM | null>(() => {
+        if (!historyTarget) return null;
+        return {
+            productionPlanId: historyTarget.productionPlanId,
+            code: historyTarget.code,
+            name: historyTarget.name,
+            machineId: historyTarget.machineId,
+            machineCode: historyTarget.machineCode,
+            spaceName: historyTarget.spaceName,
+            moldCode: historyTarget.moldCode,
+            plannedQuantity: historyTarget.schedule[todayIndex],
+            actualQuantity: historyTarget.actualQuantity,
+            status: historyTarget.status,
+            updatedAt: null,
+        };
+    }, [historyTarget, todayIndex]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -525,6 +597,11 @@ export default function DailyTable({
                     }
                 />
             </div>
+            <ProductDetailModal
+                row={historyRow}
+                open={historyRow != null}
+                onClose={() => setHistoryTarget(null)}
+            />
         </div>
     );
 }

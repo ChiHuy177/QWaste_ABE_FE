@@ -144,9 +144,22 @@ export const useMonitorColumns = ({
                 },
             },
             {
+                title: t('productionPlan.table.headers.actualPieces'),
+                key: 'actual',
+                width: 140,
+                align: 'right',
+                onCell: anchorCell,
+                render: (_, record) => {
+                    if (record.type === 'total')
+                        return <Text strong>{formatNumber(record.totalActualPieces)}</Text>;
+                    if (record.type === 'group-header') return null;
+                    return record.actualQuantity != null ? formatNumber(record.actualQuantity) : '—';
+                },
+            },
+            {
                 title: t('productionPlan.monitor.lastUpdated'),
                 key: 'updatedAt',
-                width: 150,
+                width: 140,
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type !== 'product') return null;
@@ -202,6 +215,13 @@ export const useMonitorColumns = ({
         [columns, pauseActionColumn]
     );
 
+    // Actual piece chỉ có ý nghĩa theo dõi tiến độ cho TODO/IN_PROGRESS/PAUSE — plan COMPLETE
+    // đã đóng nên bỏ cột này khỏi bảng nhóm đó (xem lại qua ProductDetailModal thay vì bảng).
+    const completeColumns: ColumnsType<MonitorFlatRow> = useMemo(
+        () => columns.filter((column) => column.key !== 'actual'),
+        [columns]
+    );
+
     const collapseItems = useMemo<CollapseProps['items']>(
         () =>
             MONITOR_GROUP_ORDER.map((status) => {
@@ -242,7 +262,13 @@ export const useMonitorColumns = ({
                         // CSS vars inherit from the Collapse root wrapper below
                         <div className={`${styles.planAntTable} ${styles.dailySheetTable}`}>
                             <Table<MonitorFlatRow>
-                                columns={status === 'PAUSE' ? pauseColumns : columns}
+                                columns={
+                                    status === 'PAUSE'
+                                        ? pauseColumns
+                                        : status === 'COMPLETE'
+                                          ? completeColumns
+                                          : columns
+                                }
                                 dataSource={groupedFlatRows[status]}
                                 loading={loading}
                                 rowKey={(record) => {
@@ -260,7 +286,7 @@ export const useMonitorColumns = ({
                                     style: record.type === 'product' ? { cursor: 'pointer' } : {},
                                 })}
                                 pagination={false}
-                                scroll={{ x: status === 'PAUSE' ? 1100 : 950 }}
+                                scroll={{ x: status === 'PAUSE' ? 1120 : 970 }}
                                 locale={{
                                     emptyText: (
                                         <Text type="secondary">
@@ -273,7 +299,18 @@ export const useMonitorColumns = ({
                     ),
                 };
             }),
-        [statConfigs, grouped, groupedFlatRows, columns, loading, pauseColumns, onSelectRow, t, token]
+        [
+            statConfigs,
+            grouped,
+            groupedFlatRows,
+            columns,
+            loading,
+            pauseColumns,
+            completeColumns,
+            onSelectRow,
+            t,
+            token,
+        ]
     );
 
     return { collapseItems };

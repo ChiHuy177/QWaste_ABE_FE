@@ -498,7 +498,8 @@
             "addProduct": "Add product code",
             "restore": "Restore",
             "transfer": "Transfer",
-            "statusLockedHint": "Only available for PENDING plans"
+            "statusLockedHint": "Only available for PENDING plans",
+            "viewHistory": "View execution history"
         },
         "panel": {
             "dailyTable": "Daily table",
@@ -527,7 +528,8 @@
                 "average": "Average",
                 "avgShort": "Avg.",
                 "time": "Time",
-                "status": "Status"
+                "status": "Status",
+                "actualPieces": "Actual quantity"
             },
             "pagination": {
                 "machineGroups": "Total {{total}} machine groups"

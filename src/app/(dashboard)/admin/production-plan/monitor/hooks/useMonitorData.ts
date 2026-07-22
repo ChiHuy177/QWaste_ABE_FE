@@ -58,6 +58,7 @@ export const useMonitorData = () => {
                     spaceName: group.spaceName,
                     moldCode: product.moldCode,
                     plannedQuantity: product.schedule[0],
+                    actualQuantity: product.actualQuantity,
                     status: product.status,
                     updatedAt: null,
                 }))
