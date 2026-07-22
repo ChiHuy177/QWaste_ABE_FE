@@ -482,8 +482,8 @@
         "summary": {
             "lines": "Spaces",
             "products": "Product codes",
-            "dailyCases": "Cases today",
-            "weeklyCases": "Cases this week"
+            "dailyPieces": "Pieces today",
+            "weeklyPieces": "Pieces this week"
         },
         "filters": {
             "machinePlaceholder": "Search by machine"
@@ -498,17 +498,18 @@
             "addProduct": "Add product code",
             "restore": "Restore",
             "transfer": "Transfer",
-            "statusLockedHint": "Only available for PENDING plans"
+            "statusLockedHint": "Only available for PENDING plans",
+            "viewHistory": "View execution history"
         },
         "panel": {
             "dailyTable": "Daily table",
             "weeklyTable": "Weekly table",
             "machineMatrixTable": "Machine Table",
             "meta": "{{lines}} spaces / {{products}} product codes",
-            "cases": "{{count}} cases"
+            "pieces": "{{count}} pieces"
         },
         "units": {
-            "cases": "Cases",
+            "pieces": "Pieces",
             "pcs": "Pcs",
             "pcsPerCase": "pcs/case"
         },
@@ -527,7 +528,8 @@
                 "average": "Average",
                 "avgShort": "Avg.",
                 "time": "Time",
-                "status": "Status"
+                "status": "Status",
+                "actualPieces": "Actual quantity"
             },
             "pagination": {
                 "machineGroups": "Total {{total}} machine groups"
@@ -545,7 +547,7 @@
             "fetchDetailError": "Failed to load plan details for editing",
             "sections": {
                 "productInfo": "Product information",
-                "schedule": "7-day plan (cases)"
+                "schedule": "7-day plan (pieces)"
             },
             "fields": {
                 "code": {
@@ -575,7 +577,7 @@
                     "required": "Please select the production date"
                 },
                 "plannedQuantity": {
-                    "label": "Quantity (cases)",
+                    "label": "Quantity (pieces)",
                     "required": "Please enter the quantity"
                 },
                 "note": {
@@ -593,7 +595,7 @@
                 }
             },
             "summary": {
-                "totalCasesWeek": "Total cases / week",
+                "totalPiecesWeek": "Total pieces / week",
                 "totalPcsWeek": "Total pcs / week"
             }
         },
@@ -617,16 +619,16 @@
             "noQuantityToday": "There is no quantity to transfer today",
             "from": "From",
             "day": "Day",
-            "caseQuantity": "Case quantity",
+            "pieceQuantity": "Piece quantity",
             "to": "To",
             "newDay": "New day",
             "newDayPlaceholder": "Select a day...",
             "newMachine": "New machine",
             "newMachinePlaceholder": "Select a machine...",
-            "caseCount": "{{count}} cases",
+            "pieceCount": "{{count}} pieces",
             "targetAlreadyHasPrefix": "The target day already has",
             "targetAlreadyHasMiddle": "it will become",
-            "targetAlreadyHasSuffix": "cases after transfer.",
+            "targetAlreadyHasSuffix": "pieces after transfer.",
             "tomorrow": "Tomorrow",
             "dayAfterTomorrow": "Day after tomorrow",
             "selectInstruction": "Click a cell to select the target date & machine",
@@ -697,6 +699,31 @@
             "needsAction": "Needs Action",
             "allConfirmed": "All Confirmed",
             "confirmedTag": "Confirmed",
+            "notAvailable": "Not available",
+            "minutesAgo": "{{count}} min ago",
+            "pausedFor": "Paused for {{count}} min",
+            "tabs": {
+                "list": "List",
+                "kanban": "Board",
+                "timeline": "Shift Timeline"
+            },
+            "kanban": {
+                "groupBy": "Group by",
+                "plannedQty": "Planned",
+                "producedQty": "Produced",
+                "noProducedData": "No actual output data yet"
+            },
+            "timeline": {
+                "recentlyConfirmed": "Recently confirmed",
+                "noIncidents": "No incidents need action",
+                "orderNote": "Ordered by queue sequence — no real duration data yet",
+                "legendComplete": "Complete",
+                "legendProgress": "Running",
+                "legendPauseBad": "Paused — needs action",
+                "legendPauseOk": "Paused — confirmed",
+                "legendTodo": "Todo",
+                "legendEmpty": "No schedule"
+            },
             "status": {
                 "TODO": "Todo",
                 "IN_PROGRESS": "In Progress",
@@ -704,8 +731,8 @@
                 "COMPLETE": "Complete"
             },
             "incident": {
-                "actionBtn": "Confirm Incident",
-                "title": "Confirm Incident",
+                "actionBtn": "Confirm",
+                "title": "Confirm",
                 "subtitle": "Machine {{machine}} · {{name}}",
                 "alert": "Select a resolution. This action will affect the production queue and actual output log.",
                 "option1Title": "Terminate Plan",

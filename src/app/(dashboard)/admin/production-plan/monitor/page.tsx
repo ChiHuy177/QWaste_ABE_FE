@@ -1,7 +1,7 @@
 'use client';
 
 import { type CSSProperties, useMemo } from 'react';
-import { Badge, Button, Card, Col, Collapse, Flex, Input, Row, Tooltip, Typography, theme } from 'antd';
+import { Badge, Button, Card, Col, Collapse, Flex, Input, Row, Tabs, Tooltip, Typography, theme } from 'antd';
 import { CaretRightOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
@@ -14,7 +14,14 @@ import type { MonitorRowVM } from '../_components/types';
 import ProductDetailModal from '../_components/ProductDetailModal';
 import IncidentConfirmModal from '../_components/IncidentConfirmModal';
 import { useMoldOptions } from '../_hooks/useMoldOptions';
-import { useMonitorColumns, useMonitorData, useMonitorGroups } from './hooks';
+import MonitorKanbanTab from './_components/MonitorKanbanTab';
+import MonitorTimelineTab from './_components/MonitorTimelineTab';
+import {
+    useMonitorColumns,
+    useMonitorData,
+    useMonitorGroups,
+    useMonitorMachineGroups,
+} from './hooks';
 import styles from '../_components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
@@ -80,6 +87,8 @@ export default function ProductionMonitorPage() {
         onSelectRow: selectRow,
     });
 
+    const machineGroups = useMonitorMachineGroups(filteredByKeyword);
+
     const planThemeVars = useMemo(
         () =>
             ({
@@ -90,8 +99,6 @@ export default function ProductionMonitorPage() {
                 '--plan-color-text': token.colorText,
                 '--plan-color-text-secondary': token.colorTextSecondary,
                 '--plan-color-text-tertiary': token.colorTextTertiary,
-                '--plan-color-warning': token.colorWarning,
-                '--plan-color-warning-bg': token.colorWarningBg,
             }) as CSSProperties,
         [token]
     );
@@ -145,13 +152,8 @@ export default function ProductionMonitorPage() {
         </Flex>
     );
 
-    return (
+    const listTabContent = (
         <>
-            <ResponsivePageHeader
-                title={t('productionPlan.monitor.title')}
-                rightContent={headerExtra}
-            />
-
             {/* Stat cards */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 {statConfigs.map(({ status, icon: Icon, color, bg, border }) => (
@@ -188,7 +190,7 @@ export default function ProductionMonitorPage() {
                                 <div style={{ minWidth: 0 }}>
                                     <div
                                         style={{
-                                            color: token.colorPrimary,
+                                            color,
                                             fontSize: 14,
                                             fontWeight: 500,
                                             marginBottom: 4,
@@ -198,7 +200,7 @@ export default function ProductionMonitorPage() {
                                     </div>
                                     <div
                                         style={{
-                                            color: token.colorPrimary,
+                                            color,
                                             fontSize: 30,
                                             fontWeight: 700,
                                             lineHeight: 1,
@@ -246,7 +248,6 @@ export default function ProductionMonitorPage() {
             {/* ClickUp-style collapsible status groups */}
             <Collapse
                 ghost
-                style={planThemeVars}
                 items={collapseItems}
                 activeKey={displayedActiveKeys}
                 onChange={(keys) => setActiveKeys(keys as MonitorGroupKey[])}
@@ -257,6 +258,53 @@ export default function ProductionMonitorPage() {
                     body: styles.monitorGroupBody,
                 }}
             />
+        </>
+    );
+
+    const tabItems = [
+        {
+            key: 'list',
+            label: t('productionPlan.monitor.tabs.list'),
+            children: listTabContent,
+        },
+        {
+            key: 'kanban',
+            label: t('productionPlan.monitor.tabs.kanban'),
+            children: (
+                <MonitorKanbanTab
+                    statConfigs={statConfigs}
+                    grouped={grouped}
+                    loading={isLoading}
+                    onOpenIncident={openIncidentModal}
+                    onSelectRow={selectRow}
+                />
+            ),
+        },
+        {
+            key: 'timeline',
+            label: t('productionPlan.monitor.tabs.timeline'),
+            children: (
+                <div className={styles.monitorTimelinePaneFill}>
+                    <MonitorTimelineTab
+                        groups={machineGroups}
+                        products={filteredByKeyword}
+                        loading={isLoading}
+                        onOpenIncident={openIncidentModal}
+                        onSelectRow={selectRow}
+                    />
+                </div>
+            ),
+        },
+    ];
+
+    return (
+        <div style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <ResponsivePageHeader
+                title={t('productionPlan.monitor.title')}
+                rightContent={headerExtra}
+            />
+
+            <Tabs items={tabItems} style={planThemeVars} className={styles.monitorTabsFill} />
 
             <ProductDetailModal
                 row={selectedRow}
@@ -273,6 +321,6 @@ export default function ProductionMonitorPage() {
                 onClose={() => dispatch(productionPlanMonitorActions.closeIncidentModal())}
                 onDone={refresh}
             />
-        </>
+        </div>
     );
 }

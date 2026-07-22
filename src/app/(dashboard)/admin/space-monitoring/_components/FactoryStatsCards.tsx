@@ -59,7 +59,7 @@ const FactoryStatsCards: React.FC<FactoryStatsCardsProps> = ({
             value: formatEnergy(energyConsumption),
             fullValue: formatFullEnergy(energyConsumption),
             icon: ThunderboltOutlined,
-            color: token.colorPrimary,
+            color: token.colorInfo,
             borderColor: token.colorInfo,
             backgroundColor: token.colorInfoBg,
         },
@@ -68,7 +68,7 @@ const FactoryStatsCards: React.FC<FactoryStatsCardsProps> = ({
             value: formatHoursToHoursMinutes(totalRunTime),
             fullValue: formatHoursToHoursMinutes(totalRunTime),
             icon: ClockCircleOutlined,
-            color: token.colorPrimary,
+            color: token.colorSuccess,
             borderColor: token.colorSuccess,
             backgroundColor: token.colorSuccessBg,
         },
@@ -77,7 +77,7 @@ const FactoryStatsCards: React.FC<FactoryStatsCardsProps> = ({
             value: formatHoursToHoursMinutes(totalStopTime),
             fullValue: formatHoursToHoursMinutes(totalStopTime),
             icon: PauseCircleOutlined,
-            color: token.colorPrimary,
+            color: token.colorWarning,
             borderColor: token.colorWarning,
             backgroundColor: token.colorWarningBg,
         },
@@ -86,7 +86,7 @@ const FactoryStatsCards: React.FC<FactoryStatsCardsProps> = ({
             value: formatHoursToHoursMinutes(totalErrorTime),
             fullValue: formatHoursToHoursMinutes(totalErrorTime),
             icon: CloseCircleOutlined,
-            color: token.colorPrimary,
+            color: token.colorError,
             borderColor: token.colorError,
             backgroundColor: token.colorErrorBg,
         },
@@ -129,7 +129,7 @@ const FactoryStatsCards: React.FC<FactoryStatsCardsProps> = ({
                                     style={{
                                         fontSize: 14,
                                         fontWeight: 500,
-                                        color: token.colorPrimary,
+                                        color: stat.color,
                                     }}
                                 >
                                     {stat.label}

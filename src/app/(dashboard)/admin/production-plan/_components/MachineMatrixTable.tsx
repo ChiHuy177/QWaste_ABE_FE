@@ -134,7 +134,7 @@ export default function MachineMatrixTable({
                         render: (_: unknown, record: FlatRow) => record.dayItems[d]?.code ?? '',
                     },
                     {
-                        title: t('productionPlan.units.cases'),
+                        title: t('productionPlan.units.pieces'),
                         key: `${dayKey}-qty`,
                         width: 80,
                         align: 'right' as const,

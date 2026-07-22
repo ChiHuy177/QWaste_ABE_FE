@@ -105,8 +105,15 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
         };
     }, [handleError, open, row]);
 
+    const todoColor = monitorGroupColor('TODO', token);
     const STATUS_STYLE: Record<MonitorGroupKey, { color: string; bg: string; border: string }> = {
-        TODO: { color: '#722ed1', bg: '#f9f0ff', border: '#d3adf7' },
+        TODO: {
+            color: todoColor,
+            // Modal này portal ra ngoài cây DOM của Tabs nên không dùng CSS var được —
+            // mix trực tiếp với token hiện tại để vẫn tự thích ứng dark mode.
+            bg: `color-mix(in srgb, ${todoColor} 12%, ${token.colorBgContainer})`,
+            border: `color-mix(in srgb, ${todoColor} 45%, ${token.colorBorder})`,
+        },
         IN_PROGRESS: { color: token.colorInfo, bg: token.colorInfoBg, border: token.colorInfo },
         PAUSE: { color: token.colorWarning, bg: token.colorWarningBg, border: token.colorWarning },
         COMPLETE: {
@@ -336,7 +343,7 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                         <Timeline
                             items={logs.map((log) => ({
                                 key: log.productionPlanStatusLogId,
-                                dot: (
+                                icon: (
                                     <span
                                         style={{
                                             display: 'block',
@@ -347,7 +354,7 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                                         }}
                                     />
                                 ),
-                                children: (
+                                content: (
                                     <div>
                                         <Flex gap={6} align="center" wrap="wrap">
                                             {log.fromStatus && (

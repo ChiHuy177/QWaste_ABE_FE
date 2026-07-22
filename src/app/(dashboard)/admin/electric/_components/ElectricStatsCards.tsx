@@ -41,6 +41,10 @@ export const ElectricStatsCards = ({ stats }: StatsCardsProps) => {
     const { token } = theme.useToken();
     const isMobile = !screens.md;
 
+    // Không có token semantic cho tím — mix với nền/viền hiện tại của theme (thay vì hex tĩnh)
+    // để tự thích ứng dark mode giống 3 chỉ số còn lại.
+    const partsAccent = '#722ED1';
+
     const statsConfig = useMemo(
         () => [
             {
@@ -48,39 +52,40 @@ export const ElectricStatsCards = ({ stats }: StatsCardsProps) => {
                 compactValue: formatFullNumber(stats?.totalComsumption ?? 0),
                 fullValue: formatFullNumber(stats?.totalComsumption ?? 0),
                 icon: ThunderboltOutlined,
-                color: token.colorPrimary,
-                borderColor: '#1890FF',
-                backgroundColor: '#E6F7FF',
+                color: token.colorInfo,
+                borderColor: token.colorInfo,
+                backgroundColor: token.colorInfoBg,
             },
             {
                 label: t('electricManagement.stats.totalCost'),
                 compactValue: formatCompactNumber(stats?.totalCost ?? 0),
                 fullValue: formatFullNumber(stats?.totalCost ?? 0),
                 icon: DollarOutlined,
-                color: token.colorPrimary,
-                borderColor: '#52C41A',
-                backgroundColor: '#F6FFED',
+                color: token.colorSuccess,
+                borderColor: token.colorSuccess,
+                backgroundColor: token.colorSuccessBg,
             },
             {
                 label: t('electricManagement.stats.totalIdleTime'),
                 compactValue: formatFullNumber(stats?.totalIdleTime ?? 0),
                 fullValue: formatFullNumber(stats?.totalIdleTime ?? 0),
                 icon: ClockCircleOutlined,
-                color: token.colorPrimary,
-                borderColor: '#FA8C16',
-                backgroundColor: '#FFF7E6',
+                color: token.colorWarning,
+                borderColor: token.colorWarning,
+                backgroundColor: token.colorWarningBg,
             },
             {
                 label: t('electricManagement.stats.totalParts'),
                 compactValue: formatFullNumber(stats?.totalParts ?? 0),
                 fullValue: formatFullNumber(stats?.totalParts ?? 0),
                 icon: AppstoreOutlined,
-                color: token.colorPrimary,
-                borderColor: '#722ED1',
-                backgroundColor: '#F9F0FF',
+                // color = accent thuần cho text/icon/góc trang trí; border/bg mix theo theme.
+                color: partsAccent,
+                borderColor: `color-mix(in srgb, ${partsAccent} 45%, ${token.colorBorder})`,
+                backgroundColor: `color-mix(in srgb, ${partsAccent} 12%, ${token.colorBgContainer})`,
             },
         ],
-        [stats, t, token.colorPrimary]
+        [stats, t, token, partsAccent]
     );
 
     return (
@@ -94,7 +99,7 @@ export const ElectricStatsCards = ({ stats }: StatsCardsProps) => {
                             hoverable
                             style={{
                                 borderRadius: 12,
-                                boxShadow: '0 2px 8px rgba(0, 64, 156, 0.08)',
+                                boxShadow: token.boxShadowSecondary,
                                 height: '100%',
                                 border: `1px solid ${stat.borderColor}`,
                                 background: stat.backgroundColor,
@@ -110,7 +115,7 @@ export const ElectricStatsCards = ({ stats }: StatsCardsProps) => {
                                     right: 0,
                                     width: 80,
                                     height: 80,
-                                    background: `${stat.borderColor}15`,
+                                    background: `color-mix(in srgb, ${stat.color} 15%, transparent)`,
                                     borderBottomLeftRadius: '100%',
                                 }}
                             />
@@ -120,7 +125,7 @@ export const ElectricStatsCards = ({ stats }: StatsCardsProps) => {
                                     style={{
                                         fontSize: 14,
                                         fontWeight: 500,
-                                        color: token.colorPrimary,
+                                        color: stat.color,
                                     }}
                                 >
                                     {stat.label}
@@ -133,12 +138,12 @@ export const ElectricStatsCards = ({ stats }: StatsCardsProps) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            backgroundColor: '#F3F2F3',
+                                            backgroundColor: token.colorBgTextHover,
                                         }}
                                     >
                                         <IconComponent
                                             style={{
-                                                color: stat.borderColor,
+                                                color: stat.color,
                                                 fontSize: 24,
                                             }}
                                         />

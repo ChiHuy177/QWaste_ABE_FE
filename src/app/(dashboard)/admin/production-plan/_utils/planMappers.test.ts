@@ -18,6 +18,7 @@ const listItem = (overrides: Partial<ProductionPlanListItem>): ProductionPlanLis
     productionPlanName: 'Sản phẩm 1',
     snapshotMoldCode: 'M-01',
     plannedQuantity: 10,
+    actualQuantity: null,
     status: 'PENDING',
     sequence: 1,
     isDeleted: false,

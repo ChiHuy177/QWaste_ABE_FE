@@ -1,29 +1,48 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { Button, Table, Tag, theme, Typography, Flex } from 'antd';
-import type { CollapseProps } from 'antd';
+import type { CollapseProps, GlobalToken } from 'antd';
 import type { ColumnType, ColumnsType } from 'antd/es/table';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../_utils/planMappers';
 import styles from '../../_components/ProductionPlanTable.module.css';
 import type { MonitorRowVM } from '../../_components/types';
+import { isIncidentConfirmed } from '../_utils/incidentStatus';
 import type { MonitorFlatRow, MonitorStatConfig } from './useMonitorGroups';
 
 const { Text } = Typography;
 
 const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
+/** Khung nền tint theo màu riêng của từng nhóm — cùng motif hộp viền như "Tạm dừng" trước đây. */
+function monitorGroupHeaderStyle(status: MonitorGroupKey, token: GlobalToken): CSSProperties {
+    const todoColor = monitorGroupColor('TODO', token);
+    const border =
+        status === 'TODO'
+            ? // Không có token semantic riêng cho Chàm — mix với viền hiện tại của theme
+              // (thay vì hex tĩnh) để tự thích ứng dark mode giống 3 trạng thái còn lại.
+              `color-mix(in srgb, ${todoColor} 45%, ${token.colorBorder})`
+            : status === 'IN_PROGRESS'
+              ? token.colorInfo
+              : status === 'PAUSE'
+                ? token.colorWarning
+                : token.colorSuccess;
+    const background =
+        status === 'TODO'
+            ? `color-mix(in srgb, ${todoColor} 12%, ${token.colorBgContainer})`
+            : status === 'IN_PROGRESS'
+              ? token.colorInfoBg
+              : status === 'PAUSE'
+                ? token.colorWarningBg
+                : token.colorSuccessBg;
+
+    return { background, border: `1px solid ${border}`, borderRadius: 8 };
+}
+
 const anchorCell = (record: MonitorFlatRow) =>
     record.type === 'group-header' ? { className: styles.dailyGroupAnchorCell } : {};
-
-/**
- * PAUSE do MQTT (máy tự báo lỗi/mất kết nối) có trigger MQTT_* và incidentReason null.
- * PAUSE do staff xác nhận (tạm dừng chờ sửa chữa) có trigger MANUAL + incidentReason — BE
- * chỉ set incidentReason qua flow xác nhận sự cố thủ công (xem IncidentConfirmModal).
- */
-const isIncidentConfirmed = (row: MonitorRowVM) => row.trigger === 'MANUAL' && !!row.incidentReason;
 
 interface UseMonitorColumnsParams {
     statConfigs: MonitorStatConfig[];
@@ -112,22 +131,35 @@ export const useMonitorColumns = ({
                 render: (_, record) => (record.type === 'product' ? record.moldCode : null),
             },
             {
-                title: t('productionPlan.units.cases'),
-                key: 'cases',
+                title: t('productionPlan.units.pieces'),
+                key: 'pieces',
                 width: 100,
                 align: 'right',
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type === 'total')
-                        return <Text strong>{formatNumber(record.totalCases)}</Text>;
+                        return <Text strong>{formatNumber(record.totalPieces)}</Text>;
                     if (record.type === 'group-header') return null;
                     return record.plannedQuantity;
                 },
             },
             {
+                title: t('productionPlan.table.headers.actualPieces'),
+                key: 'actual',
+                width: 140,
+                align: 'right',
+                onCell: anchorCell,
+                render: (_, record) => {
+                    if (record.type === 'total')
+                        return <Text strong>{formatNumber(record.totalActualPieces)}</Text>;
+                    if (record.type === 'group-header') return null;
+                    return record.actualQuantity != null ? formatNumber(record.actualQuantity) : '—';
+                },
+            },
+            {
                 title: t('productionPlan.monitor.lastUpdated'),
                 key: 'updatedAt',
-                width: 150,
+                width: 140,
                 onCell: anchorCell,
                 render: (_, record) => {
                     if (record.type !== 'product') return null;
@@ -183,6 +215,13 @@ export const useMonitorColumns = ({
         [columns, pauseActionColumn]
     );
 
+    // Actual piece chỉ có ý nghĩa theo dõi tiến độ cho TODO/IN_PROGRESS/PAUSE — plan COMPLETE
+    // đã đóng nên bỏ cột này khỏi bảng nhóm đó (xem lại qua ProductDetailModal thay vì bảng).
+    const completeColumns: ColumnsType<MonitorFlatRow> = useMemo(
+        () => columns.filter((column) => column.key !== 'actual'),
+        [columns]
+    );
+
     const collapseItems = useMemo<CollapseProps['items']>(
         () =>
             MONITOR_GROUP_ORDER.map((status) => {
@@ -194,7 +233,7 @@ export const useMonitorColumns = ({
 
                 return {
                     key: status,
-                    classNames: isPause ? { header: styles.monitorPauseHeader } : undefined,
+                    styles: { header: monitorGroupHeaderStyle(status, token) },
                     label: (
                         <Flex align="center" gap={10} id={`monitor-group-${status}`}>
                             <span
@@ -223,7 +262,13 @@ export const useMonitorColumns = ({
                         // CSS vars inherit from the Collapse root wrapper below
                         <div className={`${styles.planAntTable} ${styles.dailySheetTable}`}>
                             <Table<MonitorFlatRow>
-                                columns={status === 'PAUSE' ? pauseColumns : columns}
+                                columns={
+                                    status === 'PAUSE'
+                                        ? pauseColumns
+                                        : status === 'COMPLETE'
+                                          ? completeColumns
+                                          : columns
+                                }
                                 dataSource={groupedFlatRows[status]}
                                 loading={loading}
                                 rowKey={(record) => {
@@ -241,7 +286,7 @@ export const useMonitorColumns = ({
                                     style: record.type === 'product' ? { cursor: 'pointer' } : {},
                                 })}
                                 pagination={false}
-                                scroll={{ x: status === 'PAUSE' ? 1100 : 950 }}
+                                scroll={{ x: status === 'PAUSE' ? 1120 : 970 }}
                                 locale={{
                                     emptyText: (
                                         <Text type="secondary">
@@ -254,7 +299,18 @@ export const useMonitorColumns = ({
                     ),
                 };
             }),
-        [statConfigs, grouped, groupedFlatRows, columns, loading, pauseColumns, onSelectRow, t]
+        [
+            statConfigs,
+            grouped,
+            groupedFlatRows,
+            columns,
+            loading,
+            pauseColumns,
+            completeColumns,
+            onSelectRow,
+            t,
+            token,
+        ]
     );
 
     return { collapseItems };

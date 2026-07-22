@@ -58,6 +58,7 @@ export const useMonitorData = () => {
                     spaceName: group.spaceName,
                     moldCode: product.moldCode,
                     plannedQuantity: product.schedule[0],
+                    actualQuantity: product.actualQuantity,
                     status: product.status,
                     updatedAt: null,
                 }))
@@ -100,6 +101,7 @@ export const useMonitorData = () => {
                     updatedAt: entry.updatedAt,
                     trigger: entry.trigger,
                     incidentReason: entry.incidentReason,
+                    reason: entry.reason,
                 };
             }),
         [baseRows, statusMap]

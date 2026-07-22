@@ -101,6 +101,7 @@ export function mapDailyGroups(
                 name: plan.productionPlanName,
                 moldCode: plan.snapshotMoldCode,
                 schedule,
+                actualQuantity: plan.actualQuantity,
                 status: plan.status,
                 sequence: plan.sequence,
                 isDeleted: plan.isDeleted,
@@ -176,6 +177,9 @@ export function mapWeeklyGroups(
                             name: plan.productionPlanName,
                             moldCode: plan.snapshotMoldCode,
                             schedule: [...EMPTY_SCHEDULE] as Schedule,
+                            // Weekly gộp nhiều plan/ngày vào 1 dòng — không có 1 giá trị actual
+                            // đại diện hợp lý, nên luôn null (view weekly không hiển thị cột này).
+                            actualQuantity: null,
                             status: plan.status,
                             sequence: null,
                             isDeleted: true,
@@ -245,7 +249,9 @@ export interface MonitorGroupColorToken {
 export function monitorGroupColor(group: MonitorGroupKey, token: MonitorGroupColorToken): string {
     switch (group) {
         case 'TODO':
-            return '#722ed1';
+            // Chàm (antd geekblue-6) — không có token semantic riêng nên hardcode,
+            // đủ tương phản trên cả nền sáng lẫn tối.
+            return '#2f54eb';
         case 'IN_PROGRESS':
             return token.colorInfo;
         case 'PAUSE':

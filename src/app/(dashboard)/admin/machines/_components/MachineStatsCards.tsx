@@ -28,7 +28,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
       label: t('machineManagement.stats.totalRun'),
       value: stats.totalRun,
       icon: PlayCircleOutlined,
-      color: token.colorPrimary,
+      color: token.colorSuccess,
       borderColor: token.colorSuccess,
       backgroundColor: token.colorSuccessBg,
     },
@@ -36,7 +36,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
       label: t('machineManagement.stats.totalIdle'),
       value: stats.totalIdle,
       icon: PauseCircleOutlined,
-      color: token.colorPrimary,
+      color: token.colorWarning,
       borderColor: token.colorWarning,
       backgroundColor: token.colorWarningBg,
     },
@@ -44,7 +44,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
       label: t('machineManagement.stats.totalError'),
       value: stats.totalError,
       icon: CloseCircleOutlined,
-      color: token.colorPrimary,
+      color: token.colorError,
       borderColor: token.colorError,
       backgroundColor: token.colorErrorBg,
     },
@@ -52,7 +52,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
       label: t('machineManagement.stats.totalEmpty'),
       value: stats.totalEmpty,
       icon: StopOutlined,
-      color: token.colorPrimary,
+      color: token.colorTextDisabled,
       borderColor: token.colorTextDisabled,
       backgroundColor: token.colorFillQuaternary,
     },
@@ -69,7 +69,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
               hoverable
               style={{
                 borderRadius: 12,
-                boxShadow: '0 2px 8px rgba(0, 64, 156, 0.08)',
+                boxShadow: token.boxShadowSecondary,
                 height: '100%',
                 border: `1px solid ${stat.borderColor}`,
                 background: stat.backgroundColor,
@@ -92,7 +92,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
                     style={{
                       color: stat.borderColor,
                       fontSize: 24,
-                      backgroundColor: '#F3F2F3',
+                      backgroundColor: token.colorBgTextHover,
                       padding: 10,
                       borderRadius: 50,
                     }}
@@ -103,7 +103,7 @@ const MachineStatsCards: React.FC<MachineStatsCardsProps> = ({ stats }) => {
                     style={{
                       fontSize: 14,
                       fontWeight: 500,
-                      color: token.colorPrimary,
+                      color: stat.color,
                       marginBottom: 4,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',

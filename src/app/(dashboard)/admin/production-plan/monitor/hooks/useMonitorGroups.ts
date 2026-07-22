@@ -27,7 +27,12 @@ export type MonitorGroupHeader = {
     groupSize: number;
 };
 export type MonitorProductRow = MonitorRowVM & { type: 'product'; groupKey: string };
-export type MonitorTotalRow = { type: 'total'; groupKey: string; totalCases: number };
+export type MonitorTotalRow = {
+    type: 'total';
+    groupKey: string;
+    totalPieces: number;
+    totalActualPieces: number;
+};
 export type MonitorFlatRow = MonitorGroupHeader | MonitorProductRow | MonitorTotalRow;
 
 export interface MonitorStatConfig {
@@ -50,7 +55,8 @@ function toFlatRows(products: MonitorRowVM[]): MonitorFlatRow[] {
     const rows: MonitorFlatRow[] = [];
     groupMap.forEach((group, machineId) => {
         const { machineCode, spaceName } = group[0];
-        const totalCases = group.reduce((sum, p) => sum + p.plannedQuantity, 0);
+        const totalPieces = group.reduce((sum, p) => sum + p.plannedQuantity, 0);
+        const totalActualPieces = group.reduce((sum, p) => sum + (p.actualQuantity ?? 0), 0);
         rows.push({
             type: 'group-header',
             groupKey: machineId,
@@ -59,7 +65,7 @@ function toFlatRows(products: MonitorRowVM[]): MonitorFlatRow[] {
             groupSize: group.length,
         });
         group.forEach((p) => rows.push({ ...p, type: 'product', groupKey: machineId }));
-        rows.push({ type: 'total', groupKey: machineId, totalCases });
+        rows.push({ type: 'total', groupKey: machineId, totalPieces, totalActualPieces });
     });
 
     return rows;
@@ -81,9 +87,11 @@ export const useMonitorGroups = ({ products }: UseMonitorGroupsParams) => {
             {
                 status: 'TODO',
                 icon: ClockCircleOutlined,
+                // Không có token semantic riêng cho Chàm — mix với nền/viền hiện tại của theme
+                // (thay vì hex tĩnh) để tự thích ứng dark mode giống 3 trạng thái còn lại.
                 color: monitorGroupColor('TODO', token),
-                bg: '#f9f0ff',
-                border: '#d3adf7',
+                bg: `color-mix(in srgb, ${monitorGroupColor('TODO', token)} 12%, ${token.colorBgContainer})`,
+                border: `color-mix(in srgb, ${monitorGroupColor('TODO', token)} 45%, ${token.colorBorder})`,
             },
             {
                 status: 'IN_PROGRESS',

@@ -33,6 +33,7 @@ export interface ProductionPlanListItem {
     productionPlanName: string;
     snapshotMoldCode: string | null;
     plannedQuantity: number;
+    actualQuantity: number | null;
     status: ProductionPlanStatus;
     sequence: number | null;
     isDeleted: boolean;

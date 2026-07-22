@@ -30,6 +30,11 @@ export interface PlanRowVM {
     /** plannedQuantity theo ngày Mon..Sun; daily chỉ có ô ngày đang xem. */
     schedule: Schedule;
     /**
+     * Số lượng thực tế đã sản xuất — null khi chưa chạy. Daily: của đúng plan/ngày đang xem.
+     * Weekly: không có ý nghĩa vì 1 dòng pivot nhiều plan/ngày — luôn null.
+     */
+    actualQuantity: number | null;
+    /**
      * Daily: status plan. Weekly: status của ngày sớm nhất chưa COMPLETE
      * (toàn bộ COMPLETE → COMPLETE).
      */
@@ -61,6 +66,7 @@ export interface MonitorRowVM {
     spaceName: string;
     moldCode: string | null;
     plannedQuantity: number;
+    actualQuantity: number | null;
     status: ProductionPlanStatus;
     updatedAt: Date | null;
     /**
@@ -70,6 +76,8 @@ export interface MonitorRowVM {
      */
     trigger?: ProductionPlanStatusTrigger | null;
     incidentReason?: IncidentReason | null;
+    /** Ghi chú tự do đi kèm status log (vd "Chờ vật tư", hoặc "CONNECTION_LOST" tự động từ MQTT). */
+    reason?: string | null;
 }
 
 // ─── Form & modal states (id-based — dữ liệu refetch được, index dễ lệch) ────
