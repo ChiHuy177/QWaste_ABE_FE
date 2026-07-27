@@ -1,4 +1,4 @@
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 
 export const WEEK_DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'] as const;
 export const FULL_WEEK_DAYS = [
@@ -24,6 +24,10 @@ export const getTodayScheduleIndex = (date = new Date()) => {
     const day = date.getDay();
     return (day + 6) % 7;
 };
+
+/** Thứ 2 (Mon) của tuần chứa `date` — dùng cho mọi lưới/tuần cần biết "weekStart" (Mon..Sun). */
+export const getWeekStart = (date: Dayjs = dayjs()): Dayjs =>
+    date.subtract((date.day() + 6) % 7, 'day');
 
 export const formatDailyLabel = (
     date = new Date(),

@@ -6,6 +6,9 @@ import { getApiErrorMessage, getErrorStatus, shouldUseServerMessage } from '@/ut
 export interface ApiErrorOptions {
     fallbackKey?: string;
     customMappings?: Record<number, string>;
+    /** Ưu tiên hiện message trả về từ BE thay vì message chung theo status — dùng cho các API
+     * mà lỗi validation cần thấy nguyên văn (vd /incident/*). */
+    showServerMessageStatuses?: number[];
 }
 
 export const useApiErrorHandler = () => {
@@ -15,13 +18,18 @@ export const useApiErrorHandler = () => {
         (error: unknown, options?: ApiErrorOptions) => {
             const status = getErrorStatus(error);
             const apiMessage = getApiErrorMessage(error);
+            const preferServerMessage =
+                shouldUseServerMessage(status) ||
+                (status !== undefined && options?.showServerMessageStatuses?.includes(status));
 
             let errorMessage = '';
 
             if (status && options?.customMappings?.[status]) {
                 errorMessage = t(options.customMappings[status]);
-            } else if (shouldUseServerMessage(status)) {
-                errorMessage = apiMessage || t('common.server.conflict');
+            } else if (preferServerMessage) {
+                const genericFallback =
+                    status === 409 ? t('common.server.conflict') : t('common.server.badRequest');
+                errorMessage = apiMessage || genericFallback;
             } else {
                 switch (status) {
                     case 400: // Validation failure

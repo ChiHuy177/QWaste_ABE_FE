@@ -2,6 +2,7 @@ import { PaginatedResult } from '@/types/Common';
 import {
     ImportConfirmRequest,
     ImportResult,
+    IncidentCompleteRequest,
     IncidentDeferRequest,
     IncidentPauseRequest,
     IncidentTerminateRequest,
@@ -171,6 +172,21 @@ export class ProductionPlanService {
         const response = await NetworkService.requestJson<ProductionPlanMutationResponse>({
             method: 'PUT',
             url: ENDPOINTS.PRODUCTION_PLANS.INCIDENT_PAUSE(productionPlanId),
+            data: request,
+        });
+
+        return response.result as ProductionPlanMutationResponse;
+    }
+
+    // BE chưa có endpoint này — sẽ 404 cho tới khi backend bổ sung PUT .../incident/complete
+    // (xem IncidentCompleteRequest). Giữ sẵn để FE chỉ cần bật lại khi BE xong.
+    static async completeProductionPlan(
+        productionPlanId: string,
+        request: IncidentCompleteRequest
+    ): Promise<ProductionPlanMutationResponse> {
+        const response = await NetworkService.requestJson<ProductionPlanMutationResponse>({
+            method: 'PUT',
+            url: ENDPOINTS.PRODUCTION_PLANS.INCIDENT_COMPLETE(productionPlanId),
             data: request,
         });
 

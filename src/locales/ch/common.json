@@ -2085,7 +2085,12 @@
                 "moldPlaceholder": "选择模具",
                 "successTerminate": "已终止计划 {{code}}",
                 "successDefer": "已转移计划 {{code}}（剩余 {{remaining}}）",
-                "successRepair": "已暂停计划 {{code}}"
+                "successRepair": "已暂停计划 {{code}}",
+                "readyToCompleteBadge": "数量已达标",
+                "readyToCompleteTitle": "已生产足够计划数量",
+                "readyToCompleteDesc": "此情况无需上报故障 — 可直接标记该计划为已完成，无需选择以上 3 个方案。",
+                "completeButton": "标记为已完成",
+                "successComplete": "计划 {{code}} 已标记为完成"
             },
             "detail": {
                 "statusTrack": "当前状态",

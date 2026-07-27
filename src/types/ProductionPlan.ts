@@ -194,6 +194,12 @@ export interface IncidentPauseRequest {
     reason?: string; // bắt buộc khi incidentReason === 'OTHER'
 }
 
+/** Đóng plan khi actualQuantity đã đạt plannedQuantity — không phải sự cố nên không cần
+ * incidentReason. BE chưa có endpoint này (PUT .../incident/complete), đang chờ bổ sung. */
+export interface IncidentCompleteRequest {
+    note?: string;
+}
+
 export interface IncidentDeferRequest {
     plannedDate: string; // yyyy-MM-dd
     machineId: string;

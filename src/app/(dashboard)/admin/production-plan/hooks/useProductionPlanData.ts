@@ -7,25 +7,17 @@ import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { productionPlanActions } from '@/stores/ProductionPlanStore';
 import type { ProductionPlanActiveView } from '@/stores/ProductionPlanStore';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
-import type {
-    ProductionPlanDailyMachineGroup,
-    ProductionPlanWeeklyMachineGroup,
-} from '@/types/ProductionPlan';
-import { getTodayScheduleIndex } from '../_utils/dateUtils';
-import { mapDailyGroups, mapWeeklyGroups } from '../_utils/planMappers';
+import { getTodayScheduleIndex, getWeekStart } from '../_utils/dateUtils';
+import { mapDailyGroups, mapWeeklyGroups, type RawPlanData } from '../_utils/planMappers';
 import { useMachineOptions } from '../_hooks/useMachineOptions';
 import { productionPlanQueryKeys } from '../_hooks/queryKeys';
 import type { MachineGroupVM } from '../_components/types';
 
-export type RawPlanData =
-    | { kind: 'daily'; content: ProductionPlanDailyMachineGroup[] }
-    | { kind: 'weekly'; content: ProductionPlanWeeklyMachineGroup[] };
+export type { RawPlanData } from '../_utils/planMappers';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 // BE phân trang theo máy (size mặc định 20) — lấy dư để render toàn bộ (G9).
 const MACHINE_PAGE_SIZE = 100;
-
-const getWeekStart = (date: Dayjs) => date.subtract((date.day() + 6) % 7, 'day');
 
 export interface ProductionPlanSummary {
     totalLines: number;

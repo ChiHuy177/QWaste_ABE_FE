@@ -195,6 +195,11 @@ export const ENDPOINTS = {
             `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/terminate`,
         INCIDENT_DEFER: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/defer`,
         INCIDENT_PAUSE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/pause`,
+        // BE chưa có endpoint này — plan chờ backend bổ sung (xem discuss actualQuantity ===
+        // plannedQuantity ở IncidentConfirmModal.tsx). Giữ path đoán trước theo đúng convention
+        // các incident/* khác để chỉ cần đổi phần service khi BE xong.
+        INCIDENT_COMPLETE: (id: PathParam) =>
+            `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/complete`,
         IMPORT: `${BASE_PATHS.PRODUCTION_PLANS}/import`,
         IMPORT_CONFIRM: `${BASE_PATHS.PRODUCTION_PLANS}/import/confirm`,
     },
