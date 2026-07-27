@@ -65,7 +65,6 @@ export default function IncidentConfirmModal({
     const [deferMoldId, setDeferMoldId] = useState<string | undefined>(undefined);
     const [submitting, setSubmitting] = useState(false);
     const [actualQuantity, setActualQuantity] = useState<number | null>(null);
-    const [completeNote, setCompleteNote] = useState('');
 
     // Lưới máy×ngày cho bước dời lịch (option 2) — tuần "hôm nay" cố định, gridWeekOffset lệch
     // theo số tuần tới do người dùng bấm next (giống useTransferPlan.ts ở trang chính).
@@ -106,7 +105,6 @@ export default function IncidentConfirmModal({
             setNote('');
             setDeferMoldId(undefined);
             setActualQuantity(null);
-            setCompleteNote('');
             setGridWeekOffset(0);
             setGridSelectedDayIndex(null);
             setGridSelectedMachineId(null);
@@ -221,9 +219,7 @@ export default function IncidentConfirmModal({
 
         try {
             setSubmitting(true);
-            await ProductionPlanService.completeProductionPlan(row.productionPlanId, {
-                note: completeNote.trim() || undefined,
-            });
+            await ProductionPlanService.completeProductionPlan(row.productionPlanId);
             toast.success(
                 t('productionPlan.monitor.incident.successComplete', { code: row.code })
             );
@@ -327,26 +323,12 @@ export default function IncidentConfirmModal({
                 </Flex>
 
                 {isFullyProduced ? (
-                    <>
-                        <Alert
-                            type="success"
-                            showIcon
-                            message={t('productionPlan.monitor.incident.readyToCompleteTitle')}
-                            description={t('productionPlan.monitor.incident.readyToCompleteDesc')}
-                        />
-                        <div>
-                            <Text style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                                {t('productionPlan.incident.noteLabel')}
-                            </Text>
-                            <TextArea
-                                rows={2}
-                                maxLength={2000}
-                                value={completeNote}
-                                onChange={(event) => setCompleteNote(event.target.value)}
-                                placeholder={t('productionPlan.incident.notePlaceholder')}
-                            />
-                        </div>
-                    </>
+                    <Alert
+                        type="success"
+                        showIcon
+                        message={t('productionPlan.monitor.incident.readyToCompleteTitle')}
+                        description={t('productionPlan.monitor.incident.readyToCompleteDesc')}
+                    />
                 ) : (
                     <>
                 {/* Option cards */}
