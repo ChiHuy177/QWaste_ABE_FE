@@ -5,7 +5,7 @@ import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icon
 import { useTranslation } from 'react-i18next';
 import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../../_utils/planMappers';
 import type { MonitorRowVM } from '../../_components/types';
-import { getElapsedMinutes, isIncidentConfirmed } from '../_utils/incidentStatus';
+import { getElapsedMinutes, isIncidentConfirmed, isReadyToComplete } from '../_utils/incidentStatus';
 import type { MonitorStatConfig } from '../hooks/useMonitorGroups';
 import styles from '../../_components/ProductionPlanTable.module.css';
 
@@ -85,11 +85,13 @@ export default function MonitorKanbanTab({
                             ) : (
                                 rows.map((row) => {
                                     const confirmed = isIncidentConfirmed(row);
+                                    const readyToComplete = isReadyToComplete(row);
                                     const elapsed = getElapsedMinutes(row.updatedAt);
                                     const reasonLabel = row.incidentReason
                                         ? t(`productionPlan.incidentReason.${row.incidentReason}`)
                                         : notAvailable;
-                                    const isAlert = row.status === 'PAUSE' && !confirmed;
+                                    const isAlert =
+                                        row.status === 'PAUSE' && !confirmed && !readyToComplete;
                                     const textColor = token.colorText;
                                     const mutedColor = token.colorTextTertiary;
 
@@ -225,6 +227,44 @@ export default function MonitorKanbanTab({
                                                             {t('productionPlan.monitor.confirmedTag')}
                                                         </b>{' '}
                                                         · {row.reason ?? notAvailable}
+                                                    </div>
+                                                ) : readyToComplete ? (
+                                                    <div
+                                                        style={{
+                                                            marginTop: 7,
+                                                            padding: '7px 8px',
+                                                            borderRadius: 8,
+                                                            background: token.colorSuccessBg,
+                                                            border: `1px solid ${token.colorSuccessBorder}`,
+                                                        }}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                fontSize: 11.5,
+                                                                color: token.colorText,
+                                                                marginBottom: 6,
+                                                            }}
+                                                        >
+                                                            {t(
+                                                                'productionPlan.monitor.incident.readyToCompleteTitle'
+                                                            )}
+                                                        </div>
+                                                        <Button
+                                                            size="small"
+                                                            block
+                                                            type="primary"
+                                                            icon={<CheckCircleOutlined />}
+                                                            style={{
+                                                                background: token.colorSuccess,
+                                                                borderColor: token.colorSuccess,
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onOpenIncident(row);
+                                                            }}
+                                                        >
+                                                            {t('productionPlan.monitor.incident.completeButton')}
+                                                        </Button>
                                                     </div>
                                                 ) : (
                                                     <div
