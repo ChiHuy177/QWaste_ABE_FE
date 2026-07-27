@@ -157,6 +157,10 @@ export interface ProductionPlanWeeklyFilter {
     page?: number;
     size?: number;
 }
+export interface ProductionPlanStatusLogFilter {
+    limit?: number;
+    cursor?: string;
+}
 
 export interface ProductionPlanReorderItem {
     productionPlanId: string;

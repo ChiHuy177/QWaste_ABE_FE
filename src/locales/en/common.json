@@ -20,6 +20,7 @@
         "restore": "Restore",
         "batch_create": "Batch Create",
         "loading": "Loading...",
+        "loadMore": "Load more",
         "success": "Success",
         "overview_view": "Overview View",
         "store": "Store",

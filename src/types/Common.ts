@@ -13,4 +13,8 @@ export interface PaginatedResult<T> {
     last: boolean;
     empty: boolean;
 }
-
+export interface CursorPage<T> {
+    items: T[];
+    nextCursor: string | null;
+    hasMore: boolean;
+}
