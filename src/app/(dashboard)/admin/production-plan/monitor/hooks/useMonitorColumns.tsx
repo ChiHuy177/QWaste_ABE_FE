@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../_utils/planMappers';
 import styles from '../../_components/ProductionPlanTable.module.css';
 import type { MonitorRowVM } from '../../_components/types';
-import { isIncidentConfirmed } from '../_utils/incidentStatus';
+import { isIncidentConfirmed, isReadyToComplete } from '../_utils/incidentStatus';
 import type { MonitorFlatRow, MonitorStatConfig } from './useMonitorGroups';
 
 const { Text } = Typography;
@@ -172,7 +172,7 @@ export const useMonitorColumns = ({
     const pauseActionColumn: ColumnType<MonitorFlatRow> = useMemo(
         () => ({
             key: 'action',
-            width: 160,
+            width: 190,
             onCell: anchorCell,
             render: (_: unknown, record: MonitorFlatRow) => {
                 if (record.type !== 'product') return null;
@@ -187,15 +187,44 @@ export const useMonitorColumns = ({
                         </Tag>
                     );
                 }
+                if (isReadyToComplete(record)) {
+                    return (
+                        <Button
+                            size="small"
+                            block
+                            type="primary"
+                            icon={<CheckCircleOutlined />}
+                            style={{
+                                background: token.colorSuccess,
+                                borderColor: token.colorSuccess,
+                                whiteSpace: 'normal',
+                                height: 'auto',
+                                lineHeight: 1.3,
+                                padding: '4px 8px',
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenIncident(record);
+                            }}
+                        >
+                            {t('productionPlan.monitor.incident.completeButton')}
+                        </Button>
+                    );
+                }
                 return (
                     <Button
                         size="small"
+                        block
                         icon={<ExclamationCircleOutlined />}
                         style={{
                             color: token.colorWarning,
                             borderColor: token.colorWarningBorder,
                             background: token.colorWarningBg,
                             fontWeight: 600,
+                            whiteSpace: 'normal',
+                            height: 'auto',
+                            lineHeight: 1.3,
+                            padding: '4px 8px',
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -286,7 +315,7 @@ export const useMonitorColumns = ({
                                     style: record.type === 'product' ? { cursor: 'pointer' } : {},
                                 })}
                                 pagination={false}
-                                scroll={{ x: status === 'PAUSE' ? 1120 : 970 }}
+                                scroll={{ x: status === 'PAUSE' ? 1150 : 970 }}
                                 locale={{
                                     emptyText: (
                                         <Text type="secondary">

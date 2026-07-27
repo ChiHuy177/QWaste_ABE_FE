@@ -1,4 +1,4 @@
-import { PaginatedResult } from '@/types/Common';
+import { CursorPage, PaginatedResult } from '@/types/Common';
 import {
     ImportConfirmRequest,
     ImportResult,
@@ -15,6 +15,7 @@ import {
     ProductionPlanReorderDayGroup,
     ProductionPlanReorderDayResponse,
     ProductionPlanStatusLog,
+    ProductionPlanStatusLogFilter,
     ProductionPlanUpdateFormData,
     ProductionPlanWeeklyFilter,
     ProductionPlanWeeklyMachineGroup,
@@ -61,14 +62,16 @@ export class ProductionPlanService {
     }
 
     static async getProductionPlanStatusLogs(
-        productionPlanId: string
-    ): Promise<ProductionPlanStatusLog[]> {
-        const response = await NetworkService.requestJson<ProductionPlanStatusLog[]>({
+        productionPlanId: string,
+        filter?: ProductionPlanStatusLogFilter
+    ): Promise<CursorPage<ProductionPlanStatusLog>> {
+        const response = await NetworkService.requestJson<CursorPage<ProductionPlanStatusLog>>({
             method: 'GET',
             url: ENDPOINTS.PRODUCTION_PLANS.STATUS_LOGS(productionPlanId),
+            data: filter,
         });
 
-        return response.result as ProductionPlanStatusLog[];
+        return response.result as CursorPage<ProductionPlanStatusLog>;
     }
 
     static async createProductionPlan(
@@ -172,6 +175,17 @@ export class ProductionPlanService {
             method: 'PUT',
             url: ENDPOINTS.PRODUCTION_PLANS.INCIDENT_PAUSE(productionPlanId),
             data: request,
+        });
+
+        return response.result as ProductionPlanMutationResponse;
+    }
+
+    static async completeProductionPlan(
+        productionPlanId: string
+    ): Promise<ProductionPlanMutationResponse> {
+        const response = await NetworkService.requestJson<ProductionPlanMutationResponse>({
+            method: 'PUT',
+            url: ENDPOINTS.PRODUCTION_PLANS.COMPLETE(productionPlanId),
         });
 
         return response.result as ProductionPlanMutationResponse;

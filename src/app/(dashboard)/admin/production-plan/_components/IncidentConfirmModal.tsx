@@ -1,25 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-    Alert,
-    DatePicker,
-    Divider,
-    Flex,
-    Input,
-    Modal,
-    Select,
-    Tag,
-    Typography,
-    theme,
-} from 'antd';
+import { Alert, Divider, Flex, Input, Modal, Select, Tag, Typography, theme } from 'antd';
 import {
     CheckCircleOutlined,
     ExclamationCircleOutlined,
     StopOutlined,
     ToolOutlined,
 } from '@ant-design/icons';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
@@ -27,13 +16,20 @@ import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { IncidentReason } from '@/types/ProductionPlan';
 import type { Mold } from '@/types/Mold';
 import { useCompatibleMachines } from '../_hooks/useCompatibleMachines';
+import { useMachineOptions } from '../_hooks/useMachineOptions';
+import { useWeeklyMachineGrid } from '../_hooks/useWeeklyMachineGrid';
+import { getTodayScheduleIndex, getWeekStart } from '../_utils/dateUtils';
 import { MonitorRowVM, SelectOptionVM } from './types';
 import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/incidentOptions';
+import MachineDayGridPicker from './MachineDayGridPicker';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 
 const DATE_FORMAT = 'YYYY-MM-DD';
+// BE clamp sequence vượt quá cuối ngày về vị trí hợp lệ cuối cùng — gửi số lớn để luôn "chèn
+// cuối hàng đợi" của (machine, plannedDate) đích, giống cách useTransferPlan.ts đang làm.
+const APPEND_TO_QUEUE_END = 999_999;
 
 type IncidentOption = 1 | 2 | 3; // 1 = terminate, 2 = defer, 3 = temp pause
 
@@ -66,32 +62,63 @@ export default function IncidentConfirmModal({
     const [selected, setSelected] = useState<IncidentOption | null>(null);
     const [incidentReason, setIncidentReason] = useState<IncidentReason | undefined>(undefined);
     const [note, setNote] = useState('');
-    const [deferDate, setDeferDate] = useState<Dayjs | null>(null);
-    const [deferMachineId, setDeferMachineId] = useState<string | undefined>(undefined);
     const [deferMoldId, setDeferMoldId] = useState<string | undefined>(undefined);
     const [submitting, setSubmitting] = useState(false);
     const [actualQuantity, setActualQuantity] = useState<number | null>(null);
+
+    // Lưới máy×ngày cho bước dời lịch (option 2) — tuần "hôm nay" cố định, gridWeekOffset lệch
+    // theo số tuần tới do người dùng bấm next (giống useTransferPlan.ts ở trang chính).
+    const [gridWeekOffset, setGridWeekOffset] = useState(0);
+    const [gridSelectedDayIndex, setGridSelectedDayIndex] = useState<number | null>(null);
+    const [gridSelectedMachineId, setGridSelectedMachineId] = useState<string | null>(null);
+
+    const weekStart = useMemo(() => getWeekStart(dayjs()), []);
+    const todayIndex = useMemo(() => getTodayScheduleIndex(), []);
+    const gridWeekStart = useMemo(
+        () => weekStart.add(gridWeekOffset * 7, 'day'),
+        [weekStart, gridWeekOffset]
+    );
+    const shiftGridWeek = (dir: 1 | -1) => {
+        setGridWeekOffset((prev) => Math.max(0, prev + dir));
+    };
 
     // Chọn khuôn trước → tra operationType của khuôn đó → chỉ hiện máy tương thích
     // (GET /machines/v1/pickingByOperationType), giống form tạo mới và modal chuyển kế hoạch.
     const deferMold = molds.find((mold) => mold.moldId === deferMoldId);
     const deferOperationTypeId = deferMold?.operationType?.operationTypeId;
-    const { machineOptions: compatibleMachineOptions, isLoading: compatibleMachinesLoading } =
+    const { machines: compatibleMachines, isLoading: compatibleMachinesLoading } =
         useCompatibleMachines(deferOperationTypeId, open && selected === 2);
+
+    const { machineInfoMap } = useMachineOptions();
+    const { weeklyGroups: deferWeeklyGroups, isLoading: deferGridDataLoading } =
+        useWeeklyMachineGrid({
+            gridWeekStart,
+            machines: compatibleMachines,
+            machineInfoMap,
+            enabled: open && selected === 2 && !!deferMoldId,
+        });
 
     useEffect(() => {
         if (!open) {
             setSelected(null);
             setIncidentReason(undefined);
             setNote('');
-            setDeferDate(null);
-            setDeferMachineId(undefined);
             setDeferMoldId(undefined);
             setActualQuantity(null);
+            setGridWeekOffset(0);
+            setGridSelectedDayIndex(null);
+            setGridSelectedMachineId(null);
             return;
         }
         setDeferMoldId(currentMoldId);
     }, [currentMoldId, open]);
+
+    // Đổi khuôn hoặc đổi tuần → tập máy tương thích/lưới đổi theo → bỏ ô đã chọn, tránh gửi
+    // nhầm máy không còn hợp lệ với lựa chọn mới.
+    useEffect(() => {
+        setGridSelectedDayIndex(null);
+        setGridSelectedMachineId(null);
+    }, [deferMoldId, gridWeekOffset]);
 
     // Lấy actualQuantity để hiển thị số còn lại khi dời (detail response có, list không).
     useEffect(() => {
@@ -118,13 +145,18 @@ export default function IncidentConfirmModal({
     }, [open, row]);
 
     const remaining = row ? Math.max(row.plannedQuantity - (actualQuantity ?? 0), 0) : 0;
+    // Đã sản xuất đủ/thừa số lượng kế hoạch — không còn là "sự cố" nữa, cho đóng thẳng plan
+    // thay vì bắt chọn 1 trong 3 phương án + điền incidentReason/note (BE chưa có endpoint
+    // complete riêng, xem ProductionPlanService.completeProductionPlan).
+    const isFullyProduced = !!row && actualQuantity !== null && actualQuantity >= row.plannedQuantity;
     const noteRequired = isIncidentNoteRequired(incidentReason);
 
     const canConfirm =
         selected !== null &&
         !!incidentReason &&
         (!noteRequired || note.trim().length > 0) &&
-        (selected !== 2 || (!!deferDate && !!deferMachineId && !!deferMoldId));
+        (selected !== 2 ||
+            (gridSelectedDayIndex !== null && !!gridSelectedMachineId && !!deferMoldId));
 
     const handleConfirm = async () => {
         if (!canConfirm || !row || !incidentReason || selected === null) return;
@@ -142,24 +174,15 @@ export default function IncidentConfirmModal({
                     t('productionPlan.monitor.incident.successTerminate', { code: row.code })
                 );
             } else if (selected === 2) {
-                const plannedDate = deferDate!.format(DATE_FORMAT);
-                // Sequence = cuối hàng đợi của máy đích ngày đích.
-                const page = await ProductionPlanService.getDailyProductionPlans({
-                    date: plannedDate,
-                    size: 100,
-                });
-                const targetGroup = page.content.find(
-                    (group) => group.machineId === deferMachineId
-                );
-                const sequence =
-                    (targetGroup?.productionPlans.filter((plan) => !plan.isDeleted).length ?? 0) +
-                    1;
+                const plannedDate = gridWeekStart
+                    .add(gridSelectedDayIndex!, 'day')
+                    .format(DATE_FORMAT);
 
                 await ProductionPlanService.deferProductionPlan(row.productionPlanId, {
                     plannedDate,
-                    machineId: deferMachineId!,
+                    machineId: gridSelectedMachineId!,
                     moldId: deferMoldId!,
-                    sequence,
+                    sequence: APPEND_TO_QUEUE_END,
                     incidentReason,
                     note: trimmedNote,
                 });
@@ -182,7 +205,31 @@ export default function IncidentConfirmModal({
             onDone();
             onClose();
         } catch (error) {
-            handleError(error, { fallbackKey: 'productionPlan.transfer.error' });
+            handleError(error, {
+                fallbackKey: 'productionPlan.transfer.error',
+                showServerMessageStatuses: [400],
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleCompleteConfirm = async () => {
+        if (!row) return;
+
+        try {
+            setSubmitting(true);
+            await ProductionPlanService.completeProductionPlan(row.productionPlanId);
+            toast.success(
+                t('productionPlan.monitor.incident.successComplete', { code: row.code })
+            );
+            onDone();
+            onClose();
+        } catch (error) {
+            handleError(error, {
+                fallbackKey: 'productionPlan.transfer.error',
+                showServerMessageStatuses: [400],
+            });
         } finally {
             setSubmitting(false);
         }
@@ -236,17 +283,21 @@ export default function IncidentConfirmModal({
             }
             open={open}
             onCancel={onClose}
-            onOk={handleConfirm}
-            okText={t('productionPlan.monitor.incident.confirm')}
+            onOk={isFullyProduced ? handleCompleteConfirm : handleConfirm}
+            okText={
+                isFullyProduced
+                    ? t('productionPlan.monitor.incident.completeButton')
+                    : t('productionPlan.monitor.incident.confirm')
+            }
             cancelText={t('common.cancel')}
-            okButtonProps={{ disabled: !canConfirm }}
+            okButtonProps={{ disabled: isFullyProduced ? false : !canConfirm }}
             confirmLoading={submitting}
             destroyOnHidden
-            width={620}
+            width={!isFullyProduced && selected === 2 ? 900 : 620}
         >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 0' }}>
                 {/* Quantity summary */}
-                <Flex gap={16} wrap="wrap">
+                <Flex gap={16} wrap="wrap" align="center">
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         {t('productionPlan.monitor.incident.planQty')}:{' '}
                         <Text strong>{row.plannedQuantity}</Text>
@@ -257,12 +308,29 @@ export default function IncidentConfirmModal({
                     </Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         {t('productionPlan.monitor.incident.remainingQty')}:{' '}
-                        <Text strong style={{ color: token.colorWarning }}>
+                        <Text
+                            strong
+                            style={{ color: isFullyProduced ? token.colorSuccess : token.colorWarning }}
+                        >
                             {remaining}
                         </Text>
                     </Text>
+                    {isFullyProduced && (
+                        <Tag color="success" style={{ margin: 0 }}>
+                            {t('productionPlan.monitor.incident.readyToCompleteBadge')}
+                        </Tag>
+                    )}
                 </Flex>
 
+                {isFullyProduced ? (
+                    <Alert
+                        type="success"
+                        showIcon
+                        message={t('productionPlan.monitor.incident.readyToCompleteTitle')}
+                        description={t('productionPlan.monitor.incident.readyToCompleteDesc')}
+                    />
+                ) : (
+                    <>
                 {/* Option cards */}
                 {optionConfigs.map(({ option, icon: Icon, color, bg, title, useCase, description }) => {
                     const isActive = selected === option;
@@ -314,63 +382,10 @@ export default function IncidentConfirmModal({
                                             style={{
                                                 display: 'flex',
                                                 flexDirection: 'column',
-                                                gap: 8,
+                                                gap: 10,
                                                 marginTop: 10,
                                             }}
                                         >
-                                            <Flex gap={8} wrap="wrap">
-                                                <div style={{ flex: '1 1 160px' }}>
-                                                    <Text
-                                                        style={{
-                                                            fontSize: 12,
-                                                            display: 'block',
-                                                            marginBottom: 4,
-                                                        }}
-                                                    >
-                                                        {t(
-                                                            'productionPlan.monitor.incident.newDate'
-                                                        )}
-                                                    </Text>
-                                                    <DatePicker
-                                                        style={{ width: '100%' }}
-                                                        format="DD/MM/YYYY"
-                                                        value={deferDate}
-                                                        onChange={setDeferDate}
-                                                        disabledDate={(date) =>
-                                                            date.isBefore(dayjs(), 'day')
-                                                        }
-                                                    />
-                                                </div>
-                                                <div style={{ flex: '1 1 200px' }}>
-                                                    <Text
-                                                        style={{
-                                                            fontSize: 12,
-                                                            display: 'block',
-                                                            marginBottom: 4,
-                                                        }}
-                                                    >
-                                                        {t('productionPlan.monitor.incident.newMold')}
-                                                    </Text>
-                                                    <Select
-                                                        style={{ width: '100%' }}
-                                                        showSearch
-                                                        placeholder={t(
-                                                            'productionPlan.monitor.incident.moldPlaceholder'
-                                                        )}
-                                                        value={deferMoldId}
-                                                        onChange={(value) => {
-                                                            setDeferMoldId(value);
-                                                            setDeferMachineId(undefined);
-                                                        }}
-                                                        options={moldOptions}
-                                                        filterOption={(input, option) =>
-                                                            (option?.label ?? '')
-                                                                .toLowerCase()
-                                                                .includes(input.toLowerCase())
-                                                        }
-                                                    />
-                                                </div>
-                                            </Flex>
                                             <div>
                                                 <Text
                                                     style={{
@@ -379,32 +394,17 @@ export default function IncidentConfirmModal({
                                                         marginBottom: 4,
                                                     }}
                                                 >
-                                                    {t(
-                                                        'productionPlan.monitor.incident.newMachine'
-                                                    )}
+                                                    {t('productionPlan.monitor.incident.newMold')}
                                                 </Text>
                                                 <Select
                                                     style={{ width: '100%' }}
                                                     showSearch
-                                                    loading={compatibleMachinesLoading}
-                                                    disabled={!deferMoldId}
-                                                    placeholder={
-                                                        !deferMoldId
-                                                            ? t(
-                                                                  'productionPlan.form.fields.machine.selectMoldFirst'
-                                                              )
-                                                            : t(
-                                                                  'productionPlan.transferMachine.newMachinePlaceholder'
-                                                              )
-                                                    }
-                                                    notFoundContent={
-                                                        deferMoldId
-                                                            ? t('productionPlan.transfer.noCompatibleMachine')
-                                                            : null
-                                                    }
-                                                    value={deferMachineId}
-                                                    onChange={setDeferMachineId}
-                                                    options={compatibleMachineOptions}
+                                                    placeholder={t(
+                                                        'productionPlan.monitor.incident.moldPlaceholder'
+                                                    )}
+                                                    value={deferMoldId}
+                                                    onChange={setDeferMoldId}
+                                                    options={moldOptions}
                                                     filterOption={(input, option) =>
                                                         (option?.label ?? '')
                                                             .toLowerCase()
@@ -412,6 +412,29 @@ export default function IncidentConfirmModal({
                                                     }
                                                 />
                                             </div>
+
+                                            {deferMoldId && (
+                                                <MachineDayGridPicker
+                                                    gridWeekStart={gridWeekStart}
+                                                    gridWeekOffset={gridWeekOffset}
+                                                    todayIndex={todayIndex}
+                                                    onShiftWeek={shiftGridWeek}
+                                                    weeklyGroups={deferWeeklyGroups}
+                                                    gridLoading={
+                                                        compatibleMachinesLoading || deferGridDataLoading
+                                                    }
+                                                    selectedDayIndex={gridSelectedDayIndex}
+                                                    selectedMachineId={gridSelectedMachineId}
+                                                    onSelectCell={(dayIndex, machineId) => {
+                                                        setGridSelectedDayIndex(dayIndex);
+                                                        setGridSelectedMachineId(machineId);
+                                                    }}
+                                                    sourceMachineId={row.machineId}
+                                                    currentCode={row.code}
+                                                    currentMoldCode={row.moldCode}
+                                                    currentQty={remaining}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                 </>
@@ -454,6 +477,8 @@ export default function IncidentConfirmModal({
                             )}
                         </div>
                     </div>
+                )}
+                    </>
                 )}
             </div>
         </Modal>

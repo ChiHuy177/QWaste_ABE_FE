@@ -5,7 +5,7 @@ import { Button, Flex, Tooltip, Typography, theme } from 'antd';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { MonitorRowVM } from '../../_components/types';
-import { getElapsedMinutes, isIncidentConfirmed } from '../_utils/incidentStatus';
+import { getElapsedMinutes, isIncidentConfirmed, isReadyToComplete } from '../_utils/incidentStatus';
 import type { MonitorMachineGroup } from '../hooks/useMonitorMachineGroups';
 import styles from '../../_components/ProductionPlanTable.module.css';
 
@@ -33,10 +33,13 @@ export default function MonitorTimelineTab({
     if (loading) return null;
 
     const unconfirmed = products
-        .filter((row) => row.status === 'PAUSE' && !isIncidentConfirmed(row))
+        .filter((row) => row.status === 'PAUSE' && !isIncidentConfirmed(row) && !isReadyToComplete(row))
         .map((row) => ({ row, elapsed: getElapsedMinutes(row.updatedAt) }))
         .sort((a, b) => (b.elapsed ?? -1) - (a.elapsed ?? -1));
     const confirmedList = products.filter((row) => row.status === 'PAUSE' && isIncidentConfirmed(row));
+    const readyToCompleteList = products.filter(
+        (row) => row.status === 'PAUSE' && !isIncidentConfirmed(row) && isReadyToComplete(row)
+    );
 
     const legend: Array<{ key: string; swatch: CSSProperties }> = [
         { key: 'legendComplete', swatch: { background: token.colorSuccess } },
@@ -146,6 +149,62 @@ export default function MonitorTimelineTab({
                     ))
                 )}
 
+                {readyToCompleteList.length > 0 && (
+                    <>
+                        <div
+                            style={{
+                                borderTop: `1px solid ${token.colorBorderSecondary}`,
+                                margin: '10px 0',
+                            }}
+                        />
+                        <Text
+                            type="secondary"
+                            style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.4,
+                                display: 'block',
+                                marginBottom: 6,
+                            }}
+                        >
+                            {t('productionPlan.monitor.incident.readyToCompleteBadge')}
+                        </Text>
+                        {readyToCompleteList.map((row) => (
+                            <div
+                                key={row.productionPlanId}
+                                style={{
+                                    borderRadius: 10,
+                                    background: token.colorSuccessBg,
+                                    border: `1px solid ${token.colorSuccessBorder}`,
+                                    padding: '9px 10px',
+                                    marginBottom: 8,
+                                }}
+                            >
+                                <Flex align="center" justify="space-between" style={{ marginBottom: 3 }}>
+                                    <Text strong style={{ fontSize: 12.5 }}>
+                                        {row.machineCode}
+                                    </Text>
+                                    <Text style={{ fontSize: 11, fontWeight: 700, color: token.colorSuccess }}>
+                                        {row.plannedQuantity}/{row.plannedQuantity}
+                                    </Text>
+                                </Flex>
+                                <div style={{ fontSize: 12, marginBottom: 7 }}>{row.name}</div>
+                                <Button
+                                    size="small"
+                                    block
+                                    type="primary"
+                                    icon={<CheckCircleOutlined />}
+                                    style={{ background: token.colorSuccess, borderColor: token.colorSuccess }}
+                                    onClick={() => onOpenIncident(row)}
+                                >
+                                    {t('productionPlan.monitor.incident.completeButton')}
+                                </Button>
+                            </div>
+                        ))}
+                    </>
+                )}
+
                 {confirmedList.length > 0 && (
                     <>
                         <div
@@ -231,6 +290,7 @@ export default function MonitorTimelineTab({
                         <div className={styles.monitorTimelineLane}>
                             {group.rows.map((row) => {
                                 const confirmed = row.status === 'PAUSE' && isIncidentConfirmed(row);
+                                const readyToComplete = row.status === 'PAUSE' && isReadyToComplete(row);
                                 const elapsed =
                                     row.status === 'PAUSE' ? getElapsedMinutes(row.updatedAt) : null;
                                 const reasonLabel = row.incidentReason
@@ -250,18 +310,23 @@ export default function MonitorTimelineTab({
                                 } else if (row.status === 'PAUSE') {
                                     blockStyle = {
                                         background: token.colorWarningBg,
-                                        border: `1.5px solid ${confirmed ? token.colorWarningBorder : token.colorError}`,
+                                        border: `1.5px solid ${
+                                            confirmed || readyToComplete
+                                                ? token.colorWarningBorder
+                                                : token.colorError
+                                        }`,
                                         color: token.colorWarningText,
                                     };
-                                    icon = confirmed ? (
-                                        <CheckCircleOutlined
-                                            style={{ marginRight: 4, color: token.colorSuccess }}
-                                        />
-                                    ) : (
-                                        <ExclamationCircleOutlined
-                                            style={{ marginRight: 4, color: token.colorError }}
-                                        />
-                                    );
+                                    icon =
+                                        confirmed || readyToComplete ? (
+                                            <CheckCircleOutlined
+                                                style={{ marginRight: 4, color: token.colorSuccess }}
+                                            />
+                                        ) : (
+                                            <ExclamationCircleOutlined
+                                                style={{ marginRight: 4, color: token.colorError }}
+                                            />
+                                        );
                                 } else {
                                     blockStyle = {
                                         background: token.colorFillTertiary,

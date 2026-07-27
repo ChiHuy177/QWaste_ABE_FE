@@ -157,6 +157,10 @@ export interface ProductionPlanWeeklyFilter {
     page?: number;
     size?: number;
 }
+export interface ProductionPlanStatusLogFilter {
+    limit?: number;
+    cursor?: string;
+}
 
 export interface ProductionPlanReorderItem {
     productionPlanId: string;
@@ -193,7 +197,6 @@ export interface IncidentPauseRequest {
     incidentReason: IncidentReason;
     reason?: string; // bắt buộc khi incidentReason === 'OTHER'
 }
-
 export interface IncidentDeferRequest {
     plannedDate: string; // yyyy-MM-dd
     machineId: string;

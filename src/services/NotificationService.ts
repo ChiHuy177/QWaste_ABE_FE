@@ -33,26 +33,17 @@ const normalizeNotification = (item: NotificationApiItem): Notification => ({
 const normalizeNotificationResponse = (
     response: NotificationApiResponse | undefined
 ): NotificationResponse => ({
-    notifications: (response?.notifications ?? []).map(normalizeNotification),
-    lastCreatedAt: response?.lastCreatedAt ?? '',
-    lastNotificationId: response?.lastNotificationId ?? 0,
-    hasNext: response?.hasNext ?? false,
+    notifications: (response?.items ?? []).map(normalizeNotification),
+    nextCursor: response?.nextCursor ?? null,
+    hasMore: response?.hasMore ?? false,
 });
 
 export class NotificationService {
-    static async getNotifications(
-        limit = 10,
-        lastCreatedAt = '',
-        lastId = 0
-    ): Promise<NotificationResponse> {
+    static async getNotifications(limit = 10, cursor?: string): Promise<NotificationResponse> {
         let url = `${ENDPOINTS.NOTIFICATIONS.BASE}?limit=${limit}`;
 
-        if (lastCreatedAt) {
-            url += `&lastCreatedAt=${encodeURIComponent(lastCreatedAt)}`;
-        }
-
-        if (lastId > 0) {
-            url += `&lastId=${lastId}`;
+        if (cursor) {
+            url += `&cursor=${encodeURIComponent(cursor)}`;
         }
 
         const response = await NetworkService.requestJson<NotificationApiResponse>({

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import type { Dayjs } from 'dayjs';
@@ -12,18 +12,14 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { IncidentDeferRequest, ProductionPlanMoveRequest } from '@/types/ProductionPlan';
 import { ReorderErrorHandler } from '../_utils/reorderErrorHandler';
-import { mapWeeklyGroups } from '../_utils/planMappers';
 import { useMachineOptions } from '../_hooks/useMachineOptions';
 import { useMoldOptions } from '../_hooks/useMoldOptions';
 import { useCompatibleMachines } from '../_hooks/useCompatibleMachines';
-import { productionPlanQueryKeys } from '../_hooks/queryKeys';
-import type { MachineGroupVM, PlanRowTarget } from '../_components/types';
+import { useWeeklyMachineGrid } from '../_hooks/useWeeklyMachineGrid';
+import type { PlanRowTarget } from '../_components/types';
 import type { TransferPayload } from '../_components/TransferGridModal';
-import type { RawPlanData } from './useProductionPlanData';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
-// BE phân trang theo máy (size mặc định 20) — lấy dư để render toàn bộ lưới tuần (G9).
-const MACHINE_PAGE_SIZE = 100;
 // BE clamp sequence vượt quá cuối ngày về vị trí hợp lệ cuối cùng — gửi số lớn để luôn
 // "chèn cuối hàng đợi" của (machine, plannedDate) đích mà không cần biết trước ngày đó
 // đang có bao nhiêu kế hoạch (tránh phải fetch cả lưới tuần chỉ để đếm).
@@ -109,46 +105,16 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
     const compatibleMachines = useCompatibleMachines(operationTypeId, transferState.open);
 
     // Lưới tuần của modal chuyển — chia sẻ cache thô (RawPlanData) với view weekly chính khi
-    // trùng tuần đang xem (cùng queryKey); đổi sang tuần khác thì fetch riêng theo tuần đó.
-    const weeklyGridQuery = useQuery({
-        queryKey: productionPlanQueryKeys.weekly(gridWeekStart.format(DATE_FORMAT)),
-        queryFn: async (): Promise<RawPlanData> => {
-            const page = await ProductionPlanService.getWeeklyProductionPlans({
-                startDate: gridWeekStart.format(DATE_FORMAT),
-                endDate: gridWeekStart.add(6, 'day').format(DATE_FORMAT),
-                size: MACHINE_PAGE_SIZE,
-            });
-            return { kind: 'weekly', content: page.content };
-        },
-        enabled: transferState.open,
-    });
-
-    // BE /weekly chỉ trả máy đã có plan trong khoảng ngày đó — 1 tuần chưa có kế hoạch nào sẽ
-    // trả rỗng. Dùng danh sách máy tương thích (pickingByOperationType) làm nguồn danh sách
-    // dòng của lưới (luôn hiện đủ), rồi lấy dữ liệu lịch từ /weekly để lấp vào từng dòng.
-    const transferWeeklyGroups = useMemo(() => {
-        const groupsByMachineId = new Map<string, MachineGroupVM>();
-        if (weeklyGridQuery.data && weeklyGridQuery.data.kind === 'weekly') {
-            mapWeeklyGroups(
-                weeklyGridQuery.data.content,
-                machineInfoMap,
-                gridWeekStart.format(DATE_FORMAT)
-            ).forEach((group) => groupsByMachineId.set(group.machineId, group));
-        }
-
-        return compatibleMachines.machines.map((machine): MachineGroupVM => {
-            const machineId = String(machine.machineId);
-            return (
-                groupsByMachineId.get(machineId) ?? {
-                    machineId,
-                    machineCode: machine.machineCode || machine.machineName,
-                    machineName: machine.machineName,
-                    spaceName: machine.space?.spaceName ?? '',
-                    products: [],
-                }
-            );
+    // trùng tuần đang xem (cùng queryKey, xem useWeeklyMachineGrid); đổi sang tuần khác thì
+    // fetch riêng theo tuần đó. BE /weekly chỉ trả máy đã có plan trong khoảng ngày đó — dùng
+    // danh sách máy tương thích (pickingByOperationType) làm nguồn danh sách dòng (luôn hiện đủ).
+    const { weeklyGroups: transferWeeklyGroups, isLoading: weeklyGridLoading } =
+        useWeeklyMachineGrid({
+            gridWeekStart,
+            machines: compatibleMachines.machines,
+            machineInfoMap,
+            enabled: transferState.open,
         });
-    }, [weeklyGridQuery.data, machineInfoMap, gridWeekStart, compatibleMachines.machines]);
 
     // PAUSE — BE /incident/defer (chốt PARTIAL + tạo kế hoạch con nối tiếp).
     const deferMutation = useMutation({
@@ -159,7 +125,12 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
             onMutated();
         },
         onError: (error) => {
-            handleError(error, { fallbackKey: 'productionPlan.transfer.error' });
+            // /incident/defer — cho thấy nguyên văn lỗi validation từ BE khi 400 (vd trùng
+            // máy/ngày, khuôn không tương thích...) thay vì message chung chung.
+            handleError(error, {
+                fallbackKey: 'productionPlan.transfer.error',
+                showServerMessageStatuses: [400],
+            });
         },
     });
 
@@ -224,7 +195,7 @@ export const useTransferPlan = ({ weekStart, machineCodeById, onMutated }: UseTr
         transferState,
         transferSubmitting,
         transferWeeklyGroups,
-        transferGridLoading: weeklyGridQuery.isLoading || compatibleMachines.isLoading,
+        transferGridLoading: weeklyGridLoading || compatibleMachines.isLoading,
         gridWeekStart,
         gridWeekOffset,
         shiftGridWeek,

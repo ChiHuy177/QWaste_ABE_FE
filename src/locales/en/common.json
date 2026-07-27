@@ -20,6 +20,7 @@
         "restore": "Restore",
         "batch_create": "Batch Create",
         "loading": "Loading...",
+        "loadMore": "Load more",
         "success": "Success",
         "overview_view": "Overview View",
         "store": "Store",
@@ -768,7 +769,12 @@
                 "confirm": "Confirm",
                 "successTerminate": "Plan {{code}} terminated — status set to PARTIAL",
                 "successDefer": "Sub-plan created for {{code}} with {{remaining}} pcs",
-                "successRepair": "Incident logged for {{code}} — listening for MQTT signal"
+                "successRepair": "Incident logged for {{code}} — listening for MQTT signal",
+                "readyToCompleteBadge": "Quantity reached",
+                "readyToCompleteTitle": "Planned quantity already produced",
+                "readyToCompleteDesc": "No need to report an incident here — mark this plan as complete instead of picking one of the 3 options above.",
+                "completeButton": "Mark as complete",
+                "successComplete": "Plan {{code}} marked as complete"
             },
             "detail": {
                 "statusTrack": "Current Status",

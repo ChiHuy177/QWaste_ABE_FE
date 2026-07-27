@@ -37,8 +37,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
         const [hasMore, setHasMore] = useState(true);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState<string | null>(null);
-        const [lastCreatedAt, setLastCreatedAt] = useState('');
-        const [lastId, setLastId] = useState(0);
+        const [cursor, setCursor] = useState<string | null>(null);
         const [isMobile, setIsMobile] = useState(false);
         const { token } = theme.useToken();
         const { t } = useTranslation();
@@ -88,7 +87,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
 
                     const response = isInitial
                         ? await NotificationService.getNotifications()
-                        : await NotificationService.getNotifications(10, lastCreatedAt, lastId);
+                        : await NotificationService.getNotifications(10, cursor ?? undefined);
 
                     const prevList = notificationsRef.current;
                     const merged = isInitial
@@ -104,16 +103,15 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
                     // InfiniteScroll bị kẹt ở trạng thái loading vĩnh viễn (xem
                     // react-infinite-scroll-component componentDidUpdate: chỉ reset
                     // actionTriggered/showLoader khi dataLength thay đổi).
-                    if (!isInitial && response.hasNext && addedCount <= 0) {
+                    if (!isInitial && response.hasMore && addedCount <= 0) {
                         console.warn(
-                            'Notification pagination returned no new items while hasNext=true, stopping pagination'
+                            'Notification pagination returned no new items while hasMore=true, stopping pagination'
                         );
                         setHasMore(false);
                     } else {
-                        setHasMore(response.hasNext);
+                        setHasMore(response.hasMore);
                     }
-                    setLastCreatedAt(response.lastCreatedAt);
-                    setLastId(response.lastNotificationId);
+                    setCursor(response.nextCursor);
                     setError(null);
                 } catch (error) {
                     console.error('Error fetching notifications:', error);
@@ -127,7 +125,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
                     setLoading(false);
                 }
             },
-            [lastCreatedAt, lastId, t]
+            [cursor, t]
         );
 
         useEffect(() => {
@@ -158,8 +156,7 @@ const NotificationList = forwardRef<NotificationListRef, NotificationListProps>(
 
         const handleRetry = () => {
             setNotifications([]);
-            setLastCreatedAt('');
-            setLastId(0);
+            setCursor(null);
             setHasMore(true);
             fetchNotifications(true);
         };

@@ -8,6 +8,10 @@ import type {
 } from '@/types/ProductionPlan';
 import type { MachineGroupVM, PlanRowVM } from '../_components/types';
 
+export type RawPlanData =
+    | { kind: 'daily'; content: ProductionPlanDailyMachineGroup[] }
+    | { kind: 'weekly'; content: ProductionPlanWeeklyMachineGroup[] };
+
 // ─── Enrich machineName/spaceName (G2 — BE group response chỉ có machineId/Code) ───
 
 export interface MachineInfo {
