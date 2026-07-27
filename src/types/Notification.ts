@@ -24,14 +24,12 @@ export interface NotificationApiItem {
 
 export interface NotificationResponse {
     notifications: Notification[];
-    lastCreatedAt: string;
-    lastNotificationId: number;
-    hasNext: boolean;
+    nextCursor: string | null;
+    hasMore: boolean;
 }
 
 export interface NotificationApiResponse {
-    notifications: NotificationApiItem[];
-    lastCreatedAt?: string;
-    lastNotificationId?: number;
-    hasNext?: boolean;
+    items: NotificationApiItem[];
+    nextCursor?: string | null;
+    hasMore?: boolean;
 }
