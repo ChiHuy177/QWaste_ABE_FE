@@ -1,7 +1,20 @@
 'use client';
 
-import { type CSSProperties, useMemo } from 'react';
-import { Badge, Button, Card, Col, Collapse, Flex, Input, Row, Tabs, Tooltip, Typography, theme } from 'antd';
+import { type CSSProperties, useCallback, useMemo } from 'react';
+import {
+    Badge,
+    Button,
+    Card,
+    Col,
+    Collapse,
+    Flex,
+    Input,
+    Row,
+    Tabs,
+    Tooltip,
+    Typography,
+    theme,
+} from 'antd';
 import { CaretRightOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
@@ -70,13 +83,21 @@ export default function ProductionMonitorPage() {
         return molds.find((m) => m.moldCode === incidentRow.moldCode)?.moldId;
     }, [incidentRow, molds]);
 
-    const openIncidentModal = (row: MonitorRowVM) => {
-        if (!checkPermission('incident', 'production_plan')) return;
-        dispatch(productionPlanMonitorActions.openIncidentModal(row.productionPlanId));
-    };
+    // useCallback — identity ổn định để MonitorCard (React.memo) không bị vô hiệu hoá vì
+    // callback đổi reference mỗi lần page re-render (vd mỗi WS tick).
+    const openIncidentModal = useCallback(
+        (row: MonitorRowVM) => {
+            if (!checkPermission('incident', 'production_plan')) return;
+            dispatch(productionPlanMonitorActions.openIncidentModal(row.productionPlanId));
+        },
+        [checkPermission, dispatch]
+    );
 
-    const selectRow = (row: MonitorRowVM) =>
-        dispatch(productionPlanMonitorActions.selectRow(row.productionPlanId));
+    const selectRow = useCallback(
+        (row: MonitorRowVM) =>
+            dispatch(productionPlanMonitorActions.selectRow(row.productionPlanId)),
+        [dispatch]
+    );
 
     const { collapseItems } = useMonitorColumns({
         statConfigs,

@@ -205,7 +205,9 @@ export default function ProductionPlanPage() {
 
     const headerActions = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Tooltip title={isReorderDirty ? t('productionPlan.reorder.lockedFilterHint') : undefined}>
+            <Tooltip
+                title={isReorderDirty ? t('productionPlan.reorder.lockedFilterHint') : undefined}
+            >
                 <span style={{ display: 'inline-block' }}>
                     <Input
                         placeholder={t('productionPlan.filters.machinePlaceholder')}
@@ -256,7 +258,11 @@ export default function ProductionPlanPage() {
                 ]}
             />
             {actions.canImport && (
-                <Tooltip title={isReorderDirty ? t('productionPlan.reorder.lockedImportHint') : undefined}>
+                <Tooltip
+                    title={
+                        isReorderDirty ? t('productionPlan.reorder.lockedImportHint') : undefined
+                    }
+                >
                     <span style={{ display: 'inline-block' }}>
                         <Button
                             icon={<UploadOutlined />}
@@ -265,7 +271,7 @@ export default function ProductionPlanPage() {
                                 actions.openImportModal();
                             }}
                             disabled={isReorderDirty}
-                            type='primary'
+                            type="primary"
                         >
                             {t('productionPlan.actions.import')}
                         </Button>
@@ -291,13 +297,13 @@ export default function ProductionPlanPage() {
                 mobileMenuItems={
                     actions.canCreate
                         ? [
-                            {
-                                key: 'add-product',
-                                label: t('productionPlan.actions.addProduct'),
-                                icon: <PlusOutlined />,
-                                onClick: actions.openCreateModal,
-                            },
-                        ]
+                              {
+                                  key: 'add-product',
+                                  label: t('productionPlan.actions.addProduct'),
+                                  icon: <PlusOutlined />,
+                                  onClick: actions.openCreateModal,
+                              },
+                          ]
                         : []
                 }
             />
@@ -400,8 +406,8 @@ export default function ProductionPlanPage() {
                                 {activeView === 'daily'
                                     ? t('productionPlan.panel.dailyTable')
                                     : activeView === 'weekly'
-                                        ? t('productionPlan.panel.weeklyTable')
-                                        : t('productionPlan.panel.machineMatrixTable')}
+                                      ? t('productionPlan.panel.weeklyTable')
+                                      : t('productionPlan.panel.machineMatrixTable')}
                             </Text>
                             {activeView === 'daily' && (
                                 <Button
@@ -443,11 +449,11 @@ export default function ProductionPlanPage() {
                         <Text type="secondary">
                             {activeView === 'daily'
                                 ? t('productionPlan.panel.pieces', {
-                                    count: formatNumber(summary.dailyPieces),
-                                })
+                                      count: formatNumber(summary.dailyPieces),
+                                  })
                                 : t('productionPlan.panel.pieces', {
-                                    count: formatNumber(summary.weeklyPieces),
-                                })}
+                                      count: formatNumber(summary.weeklyPieces),
+                                  })}
                         </Text>
                         {isReorderDirty && (
                             <>

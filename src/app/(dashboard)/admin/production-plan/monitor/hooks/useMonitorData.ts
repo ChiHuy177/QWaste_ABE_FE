@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import { useProductionMonitor } from '@/hooks/useProductionMonitor';
+import { useProductionMonitor, type PlanStatusEntry } from '@/hooks/useProductionMonitor';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { ProductionPlanDailyMachineGroup } from '@/types/ProductionPlan';
 import { mapDailyGroups } from '../../_utils/planMappers';
@@ -15,7 +15,6 @@ import type { MonitorRowVM } from '../../_components/types';
 const DATE_FORMAT = 'YYYY-MM-DD';
 const MACHINE_PAGE_SIZE = 100;
 
-/** Dữ liệu monitor hôm nay: fetch daily plans (TanStack) merge status realtime (WebSocket). */
 export const useMonitorData = () => {
     const { handleError } = useApiErrorHandler();
     const queryClient = useQueryClient();
@@ -24,8 +23,6 @@ export const useMonitorData = () => {
     // Monitor luôn nhìn hôm nay.
     const todayIso = useMemo(() => dayjs().format(DATE_FORMAT), []);
 
-    // queryFn chỉ fetch dữ liệu thô — enrich machineName/spaceName qua machineInfoMap tách
-    // sang useMemo bên dưới để không phải nhét Map vào queryKey (không serializable).
     const baseRowsQuery = useQuery({
         queryKey: productionPlanQueryKeys.monitorDaily(todayIso),
         queryFn: async (): Promise<ProductionPlanDailyMachineGroup[]> => {
@@ -89,23 +86,35 @@ export const useMonitorData = () => {
         onUnknownPlan: refresh,
     });
 
-    // Merge status realtime đè lên dữ liệu fetch.
-    const products = useMemo<MonitorRowVM[]>(
-        () =>
-            baseRows.map((row) => {
-                const entry = statusMap.get(row.productionPlanId);
-                if (!entry) return row;
-                return {
-                    ...row,
-                    status: entry.status,
-                    updatedAt: entry.updatedAt,
-                    trigger: entry.trigger,
-                    incidentReason: entry.incidentReason,
-                    reason: entry.reason,
-                };
-            }),
-        [baseRows, statusMap]
+    const mergeCacheRef = useRef(
+        new Map<string, { entry: PlanStatusEntry; row: MonitorRowVM; merged: MonitorRowVM }>()
     );
+
+    // Merge status realtime đè lên dữ liệu fetch.
+    const products = useMemo<MonitorRowVM[]>(() => {
+        const cache = mergeCacheRef.current;
+        return baseRows.map((row) => {
+            const entry = statusMap.get(row.productionPlanId);
+            if (!entry) return row;
+
+            const cached = cache.get(row.productionPlanId);
+            if (cached && cached.entry === entry && cached.row === row) {
+                return cached.merged;
+            }
+
+            const merged: MonitorRowVM = {
+                ...row,
+                status: entry.status ?? row.status,
+                updatedAt: entry.updatedAt,
+                trigger: entry.trigger ?? row.trigger,
+                incidentReason: entry.incidentReason ?? row.incidentReason,
+                reason: entry.reason ?? row.reason,
+                actualQuantity: entry.actualQuantity ?? row.actualQuantity,
+            };
+            cache.set(row.productionPlanId, { entry, row, merged });
+            return merged;
+        });
+    }, [baseRows, statusMap]);
 
     return {
         products,
