@@ -328,6 +328,7 @@
             "order": "Order",
             "tasks": "Tasks",
             "productionPlan": "Production Plan",
+            "workCalendar": "Work Calendar",
             "productionMonitor": "Production Monitor",
             "history": "History",
             "reports": "Reports",
@@ -363,6 +364,74 @@
         },
         "logo": {
             "alt": "Logo"
+        }
+    },
+    "workCalendar": {
+        "header": {
+            "title": "Work Calendar",
+            "btnEdit": "Edit",
+            "btnSave": "Save Changes",
+            "btnCancel": "Cancel",
+            "btnReset": "Reset Default",
+            "hasChanges": "Modified",
+            "confirmResetTitle": "Reset Calendar to Default",
+            "confirmResetContent": "Are you sure you want to reset the calendar to default values for this month?",
+            "editModeNotice": "In Edit Mode",
+            "editModeDesc": "Click day cells to select/unselect, or click and drag mouse to bulk select. Once finished, click 'Save Changes'."
+        },
+        "summary": {
+            "workingDays": "Total Working Days",
+            "offDays": "Total Off Days",
+            "plannedHours": "Total Planned Hours",
+            "unitDays": "days",
+            "unitHours": "hours"
+        },
+        "grid": {
+            "selectTip": "Tip: You can click day cells or click and drag mouse to select multiple days.",
+            "selectedCount": "{{count}} days selected",
+            "btnSelectAll": "Select All ({{count}})",
+            "btnClearSelection": "Clear Selection",
+            "btnSingleEdit": "Edit This Day",
+            "btnBulkEdit": "Edit Selected ({{count}})",
+            "editedBadge": "Edited",
+            "overrideBadge": "Overridden",
+            "overrideTooltip": "Date modified differently from default rule",
+            "plannedHoursLabel": "{{hours}}h planned",
+            "plannedOffLabel": "0h (Off)"
+        },
+        "dayType": {
+            "working": "Working",
+            "weekendOff": "Weekend Off",
+            "holiday": "Holiday",
+            "workingDesc": "WORKING (Official Working Day)",
+            "weekendOffDesc": "WEEKEND_OFF (Weekly Rest / Sunday)",
+            "holidayDesc": "HOLIDAY (Public Holiday)"
+        },
+        "modal": {
+            "editDayTitle": "Edit Date {{date}}",
+            "selectedDateLabel": "Selected Date: ",
+            "workingStatusLabel": "Working Status",
+            "dayTypeLabel": "Day Type",
+            "statusWorking": "Working",
+            "statusOff": "Off",
+            "btnApply": "Apply"
+        },
+        "drawer": {
+            "bulkEditTitle": "Edit Selected Date(s)",
+            "bulkEditNotice": "Edit Selected Date(s)",
+            "bulkEditDesc": "The settings below will be applied to the {{count}} selected date(s) on the calendar grid.",
+            "btnApplyBulk": "Apply for {{count}} days"
+        },
+        "notifications": {
+            "loadingData": "Loading work calendar data...",
+            "saveSuccess": "Work calendar saved successfully!",
+            "resetSuccess": "Calendar reset to default successfully!",
+            "singleUpdateSuccess": "Updated status for {{date}}",
+            "bulkUpdateSuccess": "Bulk updated {{count}} selected days.",
+            "saveError": "An error occurred while saving work calendar.",
+            "resetError": "Failed to reset calendar to default.",
+            "fetchError": "Failed to load work calendar data.",
+            "missingDataError": "Missing data for date {{date}}. Please check again."
         }
     },
     "navUser": {

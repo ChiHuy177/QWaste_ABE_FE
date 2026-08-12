@@ -65,6 +65,11 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
+    '/admin/work-calendar': {
+        subject: 'work_calendar',
+        action: 'view',
+    },
+
     '/admin/floor-map': {
         subject: 'floor_map',
         action: 'update',

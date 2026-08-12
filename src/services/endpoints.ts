@@ -35,6 +35,7 @@ const BASE_PATHS = {
     MOLDS: `${API}/molds/${V1}`,
     OPERATION_TYPES: `${API}/operationTypes/${V1}`,
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
+    WORK_CALENDAR: `${API}/workCalendar/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -199,6 +200,11 @@ export const ENDPOINTS = {
             `${BASE_PATHS.PRODUCTION_PLANS}/${id}/complete`,
         IMPORT: `${BASE_PATHS.PRODUCTION_PLANS}/import`,
         IMPORT_CONFIRM: `${BASE_PATHS.PRODUCTION_PLANS}/import/confirm`,
+    },
+    WORK_CALENDAR: {
+        BASE: BASE_PATHS.WORK_CALENDAR,
+        BATCH_UPDATE: `${BASE_PATHS.WORK_CALENDAR}/batchUpdate`,
+        RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
     },
 } as const;
 

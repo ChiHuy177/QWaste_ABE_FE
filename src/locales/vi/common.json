@@ -319,6 +319,7 @@
             "order": "Đơn hàng",
             "tasks": "Nhiệm vụ",
             "productionPlan": "Kế hoạch sản xuất",
+            "workCalendar": "Lịch làm việc",
             "productionMonitor": "Giám sát sản xuất",
             "history": "Lịch sử",
             "reports": "Báo cáo",
@@ -354,6 +355,74 @@
         },
         "logo": {
             "alt": "Logo"
+        }
+    },
+    "workCalendar": {
+        "header": {
+            "title": "Lịch Làm Việc",
+            "btnEdit": "Chỉnh sửa",
+            "btnSave": "Lưu thay đổi",
+            "btnCancel": "Hủy bỏ",
+            "btnReset": "Reset mặc định",
+            "hasChanges": "Có thay đổi",
+            "confirmResetTitle": "Reset lịch về mặc định",
+            "confirmResetContent": "Bạn có chắc chắn muốn khôi phục lại lịch mặc định cho tháng này không?",
+            "editModeNotice": "Đang trong chế độ chỉnh sửa",
+            "editModeDesc": "Click vào ô ngày để chọn/bỏ chọn, hoặc nhấp giữ rê chuột để chọn hàng loạt. Sau khi chỉnh sửa xong, bấm 'Lưu thay đổi'."
+        },
+        "summary": {
+            "workingDays": "Tổng Ngày Làm Việc",
+            "offDays": "Tổng Ngày Nghỉ",
+            "plannedHours": "Tổng Giờ Kế Hoạch",
+            "unitDays": "ngày",
+            "unitHours": "giờ"
+        },
+        "grid": {
+            "selectTip": "Mẹo: Bạn có thể click vào các ô ngày hoặc nhấp giữ kéo rê chuột để chọn nhiều ngày.",
+            "selectedCount": "Đã chọn {{count}} ngày",
+            "btnSelectAll": "Chọn tất cả ({{count}})",
+            "btnClearSelection": "Bỏ chọn tất cả",
+            "btnSingleEdit": "Chỉnh sửa ngày này",
+            "btnBulkEdit": "Chỉnh sửa ngày đã chọn ({{count}})",
+            "editedBadge": "Đã sửa",
+            "overrideBadge": "Đã Override",
+            "overrideTooltip": "Ngày đã được chỉnh sửa khác quy tắc mặc định",
+            "plannedHoursLabel": "{{hours}}h kế hoạch",
+            "plannedOffLabel": "0h (Nghỉ)"
+        },
+        "dayType": {
+            "working": "Làm việc",
+            "weekendOff": "Nghỉ tuần",
+            "holiday": "Ngày lễ",
+            "workingDesc": "WORKING (Ngày làm việc chính thức)",
+            "weekendOffDesc": "WEEKEND_OFF (Nghỉ hàng tuần / Chủ nhật)",
+            "holidayDesc": "HOLIDAY (Ngày nghỉ lễ / Tết)"
+        },
+        "modal": {
+            "editDayTitle": "Chỉnh sửa ngày {{date}}",
+            "selectedDateLabel": "Ngày chọn: ",
+            "workingStatusLabel": "Trạng thái đi làm",
+            "dayTypeLabel": "Loại ngày (Day Type)",
+            "statusWorking": "Đi làm",
+            "statusOff": "Nghỉ",
+            "btnApply": "Áp dụng"
+        },
+        "drawer": {
+            "bulkEditTitle": "Chỉnh sửa ngày đã chọn",
+            "bulkEditNotice": "Chỉnh sửa ngày đã chọn",
+            "bulkEditDesc": "Các thiết lập dưới đây sẽ được áp dụng cho {{count}} ngày mà bạn đã chọn trên lưới lịch.",
+            "btnApplyBulk": "Áp dụng cho {{count}} ngày"
+        },
+        "notifications": {
+            "loadingData": "Đang tải dữ liệu lịch làm việc...",
+            "saveSuccess": "Lưu thay đổi lịch làm việc thành công!",
+            "resetSuccess": "Khôi phục lịch mặc định thành công!",
+            "singleUpdateSuccess": "Đã cập nhật trạng thái ngày {{date}}",
+            "bulkUpdateSuccess": "Đã cập nhật đồng loạt {{count}} ngày đã chọn.",
+            "saveError": "Có lỗi xảy ra khi lưu lịch làm việc.",
+            "resetError": "Không thể khôi phục lịch mặc định.",
+            "fetchError": "Không thể tải dữ liệu lịch làm việc.",
+            "missingDataError": "Dữ liệu thiếu ngày {{date}}. Vui lòng kiểm tra lại."
         }
     },
     "navUser": {

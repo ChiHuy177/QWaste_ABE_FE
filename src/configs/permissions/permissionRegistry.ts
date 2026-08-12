@@ -682,6 +682,29 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Restore user',
     },
+    // Work Calendar
+    {
+        slug: 'work_calendar:view',
+        subject: 'work_calendar',
+        action: 'view',
+        routes: ['/admin/work-calendar'],
+        menuKey: 'work-calendar',
+        description: 'View work calendar',
+    },
+    {
+        slug: 'work_calendar:update',
+        subject: 'work_calendar',
+        action: 'update',
+        routes: [],
+        description: 'Batch update work calendar',
+    },
+    {
+        slug: 'work_calendar:reset',
+        subject: 'work_calendar',
+        action: 'reset',
+        routes: [],
+        description: 'Reset work calendar to default',
+    },
 ];
 
 // Helper functions
