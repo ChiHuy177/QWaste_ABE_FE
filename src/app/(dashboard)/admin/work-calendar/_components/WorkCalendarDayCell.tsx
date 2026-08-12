@@ -39,6 +39,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
     const sc = isDark ? statusColors.dark : statusColors.light;
 
     const isPast = isCurrentMonth && dayjs(dateString).isBefore(dayjs().startOf('day'));
+    const isLockedInEditMode = isEditMode && isPast;
 
     if (!isCurrentMonth) {
         return (
@@ -93,9 +94,9 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
 
     const cellContent = (
         <div
-            onClick={isPast ? undefined : onClick}
-            onMouseDown={isPast ? undefined : onMouseDown}
-            onMouseEnter={isPast ? undefined : onMouseEnter}
+            onClick={isLockedInEditMode ? undefined : onClick}
+            onMouseDown={isLockedInEditMode ? undefined : onMouseDown}
+            onMouseEnter={isLockedInEditMode ? undefined : onMouseEnter}
             style={{
                 position: 'relative',
                 height: '100%',
@@ -104,8 +105,8 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                 background: isSelected ? token.colorPrimaryBg : cellBg,
                 border: borderStyle,
                 borderRadius: 8,
-                opacity: isPast ? 0.6 : 1,
-                cursor: isPast ? 'not-allowed' : isEditMode ? 'pointer' : 'default',
+                opacity: isLockedInEditMode ? 0.6 : 1,
+                cursor: isLockedInEditMode ? 'not-allowed' : isEditMode ? 'pointer' : 'default',
                 transition: 'all 0.15s ease',
                 boxShadow: isSelected ? `0 0 0 2px ${token.colorPrimary}` : undefined,
                 overflow: 'hidden',
@@ -125,7 +126,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                     {isEditMode && (
                         <Checkbox
                             checked={isSelected}
-                            disabled={isPast}
+                            disabled={isLockedInEditMode}
                             onChange={() => {}}
                             onClick={(e) => e.stopPropagation()}
                             style={{ pointerEvents: 'none' }}
@@ -135,7 +136,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                         style={{
                             fontWeight: 700,
                             fontSize: 14,
-                            color: isPast
+                            color: isLockedInEditMode
                                 ? token.colorTextQuaternary
                                 : isWorkingDay
                                   ? token.colorText
@@ -147,8 +148,8 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {/* Past Lock Icon */}
-                    {isPast && (
+                    {/* Past Lock Icon ONLY in Edit Mode */}
+                    {isLockedInEditMode && (
                         <LockOutlined style={{ fontSize: 12, color: token.colorTextQuaternary }} />
                     )}
 
@@ -192,7 +193,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                     style={{
                         fontSize: 11,
                         fontWeight: 600,
-                        color: isPast ? token.colorTextQuaternary : typeColor,
+                        color: isLockedInEditMode ? token.colorTextQuaternary : typeColor,
                     }}
                 >
                     {typeLabel}
@@ -208,7 +209,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
         </div>
     );
 
-    if (isPast) {
+    if (isLockedInEditMode) {
         return <Tooltip title={t('workCalendar.grid.pastDayTooltip')}>{cellContent}</Tooltip>;
     }
 
