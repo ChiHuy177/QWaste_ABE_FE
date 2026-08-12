@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { Tag, Tooltip, Checkbox, theme } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { WorkCalendarDayResponse } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
@@ -21,6 +23,7 @@ interface WorkCalendarDayCellProps {
 
 export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
     dayData,
+    dateString,
     dayNumber,
     isCurrentMonth,
     isEditMode,
@@ -34,6 +37,8 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
     const { token } = theme.useToken();
     const isDark = token.colorBgContainer !== '#ffffff';
     const sc = isDark ? statusColors.dark : statusColors.light;
+
+    const isPast = isCurrentMonth && dayjs(dateString).isBefore(dayjs().startOf('day'));
 
     if (!isCurrentMonth) {
         return (
@@ -86,11 +91,11 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
         borderStyle = `2px dashed ${token.colorPrimary}`;
     }
 
-    return (
+    const cellContent = (
         <div
-            onClick={onClick}
-            onMouseDown={onMouseDown}
-            onMouseEnter={onMouseEnter}
+            onClick={isPast ? undefined : onClick}
+            onMouseDown={isPast ? undefined : onMouseDown}
+            onMouseEnter={isPast ? undefined : onMouseEnter}
             style={{
                 position: 'relative',
                 height: '100%',
@@ -99,7 +104,8 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                 background: isSelected ? token.colorPrimaryBg : cellBg,
                 border: borderStyle,
                 borderRadius: 8,
-                cursor: isEditMode ? 'pointer' : 'default',
+                opacity: isPast ? 0.6 : 1,
+                cursor: isPast ? 'not-allowed' : isEditMode ? 'pointer' : 'default',
                 transition: 'all 0.15s ease',
                 boxShadow: isSelected ? `0 0 0 2px ${token.colorPrimary}` : undefined,
                 overflow: 'hidden',
@@ -119,6 +125,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                     {isEditMode && (
                         <Checkbox
                             checked={isSelected}
+                            disabled={isPast}
                             onChange={() => {}}
                             onClick={(e) => e.stopPropagation()}
                             style={{ pointerEvents: 'none' }}
@@ -128,7 +135,11 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                         style={{
                             fontWeight: 700,
                             fontSize: 14,
-                            color: isWorkingDay ? token.colorText : token.colorTextSecondary,
+                            color: isPast
+                                ? token.colorTextQuaternary
+                                : isWorkingDay
+                                  ? token.colorText
+                                  : token.colorTextSecondary,
                         }}
                     >
                         {dayNumber}
@@ -136,6 +147,11 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {/* Past Lock Icon */}
+                    {isPast && (
+                        <LockOutlined style={{ fontSize: 12, color: token.colorTextQuaternary }} />
+                    )}
+
                     {/* Draft Modified Badge */}
                     {isModified && (
                         <Tag
@@ -176,7 +192,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                     style={{
                         fontSize: 11,
                         fontWeight: 600,
-                        color: typeColor,
+                        color: isPast ? token.colorTextQuaternary : typeColor,
                     }}
                 >
                     {typeLabel}
@@ -191,4 +207,10 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
             </div>
         </div>
     );
+
+    if (isPast) {
+        return <Tooltip title={t('workCalendar.grid.pastDayTooltip')}>{cellContent}</Tooltip>;
+    }
+
+    return cellContent;
 };

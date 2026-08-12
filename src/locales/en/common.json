@@ -377,7 +377,8 @@
             "confirmResetTitle": "Reset Calendar to Default",
             "confirmResetContent": "Are you sure you want to reset the calendar to default values for this month?",
             "editModeNotice": "In Edit Mode",
-            "editModeDesc": "Click day cells to select/unselect, or click and drag mouse to bulk select. Once finished, click 'Save Changes'."
+            "editModeDesc": "Click day cells to select/unselect, or click and drag mouse to bulk select. Once finished, click 'Save Changes'.",
+            "pastMonthEditDisabled": "Cannot edit schedule for past months"
         },
         "summary": {
             "workingDays": "Total Working Days",
@@ -396,6 +397,7 @@
             "editedBadge": "Edited",
             "overrideBadge": "Overridden",
             "overrideTooltip": "Date modified differently from default rule",
+            "pastDayTooltip": "Past date (cannot be edited)",
             "plannedHoursLabel": "{{hours}}h planned",
             "plannedOffLabel": "0h (Off)"
         },

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Button, DatePicker, Popconfirm, Space, Tag, Alert, theme } from 'antd';
+import { Button, DatePicker, Popconfirm, Space, Tag, Alert, Tooltip, theme } from 'antd';
 import {
     LeftOutlined,
     RightOutlined,
@@ -30,156 +30,167 @@ interface WorkCalendarHeaderProps {
     onResetToDefault: () => void;
 }
 
-export const WorkCalendarHeader = React.memo<WorkCalendarHeaderProps>(
-    ({
-        year,
-        month,
-        isEditMode,
-        isSaving,
-        isResetting,
-        hasDraftChanges,
-        onMonthChange,
-        onEnterEditMode,
-        onCancelEditMode,
-        onSaveChanges,
-        onResetToDefault,
-    }) => {
-        const { t, i18n } = useTranslation('common');
-        const { token } = theme.useToken();
-        const ability = useAbility();
-        const canUpdate = ability.can('update', 'work_calendar');
-        const canReset = ability.can('reset', 'work_calendar');
+export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = ({
+    year,
+    month,
+    isEditMode,
+    isSaving,
+    isResetting,
+    hasDraftChanges,
+    onMonthChange,
+    onEnterEditMode,
+    onCancelEditMode,
+    onSaveChanges,
+    onResetToDefault,
+}) => {
+    const { t, i18n } = useTranslation('common');
+    const { token } = theme.useToken();
+    const ability = useAbility();
+    const canUpdate = ability.can('update', 'work_calendar');
+    const canReset = ability.can('reset', 'work_calendar');
 
-        const currentDate = dayjs(`${year}-${String(month).padStart(2, '0')}-01`);
-        const datePickerFormat = i18n.language === 'en' ? 'MMMM, YYYY' : '[Tháng] MM, YYYY';
+    const currentDate = dayjs(`${year}-${String(month).padStart(2, '0')}-01`);
+    const datePickerFormat = i18n.language === 'en' ? 'MMMM, YYYY' : '[Tháng] MM, YYYY';
 
-        const handlePrevMonth = () => {
-            const prev = currentDate.subtract(1, 'month');
-            onMonthChange(prev.year(), prev.month() + 1);
-        };
+    // Check if the current month being viewed is in the past
+    const isPastMonth = currentDate.isBefore(dayjs().startOf('month'));
 
-        const handleNextMonth = () => {
-            const next = currentDate.add(1, 'month');
-            onMonthChange(next.year(), next.month() + 1);
-        };
+    const handlePrevMonth = () => {
+        const prev = currentDate.subtract(1, 'month');
+        onMonthChange(prev.year(), prev.month() + 1);
+    };
 
-        const handleDatePickerChange = (date: Dayjs | null) => {
-            if (date) {
-                onMonthChange(date.year(), date.month() + 1);
-            }
-        };
+    const handleNextMonth = () => {
+        const next = currentDate.add(1, 'month');
+        onMonthChange(next.year(), next.month() + 1);
+    };
 
-        const rightContent = (
-            <Space size="small" wrap style={{ width: '100%' }}>
-                {/* Month Picker Group */}
-                <Space size="small">
-                    <Button
-                        icon={<LeftOutlined />}
-                        onClick={handlePrevMonth}
-                        disabled={isEditMode}
-                        style={{ height: 38 }}
-                    />
-                    <DatePicker.MonthPicker
-                        value={currentDate}
-                        onChange={handleDatePickerChange}
-                        format={datePickerFormat}
-                        allowClear={false}
-                        disabled={isEditMode}
-                        style={{ width: 160, height: 38 }}
-                    />
-                    <Button
-                        icon={<RightOutlined />}
-                        onClick={handleNextMonth}
-                        disabled={isEditMode}
-                        style={{ height: 38 }}
-                    />
-                </Space>
+    const handleDatePickerChange = (date: Dayjs | null) => {
+        if (date) {
+            onMonthChange(date.year(), date.month() + 1);
+        }
+    };
 
-                {/* Actions */}
-                {!isEditMode ? (
-                    <>
-                        {canUpdate && (
-                            <Button
-                                type="primary"
-                                icon={<EditOutlined />}
-                                onClick={onEnterEditMode}
-                                style={{ height: 38, borderRadius: 8 }}
-                            >
-                                {t('workCalendar.header.btnEdit')}
-                            </Button>
-                        )}
-                        {canReset && (
-                            <Popconfirm
-                                title={t('workCalendar.header.confirmResetTitle')}
-                                description={t('workCalendar.header.confirmResetContent')}
-                                onConfirm={onResetToDefault}
-                                okText={t('common.reset')}
-                                cancelText={t('common.cancel')}
-                                okButtonProps={{ danger: true, loading: isResetting }}
-                            >
+    const rightContent = (
+        <Space size="small" wrap style={{ width: '100%' }}>
+            {/* Month Picker Group */}
+            <Space size="small">
+                <Button
+                    icon={<LeftOutlined />}
+                    onClick={handlePrevMonth}
+                    disabled={isEditMode}
+                    style={{ height: 38 }}
+                />
+                <DatePicker.MonthPicker
+                    value={currentDate}
+                    onChange={handleDatePickerChange}
+                    format={datePickerFormat}
+                    allowClear={false}
+                    disabled={isEditMode}
+                    style={{ width: 160, height: 38 }}
+                />
+                <Button
+                    icon={<RightOutlined />}
+                    onClick={handleNextMonth}
+                    disabled={isEditMode}
+                    style={{ height: 38 }}
+                />
+            </Space>
+
+            {/* Actions */}
+            {!isEditMode ? (
+                <>
+                    {canUpdate && (
+                        <Tooltip title={isPastMonth ? t('workCalendar.header.pastMonthEditDisabled') : undefined}>
+                            <span style={{ display: 'inline-block' }}>
                                 <Button
-                                    icon={<ReloadOutlined />}
-                                    loading={isResetting}
+                                    type="primary"
+                                    icon={<EditOutlined />}
+                                    onClick={onEnterEditMode}
+                                    disabled={isPastMonth}
                                     style={{ height: 38, borderRadius: 8 }}
                                 >
-                                    {t('workCalendar.header.btnReset')}
+                                    {t('workCalendar.header.btnEdit')}
                                 </Button>
-                            </Popconfirm>
+                            </span>
+                        </Tooltip>
+                    )}
+                    {canReset && (
+                        <Tooltip title={isPastMonth ? t('workCalendar.header.pastMonthEditDisabled') : undefined}>
+                            <span style={{ display: 'inline-block' }}>
+                                <Popconfirm
+                                    title={t('workCalendar.header.confirmResetTitle')}
+                                    description={t('workCalendar.header.confirmResetContent')}
+                                    onConfirm={onResetToDefault}
+                                    okText={t('common.reset')}
+                                    cancelText={t('common.cancel')}
+                                    okButtonProps={{ danger: true, loading: isResetting }}
+                                    disabled={isPastMonth}
+                                >
+                                    <Button
+                                        icon={<ReloadOutlined />}
+                                        loading={isResetting}
+                                        disabled={isPastMonth}
+                                        style={{ height: 38, borderRadius: 8 }}
+                                    >
+                                        {t('workCalendar.header.btnReset')}
+                                    </Button>
+                                </Popconfirm>
+                            </span>
+                        </Tooltip>
+                    )}
+                </>
+            ) : (
+                <>
+                    <Button
+                        icon={<UndoOutlined />}
+                        onClick={onCancelEditMode}
+                        disabled={isSaving}
+                        style={{ height: 38, borderRadius: 8 }}
+                    >
+                        {t('workCalendar.header.btnCancel')}
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<SaveOutlined />}
+                        loading={isSaving}
+                        onClick={onSaveChanges}
+                        style={{
+                            height: 38,
+                            borderRadius: 8,
+                            boxShadow: token.boxShadowSecondary,
+                        }}
+                    >
+                        {t('workCalendar.header.btnSave')}{' '}
+                        {hasDraftChanges && (
+                            <Tag color="gold" style={{ marginLeft: 4 }}>
+                                {t('workCalendar.header.hasChanges')}
+                            </Tag>
                         )}
-                    </>
-                ) : (
-                    <>
-                        <Button
-                            icon={<UndoOutlined />}
-                            onClick={onCancelEditMode}
-                            disabled={isSaving}
-                            style={{ height: 38, borderRadius: 8 }}
-                        >
-                            {t('workCalendar.header.btnCancel')}
-                        </Button>
-                        <Button
-                            type="primary"
-                            icon={<SaveOutlined />}
-                            loading={isSaving}
-                            onClick={onSaveChanges}
-                            style={{
-                                height: 38,
-                                borderRadius: 8,
-                                boxShadow: token.boxShadowSecondary,
-                            }}
-                        >
-                            {t('workCalendar.header.btnSave')}{' '}
-                            {hasDraftChanges && (
-                                <Tag color="gold" style={{ marginLeft: 4 }}>
-                                    {t('workCalendar.header.hasChanges')}
-                                </Tag>
-                            )}
-                        </Button>
-                    </>
-                )}
-            </Space>
-        );
+                    </Button>
+                </>
+            )}
+        </Space>
+    );
 
-        return (
-            <>
-                <ResponsivePageHeader
-                    title={t('workCalendar.header.title')}
-                    rightContent={rightContent}
+    return (
+        <>
+            <ResponsivePageHeader
+                title={t('workCalendar.header.title')}
+                rightContent={rightContent}
+            />
+
+            {/* Edit Mode Alert Banner */}
+            {isEditMode && (
+                <Alert
+                    title={t('workCalendar.header.editModeNotice')}
+                    description={t('workCalendar.header.editModeDesc')}
+                    type="warning"
+                    showIcon
+                    icon={<WarningOutlined />}
+                    style={{ borderRadius: 8, marginBottom: 16 }}
                 />
-
-                {/* Edit Mode Alert Banner */}
-                {isEditMode && (
-                    <Alert
-                        title={t('workCalendar.header.editModeNotice')}
-                        description={t('workCalendar.header.editModeDesc')}
-                        type="warning"
-                        showIcon
-                        icon={<WarningOutlined />}
-                        style={{ borderRadius: 8, marginBottom: 16 }}
-                    />
-                )}
-            </>
-        );
-    }
-);
-WorkCalendarHeader.displayName = 'WorkCalendarHeader';
+            )}
+        </>
+    );
+};

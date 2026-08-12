@@ -368,7 +368,8 @@
             "confirmResetTitle": "Reset lịch về mặc định",
             "confirmResetContent": "Bạn có chắc chắn muốn khôi phục lại lịch mặc định cho tháng này không?",
             "editModeNotice": "Đang trong chế độ chỉnh sửa",
-            "editModeDesc": "Click vào ô ngày để chọn/bỏ chọn, hoặc nhấp giữ rê chuột để chọn hàng loạt. Sau khi chỉnh sửa xong, bấm 'Lưu thay đổi'."
+            "editModeDesc": "Click vào ô ngày để chọn/bỏ chọn, hoặc nhấp giữ rê chuột để chọn hàng loạt. Sau khi chỉnh sửa xong, bấm 'Lưu thay đổi'.",
+            "pastMonthEditDisabled": "Không thể điều chỉnh lịch của các tháng trong quá khứ"
         },
         "summary": {
             "workingDays": "Tổng Ngày Làm Việc",
@@ -387,6 +388,7 @@
             "editedBadge": "Đã sửa",
             "overrideBadge": "Đã Override",
             "overrideTooltip": "Ngày đã được chỉnh sửa khác quy tắc mặc định",
+            "pastDayTooltip": "Ngày trong quá khứ (không thể chỉnh sửa)",
             "plannedHoursLabel": "{{hours}}h kế hoạch",
             "plannedOffLabel": "0h (Nghỉ)"
         },
