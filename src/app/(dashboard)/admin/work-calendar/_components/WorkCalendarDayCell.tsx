@@ -2,8 +2,6 @@
 
 import React from 'react';
 import { Tag, Tooltip, Checkbox, theme } from 'antd';
-import { LockOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { WorkCalendarDayResponse } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
@@ -23,7 +21,6 @@ interface WorkCalendarDayCellProps {
 
 export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
     dayData,
-    dateString,
     dayNumber,
     isCurrentMonth,
     isEditMode,
@@ -37,9 +34,6 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
     const { token } = theme.useToken();
     const isDark = token.colorBgContainer !== '#ffffff';
     const sc = isDark ? statusColors.dark : statusColors.light;
-
-    const isPast = isCurrentMonth && dayjs(dateString).isBefore(dayjs().startOf('day'));
-    const isLockedInEditMode = isEditMode && isPast;
 
     if (!isCurrentMonth) {
         return (
@@ -92,11 +86,11 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
         borderStyle = `2px dashed ${token.colorPrimary}`;
     }
 
-    const cellContent = (
+    return (
         <div
-            onClick={isLockedInEditMode ? undefined : onClick}
-            onMouseDown={isLockedInEditMode ? undefined : onMouseDown}
-            onMouseEnter={isLockedInEditMode ? undefined : onMouseEnter}
+            onClick={onClick}
+            onMouseDown={onMouseDown}
+            onMouseEnter={onMouseEnter}
             style={{
                 position: 'relative',
                 height: '100%',
@@ -105,8 +99,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                 background: isSelected ? token.colorPrimaryBg : cellBg,
                 border: borderStyle,
                 borderRadius: 8,
-                opacity: isLockedInEditMode ? 0.6 : 1,
-                cursor: isLockedInEditMode ? 'not-allowed' : isEditMode ? 'pointer' : 'default',
+                cursor: isEditMode ? 'pointer' : 'default',
                 transition: 'all 0.15s ease',
                 boxShadow: isSelected ? `0 0 0 2px ${token.colorPrimary}` : undefined,
                 overflow: 'hidden',
@@ -126,7 +119,6 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                     {isEditMode && (
                         <Checkbox
                             checked={isSelected}
-                            disabled={isLockedInEditMode}
                             onChange={() => {}}
                             onClick={(e) => e.stopPropagation()}
                             style={{ pointerEvents: 'none' }}
@@ -136,11 +128,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                         style={{
                             fontWeight: 700,
                             fontSize: 14,
-                            color: isLockedInEditMode
-                                ? token.colorTextQuaternary
-                                : isWorkingDay
-                                  ? token.colorText
-                                  : token.colorTextSecondary,
+                            color: isWorkingDay ? token.colorText : token.colorTextSecondary,
                         }}
                     >
                         {dayNumber}
@@ -148,11 +136,6 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {/* Past Lock Icon ONLY in Edit Mode */}
-                    {isLockedInEditMode && (
-                        <LockOutlined style={{ fontSize: 12, color: token.colorTextQuaternary }} />
-                    )}
-
                     {/* Draft Modified Badge */}
                     {isModified && (
                         <Tag
@@ -193,7 +176,7 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
                     style={{
                         fontSize: 11,
                         fontWeight: 600,
-                        color: isLockedInEditMode ? token.colorTextQuaternary : typeColor,
+                        color: typeColor,
                     }}
                 >
                     {typeLabel}
@@ -208,10 +191,4 @@ export const WorkCalendarDayCell: React.FC<WorkCalendarDayCellProps> = ({
             </div>
         </div>
     );
-
-    if (isLockedInEditMode) {
-        return <Tooltip title={t('workCalendar.grid.pastDayTooltip')}>{cellContent}</Tooltip>;
-    }
-
-    return cellContent;
 };

@@ -20,7 +20,6 @@ interface GridCellData {
     dateString: string;
     dayNumber: number;
     isCurrentMonth: boolean;
-    isPast: boolean;
     dayData?: WorkCalendarDayResponse;
     gridIndex: number;
 }
@@ -60,8 +59,6 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
     const [dragStartIndex, setDragStartIndex] = useState<number | null>(null);
     const [lastSelectedGridIndex, setLastSelectedGridIndex] = useState<number | null>(null);
 
-    const todayStart = useMemo(() => dayjs().startOf('day'), []);
-
     const weekdays = useMemo(() => {
         return i18n.language === 'en'
             ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -88,7 +85,6 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
                 dateString: dateStr,
                 dayNumber: dayNum,
                 isCurrentMonth: false,
-                isPast: dayjs(dateStr).isBefore(todayStart),
                 gridIndex: indexCounter++,
             });
         }
@@ -100,7 +96,6 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
                 dateString: dateStr,
                 dayNumber: d,
                 isCurrentMonth: true,
-                isPast: dayjs(dateStr).isBefore(todayStart),
                 dayData: daysMap.get(dateStr),
                 gridIndex: indexCounter++,
             });
@@ -118,18 +113,17 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
                     dateString: dateStr,
                     dayNumber: d,
                     isCurrentMonth: false,
-                    isPast: dayjs(dateStr).isBefore(todayStart),
                     gridIndex: indexCounter++,
                 });
             }
         }
 
         return cells;
-    }, [year, month, daysMap, todayStart]);
+    }, [year, month, daysMap]);
 
-    // All current month date strings that are NOT in the past (editable dates)
-    const editableMonthDates = useMemo(() => {
-        return gridCells.filter((c) => c.isCurrentMonth && !c.isPast).map((c) => c.dateString);
+    // All current month date strings (all days in current month are editable!)
+    const currentMonthDates = useMemo(() => {
+        return gridCells.filter((c) => c.isCurrentMonth).map((c) => c.dateString);
     }, [gridCells]);
 
     // Global mouse up listener for drag-select finish
@@ -145,9 +139,9 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
         };
     }, []);
 
-    // Selection handlers: Ignore past days!
+    // Selection handlers: Allow all days in current month to be selected
     const handleCellMouseDown = (cell: GridCellData, e: React.MouseEvent) => {
-        if (!isEditMode || !cell.isCurrentMonth || cell.isPast) return;
+        if (!isEditMode || !cell.isCurrentMonth) return;
         if (e.button !== 0) return;
 
         setIsMouseDown(true);
@@ -159,7 +153,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
 
             const rangeDates = gridCells
                 .slice(start, end + 1)
-                .filter((c) => c.isCurrentMonth && !c.isPast)
+                .filter((c) => c.isCurrentMonth)
                 .map((c) => c.dateString);
 
             onSelectDates(Array.from(new Set([...selectedDates, ...rangeDates])));
@@ -175,25 +169,25 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
     };
 
     const handleCellMouseEnter = (cell: GridCellData) => {
-        if (!isEditMode || !isMouseDown || dragStartIndex === null || !cell.isCurrentMonth || cell.isPast) return;
+        if (!isEditMode || !isMouseDown || dragStartIndex === null || !cell.isCurrentMonth) return;
 
         const start = Math.min(dragStartIndex, cell.gridIndex);
         const end = Math.max(dragStartIndex, cell.gridIndex);
 
         const rangeDates = gridCells
             .slice(start, end + 1)
-            .filter((c) => c.isCurrentMonth && !c.isPast)
+            .filter((c) => c.isCurrentMonth)
             .map((c) => c.dateString);
 
         onSelectDates(Array.from(new Set([...selectedDates, ...rangeDates])));
     };
 
     const handleSelectAll = () => {
-        onSelectDates(editableMonthDates);
+        onSelectDates(currentMonthDates);
     };
 
     const isAllSelected =
-        selectedDates.length === editableMonthDates.length && editableMonthDates.length > 0;
+        selectedDates.length === currentMonthDates.length && currentMonthDates.length > 0;
 
     // Render Skeleton Grid when loading
     if (loading) {
@@ -309,10 +303,9 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = ({
                                 size="small"
                                 icon={<CheckSquareOutlined />}
                                 onClick={handleSelectAll}
-                                disabled={editableMonthDates.length === 0}
                             >
                                 {t('workCalendar.grid.btnSelectAll', {
-                                    count: editableMonthDates.length,
+                                    count: currentMonthDates.length,
                                 })}
                             </Button>
                         )}
