@@ -364,12 +364,20 @@
             "btnSave": "Lưu thay đổi",
             "btnCancel": "Hủy bỏ",
             "btnReset": "Reset mặc định",
+            "btnConfirmMonth": "Chốt lịch",
+            "btnAlreadyConfirmed": "Đã chốt lịch",
+            "alreadyConfirmedTooltip": "Lịch làm việc Tháng {{month}}/{{year}} đã được chốt.",
+            "confirmedBadge": "Đã chốt lịch",
+            "unconfirmedBadge": "Chưa chốt lịch",
+            "confirmMonthTitle": "Xác nhận chốt lịch làm việc",
+            "confirmMonthContent": "Bạn có chắc chắn muốn chốt lịch làm việc cho Tháng {{month}}/{{year}} không?",
             "hasChanges": "Có thay đổi",
             "confirmResetTitle": "Reset lịch về mặc định",
             "confirmResetContent": "Bạn có chắc chắn muốn khôi phục lại lịch mặc định cho tháng này không?",
             "editModeNotice": "Đang trong chế độ chỉnh sửa",
             "editModeDesc": "Click vào ô ngày để chọn/bỏ chọn, hoặc nhấp giữ rê chuột để chọn hàng loạt. Sau khi chỉnh sửa xong, bấm 'Lưu thay đổi'.",
-            "pastMonthEditDisabled": "Không thể điều chỉnh lịch của các tháng trong quá khứ"
+            "pastMonthEditDisabled": "Không thể điều chỉnh lịch của các tháng trong quá khứ",
+            "confirmedMonthEditDisabled": "Lịch làm việc Tháng {{month}}/{{year}} đã được chốt, không thể chỉnh sửa."
         },
         "summary": {
             "workingDays": "Tổng Ngày Làm Việc",
@@ -388,7 +396,7 @@
             "editedBadge": "Đã sửa",
             "overrideBadge": "Đã Override",
             "overrideTooltip": "Ngày đã được chỉnh sửa khác quy tắc mặc định",
-            "pastDayTooltip": "Ngày trong quá khứ (không thể chỉnh sửa)",
+            "pastDayTooltip": "Không thể chỉnh sửa lịch của ngày trong quá khứ",
             "plannedHoursLabel": "{{hours}}h kế hoạch",
             "plannedOffLabel": "0h (Nghỉ)"
         },
@@ -396,9 +404,9 @@
             "working": "Làm việc",
             "weekendOff": "Nghỉ tuần",
             "holiday": "Ngày lễ",
-            "workingDesc": "WORKING (Ngày làm việc chính thức)",
-            "weekendOffDesc": "WEEKEND_OFF (Nghỉ hàng tuần / Chủ nhật)",
-            "holidayDesc": "HOLIDAY (Ngày nghỉ lễ / Tết)"
+            "workingDesc": "Ngày làm việc chính thức",
+            "weekendOffDesc": "Nghỉ hàng tuần / Chủ nhật",
+            "holidayDesc": "Ngày nghỉ lễ / Tết"
         },
         "modal": {
             "editDayTitle": "Chỉnh sửa ngày {{date}}",
@@ -415,10 +423,21 @@
             "bulkEditDesc": "Các thiết lập dưới đây sẽ được áp dụng cho {{count}} ngày mà bạn đã chọn trên lưới lịch.",
             "btnApplyBulk": "Áp dụng cho {{count}} ngày"
         },
+        "alarm": {
+            "eyebrow": "CẢNH BÁO HỆ THỐNG",
+            "modalTitle": "Cảnh báo chốt lịch làm việc",
+            "targetNotice": "Tháng {{month}}/{{year}} chưa chốt lịch",
+            "targetSub": "Vui lòng kiểm tra & chốt lịch sớm nhất",
+            "modalDesc": "Tháng {{month}} chưa được chốt lịch làm việc. Vui lòng rà soát và chốt lịch để hệ thống tính hiệu suất chính xác.",
+            "btnConfigureNow": "Cấu hình ngay",
+            "btnCloseLater": "Để sau"
+        },
         "notifications": {
             "loadingData": "Đang tải dữ liệu lịch làm việc...",
             "saveSuccess": "Lưu thay đổi lịch làm việc thành công!",
             "resetSuccess": "Khôi phục lịch mặc định thành công!",
+            "confirmMonthSuccess": "Chốt lịch làm việc Tháng {{month}}/{{year}} thành công!",
+            "confirmMonthError": "Không thể chốt lịch làm việc. Vui lòng thử lại.",
             "singleUpdateSuccess": "Đã cập nhật trạng thái ngày {{date}}",
             "bulkUpdateSuccess": "Đã cập nhật đồng loạt {{count}} ngày đã chọn.",
             "saveError": "Có lỗi xảy ra khi lưu lịch làm việc.",

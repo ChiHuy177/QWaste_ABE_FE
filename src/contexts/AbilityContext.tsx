@@ -31,6 +31,7 @@ export function AbilityProvider({ children }: { children: React.ReactNode }) {
                 'admin',
                 'director',
                 'manager',
+                'planner',
                 'operator',
                 'qc_staff',
                 'maintenance',
@@ -58,7 +59,9 @@ export function AbilityProvider({ children }: { children: React.ReactNode }) {
 
         if (USE_MOCK_PERMISSIONS) {
             const mockPermissions = getPermissionsForRoles(normalizeRole);
-            return defineAbilityFor(normalizeRole, mockPermissions);
+            if (mockPermissions && mockPermissions.length > 0) {
+                return defineAbilityFor(normalizeRole, mockPermissions);
+            }
         }
 
         return defineAbilityFor(normalizeRole);

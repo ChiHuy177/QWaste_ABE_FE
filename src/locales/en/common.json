@@ -373,12 +373,20 @@
             "btnSave": "Save Changes",
             "btnCancel": "Cancel",
             "btnReset": "Reset Default",
+            "btnConfirmMonth": "Confirm Schedule",
+            "btnAlreadyConfirmed": "Schedule Locked",
+            "alreadyConfirmedTooltip": "Work schedule for Month {{month}}/{{year}} is already confirmed.",
+            "confirmedBadge": "Confirmed",
+            "unconfirmedBadge": "Unconfirmed",
+            "confirmMonthTitle": "Confirm Work Schedule",
+            "confirmMonthContent": "Are you sure you want to confirm the work schedule for Month {{month}}/{{year}}?",
             "hasChanges": "Modified",
             "confirmResetTitle": "Reset Calendar to Default",
             "confirmResetContent": "Are you sure you want to reset the calendar to default values for this month?",
             "editModeNotice": "In Edit Mode",
             "editModeDesc": "Click day cells to select/unselect, or click and drag mouse to bulk select. Once finished, click 'Save Changes'.",
-            "pastMonthEditDisabled": "Cannot edit schedule for past months"
+            "pastMonthEditDisabled": "Cannot edit schedule for past months",
+            "confirmedMonthEditDisabled": "Work schedule for Month {{month}}/{{year}} is already confirmed and cannot be edited."
         },
         "summary": {
             "workingDays": "Total Working Days",
@@ -397,7 +405,7 @@
             "editedBadge": "Edited",
             "overrideBadge": "Overridden",
             "overrideTooltip": "Date modified differently from default rule",
-            "pastDayTooltip": "Past date (cannot be edited)",
+            "pastDayTooltip": "Cannot edit schedule for past dates",
             "plannedHoursLabel": "{{hours}}h planned",
             "plannedOffLabel": "0h (Off)"
         },
@@ -405,9 +413,9 @@
             "working": "Working",
             "weekendOff": "Weekend Off",
             "holiday": "Holiday",
-            "workingDesc": "WORKING (Official Working Day)",
-            "weekendOffDesc": "WEEKEND_OFF (Weekly Rest / Sunday)",
-            "holidayDesc": "HOLIDAY (Public Holiday)"
+            "workingDesc": "Official Working Day",
+            "weekendOffDesc": "Weekly Rest / Sunday",
+            "holidayDesc": "Public Holiday"
         },
         "modal": {
             "editDayTitle": "Edit Date {{date}}",
@@ -424,16 +432,27 @@
             "bulkEditDesc": "The settings below will be applied to the {{count}} selected date(s) on the calendar grid.",
             "btnApplyBulk": "Apply for {{count}} days"
         },
+        "alarm": {
+            "eyebrow": "SYSTEM WARNING",
+            "modalTitle": "Work Calendar Alert",
+            "targetNotice": "Month {{month}}/{{year}} unconfirmed",
+            "targetSub": "Please review and lock schedule promptly",
+            "modalDesc": "Month {{month}} work schedule has not been confirmed. Please review and confirm to ensure accurate performance calculations.",
+            "btnConfigureNow": "Configure Now",
+            "btnCloseLater": "Later"
+        },
         "notifications": {
             "loadingData": "Loading work calendar data...",
             "saveSuccess": "Work calendar saved successfully!",
             "resetSuccess": "Calendar reset to default successfully!",
+            "confirmMonthSuccess": "Work schedule for Month {{month}}/{{year}} confirmed successfully!",
+            "confirmMonthError": "Failed to confirm work schedule. Please try again.",
             "singleUpdateSuccess": "Updated status for {{date}}",
             "bulkUpdateSuccess": "Bulk updated {{count}} selected days.",
-            "saveError": "An error occurred while saving work calendar.",
-            "resetError": "Failed to reset calendar to default.",
+            "saveError": "Failed to save work calendar.",
+            "resetError": "Failed to reset calendar.",
             "fetchError": "Failed to load work calendar data.",
-            "missingDataError": "Missing data for date {{date}}. Please check again."
+            "missingDataError": "Data missing for {{date}}. Please check again."
         }
     },
     "navUser": {

@@ -18,7 +18,7 @@ interface MobileSearchConfig {
 }
 
 interface ResponsivePageHeaderProps {
-    title: string;
+    title: ReactNode;
     icon?: ReactNode;
     loading?: boolean;
     className?: string;

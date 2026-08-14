@@ -119,7 +119,10 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                 onValuesChange={handleValuesChange}
                 initialValues={
                     isSingle && singleDayData
-                        ? { isWorkingDay: singleDayData.isWorkingDay, dayType: singleDayData.dayType }
+                        ? {
+                              isWorkingDay: singleDayData.isWorkingDay,
+                              dayType: singleDayData.dayType,
+                          }
                         : { isWorkingDay: true, dayType: 'WORKING' }
                 }
             >
@@ -140,7 +143,7 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                     rules={[{ required: true, message: t('workCalendar.modal.dayTypeLabel') }]}
                 >
                     <Radio.Group buttonStyle="solid" style={{ width: '100%' }}>
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                             <Radio value="WORKING">
                                 <span style={{ fontWeight: 500, color: sc.runtime.base }}>
                                     {t('workCalendar.dayType.workingDesc')}

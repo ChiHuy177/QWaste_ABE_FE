@@ -196,8 +196,7 @@ export const ENDPOINTS = {
             `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/terminate`,
         INCIDENT_DEFER: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/defer`,
         INCIDENT_PAUSE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/pause`,
-        COMPLETE: (id: PathParam) =>
-            `${BASE_PATHS.PRODUCTION_PLANS}/${id}/complete`,
+        COMPLETE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/complete`,
         IMPORT: `${BASE_PATHS.PRODUCTION_PLANS}/import`,
         IMPORT_CONFIRM: `${BASE_PATHS.PRODUCTION_PLANS}/import/confirm`,
     },
@@ -205,6 +204,8 @@ export const ENDPOINTS = {
         BASE: BASE_PATHS.WORK_CALENDAR,
         BATCH_UPDATE: `${BASE_PATHS.WORK_CALENDAR}/batchUpdate`,
         RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
+        CHECK_ALARM: `${BASE_PATHS.WORK_CALENDAR}/checkAlarm`,
+        CONFIRM_MONTH: `${BASE_PATHS.WORK_CALENDAR}/confirmMonth`,
     },
 } as const;
 
