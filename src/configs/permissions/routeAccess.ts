@@ -65,6 +65,10 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         action: 'view',
     },
 
+    '/admin/production-overview': {
+        subject: 'production_overview',
+        action: 'view',
+    },
     '/admin/floor-map': {
         subject: 'floor_map',
         action: 'update',

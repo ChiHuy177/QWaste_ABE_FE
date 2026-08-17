@@ -34,7 +34,7 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
     can(['view', 'update'], 'profile');
 
     // Grant access to process, staff, and tasks for all authenticated users
-    can('view', ['process', 'staff', 'tasks', 'production_monitor']);
+    can('view', ['process', 'staff', 'tasks', 'production_monitor', 'production_overview']);
 
     normalizedRoles.forEach((normalizedRole) => {
         switch (normalizedRole) {
@@ -55,9 +55,11 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
                     'machine_monitoring',
                     'machine_operator_history',
                     'space_monitoring',
+                    'production_overview',
                     'standard_step',
                 ]);
                 can('view', 'space_monitoring');
+                can('view', 'production_overview');
                 can('view', 'machine_overview');
                 // All 40 permissions are usually granted via API,
                 // but this fallback ensures they have basic view access.
@@ -65,6 +67,7 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
 
             case 'client':
                 can('view', 'space_monitoring');
+                can('view', 'production_overview');
                 break;
         }
     });

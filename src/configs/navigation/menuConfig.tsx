@@ -1,6 +1,7 @@
 import {
     LaptopOutlined,
     ApartmentOutlined,
+    BarChartOutlined,
     SettingOutlined,
     SafetyOutlined,
     ProjectOutlined,
@@ -73,6 +74,14 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         i18nKey: 'sidebar.navigation.productionPlan',
         icon: <CalendarOutlined />,
         subject: 'tasks',
+        action: 'view',
+    },
+    {
+        key: 'production-overview',
+        route: '/admin/production-overview',
+        i18nKey: 'permissionSubjects.production_overview',
+        icon: <BarChartOutlined />,
+        subject: 'production_overview',
         action: 'view',
     },
     {

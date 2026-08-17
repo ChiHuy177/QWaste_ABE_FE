@@ -16,6 +16,7 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'staff' },
         { action: 'view', subject: 'group' },
         { action: 'view', subject: 'space_monitoring' },
+        { action: 'view', subject: 'production_overview' },
         { action: 'view', subject: 'machine_overview' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
@@ -28,6 +29,7 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
     client: [
         { action: 'view', subject: 'overview' },
         { action: 'view', subject: 'space_monitoring' },
+        { action: 'view', subject: 'production_overview' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
     ],
@@ -43,6 +45,7 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'staff' },
         { action: 'view', subject: 'group' },
         { action: 'view', subject: 'space_monitoring' },
+        { action: 'view', subject: 'production_overview' },
         { action: 'view', subject: 'machine_overview' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },

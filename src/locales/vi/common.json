@@ -4725,9 +4725,80 @@
         "process": "Quy trình",
         "tasks": "Nhiệm vụ",
         "space_monitoring": "Giám sát khu vực",
+        "production_overview": "Tổng quan sản xuất",
         "production_monitor": "Giám sát sản xuất",
         "floor_map": "Sơ đồ mặt bằng",
         "all": "Tất cả"
     },
-    "stepTemplates": "Các bước làm"
+    "stepTemplates": "Các bước làm",
+    "productionOverview": {
+        "title": "Tổng quan sản xuất",
+        "header": {
+            "activeMachines": "máy hoạt động",
+            "updatedAt": "Cập nhật lúc"
+        },
+        "filters": {
+            "selectFactory": "Chọn nhà máy",
+            "time": "Thời gian",
+            "selectShiftPeriod": "CHỌN CA / KHOẢNG THỜI GIAN",
+            "customDateRange": "Tùy chọn khoảng ngày",
+            "dayShift": "Ca ngày"
+        },
+        "actions": {
+            "refreshData": "Làm mới dữ liệu",
+            "refreshSuccess": "Cập nhật dữ liệu thành công",
+            "exportReport": "Xuất báo cáo",
+            "preparingReport": "Đang chuẩn bị báo cáo tổng quan...",
+            "exportSuccess": "Xuất báo cáo thành công!",
+            "exportError": "Lỗi khi xuất báo cáo"
+        },
+        "kpi": {
+            "overallPlantOee": "HIỆU SUẤT TỔNG NHÀ MÁY",
+            "machineEfficiency": "HIỆU SUẤT MÁY",
+            "target": "Mục tiêu",
+            "vsYesterday": "so với hôm qua",
+            "totalDowntime": "TỔNG THỜI GIAN DỪNG",
+            "minutes": "phút",
+            "minutesOverTarget": "phút vượt mục tiêu",
+            "yieldRate": "TỶ LỆ SẢN LƯỢNG",
+            "vsPlan": "So với kế hoạch",
+            "actualProduction": "SẢN LƯỢNG THỰC TẾ",
+            "planShort": "KH"
+        },
+        "charts": {
+            "oeeByMachine": "Hiệu suất theo máy",
+            "planVsActualByMachine": "KH vs TT theo máy",
+            "outputPcs": "Sản lượng (sản phẩm)",
+            "planned": "Kế hoạch",
+            "actual": "Thực tế",
+            "planVsActualBySku": "Sản lượng KH vs TT theo mã hàng",
+            "planVsActualSkuDesc": "So sánh kế hoạch và thực tế theo từng mã sản phẩm"
+        },
+        "machineDetail": {
+            "backToOverview": "Tổng quan",
+            "selectMachine": "Chọn máy",
+            "runningSku": "Mã hàng đang chạy",
+            "operator": "Kỹ thuật viên",
+            "shift": "Ca làm việc",
+            "statusRunning": "Đang hoạt động",
+            "statusStopped": "Dừng máy",
+            "hourlyOutput": "Sản lượng theo giờ",
+            "hourlyOutputDesc": "Sản lượng thực tế theo từng mốc giờ trong ca",
+            "dailyOutput": "Sản lượng theo ngày",
+            "dailyOutputDesc": "So sánh kế hoạch và thực tế theo từng ngày",
+            "weeklyOutput": "Sản lượng theo tuần",
+            "weeklyOutputDesc": "So sánh kế hoạch và thực tế theo từng tuần",
+            "monthlyOutput": "Sản lượng theo tháng",
+            "monthlyOutputDesc": "So sánh kế hoạch và thực tế theo từng tháng",
+            "recent7DaysEfficiency": "Hiệu suất 7 ngày gần nhất",
+            "recent7DaysEfficiencyDesc": "Xu hướng hiệu suất và mức độ hoàn thành mục tiêu",
+            "actualOutput": "Thực tế",
+            "plannedOutput": "Kế hoạch",
+            "efficiency": "Hiệu suất",
+            "pcsPerHour": "sp/h",
+            "pcsPerDay": "sp/ngày",
+            "pcsPerWeek": "sp/tuần",
+            "pcsPerMonth": "sp/tháng"
+        }
+    }
 }

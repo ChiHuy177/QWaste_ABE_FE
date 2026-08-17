@@ -1,6 +1,7 @@
 import {
     LaptopOutlined,
     ApartmentOutlined,
+    BarChartOutlined,
     SettingOutlined,
     SafetyOutlined,
     AppstoreOutlined,
@@ -28,6 +29,16 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
                 '/admin/space-monitoring',
                 t('permissionSubjects.space_monitoring'),
                 <ApartmentOutlined />
+            )
+        );
+    }
+
+    if (ability.can('view', 'production_overview')) {
+        items.push(
+            createMenuItem(
+                '/admin/production-overview',
+                t('permissionSubjects.production_overview'),
+                <BarChartOutlined />
             )
         );
     }

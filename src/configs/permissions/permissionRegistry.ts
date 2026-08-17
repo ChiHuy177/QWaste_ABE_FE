@@ -116,6 +116,15 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         menuKey: 'space-monitoring',
         description: 'View space monitoring',
     },
+    // Production Overview
+    {
+        slug: 'production_overview:view',
+        subject: 'production_overview',
+        action: 'view',
+        routes: ['/admin/production-overview'],
+        menuKey: 'production-overview',
+        description: 'View production overview',
+    },
     // Production Monitor
     {
         slug: 'production_monitor:view',

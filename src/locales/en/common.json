@@ -4680,10 +4680,81 @@
         "process": "Process",
         "tasks": "Tasks",
         "space_monitoring": "Space Monitoring",
+        "production_overview": "Production Overview",
         "production_monitor": "Production Monitor",
         "floor_map": "Floor Map",
         "all": "All",
         "other": "Other"
     },
-    "stepTemplates": "Step templates"
+    "stepTemplates": "Step templates",
+    "productionOverview": {
+        "title": "Production Overview",
+        "header": {
+            "activeMachines": "machines active",
+            "updatedAt": "Updated at"
+        },
+        "filters": {
+            "selectFactory": "Select factory",
+            "time": "Time",
+            "selectShiftPeriod": "SELECT SHIFT / PERIOD",
+            "customDateRange": "Custom Date Range",
+            "dayShift": "Day shift"
+        },
+        "actions": {
+            "refreshData": "Refresh data",
+            "refreshSuccess": "Data refreshed successfully",
+            "exportReport": "Export Report",
+            "preparingReport": "Preparing overview report...",
+            "exportSuccess": "Report exported successfully!",
+            "exportError": "Failed to export report"
+        },
+        "kpi": {
+            "overallPlantOee": "PLANT OVERALL EFFICIENCY",
+            "machineEfficiency": "MACHINE EFFICIENCY",
+            "target": "Target",
+            "vsYesterday": "vs yesterday",
+            "totalDowntime": "TOTAL DOWNTIME",
+            "minutes": "mins",
+            "minutesOverTarget": "mins over target",
+            "yieldRate": "YIELD RATE",
+            "vsPlan": "vs planned target",
+            "actualProduction": "ACTUAL PRODUCTION",
+            "planShort": "Plan"
+        },
+        "charts": {
+            "oeeByMachine": "Machine Efficiency",
+            "planVsActualByMachine": "Plan vs Actual by Machine",
+            "outputPcs": "Production Output (pcs)",
+            "planned": "Planned",
+            "actual": "Actual",
+            "planVsActualBySku": "Plan vs Actual Output by SKU",
+            "planVsActualSkuDesc": "Plan vs Actual comparison by product SKU"
+        },
+        "machineDetail": {
+            "backToOverview": "Overview",
+            "selectMachine": "Select Machine",
+            "runningSku": "Running SKU",
+            "operator": "Operator",
+            "shift": "Shift",
+            "statusRunning": "Running",
+            "statusStopped": "Stopped",
+            "hourlyOutput": "Hourly Production Output",
+            "hourlyOutputDesc": "Actual output per hour during shift",
+            "dailyOutput": "Daily Production Output",
+            "dailyOutputDesc": "Plan vs Actual comparison by day",
+            "weeklyOutput": "Weekly Production Output",
+            "weeklyOutputDesc": "Plan vs Actual comparison by week",
+            "monthlyOutput": "Monthly Production Output",
+            "monthlyOutputDesc": "Plan vs Actual comparison by month",
+            "recent7DaysEfficiency": "7-Day Efficiency Trend",
+            "recent7DaysEfficiencyDesc": "Efficiency trend and target achievement rate",
+            "actualOutput": "Actual",
+            "plannedOutput": "Planned",
+            "efficiency": "Efficiency",
+            "pcsPerHour": "pcs/h",
+            "pcsPerDay": "pcs/day",
+            "pcsPerWeek": "pcs/week",
+            "pcsPerMonth": "pcs/month"
+        }
+    }
 }
