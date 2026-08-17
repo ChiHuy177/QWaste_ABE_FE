@@ -95,12 +95,6 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                                     {machineDetail.kpi.oee.current}%
                                 </Tag>
                             </div>
-                            <div style={{ fontSize: 12, color: token.colorTextSecondary, marginTop: 2 }}>
-                                {t('productionOverview.machineDetail.operator')}: <b>{info.operatorName}</b> •{' '}
-                                {t('productionOverview.machineDetail.shift')}: {info.shiftTime} •{' '}
-                                {t('productionOverview.header.updatedAt')} {info.updatedAt} •{' '}
-                                {t('productionOverview.machineDetail.runningSku')}: <b>{info.runningSku}</b>
-                            </div>
                         </div>
                     </div>
                 </div>
