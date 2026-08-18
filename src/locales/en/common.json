@@ -403,7 +403,7 @@
             "btnSingleEdit": "Edit This Day",
             "btnBulkEdit": "Edit Selected ({{count}})",
             "editedBadge": "Edited",
-            "overrideBadge": "Overridden",
+            "overrideBadge": "Customized",
             "overrideTooltip": "Date modified differently from default rule",
             "pastDayTooltip": "Cannot edit schedule for past dates",
             "plannedHoursLabel": "{{hours}}h planned",

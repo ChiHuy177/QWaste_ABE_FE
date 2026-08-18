@@ -394,7 +394,7 @@
             "btnSingleEdit": "Chỉnh sửa ngày này",
             "btnBulkEdit": "Chỉnh sửa ngày đã chọn ({{count}})",
             "editedBadge": "Đã sửa",
-            "overrideBadge": "Đã Override",
+            "overrideBadge": "Đã tùy chỉnh",
             "overrideTooltip": "Ngày đã được chỉnh sửa khác quy tắc mặc định",
             "pastDayTooltip": "Không thể chỉnh sửa lịch của ngày trong quá khứ",
             "plannedHoursLabel": "{{hours}}h kế hoạch",

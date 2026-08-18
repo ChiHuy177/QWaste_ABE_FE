@@ -13,13 +13,12 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
 
         if (hasManageAll) {
             can('manage', 'all');
+            return build();
         } else {
             permissions.forEach((rule) => {
                 can(rule.action, rule.subject, rule.conditions);
             });
         }
-
-        return build();
     }
 
     // Fallback to role-based permissions if no custom permissions
@@ -39,7 +38,29 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
     normalizedRoles.forEach((normalizedRole) => {
         switch (normalizedRole) {
             case 'planner':
-                can('manage', 'all');
+                can('view', [
+                    'machine',
+                    'mold',
+                    'operation_type',
+                    'space_level',
+                    'space',
+                    'step',
+                    'standard_step',
+                    'industry_filter',
+                    'energy',
+                    'machine_monitoring',
+                    'machine_operator_history',
+                    'space_monitoring',
+                    'machine_overview',
+                    'production_monitor',
+                    'production_plan',
+                    'work_calendar',
+                ]);
+                can('view', 'space_monitoring');
+                can('view', 'machine_overview');
+                can('view', 'production_monitor');
+                can(['view', 'create', 'update', 'delete', 'manage'], 'work_calendar');
+                can(['view', 'create', 'update', 'delete', 'manage'], 'production_plan');
                 break;
 
             case 'director':
