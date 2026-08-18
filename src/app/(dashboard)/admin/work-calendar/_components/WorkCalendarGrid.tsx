@@ -299,7 +299,10 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         }}
                     >
                         <div>
-                            <Text strong style={{ color: token.colorPrimary, fontSize: isMobile ? 12 : 14 }}>
+                            <Text
+                                strong
+                                style={{ color: token.colorPrimary, fontSize: isMobile ? 12 : 14 }}
+                            >
                                 {selectedDates.length > 0
                                     ? t('workCalendar.grid.selectedCount', {
                                           count: selectedDates.length,
