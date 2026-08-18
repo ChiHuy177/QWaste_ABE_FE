@@ -239,6 +239,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         isWorkingDay={dayData?.isWorkingDay}
                         isOverride={dayData?.isOverride}
                         plannedTime={dayData?.plannedTime}
+                        isMobile={isMobile}
                         onCellMouseDown={handleCellMouseDown}
                         onCellMouseEnter={handleCellMouseEnter}
                     />
@@ -251,6 +252,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                 originalDaysMap,
                 selectedDatesSet,
                 isEditMode,
+                isMobile,
                 handleCellMouseDown,
                 handleCellMouseEnter,
             ]
@@ -264,7 +266,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         borderRadius: token.borderRadiusLG,
                         boxShadow: token.boxShadow,
                     }}
-                    styles={{ body: { padding: isMobile ? 12 : 20 } }}
+                    styles={{ body: { padding: isMobile ? '8px 4px' : 20 } }}
                 >
                     <Skeleton active paragraph={{ rows: 8 }} />
                 </Card>
@@ -278,7 +280,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                     borderRadius: token.borderRadiusLG,
                     boxShadow: token.boxShadow,
                 }}
-                styles={{ body: { padding: isMobile ? 12 : 20 } }}
+                styles={{ body: { padding: isMobile ? '8px 4px' : 20 } }}
             >
                 {/* Edit mode selection toolbar */}
                 {isEditMode && (
@@ -288,16 +290,16 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            gap: 12,
-                            marginBottom: 16,
-                            padding: '10px 16px',
+                            gap: 8,
+                            marginBottom: 12,
+                            padding: isMobile ? '8px 10px' : '10px 16px',
                             background: token.colorBgLayout,
                             borderRadius: token.borderRadius,
                             border: `1px solid ${token.colorBorderSecondary}`,
                         }}
                     >
                         <div>
-                            <Text strong style={{ color: token.colorPrimary }}>
+                            <Text strong style={{ color: token.colorPrimary, fontSize: isMobile ? 12 : 14 }}>
                                 {selectedDates.length > 0
                                     ? t('workCalendar.grid.selectedCount', {
                                           count: selectedDates.length,
@@ -370,6 +372,21 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         }
                         .qwaste-work-calendar-wrapper .ant-picker-cell {
                             padding: 3px !important;
+                        }
+                        @media (max-width: 767px) {
+                            .qwaste-work-calendar-wrapper .ant-picker-cell-inner {
+                                min-height: 54px !important;
+                            }
+                            .qwaste-work-calendar-wrapper .ant-picker-cell {
+                                padding: 1px !important;
+                            }
+                            .qwaste-work-calendar-wrapper .ant-picker-calendar-date {
+                                padding: 0 !important;
+                            }
+                            .qwaste-work-calendar-wrapper .ant-picker-content th {
+                                padding: 4px 0 !important;
+                                font-size: 11px !important;
+                            }
                         }
                     `}</style>
                     <Calendar

@@ -413,6 +413,9 @@
             "working": "Working",
             "weekendOff": "Weekend Off",
             "holiday": "Holiday",
+            "workingShort": "Work",
+            "weekendOffShort": "Off",
+            "holidayShort": "Holiday",
             "workingDesc": "Official Working Day",
             "weekendOffDesc": "Weekly Rest / Sunday",
             "holidayDesc": "Public Holiday"
@@ -3970,7 +3973,8 @@
         "lineList": "Line Management",
         "spaceLevelList": "Hierarchy Level Management",
         "spaceList": "Space Management",
-        "industryFilterList": "Industry Filter List"
+        "industryFilterList": "Industry Filter List",
+        "workCalendar": "Work Calendar"
     },
     "settingsPage": {
         "success": "Settings updated successfully",

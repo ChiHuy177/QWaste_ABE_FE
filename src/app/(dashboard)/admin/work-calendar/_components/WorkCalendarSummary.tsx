@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Card, Col, Row, Statistic, Skeleton, theme } from 'antd';
+import { Card, Col, Row, Statistic, Skeleton, Grid, theme } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined, CoffeeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { WorkCalendarSummaryResponse } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
+
+const { useBreakpoint } = Grid;
 
 interface WorkCalendarSummaryProps {
     summary?: WorkCalendarSummaryResponse;
@@ -16,6 +18,8 @@ export const WorkCalendarSummary = React.memo<WorkCalendarSummaryProps>(
     ({ summary, loading = false }) => {
         const { t } = useTranslation('common');
         const { token } = theme.useToken();
+        const screens = useBreakpoint();
+        const isMobile = !screens.md;
         const isDark = token.colorBgContainer !== '#ffffff';
         const sc = isDark ? statusColors.dark : statusColors.light;
 
@@ -25,32 +29,39 @@ export const WorkCalendarSummary = React.memo<WorkCalendarSummaryProps>(
 
         if (loading) {
             return (
-                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Row
+                    gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}
+                    style={{ marginBottom: isMobile ? 12 : 24 }}
+                >
                     {[1, 2, 3].map((key) => (
-                        <Col xs={24} sm={8} key={key}>
+                        <Col xs={8} sm={8} key={key}>
                             <Card
                                 variant="borderless"
                                 style={{
-                                    borderRadius: 12,
-                                    height: 104,
+                                    borderRadius: token.borderRadiusLG,
+                                    height: isMobile ? 76 : 104,
                                     boxShadow: token.boxShadow,
                                     background: token.colorBgContainer,
                                 }}
-                                styles={{ body: { padding: 20 } }}
+                                styles={{ body: { padding: isMobile ? '8px 6px' : 20 } }}
                             >
                                 <Skeleton.Input
                                     active
                                     size="small"
                                     style={{
-                                        width: '55%',
-                                        height: 16,
-                                        marginBottom: 12,
+                                        width: '70%',
+                                        height: isMobile ? 12 : 16,
+                                        marginBottom: isMobile ? 6 : 12,
                                         display: 'block',
                                     }}
                                 />
                                 <Skeleton.Input
                                     active
-                                    style={{ width: '35%', height: 32, display: 'block' }}
+                                    style={{
+                                        width: '50%',
+                                        height: isMobile ? 22 : 32,
+                                        display: 'block',
+                                    }}
                                 />
                             </Card>
                         </Col>
@@ -60,34 +71,60 @@ export const WorkCalendarSummary = React.memo<WorkCalendarSummaryProps>(
         }
 
         return (
-            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Row
+                gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}
+                style={{ marginBottom: isMobile ? 12 : 24 }}
+            >
                 {/* Working Days */}
-                <Col xs={24} sm={8}>
+                <Col xs={8} sm={8}>
                     <Card
                         variant="borderless"
                         style={{
-                            borderRadius: 12,
-                            height: 104,
+                            borderRadius: token.borderRadiusLG,
+                            height: isMobile ? 76 : 104,
                             background: sc.runtime.bg,
                             border: `1px solid ${sc.runtime.border}`,
                             boxShadow: token.boxShadow,
                         }}
-                        styles={{ body: { padding: 20 } }}
+                        styles={{ body: { padding: isMobile ? '8px 6px' : 20 } }}
                     >
                         <Statistic
                             title={
-                                <span style={{ color: token.colorTextSecondary, fontWeight: 500 }}>
+                                <span
+                                    style={{
+                                        color: token.colorTextSecondary,
+                                        fontWeight: 500,
+                                        fontSize: isMobile ? 10 : 14,
+                                        display: 'block',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                    }}
+                                >
                                     {t('workCalendar.summary.workingDays')}
                                 </span>
                             }
                             value={workingDays}
-                            suffix={t('workCalendar.summary.unitDays')}
+                            suffix={
+                                <span style={{ fontSize: isMobile ? 10 : 14 }}>
+                                    {t('workCalendar.summary.unitDays')}
+                                </span>
+                            }
                             styles={{
-                                content: { color: sc.runtime.base, fontWeight: 700, fontSize: 28 },
+                                content: {
+                                    color: sc.runtime.base,
+                                    fontWeight: 700,
+                                    fontSize: isMobile ? 18 : 28,
+                                    lineHeight: 1.2,
+                                },
                             }}
                             prefix={
                                 <CalendarOutlined
-                                    style={{ marginRight: 8, color: sc.runtime.base }}
+                                    style={{
+                                        marginRight: isMobile ? 4 : 8,
+                                        fontSize: isMobile ? 13 : 16,
+                                        color: sc.runtime.base,
+                                    }}
                                 />
                             }
                         />
@@ -95,70 +132,114 @@ export const WorkCalendarSummary = React.memo<WorkCalendarSummaryProps>(
                 </Col>
 
                 {/* Off Days */}
-                <Col xs={24} sm={8}>
+                <Col xs={8} sm={8}>
                     <Card
                         variant="borderless"
                         style={{
-                            borderRadius: 12,
-                            height: 104,
+                            borderRadius: token.borderRadiusLG,
+                            height: isMobile ? 76 : 104,
                             background: sc.idle.bg,
                             border: `1px solid ${sc.idle.border}`,
                             boxShadow: token.boxShadow,
                         }}
-                        styles={{ body: { padding: 20 } }}
+                        styles={{ body: { padding: isMobile ? '8px 6px' : 20 } }}
                     >
                         <Statistic
                             title={
-                                <span style={{ color: token.colorTextSecondary, fontWeight: 500 }}>
+                                <span
+                                    style={{
+                                        color: token.colorTextSecondary,
+                                        fontWeight: 500,
+                                        fontSize: isMobile ? 10 : 14,
+                                        display: 'block',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                    }}
+                                >
                                     {t('workCalendar.summary.offDays')}
                                 </span>
                             }
                             value={offDays}
-                            suffix={t('workCalendar.summary.unitDays')}
+                            suffix={
+                                <span style={{ fontSize: isMobile ? 10 : 14 }}>
+                                    {t('workCalendar.summary.unitDays')}
+                                </span>
+                            }
                             styles={{
-                                content: { color: sc.idle.base, fontWeight: 700, fontSize: 28 },
+                                content: {
+                                    color: sc.idle.base,
+                                    fontWeight: 700,
+                                    fontSize: isMobile ? 18 : 28,
+                                    lineHeight: 1.2,
+                                },
                             }}
                             prefix={
-                                <CoffeeOutlined style={{ marginRight: 8, color: sc.idle.base }} />
+                                <CoffeeOutlined
+                                    style={{
+                                        marginRight: isMobile ? 4 : 8,
+                                        fontSize: isMobile ? 13 : 16,
+                                        color: sc.idle.base,
+                                    }}
+                                />
                             }
                         />
                     </Card>
                 </Col>
 
                 {/* Total Planned Hours */}
-                <Col xs={24} sm={8}>
+                <Col xs={8} sm={8}>
                     <Card
                         variant="borderless"
                         style={{
-                            borderRadius: 12,
-                            height: 104,
+                            borderRadius: token.borderRadiusLG,
+                            height: isMobile ? 76 : 104,
                             background: isDark
                                 ? 'rgba(61, 125, 210, 0.14)'
                                 : 'rgba(7, 70, 149, 0.08)',
                             border: `1px solid ${token.colorPrimaryBorder}`,
                             boxShadow: token.boxShadow,
                         }}
-                        styles={{ body: { padding: 20 } }}
+                        styles={{ body: { padding: isMobile ? '8px 6px' : 20 } }}
                     >
                         <Statistic
                             title={
-                                <span style={{ color: token.colorTextSecondary, fontWeight: 500 }}>
+                                <span
+                                    style={{
+                                        color: token.colorTextSecondary,
+                                        fontWeight: 500,
+                                        fontSize: isMobile ? 10 : 14,
+                                        display: 'block',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                    }}
+                                >
                                     {t('workCalendar.summary.plannedHours')}
                                 </span>
                             }
                             value={plannedHours}
-                            suffix={t('workCalendar.summary.unitHours')}
+                            suffix={
+                                <span style={{ fontSize: isMobile ? 10 : 14 }}>
+                                    {t('workCalendar.summary.unitHours')}
+                                </span>
+                            }
                             precision={1}
                             styles={{
                                 content: {
                                     color: token.colorPrimary,
                                     fontWeight: 700,
-                                    fontSize: 28,
+                                    fontSize: isMobile ? 18 : 28,
+                                    lineHeight: 1.2,
                                 },
                             }}
                             prefix={
                                 <ClockCircleOutlined
-                                    style={{ marginRight: 8, color: token.colorPrimary }}
+                                    style={{
+                                        marginRight: isMobile ? 4 : 8,
+                                        fontSize: isMobile ? 13 : 16,
+                                        color: token.colorPrimary,
+                                    }}
                                 />
                             }
                         />

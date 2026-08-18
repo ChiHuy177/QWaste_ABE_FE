@@ -404,6 +404,9 @@
             "working": "Làm việc",
             "weekendOff": "Nghỉ tuần",
             "holiday": "Ngày lễ",
+            "workingShort": "Đi làm",
+            "weekendOffShort": "Nghỉ",
+            "holidayShort": "Lễ",
             "workingDesc": "Ngày làm việc chính thức",
             "weekendOffDesc": "Nghỉ hàng tuần / Chủ nhật",
             "holidayDesc": "Ngày nghỉ lễ / Tết"
@@ -412,7 +415,7 @@
             "editDayTitle": "Chỉnh sửa ngày {{date}}",
             "selectedDateLabel": "Ngày chọn: ",
             "workingStatusLabel": "Trạng thái đi làm",
-            "dayTypeLabel": "Loại ngày (Day Type)",
+            "dayTypeLabel": "Loại ngày",
             "statusWorking": "Đi làm",
             "statusOff": "Nghỉ",
             "btnApply": "Áp dụng"
@@ -3748,7 +3751,8 @@
         "lineList": "Quản lý băng chuyền",
         "spaceLevelList": "Quản lý cấp độ khu vực",
         "spaceList": "Quản lý khu vực",
-        "industryFilterList": "Quản lý bộ lọc"
+        "industryFilterList": "Quản lý bộ lọc",
+        "workCalendar": "Lịch làm việc"
     },
     "addTaskForm": {
         "title": "Thêm Công việc Mới",

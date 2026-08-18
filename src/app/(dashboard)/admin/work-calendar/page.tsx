@@ -13,6 +13,7 @@ import {
     DayType,
 } from '@/types/WorkCalendar';
 import { WorkCalendarService } from '@/services/WorkCalendarService';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { WorkCalendarHeader } from './_components/WorkCalendarHeader';
 import { WorkCalendarSummary } from './_components/WorkCalendarSummary';
 import { WorkCalendarGrid } from './_components/WorkCalendarGrid';
@@ -38,6 +39,7 @@ const getErrorMessage = (err: any, fallbackMessage: string): string => {
 
 export default function WorkCalendarPage() {
     const { t } = useTranslation('common');
+    usePageTitle(t('pageTitle.workCalendar', t('workCalendar.header.title')));
     const searchParams = useSearchParams();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
