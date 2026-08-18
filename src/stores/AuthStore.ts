@@ -22,6 +22,9 @@ class AuthStoreClass {
 
     clear() {
         this.removeUser();
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('has_seen_calendar_popup');
+        }
     }
 }
 
