@@ -58,12 +58,6 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             }
         };
 
-        const handleClick = (e: React.MouseEvent) => {
-            if (isEditMode && onCellMouseDown) {
-                onCellMouseDown(dateString, dayIndex, e);
-            }
-        };
-
         if (!isCurrentMonth) {
             return (
                 <div
@@ -126,7 +120,6 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             <div
                 onMouseDown={handleMouseDown}
                 onMouseEnter={handleMouseEnter}
-                onClick={handleClick}
                 style={{
                     position: 'relative',
                     height: '100%',
@@ -329,7 +322,7 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             </div>
         );
 
-        if (isMobile) {
+        if (isMobile && !isEditMode) {
             const tooltipTitle = `${dateString} (${typeLabel}): ${
                 isWorkingDay
                     ? t('workCalendar.grid.plannedHoursLabel', { hours: plannedTime })
