@@ -282,7 +282,6 @@ export default function WorkCalendarPage() {
                 flexDirection: 'column',
                 width: '100%',
                 padding: 0,
-                flex: 1,
             }}
         >
             <WorkCalendarHeader

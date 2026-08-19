@@ -194,8 +194,6 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                         overflow: 'auto',
                         background: colorBgLayout,
                         borderRadius: borderRadiusLG,
-                        display: 'flex',
-                        flexDirection: 'column',
                     }}
                 >
                     {error403 ? (
