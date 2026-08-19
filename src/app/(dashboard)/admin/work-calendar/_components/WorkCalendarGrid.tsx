@@ -265,8 +265,19 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                     style={{
                         borderRadius: token.borderRadiusLG,
                         boxShadow: token.boxShadow,
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: isMobile ? 480 : 560,
                     }}
-                    styles={{ body: { padding: isMobile ? '8px 4px' : 20 } }}
+                    styles={{
+                        body: {
+                            padding: isMobile ? '8px 6px' : 20,
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                        },
+                    }}
                 >
                     <Skeleton active paragraph={{ rows: 8 }} />
                 </Card>
@@ -274,15 +285,8 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
         }
 
         return (
-            <Card
-                variant="borderless"
-                style={{
-                    borderRadius: token.borderRadiusLG,
-                    boxShadow: token.boxShadow,
-                }}
-                styles={{ body: { padding: isMobile ? '8px 4px' : 20 } }}
-            >
-                {/* Edit mode selection toolbar */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                {/* Edit mode selection toolbar OUTSIDE the calendar card */}
                 {isEditMode && (
                     <div
                         style={{
@@ -292,10 +296,11 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                             flexWrap: 'wrap',
                             gap: 8,
                             marginBottom: 12,
-                            padding: isMobile ? '8px 10px' : '10px 16px',
-                            background: token.colorBgLayout,
-                            borderRadius: token.borderRadius,
+                            padding: isMobile ? '8px 12px' : '10px 16px',
+                            background: token.colorBgContainer,
+                            borderRadius: token.borderRadiusLG,
                             border: `1px solid ${token.colorBorderSecondary}`,
+                            boxShadow: token.boxShadow,
                         }}
                     >
                         <div>
@@ -307,7 +312,9 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                                     ? t('workCalendar.grid.selectedCount', {
                                           count: selectedDates.length,
                                       })
-                                    : t('workCalendar.grid.selectTip')}
+                                    : isMobile
+                                      ? t('workCalendar.grid.selectTipMobile')
+                                      : t('workCalendar.grid.selectTip')}
                             </Text>
                         </div>
 
@@ -359,46 +366,161 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                     </div>
                 )}
 
-                {/* Ant Design Built-in Calendar Component */}
-                <div className="qwaste-work-calendar-wrapper">
-                    <style jsx global>{`
-                        .qwaste-work-calendar-wrapper .ant-picker-calendar-date {
-                            margin: 0 !important;
-                            padding: 2px !important;
-                            height: 100% !important;
-                        }
-                        .qwaste-work-calendar-wrapper .ant-picker-cell-inner {
-                            min-height: 94px !important;
-                        }
-                        .qwaste-work-calendar-wrapper .ant-picker-calendar-date-content {
-                            height: 100% !important;
-                        }
-                        .qwaste-work-calendar-wrapper .ant-picker-cell {
-                            padding: 3px !important;
-                        }
-                        @media (max-width: 767px) {
-                            .qwaste-work-calendar-wrapper .ant-picker-cell-inner {
-                                min-height: 54px !important;
+                {/* Calendar Card - Dedicated solely to the calendar grid */}
+                <Card
+                    variant="borderless"
+                    style={{
+                        borderRadius: token.borderRadiusLG,
+                        boxShadow: token.boxShadow,
+                        flex: '1 0 auto',
+                        minHeight: isMobile ? (isEditMode ? 440 : 480) : 'fit-content',
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
+                    styles={{
+                        body: {
+                            padding: isMobile ? '8px 6px 12px 6px' : 20,
+                            flex: '1 0 auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            minHeight: isMobile
+                                ? isEditMode
+                                    ? 440
+                                    : 'fit-content'
+                                : 'fit-content',
+                        },
+                    }}
+                >
+                    {/* Ant Design Built-in Calendar Component */}
+                    <div className="qwaste-work-calendar-wrapper">
+                        <style jsx global>{`
+                            .qwaste-work-calendar-wrapper {
+                                width: 100%;
+                                flex: 1 0 auto;
+                                display: flex;
+                                flex-direction: column;
+                                min-height: 0;
+                                height: 100%;
                             }
-                            .qwaste-work-calendar-wrapper .ant-picker-cell {
-                                padding: 1px !important;
+                            .qwaste-work-calendar-wrapper .ant-picker-calendar,
+                            .qwaste-work-calendar-wrapper .ant-picker-calendar-full,
+                            .qwaste-work-calendar-wrapper .ant-picker-panel,
+                            .qwaste-work-calendar-wrapper .ant-picker-date-panel,
+                            .qwaste-work-calendar-wrapper .ant-picker-body {
+                                flex: 1 !important;
+                                display: flex !important;
+                                flex-direction: column !important;
+                                height: 100% !important;
+                                min-height: 0 !important;
+                                padding: 0 !important;
+                                width: 100% !important;
                             }
-                            .qwaste-work-calendar-wrapper .ant-picker-calendar-date {
+                            .qwaste-work-calendar-wrapper table.ant-picker-content {
+                                flex: 1 !important;
+                                height: 100% !important;
+                                width: 100% !important;
+                                display: flex !important;
+                                flex-direction: column !important;
+                                min-height: 0 !important;
+                            }
+                            .qwaste-work-calendar-wrapper table.ant-picker-content thead {
+                                display: block !important;
+                                width: 100% !important;
+                                flex-shrink: 0 !important;
+                            }
+                            .qwaste-work-calendar-wrapper table.ant-picker-content thead tr {
+                                display: grid !important;
+                                grid-template-columns: repeat(7, 1fr) !important;
+                                width: 100% !important;
+                            }
+                            .qwaste-work-calendar-wrapper table.ant-picker-content thead th {
+                                padding: 6px 0 8px 0 !important;
+                                font-size: 13px !important;
+                                font-weight: 600 !important;
+                                text-align: center !important;
+                            }
+                            .qwaste-work-calendar-wrapper table.ant-picker-content tbody {
+                                display: grid !important;
+                                grid-template-rows: repeat(6, minmax(84px, 1fr)) !important;
+                                flex: 1 !important;
+                                height: 100% !important;
+                                width: 100% !important;
+                                min-height: 0 !important;
+                                gap: 4px !important;
+                            }
+                            .qwaste-work-calendar-wrapper table.ant-picker-content tbody tr {
+                                display: grid !important;
+                                grid-template-columns: repeat(7, 1fr) !important;
+                                min-height: 0 !important;
+                                height: 100% !important;
+                                gap: 4px !important;
+                            }
+                            .qwaste-work-calendar-wrapper
+                                table.ant-picker-content
+                                td.ant-picker-cell {
+                                display: block !important;
+                                height: 100% !important;
+                                min-height: 0 !important;
                                 padding: 0 !important;
                             }
-                            .qwaste-work-calendar-wrapper .ant-picker-content th {
-                                padding: 4px 0 !important;
-                                font-size: 11px !important;
+                            .qwaste-work-calendar-wrapper .ant-picker-cell-inner {
+                                height: 100% !important;
+                                min-height: 0 !important;
+                                display: flex !important;
+                                flex-direction: column !important;
+                                flex: 1 !important;
                             }
-                        }
-                    `}</style>
-                    <Calendar
-                        value={calendarValue}
-                        headerRender={() => null}
-                        fullCellRender={fullCellRender}
-                    />
-                </div>
-            </Card>
+                            .qwaste-work-calendar-wrapper .ant-picker-calendar-date {
+                                height: 100% !important;
+                                min-height: 0 !important;
+                                display: flex !important;
+                                flex-direction: column !important;
+                                flex: 1 !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                            .qwaste-work-calendar-wrapper .ant-picker-calendar-date-content {
+                                height: 100% !important;
+                                flex: 1 !important;
+                                display: flex !important;
+                                flex-direction: column !important;
+                                min-height: 0 !important;
+                            }
+                            @media (max-width: 767px) {
+                                .qwaste-work-calendar-wrapper table.ant-picker-content tbody {
+                                    grid-template-rows: repeat(
+                                        6,
+                                        minmax(${isEditMode ? '64px' : '72px'}, 1fr)
+                                    ) !important;
+                                    gap: 2px !important;
+                                }
+                                .qwaste-work-calendar-wrapper table.ant-picker-content tbody tr {
+                                    gap: 2px !important;
+                                }
+                                .qwaste-work-calendar-wrapper table.ant-picker-content thead th {
+                                    padding: 4px 0 6px 0 !important;
+                                    font-size: 11.5px !important;
+                                }
+                            }
+                        `}</style>
+                        <Calendar
+                            value={calendarValue}
+                            headerRender={() => null}
+                            fullCellRender={fullCellRender}
+                        />
+                    </div>
+                </Card>
+
+                {/* Guaranteed bottom scroll spacer */}
+                <div
+                    style={{
+                        height: isMobile ? (isEditMode ? 28 : 12) : 16,
+                        minHeight: isMobile ? (isEditMode ? 28 : 12) : 16,
+                        width: '100%',
+                        flexShrink: 0,
+                    }}
+                />
+            </div>
         );
     }
 );

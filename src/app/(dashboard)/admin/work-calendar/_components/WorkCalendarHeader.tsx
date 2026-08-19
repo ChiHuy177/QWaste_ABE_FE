@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Button, DatePicker, Popconfirm, Space, Tag, Alert, Tooltip, theme } from 'antd';
+import { Button, DatePicker, Popconfirm, Space, Tag, Alert, Tooltip, theme, Grid } from 'antd';
 import {
     LeftOutlined,
     RightOutlined,
@@ -9,7 +9,7 @@ import {
     SaveOutlined,
     UndoOutlined,
     ReloadOutlined,
-    WarningOutlined,
+    WarningFilled,
     CheckCircleOutlined,
     ClockCircleOutlined,
 } from '@ant-design/icons';
@@ -54,6 +54,8 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
     }) => {
         const { t, i18n } = useTranslation('common');
         const { token } = theme.useToken();
+        const screens = Grid.useBreakpoint();
+        const isMobile = !screens.md;
         const ability = useAbility();
         const canUpdate = ability.can('update', 'work_calendar');
         const canReset = ability.can('reset', 'work_calendar');
@@ -310,12 +312,40 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
                 {/* Edit Mode Alert Banner */}
                 {isEditMode && (
                     <Alert
-                        title={t('workCalendar.header.editModeNotice')}
-                        description={t('workCalendar.header.editModeDesc')}
+                        message={
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    fontSize: isMobile ? 13 : 14,
+                                    color: token.colorWarningText,
+                                    letterSpacing: '-0.01em',
+                                }}
+                            >
+                                {t('workCalendar.header.editModeNotice')}
+                            </div>
+                        }
+                        description={
+                            <div
+                                style={{
+                                    fontSize: isMobile ? 11.5 : 12.5,
+                                    color: token.colorTextSecondary,
+                                    lineHeight: 1.35,
+                                    marginTop: 2,
+                                }}
+                            >
+                                {isMobile
+                                    ? t('workCalendar.header.editModeDescMobile')
+                                    : t('workCalendar.header.editModeDesc')}
+                            </div>
+                        }
                         type="warning"
                         showIcon
-                        icon={<WarningOutlined />}
-                        style={{ borderRadius: token.borderRadius, marginBottom: 16 }}
+                        icon={<WarningFilled style={{ fontSize: isMobile ? 16 : 18 }} />}
+                        style={{
+                            borderRadius: token.borderRadiusLG,
+                            marginBottom: 12,
+                            padding: isMobile ? '8px 12px' : '10px 16px',
+                        }}
                     />
                 )}
             </>

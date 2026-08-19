@@ -376,6 +376,7 @@
             "confirmResetContent": "Bạn có chắc chắn muốn khôi phục lại lịch mặc định cho tháng này không?",
             "editModeNotice": "Đang trong chế độ chỉnh sửa",
             "editModeDesc": "Click vào ô ngày để chọn/bỏ chọn, hoặc nhấp giữ rê chuột để chọn hàng loạt. Sau khi chỉnh sửa xong, bấm 'Lưu thay đổi'.",
+            "editModeDescMobile": "Chạm vào các ô ngày để chọn hoặc dùng 'Chọn tất cả'. Khi hoàn tất, bấm 'Lưu thay đổi'.",
             "pastMonthEditDisabled": "Không thể điều chỉnh lịch của các tháng trong quá khứ",
             "confirmedMonthEditDisabled": "Lịch làm việc Tháng {{month}}/{{year}} đã được chốt, không thể chỉnh sửa."
         },
@@ -388,6 +389,7 @@
         },
         "grid": {
             "selectTip": "Mẹo: Bạn có thể click vào các ô ngày hoặc nhấp giữ kéo rê chuột để chọn nhiều ngày.",
+            "selectTipMobile": "Chạm vào các ô ngày để chọn hoặc bấm 'Chọn tất cả'.",
             "selectedCount": "Đã chọn {{count}} ngày",
             "btnSelectAll": "Chọn tất cả ({{count}})",
             "btnClearSelection": "Bỏ chọn tất cả",

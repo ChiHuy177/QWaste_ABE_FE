@@ -385,6 +385,7 @@
             "confirmResetContent": "Are you sure you want to reset the calendar to default values for this month?",
             "editModeNotice": "In Edit Mode",
             "editModeDesc": "Click day cells to select/unselect, or click and drag mouse to bulk select. Once finished, click 'Save Changes'.",
+            "editModeDescMobile": "Tap day cells to select or use 'Select All'. When finished, tap 'Save Changes'.",
             "pastMonthEditDisabled": "Cannot edit schedule for past months",
             "confirmedMonthEditDisabled": "Work schedule for Month {{month}}/{{year}} is already confirmed and cannot be edited."
         },
@@ -397,6 +398,7 @@
         },
         "grid": {
             "selectTip": "Tip: You can click day cells or click and drag mouse to select multiple days.",
+            "selectTipMobile": "Tap day cells to select or use 'Select All'.",
             "selectedCount": "{{count}} days selected",
             "btnSelectAll": "Select All ({{count}})",
             "btnClearSelection": "Clear Selection",

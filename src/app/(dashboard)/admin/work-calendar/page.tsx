@@ -277,13 +277,12 @@ export default function WorkCalendarPage() {
     return (
         <div
             style={{
-                height: isMobile ? 'auto' : '100%',
-                minHeight: 0,
-                overflow: isMobile ? 'visible' : 'auto',
+                minHeight: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 width: '100%',
                 padding: 0,
+                flex: 1,
             }}
         >
             <WorkCalendarHeader
