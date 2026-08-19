@@ -312,7 +312,7 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
                 {/* Edit Mode Alert Banner */}
                 {isEditMode && (
                     <Alert
-                        message={
+                        title={
                             <div
                                 style={{
                                     fontWeight: 700,
