@@ -4,14 +4,15 @@ import React from 'react';
 import { Card, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
-    LineChart,
-    Line,
+    BarChart,
+    Bar,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     Legend,
     ResponsiveContainer,
+    Cell,
 } from 'recharts';
 import {
     OutputTimelinePoint,
@@ -86,16 +87,18 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                 <Text style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
                     {title}
                 </Text>
-                <div style={{ fontSize: 12, color: token.colorTextDescription }}>
-                    {subtitle}
-                </div>
+                <div style={{ fontSize: 12, color: token.colorTextDescription }}>{subtitle}</div>
             </div>
 
             {/* Recharts Container */}
             <div style={{ width: '100%', height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} opacity={0.5} />
+                    <BarChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke={token.colorBorderSecondary}
+                            opacity={0.5}
+                        />
                         <XAxis
                             dataKey="label"
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
@@ -104,7 +107,9 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                         <YAxis
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
                             axisLine={{ stroke: token.colorBorderSecondary }}
-                            tickFormatter={(val) => (val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val)}
+                            tickFormatter={(val) =>
+                                val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val
+                            }
                         />
                         <Tooltip
                             contentStyle={{
@@ -133,31 +138,35 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                             />
                         )}
 
-                        {/* Planned line: Rendered when hasPlanLine is true */}
+                        {/* Planned Bar: Rendered when hasPlanLine is true */}
                         {hasPlanLine && (
-                            <Line
-                                type="monotone"
+                            <Bar
                                 dataKey="planned"
                                 name="planned"
-                                stroke={token.colorTextSecondary}
-                                strokeDasharray="5 5"
-                                strokeWidth={2}
-                                dot={{ r: 4, fill: token.colorTextSecondary }}
-                                activeDot={{ r: 6 }}
+                                fill={token.colorTextQuaternary}
+                                radius={[4, 4, 0, 0]}
+                                maxBarSize={24}
                             />
                         )}
 
-                        {/* Actual line: Always rendered */}
-                        <Line
-                            type="monotone"
+                        {/* Actual Bar: Always rendered */}
+                        <Bar
                             dataKey="actual"
                             name="actual"
-                            stroke={token.colorSuccess}
-                            strokeWidth={3}
-                            dot={{ r: 4, fill: token.colorSuccess }}
-                            activeDot={{ r: 6 }}
-                        />
-                    </LineChart>
+                            fill={token.colorSuccess}
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={hasPlanLine ? 24 : 36}
+                        >
+                            {data.map((entry, index) => (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={
+                                        entry.stoppageNote ? token.colorError : token.colorSuccess
+                                    }
+                                />
+                            ))}
+                        </Bar>
+                    </BarChart>
                 </ResponsiveContainer>
             </div>
 

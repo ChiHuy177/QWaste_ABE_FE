@@ -9,9 +9,21 @@ export interface KpiSummaryData {
         yesterdayDiff: number;
         statusTag: string;
     };
+    maxCapacity?: {
+        current: number;
+        unit: string;
+        target?: number;
+        periodLabel?: string;
+    };
     downtimeMinutes: {
         current: number;
         overTargetMinutes: number;
+    };
+    actualCapacity?: {
+        current: number;
+        unit: string;
+        rateVsMax?: number;
+        periodLabel?: string;
     };
     yieldRate: {
         current: number;
@@ -50,9 +62,11 @@ export interface OutputTimelinePoint {
 }
 
 export interface DailyEfficiencyPoint {
-    date: string; // "11/08", "12/08", ..., "17/08"
-    efficiency: number;
-    target: number;
+    date: string; // "11/08", "12/08", ..., "17/08" (or "07/2025", ...)
+    efficiency: number; // Operating ratio %
+    target?: number;
+    maxCapacityHours?: number; // e.g. 195.00 h
+    actualOperatingHours?: number; // e.g. 120.00 h
 }
 
 export interface MachineDetailInfo {
@@ -205,7 +219,12 @@ export const BASE_MACHINE_CONFIGS: Record<string, BaseMachineConfig> = {
             { label: '02:00', actual: 128 },
             { label: '03:00', actual: 115 },
             { label: '04:00', actual: 110 },
-            { label: '05:00', actual: 95, stoppageNote: 'Dừng máy từ 05:12 - Gãy dao phay số 3. Thời gian dừng tích lũy: 32 phút.' },
+            {
+                label: '05:00',
+                actual: 95,
+                stoppageNote:
+                    'Dừng máy từ 05:12 - Gãy dao phay số 3. Thời gian dừng tích lũy: 32 phút.',
+            },
             { label: '06:00', actual: 0 },
             { label: '07:00', actual: 0 },
         ],
@@ -216,12 +235,22 @@ export const BASE_MACHINE_CONFIGS: Record<string, BaseMachineConfig> = {
             { label: 'T6 14/08', planned: 1200, actual: 1020 },
             { label: 'T7 15/08', planned: 1150, actual: 890 },
             { label: 'CN 16/08', planned: 850, actual: 940 },
-            { label: 'T2 17/08', planned: 1000, actual: 750, stoppageNote: 'Dừng máy 157 phút ngày 17/08' },
+            {
+                label: 'T2 17/08',
+                planned: 1000,
+                actual: 750,
+                stoppageNote: 'Dừng máy 157 phút ngày 17/08',
+            },
         ],
         weeklyTimeline: [
             { label: 'Tuần 1 (01-07/08)', planned: 5800, actual: 5800 },
             { label: 'Tuần 2 (08-14/08)', planned: 6400, actual: 5650 },
-            { label: 'Tuần 3 (15-21/08)', planned: 6100, actual: 4800, stoppageNote: 'Sự cố gãy dao phay tuần 3' },
+            {
+                label: 'Tuần 3 (15-21/08)',
+                planned: 6100,
+                actual: 4800,
+                stoppageNote: 'Sự cố gãy dao phay tuần 3',
+            },
             { label: 'Tuần 4 (22-28/08)', planned: 6700, actual: 5900 },
         ],
         monthlyTimeline: [
@@ -680,12 +709,22 @@ export const BASE_MACHINE_CONFIGS: Record<string, BaseMachineConfig> = {
             { label: 'T6 14/08', planned: 1050, actual: 840 },
             { label: 'T7 15/08', planned: 950, actual: 810 },
             { label: 'CN 16/08', planned: 780, actual: 860 },
-            { label: 'T2 17/08', planned: 900, actual: 650, stoppageNote: 'Dừng máy 95 phút ngày 17/08' },
+            {
+                label: 'T2 17/08',
+                planned: 900,
+                actual: 650,
+                stoppageNote: 'Dừng máy 95 phút ngày 17/08',
+            },
         ],
         weeklyTimeline: [
             { label: 'Tuần 1 (01-07/08)', planned: 5200, actual: 5100 },
             { label: 'Tuần 2 (08-14/08)', planned: 5900, actual: 5050 },
-            { label: 'Tuần 3 (15-21/08)', planned: 5100, actual: 4450, stoppageNote: 'Bảo trì hệ thống thủy lực' },
+            {
+                label: 'Tuần 3 (15-21/08)',
+                planned: 5100,
+                actual: 4450,
+                stoppageNote: 'Bảo trì hệ thống thủy lực',
+            },
             { label: 'Tuần 4 (22-28/08)', planned: 6100, actual: 5200 },
         ],
         monthlyTimeline: [

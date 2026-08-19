@@ -4,15 +4,15 @@ import React from 'react';
 import { Card, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
-    BarChart,
+    ComposedChart,
     Bar,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
+    Legend,
     ResponsiveContainer,
-    ReferenceLine,
-    Cell,
 } from 'recharts';
 import { DailyEfficiencyPoint } from '@/configs/mockData/productionOverviewMockData';
 
@@ -30,16 +30,63 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
     const { t } = useTranslation();
     const { token } = theme.useToken();
 
-    const getBarColor = (efficiency: number) => {
-        if (efficiency >= 85) return token.colorSuccess;
-        if (efficiency >= 70) return token.colorWarning;
-        return token.colorError;
-    };
+    const maxCapLabel = t('productionOverview.machineDetail.maxCapacityHoursLabel');
+    const actHoursLabel = t('productionOverview.machineDetail.actualOperatingHoursLabel');
+    const opRatioLabel = t('productionOverview.machineDetail.operatingRatioLabel');
+    const avgShortLabel = t('productionOverview.machineDetail.averageShort');
+
+    // Transform and ensure maxCapacityHours & actualOperatingHours exist
+    const chartData = React.useMemo(() => {
+        return data.map((item) => {
+            const maxCap = item.maxCapacityHours ?? 180;
+            const actualHours =
+                item.actualOperatingHours ?? Number(((maxCap * item.efficiency) / 100).toFixed(1));
+
+            return {
+                ...item,
+                maxCapacityHours: maxCap,
+                actualOperatingHours: actualHours,
+                efficiency: item.efficiency,
+            };
+        });
+    }, [data]);
 
     const avgEfficiency =
-        data.length > 0
-            ? (data.reduce((sum, item) => sum + item.efficiency, 0) / data.length).toFixed(1)
+        chartData.length > 0
+            ? (
+                  chartData.reduce((sum, item) => sum + item.efficiency, 0) / chartData.length
+              ).toFixed(1)
             : '0';
+
+    // Custom Percentage badge label on Line chart points using Ant Design tokens
+    const renderPercentageLabel = (props: any) => {
+        const { x, y, value } = props;
+        if (value == null) return null;
+        return (
+            <g>
+                <rect
+                    x={x - 17}
+                    y={y - 23}
+                    width={34}
+                    height={17}
+                    fill={token.colorInfoBg}
+                    stroke={token.colorInfoBorder}
+                    strokeWidth={1}
+                    rx={3}
+                />
+                <text
+                    x={x}
+                    y={y - 10}
+                    fill={token.colorInfoText}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontWeight={700}
+                >
+                    {value}%
+                </text>
+            </g>
+        );
+    };
 
     return (
         <Card
@@ -58,7 +105,7 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: 12,
+                    marginBottom: 8,
                     flexWrap: 'wrap',
                     gap: 8,
                 }}
@@ -68,50 +115,8 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                         {t('productionOverview.machineDetail.recent7DaysEfficiency')}
                     </Text>
                     <div style={{ fontSize: 12, color: token.colorTextDescription }}>
-                        {machineCode} – {t('productionOverview.filters.dayShift')} – TB: {avgEfficiency}%
-                    </div>
-                </div>
-
-                {/* Threshold Legends */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                backgroundColor: token.colorSuccess,
-                            }}
-                        />
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                            ≥85%
-                        </Text>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                backgroundColor: token.colorWarning,
-                            }}
-                        />
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                            70–84%
-                        </Text>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span
-                            style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                backgroundColor: token.colorError,
-                            }}
-                        />
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                            &lt;70%
-                        </Text>
+                        {machineCode} – {t('productionOverview.filters.dayShift')} – {avgShortLabel}
+                        : {avgEfficiency}%
                     </div>
                 </div>
             </div>
@@ -119,19 +124,45 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
             {/* Recharts Container */}
             <div style={{ width: '100%', height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data} margin={{ top: 10, right: 35, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} opacity={0.5} />
+                    <ComposedChart
+                        data={chartData}
+                        margin={{ top: 20, right: 10, left: -5, bottom: 0 }}
+                    >
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke={token.colorBorderSecondary}
+                            opacity={0.5}
+                        />
                         <XAxis
                             dataKey="date"
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
                             axisLine={{ stroke: token.colorBorderSecondary }}
                         />
+
+                        {/* Left Y-Axis: Operating Capacity Hours */}
                         <YAxis
-                            domain={[0, 100]}
-                            unit="%"
-                            tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
+                            yAxisId="left"
+                            domain={[
+                                0,
+                                (dataMax: number) =>
+                                    Math.max(250, Math.ceil((dataMax * 1.25) / 50) * 50),
+                            ]}
+                            tick={{ fill: token.colorTextSecondary, fontSize: 10 }}
                             axisLine={{ stroke: token.colorBorderSecondary }}
+                            tickFormatter={(val) => Number(val).toFixed(2)}
                         />
+
+                        {/* Right Y-Axis: Operating Ratio Percentage */}
+                        <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            domain={[0, 200]}
+                            unit="%"
+                            tick={{ fill: token.colorTextSecondary, fontSize: 10 }}
+                            axisLine={{ stroke: token.colorBorderSecondary }}
+                            tickFormatter={(val) => `${val}%`}
+                        />
+
                         <Tooltip
                             contentStyle={{
                                 backgroundColor: token.colorBgElevated,
@@ -140,38 +171,67 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                                 color: token.colorText,
                                 fontSize: 12,
                             }}
-                            formatter={(value: any) => [`${value ?? 0}%`, t('productionOverview.machineDetail.efficiency')]}
-                        />
-                        <ReferenceLine
-                            y={85}
-                            stroke={token.colorSuccess}
-                            strokeDasharray="4 4"
-                            label={{
-                                value: '85%',
-                                fill: token.colorSuccess,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                position: 'right',
+                            formatter={(value: any, name: any) => {
+                                if (name === 'maxCapacityHours' || name === maxCapLabel) {
+                                    return [`${Number(value).toFixed(2)} h`, maxCapLabel];
+                                }
+                                if (name === 'actualOperatingHours' || name === actHoursLabel) {
+                                    return [`${Number(value).toFixed(2)} h`, actHoursLabel];
+                                }
+                                return [`${value}%`, opRatioLabel];
                             }}
                         />
-                        <ReferenceLine
-                            y={70}
-                            stroke={token.colorWarning}
-                            strokeDasharray="4 4"
-                            label={{
-                                value: '70%',
-                                fill: token.colorWarning,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                position: 'right',
+
+                        <Legend
+                            verticalAlign="top"
+                            align="center"
+                            wrapperStyle={{ paddingBottom: 10, fontSize: 11 }}
+                            formatter={(value: string) => {
+                                if (value === 'maxCapacityHours') return maxCapLabel;
+                                if (value === 'actualOperatingHours') return actHoursLabel;
+                                if (value === 'efficiency') return opRatioLabel;
+                                return value;
                             }}
                         />
-                        <Bar dataKey="efficiency" radius={[4, 4, 0, 0]} maxBarSize={28}>
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-7day-${index}`} fill={getBarColor(entry.efficiency)} />
-                            ))}
-                        </Bar>
-                    </BarChart>
+
+                        {/* 1. Maximum capacity h (Light Cyan/Info Bar) */}
+                        <Bar
+                            yAxisId="left"
+                            dataKey="maxCapacityHours"
+                            name="maxCapacityHours"
+                            fill={token.colorInfo}
+                            radius={[3, 3, 0, 0]}
+                            maxBarSize={16}
+                        />
+
+                        {/* 2. Actual operating time h (Primary Blue Bar) */}
+                        <Bar
+                            yAxisId="left"
+                            dataKey="actualOperatingHours"
+                            name="actualOperatingHours"
+                            fill={token.colorPrimary}
+                            radius={[3, 3, 0, 0]}
+                            maxBarSize={16}
+                        />
+
+                        {/* 3. Operating ratio % (Error Red Line with badge labels) */}
+                        <Line
+                            yAxisId="right"
+                            type="linear"
+                            dataKey="efficiency"
+                            name="efficiency"
+                            stroke={token.colorError}
+                            strokeWidth={2.5}
+                            dot={{
+                                r: 4,
+                                fill: token.colorError,
+                                stroke: token.colorBgContainer,
+                                strokeWidth: 1.5,
+                            }}
+                            activeDot={{ r: 6 }}
+                            label={renderPercentageLabel}
+                        />
+                    </ComposedChart>
                 </ResponsiveContainer>
             </div>
         </Card>

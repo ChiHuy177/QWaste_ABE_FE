@@ -116,7 +116,11 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = ({
             <div style={{ width: '100%', height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} margin={{ top: 10, right: 35, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} opacity={0.5} />
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke={token.colorBorderSecondary}
+                            opacity={0.5}
+                        />
                         <XAxis
                             dataKey="machineCode"
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}

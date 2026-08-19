@@ -35,6 +35,7 @@ const BASE_PATHS = {
     MOLDS: `${API}/molds/${V1}`,
     OPERATION_TYPES: `${API}/operationTypes/${V1}`,
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
+    DASHBOARD: `${API}/dashboard/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -195,10 +196,17 @@ export const ENDPOINTS = {
             `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/terminate`,
         INCIDENT_DEFER: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/defer`,
         INCIDENT_PAUSE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/incident/pause`,
-        COMPLETE: (id: PathParam) =>
-            `${BASE_PATHS.PRODUCTION_PLANS}/${id}/complete`,
+        COMPLETE: (id: PathParam) => `${BASE_PATHS.PRODUCTION_PLANS}/${id}/complete`,
         IMPORT: `${BASE_PATHS.PRODUCTION_PLANS}/import`,
         IMPORT_CONFIRM: `${BASE_PATHS.PRODUCTION_PLANS}/import/confirm`,
+    },
+    DASHBOARD: {
+        EFFICIENCY_BY_FILTER: `${BASE_PATHS.DASHBOARD}/efficiency/byFilter`,
+        EFFICIENCY_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/efficiency/byDateRange`,
+        DOWNTIME_BY_FILTER: `${BASE_PATHS.DASHBOARD}/downtime/byFilter`,
+        DOWNTIME_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/downtime/byDateRange`,
+        PRODUCTION_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byFilter`,
+        PRODUCTION_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byDateRange`,
     },
 } as const;
 

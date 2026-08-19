@@ -147,7 +147,9 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
         if (timeFilterMode === 'CUSTOM_RANGE') {
             const dateLabel = `${dayjs(startDate ?? draftDateRange[0]).format('DD/MM')} → ${dayjs(endDate ?? draftDateRange[1]).format('DD/MM')}`;
             if (selectedShiftFilterId != null) {
-                const shiftFilter = industryFilters.find((f) => f.filterId === selectedShiftFilterId);
+                const shiftFilter = industryFilters.find(
+                    (f) => f.filterId === selectedShiftFilterId
+                );
                 const shiftLabel = shiftFilter
                     ? currentLang === 'vi'
                         ? shiftFilter.displayNameVi
@@ -263,11 +265,11 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                         style={{ width: '100%' }}
                     >
                         <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                            <Radio value={null}>
-                                {i18n.language === 'vi' ? 'Tất cả' : 'All'}
-                            </Radio>
+                            <Radio value={null}>{i18n.language === 'vi' ? 'Tất cả' : 'All'}</Radio>
                             {groupedTimePeriodOptions.SHIFT.map((option) => {
-                                const filter = industryFilters.find((f) => f.filterId === option.value);
+                                const filter = industryFilters.find(
+                                    (f) => f.filterId === option.value
+                                );
                                 const isActive = filter && isShiftActive(filter);
 
                                 return (
@@ -276,7 +278,9 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                                             <Typography.Text
                                                 ellipsis
                                                 style={{
-                                                    maxWidth: isMobile ? 'calc(100vw - 150px)' : 200,
+                                                    maxWidth: isMobile
+                                                        ? 'calc(100vw - 150px)'
+                                                        : 200,
                                                     verticalAlign: 'middle',
                                                 }}
                                             >
@@ -293,7 +297,9 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                                                         borderRadius: 4,
                                                     }}
                                                 >
-                                                    {i18n.language === 'vi' ? 'Đang hoạt động' : 'Active'}
+                                                    {i18n.language === 'vi'
+                                                        ? 'Đang hoạt động'
+                                                        : 'Active'}
                                                 </Tag>
                                             )}
                                         </Space>
@@ -429,7 +435,9 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                     placeholder={t('productionOverview.filters.selectFactory')}
                     showSearch={{
                         filterOption: (input, option) =>
-                            ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase()),
+                            ((option?.label as string) ?? '')
+                                .toLowerCase()
+                                .includes(input.toLowerCase()),
                     }}
                 />
             )}

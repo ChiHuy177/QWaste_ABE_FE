@@ -4754,16 +4754,21 @@
         },
         "kpi": {
             "overallPlantOee": "HIỆU SUẤT TỔNG NHÀ MÁY",
-            "machineEfficiency": "HIỆU SUẤT MÁY",
+            "machineEfficiency": "TỈ LỆ HOẠT ĐỘNG",
+            "operatingRate": "TỈ LỆ HOẠT ĐỘNG",
+            "maxCapacity": "NĂNG LỰC TỐI ĐA",
+            "actualCapacity": "NĂNG LỰC THỰC TẾ",
+            "downtimeDuration": "THỜI GIAN DOWNTIME",
             "target": "Mục tiêu",
             "vsYesterday": "so với hôm qua",
-            "totalDowntime": "TỔNG THỜI GIAN DỪNG",
+            "totalDowntime": "THỜI GIAN DOWNTIME",
             "minutes": "phút",
             "minutesOverTarget": "phút vượt mục tiêu",
             "yieldRate": "TỶ LỆ SẢN LƯỢNG",
             "vsPlan": "So với kế hoạch",
             "actualProduction": "SẢN LƯỢNG THỰC TẾ",
-            "planShort": "KH"
+            "planShort": "KH",
+            "vsMaxCapacity": "so với tối đa"
         },
         "charts": {
             "oeeByMachine": "Hiệu suất theo máy",
@@ -4798,7 +4803,11 @@
             "pcsPerHour": "sp/h",
             "pcsPerDay": "sp/ngày",
             "pcsPerWeek": "sp/tuần",
-            "pcsPerMonth": "sp/tháng"
+            "pcsPerMonth": "sp/tháng",
+            "maxCapacityHoursLabel": "1. Maximum capacity h",
+            "actualOperatingHoursLabel": "2. Actual operating time h",
+            "operatingRatioLabel": "3. Operating ratio %",
+            "averageShort": "TB"
         }
     }
 }

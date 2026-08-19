@@ -46,7 +46,8 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                     {t('productionOverview.charts.planVsActualBySku')}
                 </Text>
                 <div style={{ fontSize: 12, color: token.colorTextDescription }}>
-                    {t('productionOverview.charts.planVsActualSkuDesc')} – {t('productionOverview.filters.dayShift')} 17/08/2026
+                    {t('productionOverview.charts.planVsActualSkuDesc')} –{' '}
+                    {t('productionOverview.filters.dayShift')} 17/08/2026
                 </div>
             </div>
 
@@ -54,7 +55,11 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
             <div style={{ width: '100%', height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} opacity={0.5} />
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke={token.colorBorderSecondary}
+                            opacity={0.5}
+                        />
                         <XAxis
                             dataKey="productCode"
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
@@ -94,15 +99,11 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                             radius={[4, 4, 0, 0]}
                             maxBarSize={22}
                         />
-                        <Bar
-                            dataKey="actual"
-                            name="actual"
-                            radius={[4, 4, 0, 0]}
-                            maxBarSize={22}
-                        >
+                        <Bar dataKey="actual" name="actual" radius={[4, 4, 0, 0]} maxBarSize={22}>
                             {data.map((entry, index) => {
                                 const ratio = entry.planned > 0 ? entry.actual / entry.planned : 1;
-                                const barColor = ratio < 0.7 ? token.colorError : token.colorSuccess;
+                                const barColor =
+                                    ratio < 0.7 ? token.colorError : token.colorSuccess;
                                 return <Cell key={`cell-product-${index}`} fill={barColor} />;
                             })}
                         </Bar>

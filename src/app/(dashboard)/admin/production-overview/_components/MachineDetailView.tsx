@@ -79,19 +79,35 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                                 <Title level={4} style={{ margin: 0, fontWeight: 800 }}>
                                     {info.machineCode}
                                 </Title>
-                                <Tag color="blue" style={{ borderRadius: 6, margin: 0, fontSize: 11 }}>
+                                <Tag
+                                    color="blue"
+                                    style={{ borderRadius: 6, margin: 0, fontSize: 11 }}
+                                >
                                     {info.lineName}
                                 </Tag>
                                 <Tag
                                     color={info.status === 'RUNNING' ? 'success' : 'error'}
-                                    style={{ borderRadius: 6, margin: 0, fontSize: 11, fontWeight: 600 }}
+                                    style={{
+                                        borderRadius: 6,
+                                        margin: 0,
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                    }}
                                 >
                                     ●{' '}
                                     {info.status === 'RUNNING'
                                         ? t('productionOverview.machineDetail.statusRunning')
                                         : t('productionOverview.machineDetail.statusStopped')}
                                 </Tag>
-                                <Tag color="warning" style={{ borderRadius: 6, margin: 0, fontSize: 11, fontWeight: 700 }}>
+                                <Tag
+                                    color="warning"
+                                    style={{
+                                        borderRadius: 6,
+                                        margin: 0,
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                    }}
+                                >
                                     {machineDetail.kpi.oee.current}%
                                 </Tag>
                             </div>

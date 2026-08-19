@@ -52,7 +52,11 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
             <div style={{ width: '100%', height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorderSecondary} opacity={0.5} />
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke={token.colorBorderSecondary}
+                            opacity={0.5}
+                        />
                         <XAxis
                             dataKey="machineCode"
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
@@ -61,7 +65,9 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                         <YAxis
                             tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
                             axisLine={{ stroke: token.colorBorderSecondary }}
-                            tickFormatter={(val) => (val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val)}
+                            tickFormatter={(val) =>
+                                val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val
+                            }
                         />
                         <Tooltip
                             contentStyle={{
