@@ -30,32 +30,54 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
     const { t } = useTranslation();
     const { token } = theme.useToken();
 
-    // Determine color based on efficiency
-    const getEfficiencyColor = (oee: number) => {
-        if (oee >= 85) {
-            return {
-                color: token.colorSuccess,
-                borderColor: token.colorSuccess,
-                backgroundColor: token.colorSuccessBg,
-            };
-        }
-        if (oee >= 70) {
-            return {
-                color: token.colorWarning,
-                borderColor: token.colorWarning,
-                backgroundColor: token.colorWarningBg,
-            };
-        }
-        return {
-            color: token.colorError,
-            borderColor: token.colorError,
-            backgroundColor: token.colorErrorBg,
-        };
-    };
+    const cardThemes = React.useMemo(
+        () => ({
+            operatingRate: {
+                main: token.colorSuccess,
+                border: token.colorSuccessBorder,
+                bg: token.colorSuccessBg,
+                text: token.colorSuccessText,
+                icon: token.colorSuccess,
+            },
+            maxCapacity: {
+                main: token.colorPrimary,
+                border: token.colorPrimaryBorder,
+                bg: token.colorPrimaryBg,
+                text: token.colorPrimaryText,
+                icon: token.colorPrimary,
+            },
+            downtime: {
+                main: token.colorError,
+                border: token.colorErrorBorder,
+                bg: token.colorErrorBg,
+                text: token.colorErrorText,
+                icon: token.colorError,
+            },
+            actualProduction: {
+                main: token.cyan,
+                border: token.cyan3,
+                bg: token.cyan1,
+                text: token.cyan8,
+                icon: token.cyan,
+            },
+            actualCapacity: {
+                main: token.colorWarning,
+                border: token.colorWarningBorder,
+                bg: token.colorWarningBg,
+                text: token.colorWarningText,
+                icon: token.colorWarning,
+            },
+            yieldRate: {
+                main: token.purple,
+                border: token.purple3,
+                bg: token.purple1,
+                text: token.purple8,
+                icon: token.purple,
+            },
+        }),
+        [token]
+    );
 
-    const effColors = getEfficiencyColor(data.oee.current);
-
-    // Derived values for maxCapacity and actualCapacity in Machine View
     const maxCapacityValue = data.maxCapacity?.current ?? 180;
     const maxCapacityUnit = data.maxCapacity?.unit ?? 'sp/h';
     const actualCapacityValue =
@@ -65,11 +87,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
         data.actualCapacity?.rateVsMax ??
         Math.min(100, Math.round((actualCapacityValue / maxCapacityValue) * 100));
 
-    // If Machine Detail View -> Render 4 Columns with 6 Stats matching sketch
     if (isMachineView) {
         return (
             <Row gutter={[16, 16]} style={{ marginBottom: 16 }} align="stretch">
-                {/* Column 1: TỈ LỆ HOẠT ĐỘNG (Full Height) */}
                 <Col xs={24} sm={12} md={7} lg={7}>
                     <Card
                         variant="borderless"
@@ -78,9 +98,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             height: '100%',
                             minHeight: 250,
                             borderRadius: 12,
-                            borderColor: effColors.borderColor,
-                            border: `1px solid ${effColors.borderColor}`,
-                            backgroundColor: effColors.backgroundColor,
+                            borderColor: cardThemes.operatingRate.border,
+                            border: `1px solid ${cardThemes.operatingRate.border}`,
+                            backgroundColor: cardThemes.operatingRate.bg,
                             boxShadow: token.boxShadowSecondary,
                             position: 'relative',
                             overflow: 'hidden',
@@ -89,7 +109,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             justifyContent: 'space-between',
                         }}
                     >
-                        {/* Decorative corner */}
                         <div
                             style={{
                                 position: 'absolute',
@@ -97,7 +116,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 right: 0,
                                 width: 80,
                                 height: 80,
-                                background: `${effColors.borderColor}15`,
+                                background: `${cardThemes.operatingRate.main}15`,
                                 borderBottomLeftRadius: '100%',
                             }}
                         />
@@ -116,7 +135,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             fontSize: 12,
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
-                                            color: effColors.color,
+                                            color: cardThemes.operatingRate.main,
                                             letterSpacing: '0.5px',
                                         }}
                                     >
@@ -164,7 +183,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             >
                                 <Title
                                     level={2}
-                                    style={{ margin: 0, fontWeight: 800, color: effColors.color }}
+                                    style={{
+                                        margin: 0,
+                                        fontWeight: 800,
+                                        color: cardThemes.operatingRate.main,
+                                    }}
                                 >
                                     {data.oee.current} %
                                 </Title>
@@ -179,11 +202,10 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 </Text>
                             </div>
 
-                            {/* Progress Bar with target marker */}
                             <div style={{ marginTop: 10 }}>
                                 <Progress
                                     percent={data.oee.current}
-                                    strokeColor={effColors.color}
+                                    strokeColor={cardThemes.operatingRate.main}
                                     trailColor={token.colorFillSecondary}
                                     showInfo={false}
                                     size={['100%', 8]}
@@ -199,7 +221,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 }}
                             >
                                 <Tag
-                                    color="orange"
+                                    color="success"
                                     style={{
                                         borderRadius: 12,
                                         fontWeight: 600,
@@ -223,7 +245,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                     </Card>
                 </Col>
 
-                {/* Column 2: NĂNG LỰC TỐI ĐA (Full Height) */}
                 <Col xs={24} sm={12} md={5} lg={5}>
                     <Card
                         variant="borderless"
@@ -232,9 +253,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             height: '100%',
                             minHeight: 250,
                             borderRadius: 12,
-                            borderColor: token.colorPrimaryBorder,
-                            border: `1px solid ${token.colorPrimaryBorder}`,
-                            backgroundColor: token.colorPrimaryBg,
+                            borderColor: cardThemes.maxCapacity.border,
+                            border: `1px solid ${cardThemes.maxCapacity.border}`,
+                            backgroundColor: cardThemes.maxCapacity.bg,
                             boxShadow: token.boxShadowSecondary,
                             position: 'relative',
                             overflow: 'hidden',
@@ -243,7 +264,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             justifyContent: 'space-between',
                         }}
                     >
-                        {/* Decorative corner */}
                         <div
                             style={{
                                 position: 'absolute',
@@ -251,7 +271,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 right: 0,
                                 width: 80,
                                 height: 80,
-                                background: `${token.colorPrimary}15`,
+                                background: `${cardThemes.maxCapacity.main}15`,
                                 borderBottomLeftRadius: '100%',
                             }}
                         />
@@ -269,14 +289,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         fontSize: 12,
                                         fontWeight: 700,
                                         textTransform: 'uppercase',
-                                        color: token.colorPrimaryText,
+                                        color: cardThemes.maxCapacity.text,
                                         letterSpacing: '0.5px',
                                     }}
                                 >
                                     {t('productionOverview.kpi.maxCapacity')}
                                 </Text>
                                 <DashboardOutlined
-                                    style={{ fontSize: 18, color: token.colorPrimary }}
+                                    style={{ fontSize: 18, color: cardThemes.maxCapacity.icon }}
                                 />
                             </div>
 
@@ -293,7 +313,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     style={{
                                         margin: 0,
                                         fontWeight: 800,
-                                        color: token.colorPrimary,
+                                        color: cardThemes.maxCapacity.main,
                                     }}
                                 >
                                     {maxCapacityValue.toLocaleString()}
@@ -302,7 +322,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     style={{
                                         fontSize: 13,
                                         fontWeight: 600,
-                                        color: token.colorPrimaryText,
+                                        color: cardThemes.maxCapacity.text,
                                     }}
                                 >
                                     {maxCapacityUnit}
@@ -312,7 +332,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             <div style={{ marginTop: 16 }}>
                                 <Progress
                                     percent={100}
-                                    strokeColor={token.colorPrimary}
+                                    strokeColor={cardThemes.maxCapacity.main}
                                     trailColor={token.colorFillSecondary}
                                     showInfo={false}
                                     size={['100%', 6]}
@@ -329,14 +349,13 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         padding: '2px 8px',
                                     }}
                                 >
-                                    100% định mức thiết kế
+                                    {t('productionOverview.kpi.designBenchmark')}
                                 </Tag>
                             </div>
                         </div>
                     </Card>
                 </Col>
 
-                {/* Column 3: Stack of 2 Cards (THỜI GIAN DOWNTIME & SẢN LƯỢNG THỰC TẾ) */}
                 <Col xs={24} sm={12} md={6} lg={6}>
                     <div
                         style={{
@@ -346,16 +365,15 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             height: '100%',
                         }}
                     >
-                        {/* Top: THỜI GIAN DOWNTIME */}
                         <Card
                             variant="borderless"
                             hoverable
                             style={{
                                 flex: 1,
                                 borderRadius: 12,
-                                borderColor: token.colorError,
-                                border: `1px solid ${token.colorError}`,
-                                backgroundColor: token.colorErrorBg,
+                                borderColor: cardThemes.downtime.border,
+                                border: `1px solid ${cardThemes.downtime.border}`,
+                                backgroundColor: cardThemes.downtime.bg,
                                 boxShadow: token.boxShadowSecondary,
                                 position: 'relative',
                                 overflow: 'hidden',
@@ -364,6 +382,18 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 justifyContent: 'center',
                             }}
                         >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.downtime.main}15`,
+                                    borderBottomLeftRadius: '100%',
+                                }}
+                            />
+
                             <div style={{ position: 'relative', zIndex: 1 }}>
                                 <div
                                     style={{
@@ -377,14 +407,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             fontSize: 11,
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
-                                            color: token.colorError,
+                                            color: cardThemes.downtime.main,
                                             letterSpacing: '0.5px',
                                         }}
                                     >
                                         {t('productionOverview.kpi.downtimeDuration')}
                                     </Text>
                                     <ClockCircleOutlined
-                                        style={{ fontSize: 16, color: token.colorError }}
+                                        style={{ fontSize: 16, color: cardThemes.downtime.icon }}
                                     />
                                 </div>
 
@@ -401,7 +431,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             margin: 0,
                                             fontWeight: 800,
-                                            color: token.colorError,
+                                            color: cardThemes.downtime.main,
                                         }}
                                     >
                                         {data.downtimeMinutes.current}
@@ -410,7 +440,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             fontSize: 12,
                                             fontWeight: 600,
-                                            color: token.colorErrorText,
+                                            color: cardThemes.downtime.text,
                                         }}
                                     >
                                         {t('productionOverview.kpi.minutes')}
@@ -420,7 +450,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 <Text
                                     style={{
                                         fontSize: 11,
-                                        color: token.colorError,
+                                        color: cardThemes.downtime.text,
                                         fontWeight: 600,
                                     }}
                                 >
@@ -431,22 +461,21 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             {t('productionOverview.kpi.minutesOverTarget')}
                                         </>
                                     ) : (
-                                        'Trong giới hạn cho phép'
+                                        t('productionOverview.kpi.withinLimit')
                                     )}
                                 </Text>
                             </div>
                         </Card>
 
-                        {/* Bottom: SẢN LƯỢNG THỰC TẾ */}
                         <Card
                             variant="borderless"
                             hoverable
                             style={{
                                 flex: 1,
                                 borderRadius: 12,
-                                borderColor: token.colorSuccess,
-                                border: `1px solid ${token.colorSuccess}`,
-                                backgroundColor: token.colorSuccessBg,
+                                borderColor: cardThemes.actualProduction.border,
+                                border: `1px solid ${cardThemes.actualProduction.border}`,
+                                backgroundColor: cardThemes.actualProduction.bg,
                                 boxShadow: token.boxShadowSecondary,
                                 position: 'relative',
                                 overflow: 'hidden',
@@ -455,6 +484,18 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 justifyContent: 'center',
                             }}
                         >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.actualProduction.main}15`,
+                                    borderBottomLeftRadius: '100%',
+                                }}
+                            />
+
                             <div style={{ position: 'relative', zIndex: 1 }}>
                                 <div
                                     style={{
@@ -468,14 +509,17 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             fontSize: 11,
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
-                                            color: token.colorSuccess,
+                                            color: cardThemes.actualProduction.text,
                                             letterSpacing: '0.5px',
                                         }}
                                     >
                                         {t('productionOverview.kpi.actualProduction')}
                                     </Text>
                                     <BarChartOutlined
-                                        style={{ fontSize: 16, color: token.colorSuccess }}
+                                        style={{
+                                            fontSize: 16,
+                                            color: cardThemes.actualProduction.icon,
+                                        }}
                                     />
                                 </div>
 
@@ -492,7 +536,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             margin: 0,
                                             fontWeight: 800,
-                                            color: token.colorSuccess,
+                                            color: cardThemes.actualProduction.main,
                                         }}
                                     >
                                         {data.actualProduction.current.toLocaleString()}
@@ -501,7 +545,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             fontSize: 12,
                                             fontWeight: 600,
-                                            color: token.colorSuccessText,
+                                            color: cardThemes.actualProduction.text,
                                         }}
                                     >
                                         {data.actualProduction.unit}
@@ -511,12 +555,17 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 <Text
                                     style={{
                                         fontSize: 11,
-                                        color: token.colorSuccessText,
+                                        color: cardThemes.actualProduction.text,
                                         fontWeight: 600,
                                     }}
                                 >
                                     {t('productionOverview.kpi.planShort')}:{' '}
-                                    <span style={{ fontWeight: 700, color: token.colorSuccess }}>
+                                    <span
+                                        style={{
+                                            fontWeight: 700,
+                                            color: cardThemes.actualProduction.main,
+                                        }}
+                                    >
                                         {data.actualProduction.target.toLocaleString()}
                                     </span>{' '}
                                     {data.actualProduction.unit}
@@ -526,7 +575,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                     </div>
                 </Col>
 
-                {/* Column 4: Stack of 2 Cards (NĂNG LỰC THỰC TẾ & TỶ LỆ SẢN LƯỢNG) */}
                 <Col xs={24} sm={12} md={6} lg={6}>
                     <div
                         style={{
@@ -536,16 +584,15 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             height: '100%',
                         }}
                     >
-                        {/* Top: NĂNG LỰC THỰC TẾ */}
                         <Card
                             variant="borderless"
                             hoverable
                             style={{
                                 flex: 1,
                                 borderRadius: 12,
-                                borderColor: token.colorInfoBorder,
-                                border: `1px solid ${token.colorInfoBorder}`,
-                                backgroundColor: token.colorInfoBg,
+                                borderColor: cardThemes.actualCapacity.border,
+                                border: `1px solid ${cardThemes.actualCapacity.border}`,
+                                backgroundColor: cardThemes.actualCapacity.bg,
                                 boxShadow: token.boxShadowSecondary,
                                 position: 'relative',
                                 overflow: 'hidden',
@@ -554,6 +601,18 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 justifyContent: 'center',
                             }}
                         >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.actualCapacity.main}15`,
+                                    borderBottomLeftRadius: '100%',
+                                }}
+                            />
+
                             <div style={{ position: 'relative', zIndex: 1 }}>
                                 <div
                                     style={{
@@ -567,14 +626,17 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             fontSize: 11,
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
-                                            color: token.colorInfoText,
+                                            color: cardThemes.actualCapacity.text,
                                             letterSpacing: '0.5px',
                                         }}
                                     >
                                         {t('productionOverview.kpi.actualCapacity')}
                                     </Text>
                                     <ThunderboltOutlined
-                                        style={{ fontSize: 16, color: token.colorInfo }}
+                                        style={{
+                                            fontSize: 16,
+                                            color: cardThemes.actualCapacity.icon,
+                                        }}
                                     />
                                 </div>
 
@@ -591,7 +653,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             margin: 0,
                                             fontWeight: 800,
-                                            color: token.colorInfo,
+                                            color: cardThemes.actualCapacity.main,
                                         }}
                                     >
                                         {actualCapacityValue.toLocaleString()}
@@ -600,7 +662,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             fontSize: 12,
                                             fontWeight: 600,
-                                            color: token.colorInfoText,
+                                            color: cardThemes.actualCapacity.text,
                                         }}
                                     >
                                         {actualCapacityUnit}
@@ -610,28 +672,30 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 <Text
                                     style={{
                                         fontSize: 11,
-                                        color: token.colorInfoText,
+                                        color: cardThemes.actualCapacity.text,
                                         fontWeight: 600,
                                     }}
                                 >
                                     <RiseOutlined
-                                        style={{ color: token.colorSuccess, marginRight: 4 }}
+                                        style={{
+                                            color: cardThemes.actualCapacity.main,
+                                            marginRight: 4,
+                                        }}
                                     />
                                     {actualRateVsMax}% {t('productionOverview.kpi.vsMaxCapacity')}
                                 </Text>
                             </div>
                         </Card>
 
-                        {/* Bottom: TỶ LỆ SẢN LƯỢNG */}
                         <Card
                             variant="borderless"
                             hoverable
                             style={{
                                 flex: 1,
                                 borderRadius: 12,
-                                borderColor: token.colorInfo,
-                                border: `1px solid ${token.colorInfo}`,
-                                backgroundColor: token.colorInfoBg,
+                                borderColor: cardThemes.yieldRate.border,
+                                border: `1px solid ${cardThemes.yieldRate.border}`,
+                                backgroundColor: cardThemes.yieldRate.bg,
                                 boxShadow: token.boxShadowSecondary,
                                 position: 'relative',
                                 overflow: 'hidden',
@@ -640,6 +704,18 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 justifyContent: 'center',
                             }}
                         >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.yieldRate.main}15`,
+                                    borderBottomLeftRadius: '100%',
+                                }}
+                            />
+
                             <div style={{ position: 'relative', zIndex: 1 }}>
                                 <div
                                     style={{
@@ -653,14 +729,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             fontSize: 11,
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
-                                            color: token.colorInfo,
+                                            color: cardThemes.yieldRate.text,
                                             letterSpacing: '0.5px',
                                         }}
                                     >
                                         {t('productionOverview.kpi.yieldRate')}
                                     </Text>
                                     <InboxOutlined
-                                        style={{ fontSize: 16, color: token.colorInfo }}
+                                        style={{ fontSize: 16, color: cardThemes.yieldRate.icon }}
                                     />
                                 </div>
 
@@ -677,7 +753,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         style={{
                                             margin: 0,
                                             fontWeight: 800,
-                                            color: token.colorInfo,
+                                            color: cardThemes.yieldRate.main,
                                         }}
                                     >
                                         {data.yieldRate.current} %
@@ -687,12 +763,15 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 <Text
                                     style={{
                                         fontSize: 11,
-                                        color: token.colorInfoText,
+                                        color: cardThemes.yieldRate.text,
                                         fontWeight: 600,
                                     }}
                                 >
                                     <RiseOutlined
-                                        style={{ color: token.colorSuccess, marginRight: 4 }}
+                                        style={{
+                                            color: cardThemes.yieldRate.main,
+                                            marginRight: 4,
+                                        }}
                                     />
                                     {t('productionOverview.kpi.vsPlan')}
                                 </Text>
@@ -704,10 +783,8 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
         );
     }
 
-    // Default Overview View (4 cards)
     return (
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-            {/* Card 1: HIỆU SUẤT TỔNG NHÀ MÁY */}
             <Col xs={24} sm={12} lg={6}>
                 <Card
                     variant="borderless"
@@ -715,15 +792,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                     style={{
                         height: '100%',
                         borderRadius: 12,
-                        borderColor: effColors.borderColor,
-                        border: `1px solid ${effColors.borderColor}`,
-                        backgroundColor: effColors.backgroundColor,
+                        borderColor: cardThemes.operatingRate.border,
+                        border: `1px solid ${cardThemes.operatingRate.border}`,
+                        backgroundColor: cardThemes.operatingRate.bg,
                         boxShadow: token.boxShadowSecondary,
                         position: 'relative',
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Decorative corner */}
                     <div
                         style={{
                             position: 'absolute',
@@ -731,7 +807,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             right: 0,
                             width: 80,
                             height: 80,
-                            background: `${effColors.borderColor}15`,
+                            background: `${cardThemes.operatingRate.main}15`,
                             borderBottomLeftRadius: '100%',
                         }}
                     />
@@ -750,7 +826,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         fontSize: 12,
                                         fontWeight: 700,
                                         textTransform: 'uppercase',
-                                        color: effColors.color,
+                                        color: cardThemes.operatingRate.main,
                                         letterSpacing: '0.5px',
                                     }}
                                 >
@@ -768,7 +844,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 </div>
                             </div>
                             <Tag
-                                color="warning"
+                                color={data.oee.yesterdayDiff >= 0 ? 'success' : 'warning'}
                                 style={{
                                     borderRadius: 6,
                                     fontSize: 11,
@@ -776,7 +852,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     fontWeight: 600,
                                 }}
                             >
-                                <FallOutlined /> {data.oee.yesterdayDiff}%
+                                {data.oee.yesterdayDiff >= 0 ? <RiseOutlined /> : <FallOutlined />}{' '}
+                                {data.oee.yesterdayDiff >= 0
+                                    ? `+${data.oee.yesterdayDiff}`
+                                    : data.oee.yesterdayDiff}
+                                %
                             </Tag>
                         </div>
 
@@ -790,7 +870,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                         >
                             <Title
                                 level={2}
-                                style={{ margin: 0, fontWeight: 800, color: effColors.color }}
+                                style={{
+                                    margin: 0,
+                                    fontWeight: 800,
+                                    color: cardThemes.operatingRate.main,
+                                }}
                             >
                                 {data.oee.current} %
                             </Title>
@@ -805,11 +889,10 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             </Text>
                         </div>
 
-                        {/* Progress Bar with target marker */}
                         <div style={{ marginTop: 8 }}>
                             <Progress
                                 percent={data.oee.current}
-                                strokeColor={effColors.color}
+                                strokeColor={cardThemes.operatingRate.main}
                                 trailColor={token.colorFillSecondary}
                                 showInfo={false}
                                 size={['100%', 8]}
@@ -825,7 +908,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             }}
                         >
                             <Tag
-                                color="orange"
+                                color="success"
                                 style={{
                                     borderRadius: 12,
                                     fontWeight: 600,
@@ -849,7 +932,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                 </Card>
             </Col>
 
-            {/* Card 2: THỜI GIAN DOWNTIME */}
             <Col xs={24} sm={12} lg={6}>
                 <Card
                     variant="borderless"
@@ -857,15 +939,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                     style={{
                         height: '100%',
                         borderRadius: 12,
-                        borderColor: token.colorError,
-                        border: `1px solid ${token.colorError}`,
-                        backgroundColor: token.colorErrorBg,
+                        borderColor: cardThemes.downtime.border,
+                        border: `1px solid ${cardThemes.downtime.border}`,
+                        backgroundColor: cardThemes.downtime.bg,
                         boxShadow: token.boxShadowSecondary,
                         position: 'relative',
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Decorative corner */}
                     <div
                         style={{
                             position: 'absolute',
@@ -873,7 +954,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             right: 0,
                             width: 80,
                             height: 80,
-                            background: `${token.colorError}15`,
+                            background: `${cardThemes.downtime.main}15`,
                             borderBottomLeftRadius: '100%',
                         }}
                     />
@@ -891,14 +972,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     fontSize: 12,
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
-                                    color: token.colorError,
+                                    color: cardThemes.downtime.main,
                                     letterSpacing: '0.5px',
                                 }}
                             >
                                 {t('productionOverview.kpi.totalDowntime')}
                             </Text>
                             <ClockCircleOutlined
-                                style={{ fontSize: 18, color: token.colorError }}
+                                style={{ fontSize: 18, color: cardThemes.downtime.icon }}
                             />
                         </div>
 
@@ -912,7 +993,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                         >
                             <Title
                                 level={2}
-                                style={{ margin: 0, fontWeight: 800, color: token.colorError }}
+                                style={{
+                                    margin: 0,
+                                    fontWeight: 800,
+                                    color: cardThemes.downtime.main,
+                                }}
                             >
                                 {data.downtimeMinutes.current}
                             </Title>
@@ -920,7 +1005,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 style={{
                                     fontSize: 14,
                                     fontWeight: 600,
-                                    color: token.colorErrorText,
+                                    color: cardThemes.downtime.text,
                                 }}
                             >
                                 {t('productionOverview.kpi.minutes')}
@@ -929,17 +1014,26 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
 
                         <div style={{ marginTop: 12 }}>
                             <Text
-                                style={{ fontSize: 12, color: token.colorError, fontWeight: 600 }}
+                                style={{
+                                    fontSize: 12,
+                                    color: cardThemes.downtime.text,
+                                    fontWeight: 600,
+                                }}
                             >
-                                <FallOutlined /> +{data.downtimeMinutes.overTargetMinutes}{' '}
-                                {t('productionOverview.kpi.minutesOverTarget')}
+                                {data.downtimeMinutes.overTargetMinutes > 0 ? (
+                                    <>
+                                        <FallOutlined /> +{data.downtimeMinutes.overTargetMinutes}{' '}
+                                        {t('productionOverview.kpi.minutesOverTarget')}
+                                    </>
+                                ) : (
+                                    t('productionOverview.kpi.withinLimit')
+                                )}
                             </Text>
                         </div>
                     </div>
                 </Card>
             </Col>
 
-            {/* Card 3: TỶ LỆ SẢN LƯỢNG */}
             <Col xs={24} sm={12} lg={6}>
                 <Card
                     variant="borderless"
@@ -947,15 +1041,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                     style={{
                         height: '100%',
                         borderRadius: 12,
-                        borderColor: token.colorInfo,
-                        border: `1px solid ${token.colorInfo}`,
-                        backgroundColor: token.colorInfoBg,
+                        borderColor: cardThemes.yieldRate.border,
+                        border: `1px solid ${cardThemes.yieldRate.border}`,
+                        backgroundColor: cardThemes.yieldRate.bg,
                         boxShadow: token.boxShadowSecondary,
                         position: 'relative',
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Decorative corner */}
                     <div
                         style={{
                             position: 'absolute',
@@ -963,7 +1056,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             right: 0,
                             width: 80,
                             height: 80,
-                            background: `${token.colorInfo}15`,
+                            background: `${cardThemes.yieldRate.main}15`,
                             borderBottomLeftRadius: '100%',
                         }}
                     />
@@ -981,13 +1074,15 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     fontSize: 12,
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
-                                    color: token.colorInfo,
+                                    color: cardThemes.yieldRate.text,
                                     letterSpacing: '0.5px',
                                 }}
                             >
                                 {t('productionOverview.kpi.yieldRate')}
                             </Text>
-                            <InboxOutlined style={{ fontSize: 18, color: token.colorInfo }} />
+                            <InboxOutlined
+                                style={{ fontSize: 18, color: cardThemes.yieldRate.icon }}
+                            />
                         </div>
 
                         <div
@@ -1000,7 +1095,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                         >
                             <Title
                                 level={2}
-                                style={{ margin: 0, fontWeight: 800, color: token.colorInfo }}
+                                style={{
+                                    margin: 0,
+                                    fontWeight: 800,
+                                    color: cardThemes.yieldRate.main,
+                                }}
                             >
                                 {data.yieldRate.current} %
                             </Title>
@@ -1010,12 +1109,12 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             <Text
                                 style={{
                                     fontSize: 12,
-                                    color: token.colorInfoText,
+                                    color: cardThemes.yieldRate.text,
                                     fontWeight: 600,
                                 }}
                             >
                                 <RiseOutlined
-                                    style={{ color: token.colorSuccess, marginRight: 4 }}
+                                    style={{ color: cardThemes.yieldRate.main, marginRight: 4 }}
                                 />
                                 {t('productionOverview.kpi.vsPlan')}
                             </Text>
@@ -1024,7 +1123,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                 </Card>
             </Col>
 
-            {/* Card 4: SẢN LƯỢNG THỰC TẾ */}
             <Col xs={24} sm={12} lg={6}>
                 <Card
                     variant="borderless"
@@ -1032,15 +1130,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                     style={{
                         height: '100%',
                         borderRadius: 12,
-                        borderColor: token.colorSuccess,
-                        border: `1px solid ${token.colorSuccess}`,
-                        backgroundColor: token.colorSuccessBg,
+                        borderColor: cardThemes.actualProduction.border,
+                        border: `1px solid ${cardThemes.actualProduction.border}`,
+                        backgroundColor: cardThemes.actualProduction.bg,
                         boxShadow: token.boxShadowSecondary,
                         position: 'relative',
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Decorative corner */}
                     <div
                         style={{
                             position: 'absolute',
@@ -1048,7 +1145,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             right: 0,
                             width: 80,
                             height: 80,
-                            background: `${token.colorSuccess}15`,
+                            background: `${cardThemes.actualProduction.main}15`,
                             borderBottomLeftRadius: '100%',
                         }}
                     />
@@ -1066,13 +1163,18 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     fontSize: 12,
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
-                                    color: token.colorSuccess,
+                                    color: cardThemes.actualProduction.text,
                                     letterSpacing: '0.5px',
                                 }}
                             >
                                 {t('productionOverview.kpi.actualProduction')}
                             </Text>
-                            <BarChartOutlined style={{ fontSize: 18, color: token.colorSuccess }} />
+                            <BarChartOutlined
+                                style={{
+                                    fontSize: 18,
+                                    color: cardThemes.actualProduction.icon,
+                                }}
+                            />
                         </div>
 
                         <div
@@ -1085,7 +1187,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                         >
                             <Title
                                 level={2}
-                                style={{ margin: 0, fontWeight: 800, color: token.colorSuccess }}
+                                style={{
+                                    margin: 0,
+                                    fontWeight: 800,
+                                    color: cardThemes.actualProduction.main,
+                                }}
                             >
                                 {data.actualProduction.current.toLocaleString()}
                             </Title>
@@ -1093,7 +1199,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 style={{
                                     fontSize: 13,
                                     fontWeight: 600,
-                                    color: token.colorSuccessText,
+                                    color: cardThemes.actualProduction.text,
                                 }}
                             >
                                 {data.actualProduction.unit}
@@ -1104,12 +1210,17 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             <Text
                                 style={{
                                     fontSize: 12,
-                                    color: token.colorSuccessText,
+                                    color: cardThemes.actualProduction.text,
                                     fontWeight: 600,
                                 }}
                             >
                                 {t('productionOverview.kpi.planShort')}:{' '}
-                                <span style={{ fontWeight: 700, color: token.colorSuccess }}>
+                                <span
+                                    style={{
+                                        fontWeight: 700,
+                                        color: cardThemes.actualProduction.main,
+                                    }}
+                                >
                                     {data.actualProduction.target.toLocaleString()}
                                 </span>{' '}
                                 {data.actualProduction.unit}

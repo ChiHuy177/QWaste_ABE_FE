@@ -69,15 +69,15 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                     y={y - 23}
                     width={34}
                     height={17}
-                    fill={token.colorInfoBg}
-                    stroke={token.colorInfoBorder}
+                    fill={token.colorErrorBg}
+                    stroke={token.colorErrorBorder}
                     strokeWidth={1}
                     rx={3}
                 />
                 <text
                     x={x}
                     y={y - 10}
-                    fill={token.colorInfoText}
+                    fill={token.colorErrorText}
                     textAnchor="middle"
                     fontSize={10}
                     fontWeight={700}
@@ -157,7 +157,6 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                             yAxisId="right"
                             orientation="right"
                             domain={[0, 200]}
-                            unit="%"
                             tick={{ fill: token.colorTextSecondary, fontSize: 10 }}
                             axisLine={{ stroke: token.colorBorderSecondary }}
                             tickFormatter={(val) => `${val}%`}
@@ -194,17 +193,17 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                             }}
                         />
 
-                        {/* 1. Maximum capacity h (Light Cyan/Info Bar) */}
+                        {/* 1. Maximum capacity h (Ant Design Warning Gold Bar) */}
                         <Bar
                             yAxisId="left"
                             dataKey="maxCapacityHours"
                             name="maxCapacityHours"
-                            fill={token.colorInfo}
+                            fill={token.colorWarning}
                             radius={[3, 3, 0, 0]}
                             maxBarSize={16}
                         />
 
-                        {/* 2. Actual operating time h (Primary Blue Bar) */}
+                        {/* 2. Actual operating time h (Ant Design Primary Blue Bar) */}
                         <Bar
                             yAxisId="left"
                             dataKey="actualOperatingHours"
@@ -214,7 +213,7 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                             maxBarSize={16}
                         />
 
-                        {/* 3. Operating ratio % (Error Red Line with badge labels) */}
+                        {/* 3. Operating ratio % (Ant Design Error Red Line with badge labels) */}
                         <Line
                             yAxisId="right"
                             type="linear"

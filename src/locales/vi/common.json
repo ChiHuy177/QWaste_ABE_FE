@@ -4768,7 +4768,9 @@
             "vsPlan": "So với kế hoạch",
             "actualProduction": "SẢN LƯỢNG THỰC TẾ",
             "planShort": "KH",
-            "vsMaxCapacity": "so với tối đa"
+            "vsMaxCapacity": "so với tối đa",
+            "withinLimit": "Trong giới hạn cho phép",
+            "designBenchmark": "100% định mức thiết kế"
         },
         "charts": {
             "oeeByMachine": "Hiệu suất theo máy",
@@ -4804,9 +4806,9 @@
             "pcsPerDay": "sp/ngày",
             "pcsPerWeek": "sp/tuần",
             "pcsPerMonth": "sp/tháng",
-            "maxCapacityHoursLabel": "1. Maximum capacity h",
-            "actualOperatingHoursLabel": "2. Actual operating time h",
-            "operatingRatioLabel": "3. Operating ratio %",
+            "maxCapacityHoursLabel": "3. Công suất tối đa (giờ)",
+            "actualOperatingHoursLabel": "1. Thời gian vận hành thực tế (giờ)",
+            "operatingRatioLabel": "2. Tỷ lệ hoạt động %",
             "averageShort": "TB"
         }
     }

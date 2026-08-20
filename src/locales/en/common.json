@@ -4724,7 +4724,9 @@
             "vsPlan": "vs planned target",
             "actualProduction": "ACTUAL OUTPUT",
             "planShort": "Plan",
-            "vsMaxCapacity": "vs max capacity"
+            "vsMaxCapacity": "vs max capacity",
+            "withinLimit": "Within allowable limit",
+            "designBenchmark": "100% design benchmark"
         },
         "charts": {
             "oeeByMachine": "Machine Efficiency",
@@ -4760,9 +4762,9 @@
             "pcsPerDay": "pcs/day",
             "pcsPerWeek": "pcs/week",
             "pcsPerMonth": "pcs/month",
-            "maxCapacityHoursLabel": "1. Maximum capacity h",
-            "actualOperatingHoursLabel": "2. Actual operating time h",
-            "operatingRatioLabel": "3. Operating ratio %",
+            "maxCapacityHoursLabel": "3. Maximum capacity h",
+            "actualOperatingHoursLabel": "1. Actual operating time h",
+            "operatingRatioLabel": "2. Operating ratio %",
             "averageShort": "Avg"
         }
     }

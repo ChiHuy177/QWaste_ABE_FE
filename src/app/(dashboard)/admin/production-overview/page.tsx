@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Col, Row, Spin } from 'antd';
 import { toast } from 'sonner';
 import dayjs, { Dayjs } from 'dayjs';
@@ -65,7 +65,7 @@ const ProductionOverviewPage: React.FC = () => {
         }
     }, [spaces, selectedFactoryId]);
 
-    // Fetch industry filters
+    // Fetch industry filters on mount
     useEffect(() => {
         const fetchFilters = async () => {
             try {
@@ -84,7 +84,7 @@ const ProductionOverviewPage: React.FC = () => {
             }
         };
         fetchFilters();
-    }, [selectedTimePeriod]);
+    }, []);
 
     // Active period filter object lookup
     const activeFilterObj = useMemo(() => {
@@ -115,84 +115,96 @@ const ProductionOverviewPage: React.FC = () => {
         ]
     );
 
+    // Request Key guard to prevent duplicate API calls
+    const lastFetchedParamsRef = useRef<string>('');
+
     // Fetch live Dashboard KPI Widgets data (Efficiency, Downtime, Production)
-    const fetchDashboardKpis = useCallback(async () => {
-        if (!selectedFactoryId) return;
-        if (timeFilterMode === 'PRESET' && !selectedTimePeriod) return;
+    const fetchDashboardKpis = useCallback(
+        async (force = false) => {
+            if (!selectedFactoryId) return;
+            if (timeFilterMode === 'PRESET' && !selectedTimePeriod) return;
 
-        setIsLoadingData(true);
-        try {
-            const isShift = activeFilterObj?.category === 'SHIFT';
-            const kpiResult = await DashboardService.getOverviewKpis({
-                spaceId: selectedFactoryId,
-                mode: timeFilterMode,
-                filterId: selectedTimePeriod,
-                shiftFilterId: selectedShiftFilterId,
-                isShiftFilter: isShift,
-                startDate,
-                endDate,
-            });
-
-            // Map API response to KpiSummaryData dynamically from API result
-            if (kpiResult.efficiency || kpiResult.downtime || kpiResult.production) {
-                const totalEff = kpiResult.efficiency?.totalEfficiencyPercentage ?? null;
-                const effDelta = kpiResult.efficiency?.efficiencyDeltaPercentage ?? null;
-                const totalDowntimeSec = kpiResult.downtime?.totalDowntimeSeconds ?? 0;
-                const downtimeMins = Math.round(totalDowntimeSec / 60);
-                const actualQty = kpiResult.production?.actualQuantity ?? 0;
-                const plannedQty = kpiResult.production?.plannedQuantity ?? 0;
-                const prodRatio = kpiResult.production?.productionRatioPercentage ?? null;
-
-                const oeeVal = totalEff != null ? Number(totalEff.toFixed(1)) : 0;
-                const yieldVal = prodRatio != null ? Number(prodRatio.toFixed(1)) : 0;
-
-                const statusTag =
-                    oeeVal >= 85
-                        ? t('productionOverview.kpi.targetMet', 'Đạt mục tiêu (≥85%)')
-                        : oeeVal >= 70
-                          ? t('productionOverview.kpi.improveArea', 'Vùng cải thiện (70–84%)')
-                          : t('productionOverview.kpi.needImprove', 'Cần cải thiện (<70%)');
-
-                setLiveKpiData({
-                    oee: {
-                        current: oeeVal,
-                        target: 85.0,
-                        yesterdayDiff: effDelta != null ? Number(effDelta.toFixed(1)) : 0,
-                        statusTag,
-                    },
-                    downtimeMinutes: {
-                        current: downtimeMins,
-                        overTargetMinutes: 0,
-                    },
-                    yieldRate: {
-                        current: yieldVal,
-                        targetText: t('productionOverview.kpi.vsPlan'),
-                    },
-                    actualProduction: {
-                        current: actualQty,
-                        target: plannedQty,
-                        unit: t('productionOverview.machineDetail.pcs', 'sp'),
-                    },
-                });
-            } else {
-                setLiveKpiData(null);
+            const requestKey = `${selectedFactoryId}_${timeFilterMode}_${selectedTimePeriod}_${selectedShiftFilterId}_${startDate}_${endDate}`;
+            if (!force && lastFetchedParamsRef.current === requestKey) {
+                return;
             }
-        } catch (error) {
-            console.warn('Dashboard KPI API fallback to mock data:', error);
-            setLiveKpiData(null);
-        } finally {
-            setIsLoadingData(false);
-        }
-    }, [
-        selectedFactoryId,
-        timeFilterMode,
-        selectedTimePeriod,
-        selectedShiftFilterId,
-        activeFilterObj,
-        startDate,
-        endDate,
-        t,
-    ]);
+            lastFetchedParamsRef.current = requestKey;
+
+            setIsLoadingData(true);
+            try {
+                const isShift = activeFilterObj?.category === 'SHIFT';
+                const kpiResult = await DashboardService.getOverviewKpis({
+                    spaceId: selectedFactoryId,
+                    mode: timeFilterMode,
+                    filterId: selectedTimePeriod,
+                    shiftFilterId: selectedShiftFilterId,
+                    isShiftFilter: isShift,
+                    startDate,
+                    endDate,
+                });
+
+                // Map API response to KpiSummaryData dynamically from API result
+                if (kpiResult.efficiency || kpiResult.downtime || kpiResult.production) {
+                    const totalEff = kpiResult.efficiency?.totalEfficiencyPercentage ?? null;
+                    const effDelta = kpiResult.efficiency?.efficiencyDeltaPercentage ?? null;
+                    const totalDowntimeSec = kpiResult.downtime?.totalDowntimeSeconds ?? 0;
+                    const downtimeMins = Math.round(totalDowntimeSec / 60);
+                    const actualQty = kpiResult.production?.actualQuantity ?? 0;
+                    const plannedQty = kpiResult.production?.plannedQuantity ?? 0;
+                    const prodRatio = kpiResult.production?.productionRatioPercentage ?? null;
+
+                    const oeeVal = totalEff != null ? Number(totalEff.toFixed(1)) : 0;
+                    const yieldVal = prodRatio != null ? Number(prodRatio.toFixed(1)) : 0;
+
+                    const statusTag =
+                        oeeVal >= 85
+                            ? t('productionOverview.kpi.targetMet', 'Đạt mục tiêu (≥85%)')
+                            : oeeVal >= 70
+                              ? t('productionOverview.kpi.improveArea', 'Vùng cải thiện (70–84%)')
+                              : t('productionOverview.kpi.needImprove', 'Cần cải thiện (<70%)');
+
+                    setLiveKpiData({
+                        oee: {
+                            current: oeeVal,
+                            target: 85.0,
+                            yesterdayDiff: effDelta != null ? Number(effDelta.toFixed(1)) : 0,
+                            statusTag,
+                        },
+                        downtimeMinutes: {
+                            current: downtimeMins,
+                            overTargetMinutes: 0,
+                        },
+                        yieldRate: {
+                            current: yieldVal,
+                            targetText: t('productionOverview.kpi.vsPlan'),
+                        },
+                        actualProduction: {
+                            current: actualQty,
+                            target: plannedQty,
+                            unit: t('productionOverview.machineDetail.pcs', 'sp'),
+                        },
+                    });
+                } else {
+                    setLiveKpiData(null);
+                }
+            } catch (error) {
+                console.warn('Dashboard KPI API fallback to mock data:', error);
+                setLiveKpiData(null);
+            } finally {
+                setIsLoadingData(false);
+            }
+        },
+        [
+            selectedFactoryId,
+            timeFilterMode,
+            selectedTimePeriod,
+            selectedShiftFilterId,
+            activeFilterObj,
+            startDate,
+            endDate,
+            t,
+        ]
+    );
 
     // Fetch dashboard KPIs on filter change
     useEffect(() => {
@@ -217,7 +229,7 @@ const ProductionOverviewPage: React.FC = () => {
 
     // Refresh action
     const handleRefresh = useCallback(() => {
-        fetchDashboardKpis();
+        fetchDashboardKpis(true);
         toast.success(t('productionOverview.actions.refreshSuccess'));
     }, [fetchDashboardKpis, t]);
 
