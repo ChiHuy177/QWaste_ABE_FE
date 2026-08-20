@@ -76,6 +76,14 @@ export const MENU_CONFIG: MenuItemConfig[] = [
         action: 'view',
     },
     {
+        key: 'work-calendar',
+        route: '/admin/work-calendar',
+        i18nKey: 'sidebar.navigation.workCalendar',
+        icon: <CalendarOutlined />,
+        subject: 'work_calendar',
+        action: 'view',
+    },
+    {
         key: 'production-plan-monitor',
         route: '/admin/production-plan/monitor',
         i18nKey: 'sidebar.navigation.productionMonitor',

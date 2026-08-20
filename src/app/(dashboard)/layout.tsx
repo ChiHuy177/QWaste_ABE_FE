@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { hasRouteAccessWithAbility, getDefaultRoute } from '@/configs/permissions/routeAccess';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useAbility } from '@/contexts/AbilityContext';
+import { WorkCalendarAlarmModal } from '@/components/shared/WorkCalendarAlarmModal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, isLoading } = useAuth();
@@ -37,5 +38,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return <FullPageLoader message="Loading..." />;
     }
 
-    return <AppLayout>{children}</AppLayout>;
+    return (
+        <AppLayout>
+            {children}
+            <WorkCalendarAlarmModal />
+        </AppLayout>
+    );
 }
