@@ -293,7 +293,6 @@ export default function WorkCalendarPage() {
                 isResetting={isResetting}
                 isConfirming={isConfirming}
                 hasDraftChanges={hasDraftChanges}
-                onMonthChange={handleMonthChange}
                 onEnterEditMode={handleEnterEditMode}
                 onCancelEditMode={handleCancelEditMode}
                 onSaveChanges={handleSaveChanges}
@@ -311,6 +310,7 @@ export default function WorkCalendarPage() {
                 isEditMode={isEditMode}
                 loading={loading}
                 selectedDates={selectedDates}
+                onMonthChange={handleMonthChange}
                 onSelectDates={handleSelectDates}
                 onOpenEditModal={handleOpenEditModal}
                 onClearSelection={handleClearSelection}

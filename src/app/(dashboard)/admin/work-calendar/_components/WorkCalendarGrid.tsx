@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Card, Space, Button, Typography, Skeleton, Grid, Calendar, theme } from 'antd';
+import { Card, Space, Button, DatePicker, Typography, Skeleton, Grid, Calendar, theme } from 'antd';
+import type { CalendarMode } from 'antd';
 import {
     EditOutlined,
     ClearOutlined,
     CheckSquareOutlined,
     BorderOutlined,
+    LeftOutlined,
+    RightOutlined,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +27,7 @@ interface WorkCalendarGridProps {
     isEditMode: boolean;
     loading?: boolean;
     selectedDates: string[];
+    onMonthChange: (year: number, month: number) => void;
     onSelectDates: (dateStrings: string[]) => void;
     onOpenEditModal: () => void;
     onClearSelection: () => void;
@@ -38,14 +42,16 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
         isEditMode,
         loading = false,
         selectedDates,
+        onMonthChange,
         onSelectDates,
         onOpenEditModal,
         onClearSelection,
     }) => {
-        const { t } = useTranslation('common');
+        const { t, i18n } = useTranslation('common');
         const { token } = theme.useToken();
         const screens = useBreakpoint();
         const isMobile = !screens.md;
+        const datePickerFormat = i18n.language === 'en' ? 'MMMM, YYYY' : '[Tháng] MM, YYYY';
 
         // Drag-select & Shift-select state
         const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
@@ -200,12 +206,109 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
             }
         }, []);
 
+        const handleCellKeyActivate = useCallback(
+            (dateStr: string, dayIndex: number, shiftKey: boolean) => {
+                const {
+                    isEditMode: editMode,
+                    lastSelectedDayIndex: lastIndex,
+                    year: curYear,
+                    month: curMonth,
+                    selectedDates: curSelected,
+                    onSelectDates: triggerSelect,
+                } = stateRef.current;
+
+                if (!editMode) return;
+
+                if (shiftKey && lastIndex !== null) {
+                    const start = Math.min(lastIndex, dayIndex);
+                    const end = Math.max(lastIndex, dayIndex);
+                    const rangeDates: string[] = [];
+                    for (let i = start; i <= end; i++) {
+                        const dNum = i + 1;
+                        rangeDates.push(
+                            `${curYear}-${String(curMonth).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`
+                        );
+                    }
+                    triggerSelect(Array.from(new Set([...curSelected, ...rangeDates])));
+                } else {
+                    const isAlreadySelected = curSelected.includes(dateStr);
+                    const nextSelected = isAlreadySelected
+                        ? curSelected.filter((d) => d !== dateStr)
+                        : Array.from(new Set([...curSelected, dateStr]));
+                    triggerSelect(nextSelected);
+                }
+                setLastSelectedDayIndex(dayIndex);
+            },
+            []
+        );
+
         const handleSelectAll = useCallback(() => {
             onSelectDates(editableMonthDates);
         }, [editableMonthDates, onSelectDates]);
 
         const isAllSelected =
             selectedDates.length === editableMonthDates.length && editableMonthDates.length > 0;
+
+        // Calendar's own header: month navigation lives right above the grid it controls,
+        // via antd's headerRender API instead of a page-level, visually detached control.
+        const renderCalendarHeader = useCallback(
+            ({
+                value,
+                onChange,
+            }: {
+                value: Dayjs;
+                type: CalendarMode;
+                onChange: (date: Dayjs) => void;
+                onTypeChange: (type: CalendarMode) => void;
+            }) => {
+                const goToMonth = (next: Dayjs) => {
+                    onChange(next);
+                    onMonthChange(next.year(), next.month() + 1);
+                };
+
+                return (
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            gap: 8,
+                            paddingBottom: isMobile ? 8 : 16,
+                        }}
+                    >
+                        <Button
+                            icon={<LeftOutlined />}
+                            onClick={() => goToMonth(value.subtract(1, 'month'))}
+                            disabled={isEditMode}
+                        />
+                        <DatePicker.MonthPicker
+                            value={value}
+                            onChange={(date) => date && goToMonth(date)}
+                            format={datePickerFormat}
+                            allowClear={false}
+                            disabled={isEditMode}
+                            style={{ width: isMobile ? 140 : 160 }}
+                        />
+                        <Button
+                            icon={<RightOutlined />}
+                            onClick={() => goToMonth(value.add(1, 'month'))}
+                            disabled={isEditMode}
+                        />
+                    </div>
+                );
+            },
+            [isEditMode, isMobile, datePickerFormat, onMonthChange]
+        );
+
+        // Antd's own <td> keeps a native onClick outside fullCellRender's reach; clicking a
+        // leading/trailing date (e.g. 31/7 shown in the August grid) silently repages the
+        // panel's internal, uncontrolled "view date" without notifying our year/month state,
+        // leaving the header on August while the grid repaints for July. disabledDate blocks
+        // that native click entirely for any date outside the month we're actually displaying.
+        const disabledDate = useCallback(
+            (date: Dayjs) => date.month() !== month - 1 || date.year() !== year,
+            [month, year]
+        );
 
         // Full Cell Render for Antd Calendar Component
         const fullCellRender = useCallback(
@@ -242,6 +345,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         isMobile={isMobile}
                         onCellMouseDown={handleCellMouseDown}
                         onCellMouseEnter={handleCellMouseEnter}
+                        onCellKeyActivate={handleCellKeyActivate}
                     />
                 );
             },
@@ -255,6 +359,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                 isMobile,
                 handleCellMouseDown,
                 handleCellMouseEnter,
+                handleCellKeyActivate,
             ]
         );
 
@@ -470,6 +575,9 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                                 flex-direction: column !important;
                                 flex: 1 !important;
                             }
+                            .qwaste-work-calendar-wrapper .ant-picker-cell-disabled::before {
+                                background: transparent !important;
+                            }
                             .qwaste-work-calendar-wrapper .ant-picker-calendar-date {
                                 height: 100% !important;
                                 min-height: 0 !important;
@@ -505,8 +613,9 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         `}</style>
                         <Calendar
                             value={calendarValue}
-                            headerRender={() => null}
+                            headerRender={renderCalendarHeader}
                             fullCellRender={fullCellRender}
+                            disabledDate={disabledDate}
                         />
                     </div>
                 </Card>

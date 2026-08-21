@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Tag, Tooltip, Checkbox, theme } from 'antd';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { DayType } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
@@ -21,6 +22,7 @@ export interface WorkCalendarDayCellProps {
     isMobile?: boolean;
     onCellMouseDown?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
     onCellMouseEnter?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
+    onCellKeyActivate?: (dateString: string, dayIndex: number, shiftKey: boolean) => void;
 }
 
 export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
@@ -39,12 +41,14 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         isMobile = false,
         onCellMouseDown,
         onCellMouseEnter,
+        onCellKeyActivate,
     }) => {
         const { t } = useTranslation('common');
         const { token } = theme.useToken();
 
         const isDark = token.colorBgContainer !== '#ffffff';
         const sc = isDark ? statusColors.dark : statusColors.light;
+        const isToday = dayjs().format('YYYY-MM-DD') === dateString;
 
         const handleMouseDown = (e: React.MouseEvent) => {
             if (isEditMode && onCellMouseDown) {
@@ -55,6 +59,14 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         const handleMouseEnter = (e: React.MouseEvent) => {
             if (isEditMode && onCellMouseEnter) {
                 onCellMouseEnter(dateString, dayIndex, e);
+            }
+        };
+
+        const handleKeyDown = (e: React.KeyboardEvent) => {
+            if (!isEditMode || !onCellKeyActivate) return;
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                onCellKeyActivate(dateString, dayIndex, e.shiftKey);
             }
         };
 
@@ -120,6 +132,11 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             <div
                 onMouseDown={handleMouseDown}
                 onMouseEnter={handleMouseEnter}
+                onKeyDown={handleKeyDown}
+                tabIndex={isEditMode ? 0 : undefined}
+                role={isEditMode ? 'button' : undefined}
+                aria-pressed={isEditMode ? isSelected : undefined}
+                aria-label={isEditMode ? `${dateString} ${typeLabel}` : undefined}
                 style={{
                     position: 'relative',
                     height: '100%',
@@ -167,10 +184,20 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                                 <span
                                     style={{
                                         fontWeight: 700,
-                                        fontSize: 13,
-                                        color: isWorkingDay
-                                            ? token.colorText
-                                            : token.colorTextSecondary,
+                                        fontSize: 12,
+                                        lineHeight: '18px',
+                                        width: isToday ? 18 : undefined,
+                                        height: isToday ? 18 : undefined,
+                                        display: isToday ? 'inline-flex' : undefined,
+                                        alignItems: isToday ? 'center' : undefined,
+                                        justifyContent: isToday ? 'center' : undefined,
+                                        borderRadius: isToday ? '50%' : undefined,
+                                        background: isToday ? token.colorPrimary : undefined,
+                                        color: isToday
+                                            ? token.colorWhite
+                                            : isWorkingDay
+                                              ? token.colorText
+                                              : token.colorTextSecondary,
                                     }}
                                 >
                                     {dayNumber}
@@ -266,10 +293,20 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                                 <span
                                     style={{
                                         fontWeight: 700,
-                                        fontSize: 14,
-                                        color: isWorkingDay
-                                            ? token.colorText
-                                            : token.colorTextSecondary,
+                                        fontSize: 13,
+                                        lineHeight: '22px',
+                                        width: isToday ? 22 : undefined,
+                                        height: isToday ? 22 : undefined,
+                                        display: isToday ? 'inline-flex' : undefined,
+                                        alignItems: isToday ? 'center' : undefined,
+                                        justifyContent: isToday ? 'center' : undefined,
+                                        borderRadius: isToday ? '50%' : undefined,
+                                        background: isToday ? token.colorPrimary : undefined,
+                                        color: isToday
+                                            ? token.colorWhite
+                                            : isWorkingDay
+                                              ? token.colorText
+                                              : token.colorTextSecondary,
                                     }}
                                 >
                                     {dayNumber}
