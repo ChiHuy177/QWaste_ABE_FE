@@ -14,6 +14,11 @@ import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { DashboardService } from '@/services/DashboardService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import {
+    DashboardMachineEfficiencyResponse,
+    DashboardMachineProductionResponse,
+    DashboardItemProductionResponse,
+} from '@/types/Dashboard';
+import {
     getProductionOverviewData,
     getMachineDetail,
     FilterContextParams,
@@ -49,6 +54,15 @@ const ProductionOverviewPage: React.FC = () => {
     const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
     const [isExporting, setIsExporting] = useState<boolean>(false);
     const [liveKpiData, setLiveKpiData] = useState<KpiSummaryData | null>(null);
+    const [liveChartsData, setLiveChartsData] = useState<{
+        machineEfficiency: DashboardMachineEfficiencyResponse[] | null;
+        machineProduction: DashboardMachineProductionResponse[] | null;
+        itemProduction: DashboardItemProductionResponse[] | null;
+    }>({
+        machineEfficiency: null,
+        machineProduction: null,
+        itemProduction: null,
+    });
 
     // Selected machine state for drilldown
     const [selectedMachineCode, setSelectedMachineCode] = useState<string | null>(null);
@@ -115,11 +129,24 @@ const ProductionOverviewPage: React.FC = () => {
         ]
     );
 
+    // Subtitle label for current filter
+    const activeFilterLabel = useMemo(() => {
+        if (timeFilterMode === 'CUSTOM_RANGE') {
+            return `${dayjs(startDate).format('DD/MM/YYYY')} – ${dayjs(endDate).format('DD/MM/YYYY')}`;
+        }
+        return (
+            activeFilterObj?.displayNameVi ||
+            activeFilterObj?.displayNameEn ||
+            activeFilterObj?.periodCode ||
+            ''
+        );
+    }, [timeFilterMode, startDate, endDate, activeFilterObj]);
+
     // Request Key guard to prevent duplicate API calls
     const lastFetchedParamsRef = useRef<string>('');
 
-    // Fetch live Dashboard KPI Widgets data (Efficiency, Downtime, Production)
-    const fetchDashboardKpis = useCallback(
+    // Fetch live Dashboard KPI Widgets & Charts data
+    const fetchDashboardData = useCallback(
         async (force = false) => {
             if (!selectedFactoryId) return;
             if (timeFilterMode === 'PRESET' && !selectedTimePeriod) return;
@@ -133,21 +160,33 @@ const ProductionOverviewPage: React.FC = () => {
             setIsLoadingData(true);
             try {
                 const isShift = activeFilterObj?.category === 'SHIFT';
-                const kpiResult = await DashboardService.getOverviewKpis({
-                    spaceId: selectedFactoryId,
-                    mode: timeFilterMode,
-                    filterId: selectedTimePeriod,
-                    shiftFilterId: selectedShiftFilterId,
-                    isShiftFilter: isShift,
-                    startDate,
-                    endDate,
-                });
+                const [kpiResult, chartsResult] = await Promise.all([
+                    DashboardService.getOverviewKpis({
+                        spaceId: selectedFactoryId,
+                        mode: timeFilterMode,
+                        filterId: selectedTimePeriod,
+                        shiftFilterId: selectedShiftFilterId,
+                        isShiftFilter: isShift,
+                        startDate,
+                        endDate,
+                    }),
+                    DashboardService.getDashboardCharts({
+                        spaceId: selectedFactoryId,
+                        mode: timeFilterMode,
+                        filterId: selectedTimePeriod,
+                        shiftFilterId: selectedShiftFilterId,
+                        isShiftFilter: isShift,
+                        startDate,
+                        endDate,
+                    }),
+                ]);
 
-                // Map API response to KpiSummaryData dynamically from API result
+                // Map KPI API response to KpiSummaryData dynamically
                 if (kpiResult.efficiency || kpiResult.downtime || kpiResult.production) {
                     const totalEff = kpiResult.efficiency?.totalEfficiencyPercentage ?? null;
                     const effDelta = kpiResult.efficiency?.efficiencyDeltaPercentage ?? null;
                     const totalDowntimeSec = kpiResult.downtime?.totalDowntimeSeconds ?? 0;
+                    const downtimeHoursVal = Number((totalDowntimeSec / 3600).toFixed(1));
                     const downtimeMins = Math.round(totalDowntimeSec / 60);
                     const actualQty = kpiResult.production?.actualQuantity ?? 0;
                     const plannedQty = kpiResult.production?.plannedQuantity ?? 0;
@@ -174,6 +213,10 @@ const ProductionOverviewPage: React.FC = () => {
                             current: downtimeMins,
                             overTargetMinutes: 0,
                         },
+                        downtimeHours: {
+                            current: downtimeHoursVal,
+                            overTargetHours: 0,
+                        },
                         yieldRate: {
                             current: yieldVal,
                             targetText: t('productionOverview.kpi.vsPlan'),
@@ -187,9 +230,33 @@ const ProductionOverviewPage: React.FC = () => {
                 } else {
                     setLiveKpiData(null);
                 }
+
+                // Map Charts API responses
+                if (
+                    chartsResult.machineEfficiency ||
+                    chartsResult.machineProduction ||
+                    chartsResult.itemProduction
+                ) {
+                    setLiveChartsData({
+                        machineEfficiency: chartsResult.machineEfficiency,
+                        machineProduction: chartsResult.machineProduction,
+                        itemProduction: chartsResult.itemProduction,
+                    });
+                } else {
+                    setLiveChartsData({
+                        machineEfficiency: null,
+                        machineProduction: null,
+                        itemProduction: null,
+                    });
+                }
             } catch (error) {
-                console.warn('Dashboard KPI API fallback to mock data:', error);
+                console.warn('Dashboard API fallback to mock data:', error);
                 setLiveKpiData(null);
+                setLiveChartsData({
+                    machineEfficiency: null,
+                    machineProduction: null,
+                    itemProduction: null,
+                });
             } finally {
                 setIsLoadingData(false);
             }
@@ -206,20 +273,58 @@ const ProductionOverviewPage: React.FC = () => {
         ]
     );
 
-    // Fetch dashboard KPIs on filter change
+    // Fetch dashboard KPIs and charts on filter change
     useEffect(() => {
         if (selectedFactoryId && (selectedTimePeriod || timeFilterMode === 'CUSTOM_RANGE')) {
-            fetchDashboardKpis();
+            fetchDashboardData();
         }
-    }, [fetchDashboardKpis, selectedFactoryId, selectedTimePeriod, timeFilterMode]);
+    }, [fetchDashboardData, selectedFactoryId, selectedTimePeriod, timeFilterMode]);
 
-    // Dynamic Overview Data based on active filter
+    // Dynamic Overview Data based on active filter (mock fallback)
     const overviewData = useMemo(() => getProductionOverviewData(filterContext), [filterContext]);
 
-    // Merged KPI data prioritizing live API data over mock
+    // Direct live KPI data or clean zero state (no fake mock fallback)
     const currentKpiData = useMemo<KpiSummaryData>(() => {
-        return liveKpiData ?? overviewData.kpi;
-    }, [liveKpiData, overviewData.kpi]);
+        if (liveKpiData) return liveKpiData;
+        return {
+            oee: {
+                current: 0,
+                target: 85.0,
+                yesterdayDiff: 0,
+                statusTag: t('productionOverview.kpi.needImprove', 'Cần cải thiện (<70%)'),
+            },
+            downtimeMinutes: {
+                current: 0,
+                overTargetMinutes: 0,
+            },
+            downtimeHours: {
+                current: 0,
+                overTargetHours: 0,
+            },
+            yieldRate: {
+                current: 0,
+                targetText: t('productionOverview.kpi.vsPlan'),
+            },
+            actualProduction: {
+                current: 0,
+                target: 0,
+                unit: t('productionOverview.machineDetail.pcs', 'sp'),
+            },
+        };
+    }, [liveKpiData, t]);
+
+    // Direct live Chart data from API (displays Empty state when no data, never shows fake mock data)
+    const currentMachineEfficiency = useMemo(() => {
+        return liveChartsData.machineEfficiency ?? [];
+    }, [liveChartsData.machineEfficiency]);
+
+    const currentMachineProduction = useMemo(() => {
+        return liveChartsData.machineProduction ?? [];
+    }, [liveChartsData.machineProduction]);
+
+    const currentProductProduction = useMemo(() => {
+        return liveChartsData.itemProduction ?? [];
+    }, [liveChartsData.itemProduction]);
 
     // Dynamic Active Machine Detail Data based on active filter
     const activeMachineDetail = useMemo(() => {
@@ -229,9 +334,9 @@ const ProductionOverviewPage: React.FC = () => {
 
     // Refresh action
     const handleRefresh = useCallback(() => {
-        fetchDashboardKpis(true);
+        fetchDashboardData(true);
         toast.success(t('productionOverview.actions.refreshSuccess'));
-    }, [fetchDashboardKpis, t]);
+    }, [fetchDashboardData, t]);
 
     const handleApplyTimeFilter = (params: {
         mode: TimeFilterMode;
@@ -329,7 +434,8 @@ const ProductionOverviewPage: React.FC = () => {
                         <Row gutter={[16, 16]}>
                             <Col xs={24} lg={12}>
                                 <MachineOeeChartCard
-                                    data={overviewData.machineOeeList}
+                                    data={currentMachineEfficiency}
+                                    subtitle={activeFilterLabel}
                                     onSelectMachine={(machineCode) =>
                                         setSelectedMachineCode(machineCode)
                                     }
@@ -337,7 +443,8 @@ const ProductionOverviewPage: React.FC = () => {
                             </Col>
                             <Col xs={24} lg={12}>
                                 <MachinePlanVsActualChartCard
-                                    data={overviewData.machineOutputList}
+                                    data={currentMachineProduction}
+                                    subtitle={activeFilterLabel}
                                 />
                             </Col>
                         </Row>
@@ -346,7 +453,8 @@ const ProductionOverviewPage: React.FC = () => {
                         <Row>
                             <Col span={24}>
                                 <ProductPlanVsActualChartCard
-                                    data={overviewData.productOutputList}
+                                    data={currentProductProduction}
+                                    subtitle={activeFilterLabel}
                                 />
                             </Col>
                         </Row>

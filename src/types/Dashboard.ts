@@ -32,3 +32,32 @@ export interface DashboardKpiSummaryState {
     production: DashboardProductionResponse | null;
     isLoading: boolean;
 }
+
+export interface DashboardMachineEfficiencyResponse {
+    machineId: string;
+    machineName: string;
+    machineCode: string | null;
+    efficiencyPercentage: number | null;
+}
+
+export interface DashboardMachineProductionResponse {
+    machineId: string;
+    machineName: string;
+    machineCode: string | null;
+    plannedQuantity: number;
+    actualQuantity: number;
+}
+
+export interface DashboardItemProductionResponse {
+    productionPlanCode: string;
+    productionPlanName: string;
+    plannedQuantity: number;
+    actualQuantity: number;
+}
+
+export interface DashboardChartsSummaryState {
+    machineEfficiency: DashboardMachineEfficiencyResponse[] | null;
+    machineProduction: DashboardMachineProductionResponse[] | null;
+    itemProduction: DashboardItemProductionResponse[] | null;
+    isLoading: boolean;
+}

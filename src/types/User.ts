@@ -87,9 +87,9 @@ export const THEME_OPTIONS: Array<{
     label: string;
     icon: string;
 }> = [
-        { value: 'light', label: 'Light', icon: '☀️' },
-        { value: 'dark', label: 'Dark', icon: '🌙' },
-    ];
+    { value: 'light', label: 'Light', icon: '☀️' },
+    { value: 'dark', label: 'Dark', icon: '🌙' },
+];
 
 export type LanguageOption = 'en' | 'vi';
 
@@ -99,9 +99,9 @@ export const LANGUAGE_OPTIONS: Array<{
     flag: string;
     nativeName: string;
 }> = [
-        { value: 'en', label: 'English', flag: '🇺🇸', nativeName: 'English' },
-        { value: 'vi', label: 'Vietnamese', flag: '🇻🇳', nativeName: 'Tiếng Việt' },
-    ];
+    { value: 'en', label: 'English', flag: '🇺🇸', nativeName: 'English' },
+    { value: 'vi', label: 'Vietnamese', flag: '🇻🇳', nativeName: 'Tiếng Việt' },
+];
 export interface ValidationErrors {
     [fieldName: string]: string;
 }

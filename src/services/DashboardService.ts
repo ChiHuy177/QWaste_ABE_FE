@@ -4,6 +4,9 @@ import {
     DashboardProductionResponse,
     DashboardFilterQueryParams,
     DashboardDateRangeQueryParams,
+    DashboardMachineEfficiencyResponse,
+    DashboardMachineProductionResponse,
+    DashboardItemProductionResponse,
 } from '@/types/Dashboard';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
@@ -138,6 +141,127 @@ export class DashboardService {
     }
 
     /**
+     * Chart 1: Efficiency by Machine (by Filter)
+     */
+    static async getMachineEfficiencyByFilter(
+        params: DashboardFilterQueryParams
+    ): Promise<DashboardMachineEfficiencyResponse[]> {
+        const queryParams: Record<string, any> = {
+            spaceId: params.spaceId,
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineEfficiencyResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.EFFICIENCY_BY_MACHINE_BY_FILTER,
+            data: queryParams,
+        });
+        return (response.result as DashboardMachineEfficiencyResponse[]) || [];
+    }
+
+    /**
+     * Chart 1: Efficiency by Machine (by Date Range)
+     */
+    static async getMachineEfficiencyByDateRange(
+        params: DashboardDateRangeQueryParams
+    ): Promise<DashboardMachineEfficiencyResponse[]> {
+        const queryParams: Record<string, any> = {
+            spaceId: params.spaceId,
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineEfficiencyResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.EFFICIENCY_BY_MACHINE_BY_DATE_RANGE,
+            data: queryParams,
+        });
+        return (response.result as DashboardMachineEfficiencyResponse[]) || [];
+    }
+
+    /**
+     * Chart 2: Planned vs Actual Production by Machine (by Filter)
+     */
+    static async getMachineProductionByFilter(params: {
+        spaceId: number;
+        filterId: number;
+    }): Promise<DashboardMachineProductionResponse[]> {
+        const response = await NetworkService.requestJson<DashboardMachineProductionResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.PRODUCTION_BY_MACHINE_BY_FILTER,
+            data: {
+                spaceId: params.spaceId,
+                filterId: params.filterId,
+            },
+        });
+        return (response.result as DashboardMachineProductionResponse[]) || [];
+    }
+
+    /**
+     * Chart 2: Planned vs Actual Production by Machine (by Date Range)
+     */
+    static async getMachineProductionByDateRange(params: {
+        spaceId: number;
+        startDate: string;
+        endDate: string;
+    }): Promise<DashboardMachineProductionResponse[]> {
+        const response = await NetworkService.requestJson<DashboardMachineProductionResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.PRODUCTION_BY_MACHINE_BY_DATE_RANGE,
+            data: {
+                spaceId: params.spaceId,
+                startDate: params.startDate,
+                endDate: params.endDate,
+            },
+        });
+        return (response.result as DashboardMachineProductionResponse[]) || [];
+    }
+
+    /**
+     * Chart 3: Planned vs Actual Production by Item / SKU (by Filter)
+     */
+    static async getItemProductionByFilter(params: {
+        spaceId: number;
+        filterId: number;
+    }): Promise<DashboardItemProductionResponse[]> {
+        const response = await NetworkService.requestJson<DashboardItemProductionResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.PRODUCTION_BY_ITEM_BY_FILTER,
+            data: {
+                spaceId: params.spaceId,
+                filterId: params.filterId,
+            },
+        });
+        return (response.result as DashboardItemProductionResponse[]) || [];
+    }
+
+    /**
+     * Chart 3: Planned vs Actual Production by Item / SKU (by Date Range)
+     */
+    static async getItemProductionByDateRange(params: {
+        spaceId: number;
+        startDate: string;
+        endDate: string;
+    }): Promise<DashboardItemProductionResponse[]> {
+        const response = await NetworkService.requestJson<DashboardItemProductionResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.PRODUCTION_BY_ITEM_BY_DATE_RANGE,
+            data: {
+                spaceId: params.spaceId,
+                startDate: params.startDate,
+                endDate: params.endDate,
+            },
+        });
+        return (response.result as DashboardItemProductionResponse[]) || [];
+    }
+
+    /**
      * Helper to fetch all 4 Dashboard KPI widgets in parallel
      */
     static async getOverviewKpis(params: {
@@ -158,7 +282,7 @@ export class DashboardService {
 
         let efficiencyPromise: Promise<DashboardEfficiencyResponse>;
         let downtimePromise: Promise<DashboardDowntimeResponse>;
-        let productionPromise: Promise<DashboardProductionResponse>;
+        let productionPromise: Promise<DashboardProductionResponse> | null = null;
 
         if (mode === 'CUSTOM_RANGE' && startDate && endDate) {
             efficiencyPromise = this.getEfficiencyByDateRange({
@@ -189,10 +313,13 @@ export class DashboardService {
                 filterId,
                 shiftFilterId,
             });
-            productionPromise = this.getProductionByFilter({
-                spaceId,
-                filterId,
-            });
+            // Production endpoint does NOT support SHIFT filters (returns 400 error 912)
+            if (!isShiftFilter && !shiftFilterId) {
+                productionPromise = this.getProductionByFilter({
+                    spaceId,
+                    filterId,
+                });
+            }
         } else {
             return { efficiency: null, downtime: null, production: null };
         }
@@ -200,13 +327,91 @@ export class DashboardService {
         const [effRes, downRes, prodRes] = await Promise.allSettled([
             efficiencyPromise,
             downtimePromise,
-            productionPromise,
+            productionPromise ?? Promise.resolve(null as any),
         ]);
 
         return {
             efficiency: effRes.status === 'fulfilled' ? effRes.value : null,
             downtime: downRes.status === 'fulfilled' ? downRes.value : null,
-            production: prodRes.status === 'fulfilled' ? prodRes.value : null,
+            production: prodRes.status === 'fulfilled' && productionPromise ? prodRes.value : null,
+        };
+    }
+
+    /**
+     * Helper to fetch all 3 Dashboard Chart Visualizations in parallel
+     */
+    static async getDashboardCharts(params: {
+        spaceId: number;
+        mode: 'PRESET' | 'CUSTOM_RANGE';
+        filterId?: number | null;
+        shiftFilterId?: number | null;
+        isShiftFilter?: boolean;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<{
+        machineEfficiency: DashboardMachineEfficiencyResponse[] | null;
+        machineProduction: DashboardMachineProductionResponse[] | null;
+        itemProduction: DashboardItemProductionResponse[] | null;
+    }> {
+        const { spaceId, mode, filterId, shiftFilterId, isShiftFilter, startDate, endDate } =
+            params;
+
+        let machineEffPromise: Promise<DashboardMachineEfficiencyResponse[]>;
+        let machineProdPromise: Promise<DashboardMachineProductionResponse[]> | null = null;
+        let itemProdPromise: Promise<DashboardItemProductionResponse[]> | null = null;
+
+        if (mode === 'CUSTOM_RANGE' && startDate && endDate) {
+            machineEffPromise = this.getMachineEfficiencyByDateRange({
+                spaceId,
+                startDate,
+                endDate,
+                filterId: isShiftFilter ? filterId : undefined,
+            });
+            machineProdPromise = this.getMachineProductionByDateRange({
+                spaceId,
+                startDate,
+                endDate,
+            });
+            itemProdPromise = this.getItemProductionByDateRange({
+                spaceId,
+                startDate,
+                endDate,
+            });
+        } else if (filterId) {
+            machineEffPromise = this.getMachineEfficiencyByFilter({
+                spaceId,
+                filterId,
+                shiftFilterId,
+            });
+            // Chart 2 & 3 only support PERIOD filters (not SHIFT filters)
+            if (!isShiftFilter && !shiftFilterId) {
+                machineProdPromise = this.getMachineProductionByFilter({
+                    spaceId,
+                    filterId,
+                });
+                itemProdPromise = this.getItemProductionByFilter({
+                    spaceId,
+                    filterId,
+                });
+            }
+        } else {
+            return { machineEfficiency: null, machineProduction: null, itemProduction: null };
+        }
+
+        const [machineEffRes, machineProdRes, itemProdRes] = await Promise.allSettled([
+            machineEffPromise,
+            machineProdPromise ?? Promise.resolve([]),
+            itemProdPromise ?? Promise.resolve([]),
+        ]);
+
+        return {
+            machineEfficiency: machineEffRes.status === 'fulfilled' ? machineEffRes.value : null,
+            machineProduction:
+                machineProdRes.status === 'fulfilled' && machineProdPromise
+                    ? machineProdRes.value
+                    : null,
+            itemProduction:
+                itemProdRes.status === 'fulfilled' && itemProdPromise ? itemProdRes.value : null,
         };
     }
 }

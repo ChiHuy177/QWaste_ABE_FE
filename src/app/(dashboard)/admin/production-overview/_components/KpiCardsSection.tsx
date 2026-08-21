@@ -87,6 +87,31 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
         data.actualCapacity?.rateVsMax ??
         Math.min(100, Math.round((actualCapacityValue / maxCapacityValue) * 100));
 
+    const totalDowntimeMinutes = data.downtimeMinutes?.current ?? 0;
+    const downtimeHours = Math.floor(totalDowntimeMinutes / 60);
+    const downtimeMins = totalDowntimeMinutes % 60;
+
+    const renderDowntimeOverTarget = (totalMinutes: number) => {
+        if (!totalMinutes || totalMinutes <= 0) {
+            return t('productionOverview.kpi.withinLimit');
+        }
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        let formattedText = '';
+        if (h > 0 && m > 0) {
+            formattedText = `+${h.toLocaleString()} ${t('productionOverview.kpi.hours', 'giờ')} ${m} ${t('productionOverview.kpi.minutes', 'phút')} ${t('productionOverview.kpi.overTarget', 'vượt mục tiêu')}`;
+        } else if (h > 0) {
+            formattedText = `+${h.toLocaleString()} ${t('productionOverview.kpi.hoursOverTarget', 'giờ vượt mục tiêu')}`;
+        } else {
+            formattedText = `+${m} ${t('productionOverview.kpi.minutesOverTarget', 'phút vượt mục tiêu')}`;
+        }
+        return (
+            <>
+                <FallOutlined /> {formattedText}
+            </>
+        );
+    };
+
     if (isMachineView) {
         return (
             <Row gutter={[16, 16]} style={{ marginBottom: 16 }} align="stretch">
@@ -206,7 +231,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 <Progress
                                     percent={data.oee.current}
                                     strokeColor={cardThemes.operatingRate.main}
-                                    trailColor={token.colorFillSecondary}
+                                    railColor={token.colorFillSecondary}
                                     showInfo={false}
                                     size={['100%', 8]}
                                 />
@@ -333,7 +358,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 <Progress
                                     percent={100}
                                     strokeColor={cardThemes.maxCapacity.main}
-                                    trailColor={token.colorFillSecondary}
+                                    railColor={token.colorFillSecondary}
                                     showInfo={false}
                                     size={['100%', 6]}
                                 />
@@ -423,28 +448,81 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         margin: '8px 0 4px 0',
                                         display: 'flex',
                                         alignItems: 'baseline',
-                                        gap: 6,
+                                        gap: 5,
+                                        flexWrap: 'wrap',
                                     }}
                                 >
-                                    <Title
-                                        level={3}
-                                        style={{
-                                            margin: 0,
-                                            fontWeight: 800,
-                                            color: cardThemes.downtime.main,
-                                        }}
-                                    >
-                                        {data.downtimeMinutes.current}
-                                    </Title>
-                                    <Text
-                                        style={{
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            color: cardThemes.downtime.text,
-                                        }}
-                                    >
-                                        {t('productionOverview.kpi.minutes')}
-                                    </Text>
+                                    {downtimeHours > 0 ? (
+                                        <>
+                                            <Title
+                                                level={3}
+                                                style={{
+                                                    margin: 0,
+                                                    fontWeight: 800,
+                                                    color: cardThemes.downtime.main,
+                                                }}
+                                            >
+                                                {downtimeHours.toLocaleString()}
+                                            </Title>
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    fontWeight: 600,
+                                                    color: cardThemes.downtime.text,
+                                                }}
+                                            >
+                                                {t('productionOverview.kpi.hours', 'giờ')}
+                                            </Text>
+                                            {downtimeMins > 0 && (
+                                                <>
+                                                    <Title
+                                                        level={4}
+                                                        style={{
+                                                            margin: 0,
+                                                            fontWeight: 700,
+                                                            color: cardThemes.downtime.main,
+                                                        }}
+                                                    >
+                                                        {downtimeMins}
+                                                    </Title>
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 11,
+                                                            fontWeight: 600,
+                                                            color: cardThemes.downtime.text,
+                                                        }}
+                                                    >
+                                                        {t(
+                                                            'productionOverview.kpi.minutes',
+                                                            'phút'
+                                                        )}
+                                                    </Text>
+                                                </>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Title
+                                                level={3}
+                                                style={{
+                                                    margin: 0,
+                                                    fontWeight: 800,
+                                                    color: cardThemes.downtime.main,
+                                                }}
+                                            >
+                                                {downtimeMins}
+                                            </Title>
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    fontWeight: 600,
+                                                    color: cardThemes.downtime.text,
+                                                }}
+                                            >
+                                                {t('productionOverview.kpi.minutes', 'phút')}
+                                            </Text>
+                                        </>
+                                    )}
                                 </div>
 
                                 <Text
@@ -454,14 +532,8 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         fontWeight: 600,
                                     }}
                                 >
-                                    {data.downtimeMinutes.overTargetMinutes > 0 ? (
-                                        <>
-                                            <FallOutlined /> +
-                                            {data.downtimeMinutes.overTargetMinutes}{' '}
-                                            {t('productionOverview.kpi.minutesOverTarget')}
-                                        </>
-                                    ) : (
-                                        t('productionOverview.kpi.withinLimit')
+                                    {renderDowntimeOverTarget(
+                                        data.downtimeMinutes.overTargetMinutes
                                     )}
                                 </Text>
                             </div>
@@ -893,7 +965,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             <Progress
                                 percent={data.oee.current}
                                 strokeColor={cardThemes.operatingRate.main}
-                                trailColor={token.colorFillSecondary}
+                                railColor={token.colorFillSecondary}
                                 showInfo={false}
                                 size={['100%', 8]}
                             />
@@ -989,27 +1061,77 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 display: 'flex',
                                 alignItems: 'baseline',
                                 gap: 6,
+                                flexWrap: 'wrap',
                             }}
                         >
-                            <Title
-                                level={2}
-                                style={{
-                                    margin: 0,
-                                    fontWeight: 800,
-                                    color: cardThemes.downtime.main,
-                                }}
-                            >
-                                {data.downtimeMinutes.current}
-                            </Title>
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    color: cardThemes.downtime.text,
-                                }}
-                            >
-                                {t('productionOverview.kpi.minutes')}
-                            </Text>
+                            {downtimeHours > 0 ? (
+                                <>
+                                    <Title
+                                        level={2}
+                                        style={{
+                                            margin: 0,
+                                            fontWeight: 800,
+                                            color: cardThemes.downtime.main,
+                                        }}
+                                    >
+                                        {downtimeHours.toLocaleString()}
+                                    </Title>
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            fontWeight: 600,
+                                            color: cardThemes.downtime.text,
+                                        }}
+                                    >
+                                        {t('productionOverview.kpi.hours', 'giờ')}
+                                    </Text>
+                                    {downtimeMins > 0 && (
+                                        <>
+                                            <Title
+                                                level={3}
+                                                style={{
+                                                    margin: 0,
+                                                    fontWeight: 700,
+                                                    color: cardThemes.downtime.main,
+                                                }}
+                                            >
+                                                {downtimeMins}
+                                            </Title>
+                                            <Text
+                                                style={{
+                                                    fontSize: 13,
+                                                    fontWeight: 600,
+                                                    color: cardThemes.downtime.text,
+                                                }}
+                                            >
+                                                {t('productionOverview.kpi.minutes', 'phút')}
+                                            </Text>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <Title
+                                        level={2}
+                                        style={{
+                                            margin: 0,
+                                            fontWeight: 800,
+                                            color: cardThemes.downtime.main,
+                                        }}
+                                    >
+                                        {downtimeMins}
+                                    </Title>
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            fontWeight: 600,
+                                            color: cardThemes.downtime.text,
+                                        }}
+                                    >
+                                        {t('productionOverview.kpi.minutes', 'phút')}
+                                    </Text>
+                                </>
+                            )}
                         </div>
 
                         <div style={{ marginTop: 12 }}>
@@ -1020,14 +1142,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     fontWeight: 600,
                                 }}
                             >
-                                {data.downtimeMinutes.overTargetMinutes > 0 ? (
-                                    <>
-                                        <FallOutlined /> +{data.downtimeMinutes.overTargetMinutes}{' '}
-                                        {t('productionOverview.kpi.minutesOverTarget')}
-                                    </>
-                                ) : (
-                                    t('productionOverview.kpi.withinLimit')
-                                )}
+                                {renderDowntimeOverTarget(data.downtimeMinutes.overTargetMinutes)}
                             </Text>
                         </div>
                     </div>

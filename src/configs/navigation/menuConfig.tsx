@@ -11,7 +11,6 @@ import {
 } from '@ant-design/icons';
 import type { Action, Subject } from '@/configs/permissions/caslAbility';
 
-
 export interface MenuItemConfig {
     key: string;
     route: string;
@@ -30,7 +29,6 @@ export interface GroupConfig {
     i18nKey: string;
     icon?: React.ReactNode;
 }
-
 
 //All menu items configuration
 export const MENU_CONFIG: MenuItemConfig[] = [

@@ -1,7 +1,7 @@
-import { MachineType } from "@/types/MachineType";
-import { NetworkService } from "./NetworkService";
-import { ENDPOINTS } from "./endpoints";
-import { MachineTypeFormData } from "@/types/MachineType";
+import { MachineType } from '@/types/MachineType';
+import { NetworkService } from './NetworkService';
+import { ENDPOINTS } from './endpoints';
+import { MachineTypeFormData } from '@/types/MachineType';
 
 export class MachineTypeService {
     static async getAllMachineTypesPicking(): Promise<MachineType[]> {
@@ -52,5 +52,4 @@ export class MachineTypeService {
         });
         return response.result;
     }
-
 }

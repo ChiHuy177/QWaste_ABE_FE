@@ -52,10 +52,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     const productionPlanItems: MenuItem[] = [];
     if (ability.can('view', 'production_plan')) {
         productionPlanItems.push(
-            createMenuItem(
-                '/admin/production-plan',
-                t('sidebar.navigation.productionPlan')
-            )
+            createMenuItem('/admin/production-plan', t('sidebar.navigation.productionPlan'))
         );
     }
     if (ability.can('view', 'production_monitor')) {
@@ -91,10 +88,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     }
     if (ability.can('view', 'operation_type')) {
         machineManagementItems.push(
-            createMenuItem(
-                '/admin/categories/operationType',
-                t('sidebar.navigation.operationType')
-            )
+            createMenuItem('/admin/categories/operationType', t('sidebar.navigation.operationType'))
         );
     }
     // if (ability.can('view', 'machine_type')) {

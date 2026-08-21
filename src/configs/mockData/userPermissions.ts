@@ -38,5 +38,5 @@ export const MOCK_USER_PERMISSIONS: UserPermission[] = [
 
 // Helper to get user permissions by userId
 export const getUserPermissionsByUserId = (userId: string): UserPermission[] => {
-    return MOCK_USER_PERMISSIONS.filter(up => up.userId === userId);
+    return MOCK_USER_PERMISSIONS.filter((up) => up.userId === userId);
 };

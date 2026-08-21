@@ -1,4 +1,8 @@
-import { OperationType, OperationTypeFormData, OperationTypeUpdateFormData } from '@/types/OperationType';
+import {
+    OperationType,
+    OperationTypeFormData,
+    OperationTypeUpdateFormData,
+} from '@/types/OperationType';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 

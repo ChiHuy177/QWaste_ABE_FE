@@ -19,6 +19,10 @@ export interface KpiSummaryData {
         current: number;
         overTargetMinutes: number;
     };
+    downtimeHours?: {
+        current: number;
+        overTargetHours: number;
+    };
     actualCapacity?: {
         current: number;
         unit: string;

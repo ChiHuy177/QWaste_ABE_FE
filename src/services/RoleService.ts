@@ -35,7 +35,9 @@ export class RoleService {
         return response.result as Role;
     }
 
-    static async updateRole(role: Pick<Role, 'roleId' | 'description' | 'permissionIds'>): Promise<Role> {
+    static async updateRole(
+        role: Pick<Role, 'roleId' | 'description' | 'permissionIds'>
+    ): Promise<Role> {
         const response = await NetworkService.requestJson<Role>({
             method: 'PUT',
             url: '/api/roles/v1',

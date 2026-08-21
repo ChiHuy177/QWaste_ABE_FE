@@ -14,7 +14,6 @@ const apiClient: AxiosInstance = axios.create({
     withCredentials: true,
 });
 
-
 let isRefreshing = false;
 let failedQueue: {
     resolve: () => void;

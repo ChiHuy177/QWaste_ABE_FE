@@ -8,10 +8,7 @@ export enum ConnectionState {
 }
 
 export type EnergyMessageType =
-    | 'ZONES_CURRENT_POWER'
-    | 'ZONES_FULL_POWER'
-    | 'MACHINES_CURRENT_POWER'
-    | 'MACHINES_FULL_POWER';
+    'ZONES_CURRENT_POWER' | 'ZONES_FULL_POWER' | 'MACHINES_CURRENT_POWER' | 'MACHINES_FULL_POWER';
 
 interface BaseEnergyMessage {
     type: EnergyMessageType;

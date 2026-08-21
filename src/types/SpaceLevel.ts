@@ -1,4 +1,4 @@
-import { AuditMetaData } from "./Metadata";
+import { AuditMetaData } from './Metadata';
 
 export interface SpaceLevelsPaginatedParams {
     page: number;

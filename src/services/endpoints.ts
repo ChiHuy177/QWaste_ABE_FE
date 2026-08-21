@@ -207,6 +207,12 @@ export const ENDPOINTS = {
         DOWNTIME_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/downtime/byDateRange`,
         PRODUCTION_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byFilter`,
         PRODUCTION_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byDateRange`,
+        EFFICIENCY_BY_MACHINE_BY_FILTER: `${BASE_PATHS.DASHBOARD}/efficiency/byMachine/byFilter`,
+        EFFICIENCY_BY_MACHINE_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/efficiency/byMachine/byDateRange`,
+        PRODUCTION_BY_MACHINE_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byMachine/byFilter`,
+        PRODUCTION_BY_MACHINE_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byMachine/byDateRange`,
+        PRODUCTION_BY_ITEM_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byItem/byFilter`,
+        PRODUCTION_BY_ITEM_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byItem/byDateRange`,
     },
 } as const;
 

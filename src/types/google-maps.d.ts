@@ -16,14 +16,8 @@ declare global {
 
             namespace places {
                 class Autocomplete {
-                    constructor(
-                        input: HTMLInputElement,
-                        opts?: AutocompleteOptions
-                    );
-                    addListener(
-                        eventName: string,
-                        handler: () => void
-                    ): void;
+                    constructor(input: HTMLInputElement, opts?: AutocompleteOptions);
+                    addListener(eventName: string, handler: () => void): void;
                     getPlace(): PlaceResult;
                 }
 
@@ -52,4 +46,4 @@ declare global {
     const google: typeof google;
 }
 
-export { };
+export {};

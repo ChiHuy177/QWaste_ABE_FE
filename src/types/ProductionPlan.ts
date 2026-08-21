@@ -14,12 +14,7 @@ export type IncidentReason =
     | 'OTHER';
 
 export type ProductionPlanStatusTrigger =
-    | 'MQTT_RUN'
-    | 'MQTT_ERROR'
-    | 'MQTT_OFFLINE'
-    | 'MQTT_IDLE'
-    | 'AUTO_ADVANCE'
-    | 'MANUAL';
+    'MQTT_RUN' | 'MQTT_ERROR' | 'MQTT_OFFLINE' | 'MQTT_IDLE' | 'AUTO_ADVANCE' | 'MANUAL';
 
 export type ImportOption = 'CANCEL' | 'OVERWRITE_ALL' | 'OVERWRITE_RETAIN';
 
@@ -224,8 +219,7 @@ export interface ProductionPlanProductionChangedPayload {
 }
 
 export type ProductionPlanWsPayload =
-    | ProductionPlanStatusChangedPayload
-    | ProductionPlanProductionChangedPayload;
+    ProductionPlanStatusChangedPayload | ProductionPlanProductionChangedPayload;
 
 // ─── Import ──────────────────────────────────────────────────────────────────
 
