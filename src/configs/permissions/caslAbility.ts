@@ -15,9 +15,11 @@ export type Action =
     | 'reorder'
     | 'import'
     | 'incident'
-    | 'move';
+    | 'move'
+    | 'reset';
 
 export type Subject =
+    | 'work_calendar'
     // Overview
     | 'overview'
     // Categories

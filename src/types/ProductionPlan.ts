@@ -1,7 +1,5 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
 
-// ─── Enums (khớp BE model/enums) ─────────────────────────────────────────────
-
 export type ProductionPlanStatus = 'PENDING' | 'RUNNING' | 'PAUSE' | 'PARTIAL' | 'COMPLETE';
 
 export type IncidentReason =
@@ -24,8 +22,6 @@ export type ProductionPlanStatusTrigger =
     | 'MANUAL';
 
 export type ImportOption = 'CANCEL' | 'OVERWRITE_ALL' | 'OVERWRITE_RETAIN';
-
-// ─── Responses (khớp BE model/dtos/productionPlan/responses) ─────────────────
 
 export interface ProductionPlanListItem {
     productionPlanId: string;
@@ -111,8 +107,6 @@ export interface ProductionPlanStatusLog {
     changedBy: string | null;
     timestamp: string; // ISO LocalDateTime
 }
-
-// ─── Requests (khớp BE model/dtos/productionPlan/requests) ───────────────────
 
 export interface ProductionPlanFormData {
     productionPlanCode: string;
@@ -219,6 +213,19 @@ export interface ProductionPlanStatusChangedPayload {
     incidentReason: IncidentReason | null;
     reason: string | null;
 }
+
+export interface ProductionPlanProductionChangedPayload {
+    type: 'ProductionPlan_Production';
+    productionPlanId: string;
+    machineId: string;
+    plannedDate: string;
+    actualQuantity: number;
+    plannedQuantity: number;
+}
+
+export type ProductionPlanWsPayload =
+    | ProductionPlanStatusChangedPayload
+    | ProductionPlanProductionChangedPayload;
 
 // ─── Import ──────────────────────────────────────────────────────────────────
 

@@ -47,6 +47,14 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
             )
         );
     }
+    if (ability.can('view', 'work_calendar')) {
+        productionPlanItems.push(
+            createMenuItem(
+                '/admin/work-calendar',
+                t('sidebar.navigation.workCalendar')
+            )
+        );
+    }
     if (ability.can('view', 'production_monitor')) {
         productionPlanItems.push(
             createMenuItem(

@@ -6,43 +6,41 @@ import type { WebSocketMessage } from '@/types/WebSocket';
 import type {
     IncidentReason,
     ProductionPlanStatus,
-    ProductionPlanStatusChangedPayload,
     ProductionPlanStatusTrigger,
+    ProductionPlanWsPayload,
 } from '@/types/ProductionPlan';
 
-// BE broadcast theo từng máy: WebSocketDestinations.PRODUCTION_PLAN_STATUS + machineId.
+// Topic mang 2 loại bản tin, phân biệt bằng payload.type: ProductionPlan_Status (đổi trạng
+// thái) và ProductionPlan_Production (nhịp sản lượng MQTT quy về plan RUNNING).
 const WS_TOPIC_PRODUCTION_PLAN_STATUS = '/topic/productionPlans/status/';
 
 export interface PlanStatusEntry {
-    status: ProductionPlanStatus;
+    status?: ProductionPlanStatus;
     updatedAt: Date;
-    trigger: ProductionPlanStatusTrigger;
-    incidentReason: IncidentReason | null;
-    reason: string | null;
+    trigger?: ProductionPlanStatusTrigger;
+    incidentReason?: IncidentReason | null;
+    reason?: string | null;
+    actualQuantity?: number;
 }
 
 interface UseProductionMonitorOptions {
-    /** Máy đang hiển thị — mỗi máy 1 subscription. */
     machineIds: string[];
-    /** Ngày đang theo dõi (yyyy-MM-dd) — update khác ngày bị bỏ qua. */
     dateIso: string;
-    /**
-     * Gọi khi nhận update cho plan chưa có trong danh sách (vd defer tạo child
-     * plan mới) — page nên refetch. Được debounce phía hook.
-     */
+
     onUnknownPlan?: () => void;
-    /** Id các plan đang hiển thị — dùng để phát hiện plan mới. */
     knownPlanIds: Set<string>;
 }
 
 interface UseProductionMonitorReturn {
-    /** Status realtime theo productionPlanId — merge đè lên dữ liệu fetch. */
     statusMap: Map<string, PlanStatusEntry>;
     isConnected: boolean;
     lastUpdate: Date | null;
 }
 
 const UNKNOWN_PLAN_DEBOUNCE_MS = 2_000;
+// Gom các tick MQTT (Production ticks có thể dội vài lần/giây khi nhiều máy chạy song song)
+// trong 1 cửa sổ ngắn trước khi apply vào state — tick mới nhất của mỗi plan đè tick cũ.
+const FLUSH_INTERVAL_MS = 500;
 
 export function useProductionMonitor({
     machineIds,
@@ -63,37 +61,85 @@ export function useProductionMonitor({
     dateIsoRef.current = dateIso;
     const lastUnknownRefetchRef = useRef(0);
 
-    const handleMessage = useCallback((message: WebSocketMessage) => {
-        const payload = message.payload as ProductionPlanStatusChangedPayload | undefined;
-        if (!payload || payload.type !== 'ProductionPlan_Status') return;
-        if (payload.plannedDate !== dateIsoRef.current) return;
+    // Buffer các payload chờ flush — key = productionPlanId, value = payload mới nhất nhận được.
+    const pendingRef = useRef<Map<string, ProductionPlanWsPayload>>(new Map());
+    const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const flush = useCallback(() => {
+        flushTimerRef.current = null;
+        const pending = pendingRef.current;
+        if (pending.size === 0) return;
+        pendingRef.current = new Map();
 
         setStatusMap((prev) => {
             const next = new Map(prev);
-            next.set(payload.productionPlanId, {
-                status: payload.toStatus,
-                updatedAt: new Date(),
-                trigger: payload.trigger,
-                incidentReason: payload.incidentReason,
-                reason: payload.reason,
+            pending.forEach((payload, planId) => {
+                const existing = next.get(planId);
+                next.set(planId, {
+                    ...existing,
+                    updatedAt: new Date(),
+                    ...(payload.type === 'ProductionPlan_Status'
+                        ? {
+                              status: payload.toStatus,
+                              trigger: payload.trigger,
+                              incidentReason: payload.incidentReason,
+                              reason: payload.reason,
+                          }
+                        : { actualQuantity: payload.actualQuantity }),
+                });
             });
             return next;
         });
         setLastUpdate(new Date());
-
-        if (!knownPlanIdsRef.current.has(payload.productionPlanId)) {
-            const now = Date.now();
-            if (now - lastUnknownRefetchRef.current > UNKNOWN_PLAN_DEBOUNCE_MS) {
-                lastUnknownRefetchRef.current = now;
-                onUnknownPlanRef.current?.();
-            }
-        }
     }, []);
 
-    // Đổi ngày theo dõi → status cũ không còn ý nghĩa.
+    const handleMessage = useCallback(
+        (message: WebSocketMessage) => {
+            const payload = message.payload as ProductionPlanWsPayload | undefined;
+            if (!payload) return;
+            if (
+                payload.type !== 'ProductionPlan_Status' &&
+                payload.type !== 'ProductionPlan_Production'
+            )
+                return;
+            if (payload.plannedDate !== dateIsoRef.current) return;
+
+            // Tick mới nhất của cùng 1 plan đè tick cũ trong cửa sổ chưa flush.
+            pendingRef.current.set(payload.productionPlanId, payload);
+            if (flushTimerRef.current == null) {
+                flushTimerRef.current = setTimeout(flush, FLUSH_INTERVAL_MS);
+            }
+
+            if (!knownPlanIdsRef.current.has(payload.productionPlanId)) {
+                const now = Date.now();
+                if (now - lastUnknownRefetchRef.current > UNKNOWN_PLAN_DEBOUNCE_MS) {
+                    lastUnknownRefetchRef.current = now;
+                    onUnknownPlanRef.current?.();
+                }
+            }
+        },
+        [flush]
+    );
+
+    // Đổi ngày theo dõi → status cũ không còn ý nghĩa; huỷ tick đang chờ flush của ngày cũ.
     useEffect(() => {
+        pendingRef.current = new Map();
+        if (flushTimerRef.current != null) {
+            clearTimeout(flushTimerRef.current);
+            flushTimerRef.current = null;
+        }
         setStatusMap(new Map());
     }, [dateIso]);
+
+    // Unmount — huỷ timer đang chờ để tránh setState trên component đã gỡ.
+    useEffect(() => {
+        return () => {
+            if (flushTimerRef.current != null) {
+                clearTimeout(flushTimerRef.current);
+                flushTimerRef.current = null;
+            }
+        };
+    }, []);
 
     const machineIdsKey = [...machineIds].sort().join('|');
 
