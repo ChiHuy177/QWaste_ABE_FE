@@ -7,25 +7,20 @@
 import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
     Button,
-    DatePicker,
-    Divider,
     Grid,
-    Popover,
-    Radio,
     Select,
     Skeleton,
-    Space,
     Spin,
-    Tag,
     Tooltip,
     Typography,
     message,
 } from 'antd';
 import { useTranslation } from 'react-i18next';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import TimeFilterPopover, { TimeFilterValue } from '@/components/shared/filters/TimeFilterPopover';
 import FactoryStatsCards from './_components/FactoryStatsCards';
 import SpaceOverviewGrid from './_components/SpaceOverviewGrid';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
@@ -110,14 +105,6 @@ const SpaceMonitoringPage: React.FC = () => {
     } = useAppSelector((state) => state.factoryOverview) as IFactoryOverviewStoreState;
 
     const [isExporting, setIsExporting] = useState(false);
-    const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
-    const [draftTimeFilterMode, setDraftTimeFilterMode] = useState<TimeFilterMode>(timeFilterMode);
-    const [draftPeriodId, setDraftPeriodId] = useState<number | null>(null);
-    const [draftShiftId, setDraftShiftId] = useState<number | null>(null);
-    const [draftDateRange, setDraftDateRange] = useState<[Dayjs, Dayjs]>([
-        dayjs(selectedStartDate),
-        dayjs(selectedEndDate),
-    ]);
 
     type MachinePathEntry = { path: number[]; machineIndex: number };
     const machinePathMapRef = useRef<Map<string, MachinePathEntry>>(new Map());
@@ -461,64 +448,42 @@ const SpaceMonitoringPage: React.FC = () => {
         };
     }, []);
 
-    const timePeriodOptions = useMemo((): {
-        label: string;
-        value: number;
-        category: IndustryFilter['category'];
-        disabled?: boolean;
-    }[] => {
-        const currentLang = i18n.language;
-
-        return industryFilters.map((filter: IndustryFilter) => ({
-            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
-            value: filter.filterId,
-            category: filter.category,
-        }));
-    }, [industryFilters, i18n.language]);
-
-    const groupedTimePeriodOptions = useMemo(
-        () => ({
-            SHIFT: timePeriodOptions.filter((option) => option.category === 'SHIFT'),
-            PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
-        }),
-        [timePeriodOptions]
-    );
-
-
     // Data fetching is triggered only by the Search button (handleSearch).
     // No auto-fire on mount, factory change, or filter change.
 
-
-    const syncDraftTimeFilter = useCallback(() => {
-        setDraftTimeFilterMode(timeFilterMode);
-        setDraftDateRange([dayjs(selectedStartDate), dayjs(selectedEndDate)]);
-
-        if (timeFilterMode === 'PRESET') {
-            const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-            if (primaryFilter?.category === 'PERIOD') {
-                setDraftPeriodId(selectedTimePeriod);
-                setDraftShiftId(selectedShiftFilterId);
-            } else {
-                // SHIFT là primary (auto-select hoặc chỉ chọn Ca)
-                setDraftPeriodId(null);
-                setDraftShiftId(selectedTimePeriod);
-            }
-        } else {
-            // CUSTOM_RANGE: shift lưu trong selectedTimePeriod (backward compat)
-            setDraftPeriodId(null);
-            setDraftShiftId(selectedTimePeriod);
+    // Derives the shared TimeFilterPopover's value shape from the applied filter state.
+    // Mirrors the primary/secondary filter convention used by handleTimeFilterApply below.
+    const timeFilterValue = useMemo<TimeFilterValue>(() => {
+        if (timeFilterMode === 'CUSTOM_RANGE') {
+            return {
+                mode: 'CUSTOM_RANGE',
+                periodId: null,
+                shiftId: selectedTimePeriod,
+                startDate: selectedStartDate,
+                endDate: selectedEndDate,
+            };
         }
-    }, [selectedEndDate, selectedStartDate, selectedTimePeriod, selectedShiftFilterId, timeFilterMode, industryFilters]);
 
-    const handleTimeFilterOpenChange = useCallback(
-        (open: boolean) => {
-            if (open) {
-                syncDraftTimeFilter();
-            }
-            setIsTimeFilterOpen(open);
-        },
-        [syncDraftTimeFilter]
-    );
+        const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+        if (primaryFilter?.category === 'PERIOD') {
+            return {
+                mode: 'PRESET',
+                periodId: selectedTimePeriod,
+                shiftId: selectedShiftFilterId,
+                startDate: selectedStartDate,
+                endDate: selectedEndDate,
+            };
+        }
+
+        // SHIFT là primary (auto-select hoặc chỉ chọn Ca)
+        return {
+            mode: 'PRESET',
+            periodId: null,
+            shiftId: selectedTimePeriod,
+            startDate: selectedStartDate,
+            endDate: selectedEndDate,
+        };
+    }, [timeFilterMode, selectedTimePeriod, selectedShiftFilterId, selectedStartDate, selectedEndDate, industryFilters]);
 
     const handleExportExcel = useCallback(async () => {
         if (!activeFactoryId) return;
@@ -563,72 +528,63 @@ const SpaceMonitoringPage: React.FC = () => {
         t,
     ]);
 
-    const handleResetTimeFilter = useCallback(() => {
-        const activeShift = industryFilters.find(
-            (filter) => filter.category === 'SHIFT' && isShiftActive(filter)
-        );
+    const handleTimeFilterApply = useCallback(
+        (value: TimeFilterValue) => {
+            let primaryFilterId: number | null;
+            let secondaryShiftId: number | null;
 
-        setDraftTimeFilterMode('PRESET');
-        setDraftPeriodId(null);
-        setDraftShiftId(activeShift?.filterId ?? industryFilters[0]?.filterId ?? null);
-        setDraftDateRange([dayjs(), dayjs()]);
-    }, [industryFilters, isShiftActive]);
-
-    const handleApplyTimeFilter = useCallback(() => {
-        let primaryFilterId: number | null;
-        let secondaryShiftId: number | null;
-
-        if (draftTimeFilterMode === 'PRESET') {
-            if (draftPeriodId !== null) {
-                // Period selected → period là primary, Ca là secondary
-                primaryFilterId = draftPeriodId;
-                secondaryShiftId = draftShiftId;
-            } else if (draftShiftId !== null) {
-                // Chỉ Ca selected → Ca làm primary, không có secondary
-                primaryFilterId = draftShiftId;
-                secondaryShiftId = null;
+            if (value.mode === 'PRESET') {
+                if (value.periodId !== null) {
+                    // Period selected → period là primary, Ca là secondary
+                    primaryFilterId = value.periodId;
+                    secondaryShiftId = value.shiftId;
+                } else if (value.shiftId !== null) {
+                    // Chỉ Ca selected → Ca làm primary, không có secondary
+                    primaryFilterId = value.shiftId;
+                    secondaryShiftId = null;
+                } else {
+                    return; // Không có gì được chọn
+                }
             } else {
-                return; // Không có gì được chọn
+                // CUSTOM_RANGE: shift dropdown (backward compat với selectedTimePeriod)
+                primaryFilterId = value.shiftId;
+                secondaryShiftId = null;
             }
-        } else {
-            // CUSTOM_RANGE: draftShiftId là Ca dropdown (backward compat với selectedTimePeriod)
-            primaryFilterId = draftShiftId;
-            secondaryShiftId = null;
-        }
 
-        setTimeFilterMode(draftTimeFilterMode);
-        dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
-        dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
-        dispatch(
-            factoryOverviewActions.setSelectedDateRange({
-                startDate: draftDateRange[0].format('YYYY-MM-DD'),
-                endDate: draftDateRange[1].format('YYYY-MM-DD'),
-            })
-        );
-        setIsTimeFilterOpen(false);
-
-        if (!activeFactoryId) return;
-        setHasSearched(true);
-
-        if (draftTimeFilterMode === 'PRESET' && primaryFilterId !== null) {
+            setTimeFilterMode(value.mode);
+            dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
+            dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
             dispatch(
-                factoryOverviewActions.fetchSpaceOverview(
-                    activeFactoryId,
-                    primaryFilterId,
-                    secondaryShiftId ?? undefined
-                )
+                factoryOverviewActions.setSelectedDateRange({
+                    startDate: value.startDate,
+                    endDate: value.endDate,
+                })
             );
-        } else if (draftTimeFilterMode === 'CUSTOM_RANGE') {
-            dispatch(
-                factoryOverviewActions.fetchSpaceOverviewByDateRange(
-                    activeFactoryId,
-                    draftDateRange[0].format('YYYY-MM-DD'),
-                    draftDateRange[1].format('YYYY-MM-DD'),
-                    draftShiftId ?? undefined
-                )
-            );
-        }
-    }, [dispatch, draftDateRange, draftTimeFilterMode, draftPeriodId, draftShiftId, activeFactoryId]);
+
+            if (!activeFactoryId) return;
+            setHasSearched(true);
+
+            if (value.mode === 'PRESET' && primaryFilterId !== null) {
+                dispatch(
+                    factoryOverviewActions.fetchSpaceOverview(
+                        activeFactoryId,
+                        primaryFilterId,
+                        secondaryShiftId ?? undefined
+                    )
+                );
+            } else if (value.mode === 'CUSTOM_RANGE') {
+                dispatch(
+                    factoryOverviewActions.fetchSpaceOverviewByDateRange(
+                        activeFactoryId,
+                        value.startDate,
+                        value.endDate,
+                        value.shiftId ?? undefined
+                    )
+                );
+            }
+        },
+        [dispatch, activeFactoryId]
+    );
 
 
     useEffect(() => {
@@ -736,197 +692,6 @@ const SpaceMonitoringPage: React.FC = () => {
     // TEMP DISABLED: factory list grid — do not fetch all-factory cards on load
     // Re-enable by restoring the loadFactoryCards useEffect when the factory cards grid is re-enabled
 
-    const timeFilterPopoverContent = useMemo(() => {
-        const isPreset = draftTimeFilterMode === 'PRESET';
-
-        return (
-            <div style={{ width: isMobile ? 'calc(100vw - 48px)' : 360, maxWidth: 360 }}>
-                <Typography.Text strong>
-                    {i18n.language === 'vi' ? 'Thời gian' : 'Time Filter'}
-                </Typography.Text>
-
-                <Divider style={{ margin: '12px 0' }} />
-
-                {/* Ca làm việc — independent selection, works in both modes */}
-                {groupedTimePeriodOptions.SHIFT.length > 0 && (
-                    <>
-                        <Typography.Text
-                            type="secondary"
-                            style={{
-                                display: 'block',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                marginBottom: 8,
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {i18n.language === 'vi' ? 'Ca làm việc' : 'Shifts'}
-                        </Typography.Text>
-                        <Radio.Group
-                            value={draftShiftId}
-                            onChange={(e) => setDraftShiftId(e.target.value as number | null)}
-                            style={{ width: '100%' }}
-                        >
-                            <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                                <Radio value={null}>
-                                    {i18n.language === 'vi' ? 'Tất cả' : 'All'}
-                                </Radio>
-                                {groupedTimePeriodOptions.SHIFT.map((option) => {
-                                    const filter = industryFilters.find(
-                                        (f) => f.filterId === option.value
-                                    );
-                                    const isActive = filter && isShiftActive(filter);
-
-                                    return (
-                                        <Radio key={option.value} value={option.value}>
-                                            <Space size={4}>
-                                                <Typography.Text
-                                                    ellipsis
-                                                    style={{
-                                                        maxWidth: isMobile
-                                                            ? 'calc(100vw - 150px)'
-                                                            : 220,
-                                                        verticalAlign: 'middle',
-                                                    }}
-                                                >
-                                                    {option.label}
-                                                </Typography.Text>
-                                                {isActive && (
-                                                    <Tag
-                                                        color="green"
-                                                        style={{
-                                                            margin: 0,
-                                                            fontSize: 11,
-                                                            lineHeight: '18px',
-                                                            padding: '0 6px',
-                                                        }}
-                                                    >
-                                                        {i18n.language === 'vi'
-                                                            ? 'Đang hoạt động'
-                                                            : 'Active'}
-                                                    </Tag>
-                                                )}
-                                            </Space>
-                                        </Radio>
-                                    );
-                                })}
-                            </Space>
-                        </Radio.Group>
-
-                        <Divider style={{ margin: '12px 0' }} />
-                    </>
-                )}
-
-                {/* Khoảng thời gian (Periods) + Khoảng ngày toggle */}
-                <Space orientation="vertical" size={8} style={{ width: '100%' }}>
-                    {groupedTimePeriodOptions.PERIOD.length > 0 && (
-                        <>
-                            <Typography.Text type="secondary">
-                                {i18n.language === 'vi' ? 'Chọn nhanh' : 'Quick Select'}
-                            </Typography.Text>
-                            <Radio.Group
-                                value={isPreset ? draftPeriodId : null}
-                                onChange={(e) => {
-                                    setDraftPeriodId(e.target.value as number | null);
-                                    setDraftTimeFilterMode('PRESET');
-                                }}
-                                style={{ width: '100%' }}
-                            >
-                                <Space orientation="vertical" size={8} style={{ width: '100%' }}>
-                                    {groupedTimePeriodOptions.PERIOD.map((option) => (
-                                        <Radio key={option.value} value={option.value}>
-                                            <Typography.Text
-                                                ellipsis
-                                                style={{
-                                                    maxWidth: isMobile
-                                                        ? 'calc(100vw - 120px)'
-                                                        : 280,
-                                                    verticalAlign: 'middle',
-                                                }}
-                                            >
-                                                {option.label}
-                                            </Typography.Text>
-                                        </Radio>
-                                    ))}
-                                </Space>
-                            </Radio.Group>
-                        </>
-                    )}
-
-                    <Divider style={{ margin: '4px 0' }} />
-
-                    <Radio
-                        checked={draftTimeFilterMode === 'CUSTOM_RANGE'}
-                        onChange={() => {
-                            setDraftTimeFilterMode('CUSTOM_RANGE');
-                            setDraftPeriodId(null);
-                        }}
-                    >
-                        {i18n.language === 'vi' ? 'Khoảng ngày' : 'Custom Date Range'}
-                    </Radio>
-                </Space>
-
-                <Space orientation="vertical" size={8} style={{ width: '100%', marginTop: 12 }}>
-                    <DatePicker.RangePicker
-                        value={draftDateRange}
-                        onChange={(dates) => {
-                            if (dates?.[0] && dates?.[1]) {
-                                setDraftDateRange([dates[0], dates[1]]);
-                                setDraftTimeFilterMode('CUSTOM_RANGE');
-                                setDraftPeriodId(null);
-                            }
-                        }}
-                        format="DD/MM/YYYY"
-                        style={{ width: '100%', borderRadius: 8 }}
-                        disabledDate={(current) => current && current > dayjs().endOf('day')}
-                        disabled={draftTimeFilterMode !== 'CUSTOM_RANGE'}
-                    />
-                </Space>
-
-                <Divider style={{ margin: '12px 0' }} />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <Button onClick={handleResetTimeFilter}>{t('common.reset')}</Button>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        <Button
-                            onClick={() => {
-                                syncDraftTimeFilter();
-                                setIsTimeFilterOpen(false);
-                            }}
-                        >
-                            {t('common.cancel')}
-                        </Button>
-                        <Button
-                            type="primary"
-                            onClick={handleApplyTimeFilter}
-                            disabled={
-                                draftTimeFilterMode === 'PRESET' &&
-                                draftPeriodId === null &&
-                                draftShiftId === null
-                            }
-                        >
-                            {i18n.language === 'vi' ? 'Áp dụng' : 'Apply'}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        );
-    }, [
-        draftDateRange,
-        draftTimeFilterMode,
-        draftPeriodId,
-        draftShiftId,
-        handleApplyTimeFilter,
-        handleResetTimeFilter,
-        groupedTimePeriodOptions,
-        i18n.language,
-        industryFilters,
-        isMobile,
-        isShiftActive,
-        syncDraftTimeFilter,
-        t,
-    ]);
-
     const headerActions = useMemo(
         () =>
             isMobile ? (
@@ -949,38 +714,12 @@ const SpaceMonitoringPage: React.FC = () => {
                             />
                         ))}
 
-                    <Popover
-                        open={isTimeFilterOpen}
-                        onOpenChange={handleTimeFilterOpenChange}
-                        trigger="click"
+                    <TimeFilterPopover
+                        industryFilters={industryFilters}
+                        value={timeFilterValue}
+                        onApply={handleTimeFilterApply}
                         placement="bottomLeft"
-                        content={timeFilterPopoverContent}
-                    >
-                        <Button
-                            block
-                            style={{
-                                borderRadius: 8,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'flex-start',
-                                gap: 4,
-                            }}
-                        >
-                            <span style={{ flexShrink: 0 }}>
-                                {i18n.language === 'vi' ? 'Thời gian' : 'Time'}:
-                            </span>
-                            <Typography.Text
-                                ellipsis
-                                style={{
-                                    maxWidth: 'calc(100% - 76px)',
-                                    color: 'inherit',
-                                    lineHeight: 'inherit',
-                                }}
-                            >
-                                {activeTimePeriodLabel ?? t('common.filter')}
-                            </Typography.Text>
-                        </Button>
-                    </Popover>
+                    />
 
                     <Button
                         block
@@ -1035,40 +774,12 @@ const SpaceMonitoringPage: React.FC = () => {
                         )
                     )}
 
-                    <Popover
-                        open={isTimeFilterOpen}
-                        onOpenChange={handleTimeFilterOpenChange}
-                        trigger="click"
+                    <TimeFilterPopover
+                        industryFilters={industryFilters}
+                        value={timeFilterValue}
+                        onApply={handleTimeFilterApply}
                         placement="bottomRight"
-                        content={timeFilterPopoverContent}
-                    >
-                        <Tooltip title={activeTimePeriodLabel}>
-                            <Button
-                                style={{
-                                    borderRadius: 8,
-                                    width: 220,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    gap: 4,
-                                }}
-                            >
-                                <span style={{ flexShrink: 0 }}>
-                                    {i18n.language === 'vi' ? 'Thời gian' : 'Time'}:
-                                </span>
-                                <Typography.Text
-                                    ellipsis
-                                    style={{
-                                        maxWidth: 135,
-                                        color: 'inherit',
-                                        lineHeight: 'inherit',
-                                    }}
-                                >
-                                    {activeTimePeriodLabel ?? t('common.filter')}
-                                </Typography.Text>
-                            </Button>
-                        </Tooltip>
-                    </Popover>
+                    />
 
                     <Tooltip
                         title={i18n.language === 'vi' ? 'Làm mới dữ liệu' : 'Refresh data'}
@@ -1111,9 +822,9 @@ const SpaceMonitoringPage: React.FC = () => {
             selectedTimePeriod,
             router,
             t,
-            timeFilterPopoverContent,
-            isTimeFilterOpen,
-            handleTimeFilterOpenChange,
+            industryFilters,
+            timeFilterValue,
+            handleTimeFilterApply,
             activeTimePeriodLabel,
             isMobile,
             i18n.language,
