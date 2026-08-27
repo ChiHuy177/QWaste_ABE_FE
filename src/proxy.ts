@@ -9,7 +9,7 @@ const DEFAULT_LOCALE = 'vi';
 const SUPPORTED_LOCALES = ['vi', 'en', 'ch'];
 const COOKIE_NAME = 'NEXT_LOCALE';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const locale = request.cookies.get(COOKIE_NAME)?.value;
     const shouldSetDefaultLocale = !locale || !SUPPORTED_LOCALES.includes(locale);
