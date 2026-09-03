@@ -4710,14 +4710,14 @@
         },
         "kpi": {
             "overallPlantOee": "PLANT OVERALL EFFICIENCY",
-            "machineEfficiency": "OPERATING RATE",
             "operatingRate": "OPERATING RATE",
             "maxCapacity": "MAX CAPACITY",
-            "actualCapacity": "ACTUAL CAPACITY",
+            "actualOperating": "ACTUAL OPERATING",
             "downtimeDuration": "DOWNTIME DURATION",
             "target": "Target",
             "vsYesterday": "vs yesterday",
             "totalDowntime": "DOWNTIME DURATION",
+            "runtimeDesc": "Cumulative machine runtime",
             "minutes": "mins",
             "minutesOverTarget": "mins over target",
             "hours": "hours",
@@ -4729,7 +4729,8 @@
             "planShort": "Plan",
             "vsMaxCapacity": "vs max capacity",
             "withinLimit": "Within allowable limit",
-            "designBenchmark": "100% design benchmark"
+            "designBenchmark": "100% design benchmark",
+            "viewErrorAnalytics": "Click to view detailed error analytics"
         },
         "charts": {
             "oeeByMachine": "Machine Efficiency",
@@ -4793,6 +4794,7 @@
             "maxCapacityHoursLabel": "3. Maximum capacity h",
             "actualOperatingHoursLabel": "1. Actual operating time h",
             "operatingRatioLabel": "2. Operating ratio %",
+            "productionRatio": "Production Ratio",
             "averageShort": "Avg"
         }
     }

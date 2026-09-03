@@ -205,6 +205,8 @@ export const ENDPOINTS = {
         EFFICIENCY_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/efficiency/byDateRange`,
         DOWNTIME_BY_FILTER: `${BASE_PATHS.DASHBOARD}/downtime/byFilter`,
         DOWNTIME_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/downtime/byDateRange`,
+        RUNTIME_BY_FILTER: `${BASE_PATHS.DASHBOARD}/runtime/byFilter`,
+        RUNTIME_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/runtime/byDateRange`,
         PRODUCTION_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byFilter`,
         PRODUCTION_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byDateRange`,
         EFFICIENCY_BY_MACHINE_BY_FILTER: `${BASE_PATHS.DASHBOARD}/efficiency/byMachine/byFilter`,

@@ -19,6 +19,7 @@ interface MachineDetailViewProps {
     machineList: MachineOeeData[];
     onSelectMachine: (machineCode: string) => void;
     onBack: () => void;
+    onDowntimeClick?: () => void;
 }
 
 export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
@@ -26,6 +27,7 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     machineList,
     onSelectMachine,
     onBack,
+    onDowntimeClick,
 }) => {
     const { t } = useTranslation();
     const { token } = theme.useToken();
@@ -137,6 +139,7 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                 data={machineDetail.kpi}
                 isMachineView={true}
                 machineCode={info.machineCode}
+                onDowntimeClick={onDowntimeClick}
             />
 
             {/* Charts Section: Timeline Output & 7-Day Efficiency */}

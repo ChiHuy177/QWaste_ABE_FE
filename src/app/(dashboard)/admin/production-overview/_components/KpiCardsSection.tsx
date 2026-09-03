@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Col, Progress, Row, Tag, Typography, theme } from 'antd';
+import { Card, Col, Progress, Row, Tag, Tooltip, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
     ClockCircleOutlined,
@@ -20,12 +20,14 @@ interface KpiCardsSectionProps {
     data: KpiSummaryData;
     isMachineView?: boolean;
     machineCode?: string;
+    onDowntimeClick?: () => void;
 }
 
 export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
     data,
     isMachineView = false,
     machineCode: _machineCode,
+    onDowntimeClick,
 }) => {
     const { t } = useTranslation();
     const { token } = theme.useToken();
@@ -393,7 +395,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                         <Card
                             variant="borderless"
                             hoverable
+                            onClick={onDowntimeClick}
                             style={{
+                                cursor: 'pointer',
                                 flex: 1,
                                 borderRadius: 12,
                                 borderColor: cardThemes.downtime.border,
@@ -1008,7 +1012,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                 <Card
                     variant="borderless"
                     hoverable
+                    onClick={onDowntimeClick}
                     style={{
+                        cursor: 'pointer',
                         height: '100%',
                         borderRadius: 12,
                         borderColor: cardThemes.downtime.border,

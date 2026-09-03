@@ -7,6 +7,10 @@ export interface DashboardDowntimeResponse {
     totalDowntimeSeconds: number;
 }
 
+export interface DashboardRuntimeResponse {
+    totalRuntimeSeconds: number;
+}
+
 export interface DashboardProductionResponse {
     actualQuantity: number;
     plannedQuantity: number;
@@ -29,6 +33,7 @@ export interface DashboardDateRangeQueryParams {
 export interface DashboardKpiSummaryState {
     efficiency: DashboardEfficiencyResponse | null;
     downtime: DashboardDowntimeResponse | null;
+    runtime: DashboardRuntimeResponse | null;
     production: DashboardProductionResponse | null;
     isLoading: boolean;
 }

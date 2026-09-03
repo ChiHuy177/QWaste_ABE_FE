@@ -1,5 +1,7 @@
 'use client';
 
+import { ErrorAnalyticsModal } from './_components/ErrorAnalyticsModal';
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Col, Row, Spin } from 'antd';
 import { toast } from 'sonner';
@@ -66,6 +68,7 @@ const ProductionOverviewPage: React.FC = () => {
 
     // Selected machine state for drilldown
     const [selectedMachineCode, setSelectedMachineCode] = useState<string | null>(null);
+    const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
     // Fetch spaces on mount
     useEffect(() => {
@@ -182,12 +185,20 @@ const ProductionOverviewPage: React.FC = () => {
                 ]);
 
                 // Map KPI API response to KpiSummaryData dynamically
-                if (kpiResult.efficiency || kpiResult.downtime || kpiResult.production) {
+                if (
+                    kpiResult.efficiency ||
+                    kpiResult.downtime ||
+                    kpiResult.runtime ||
+                    kpiResult.production
+                ) {
                     const totalEff = kpiResult.efficiency?.totalEfficiencyPercentage ?? null;
                     const effDelta = kpiResult.efficiency?.efficiencyDeltaPercentage ?? null;
                     const totalDowntimeSec = kpiResult.downtime?.totalDowntimeSeconds ?? 0;
                     const downtimeHoursVal = Number((totalDowntimeSec / 3600).toFixed(1));
                     const downtimeMins = Math.round(totalDowntimeSec / 60);
+                    const totalRuntimeSec = kpiResult.runtime?.totalRuntimeSeconds ?? 0;
+                    const runtimeHoursVal = Number((totalRuntimeSec / 3600).toFixed(1));
+                    const runtimeMins = Math.round(totalRuntimeSec / 60);
                     const actualQty = kpiResult.production?.actualQuantity ?? 0;
                     const plannedQty = kpiResult.production?.plannedQuantity ?? 0;
                     const prodRatio = kpiResult.production?.productionRatioPercentage ?? null;
@@ -216,6 +227,18 @@ const ProductionOverviewPage: React.FC = () => {
                         downtimeHours: {
                             current: downtimeHoursVal,
                             overTargetHours: 0,
+                        },
+                        runtimeSeconds: totalRuntimeSec,
+                        runtimeMinutes: {
+                            current: runtimeMins,
+                        },
+                        runtimeHours: {
+                            current: runtimeHoursVal,
+                        },
+                        actualCapacity: {
+                            current: 0,
+                            unit: 'sp/h',
+                            rateVsMax: 0,
                         },
                         yieldRate: {
                             current: yieldVal,
@@ -249,8 +272,7 @@ const ProductionOverviewPage: React.FC = () => {
                         itemProduction: null,
                     });
                 }
-            } catch (error) {
-                console.warn('Dashboard API fallback to mock data:', error);
+            } catch (_error) {
                 setLiveKpiData(null);
                 setLiveChartsData({
                     machineEfficiency: null,
@@ -300,6 +322,18 @@ const ProductionOverviewPage: React.FC = () => {
             downtimeHours: {
                 current: 0,
                 overTargetHours: 0,
+            },
+            runtimeSeconds: 0,
+            runtimeMinutes: {
+                current: 0,
+            },
+            runtimeHours: {
+                current: 0,
+            },
+            actualCapacity: {
+                current: 0,
+                unit: 'sp/h',
+                rateVsMax: 0,
             },
             yieldRate: {
                 current: 0,
@@ -423,12 +457,16 @@ const ProductionOverviewPage: React.FC = () => {
                         machineList={overviewData.machineOeeList}
                         onSelectMachine={(machineCode) => setSelectedMachineCode(machineCode)}
                         onBack={() => setSelectedMachineCode(null)}
+                        onDowntimeClick={() => setIsErrorModalOpen(true)}
                     />
                 ) : (
                     /* Plant Overview View */
                     <>
                         {/* 1. Top KPI Summary Cards (Plant-wide with live API data) */}
-                        <KpiCardsSection data={currentKpiData} />
+                        <KpiCardsSection
+                            data={currentKpiData}
+                            onDowntimeClick={() => setIsErrorModalOpen(true)}
+                        />
 
                         {/* 2. Middle Row: Machine Efficiency (50%) & Machine Plan vs Actual (50%) */}
                         <Row gutter={[16, 16]}>
@@ -461,6 +499,16 @@ const ProductionOverviewPage: React.FC = () => {
                     </>
                 )}
             </Spin>
+            <ErrorAnalyticsModal
+                isOpen={isErrorModalOpen}
+                onClose={() => setIsErrorModalOpen(false)}
+                spaceId={selectedFactoryId}
+                filterId={selectedTimePeriod}
+                startDate={startDate}
+                endDate={endDate}
+                isDateRange={timeFilterMode === 'CUSTOM_RANGE'}
+                restrictToMachineIds={selectedMachineCode ? [selectedMachineCode] : undefined}
+            />
         </div>
     );
 };

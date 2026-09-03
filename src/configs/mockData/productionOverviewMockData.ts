@@ -23,6 +23,13 @@ export interface KpiSummaryData {
         current: number;
         overTargetHours: number;
     };
+    runtimeSeconds?: number;
+    runtimeMinutes?: {
+        current: number;
+    };
+    runtimeHours?: {
+        current: number;
+    };
     actualCapacity?: {
         current: number;
         unit: string;

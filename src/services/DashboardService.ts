@@ -1,6 +1,7 @@
 import {
     DashboardEfficiencyResponse,
     DashboardDowntimeResponse,
+    DashboardRuntimeResponse,
     DashboardProductionResponse,
     DashboardFilterQueryParams,
     DashboardDateRangeQueryParams,
@@ -100,6 +101,51 @@ export class DashboardService {
             data: queryParams,
         });
         return response.result as DashboardDowntimeResponse;
+    }
+
+    /**
+     * Widget 5: Runtime by Filter
+     */
+    static async getRuntimeByFilter(
+        params: DashboardFilterQueryParams
+    ): Promise<DashboardRuntimeResponse> {
+        const queryParams: Record<string, any> = {
+            spaceId: params.spaceId,
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardRuntimeResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.RUNTIME_BY_FILTER,
+            data: queryParams,
+        });
+        return response.result as DashboardRuntimeResponse;
+    }
+
+    /**
+     * Widget 5: Runtime by Date Range
+     */
+    static async getRuntimeByDateRange(
+        params: DashboardDateRangeQueryParams
+    ): Promise<DashboardRuntimeResponse> {
+        const queryParams: Record<string, any> = {
+            spaceId: params.spaceId,
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardRuntimeResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.RUNTIME_BY_DATE_RANGE,
+            data: queryParams,
+        });
+        return response.result as DashboardRuntimeResponse;
     }
 
     /**
@@ -262,7 +308,7 @@ export class DashboardService {
     }
 
     /**
-     * Helper to fetch all 4 Dashboard KPI widgets in parallel
+     * Helper to fetch all 5 Dashboard KPI widgets in parallel
      */
     static async getOverviewKpis(params: {
         spaceId: number;
@@ -275,6 +321,7 @@ export class DashboardService {
     }): Promise<{
         efficiency: DashboardEfficiencyResponse | null;
         downtime: DashboardDowntimeResponse | null;
+        runtime: DashboardRuntimeResponse | null;
         production: DashboardProductionResponse | null;
     }> {
         const { spaceId, mode, filterId, shiftFilterId, isShiftFilter, startDate, endDate } =
@@ -282,6 +329,7 @@ export class DashboardService {
 
         let efficiencyPromise: Promise<DashboardEfficiencyResponse>;
         let downtimePromise: Promise<DashboardDowntimeResponse>;
+        let runtimePromise: Promise<DashboardRuntimeResponse>;
         let productionPromise: Promise<DashboardProductionResponse> | null = null;
 
         if (mode === 'CUSTOM_RANGE' && startDate && endDate) {
@@ -292,6 +340,12 @@ export class DashboardService {
                 filterId: isShiftFilter ? filterId : undefined,
             });
             downtimePromise = this.getDowntimeByDateRange({
+                spaceId,
+                startDate,
+                endDate,
+                filterId: isShiftFilter ? filterId : undefined,
+            });
+            runtimePromise = this.getRuntimeByDateRange({
                 spaceId,
                 startDate,
                 endDate,
@@ -313,6 +367,11 @@ export class DashboardService {
                 filterId,
                 shiftFilterId,
             });
+            runtimePromise = this.getRuntimeByFilter({
+                spaceId,
+                filterId,
+                shiftFilterId,
+            });
             // Production endpoint does NOT support SHIFT filters (returns 400 error 912)
             if (!isShiftFilter && !shiftFilterId) {
                 productionPromise = this.getProductionByFilter({
@@ -321,18 +380,20 @@ export class DashboardService {
                 });
             }
         } else {
-            return { efficiency: null, downtime: null, production: null };
+            return { efficiency: null, downtime: null, runtime: null, production: null };
         }
 
-        const [effRes, downRes, prodRes] = await Promise.allSettled([
+        const [effRes, downRes, runRes, prodRes] = await Promise.allSettled([
             efficiencyPromise,
             downtimePromise,
+            runtimePromise,
             productionPromise ?? Promise.resolve(null as any),
         ]);
 
         return {
             efficiency: effRes.status === 'fulfilled' ? effRes.value : null,
             downtime: downRes.status === 'fulfilled' ? downRes.value : null,
+            runtime: runRes.status === 'fulfilled' ? runRes.value : null,
             production: prodRes.status === 'fulfilled' && productionPromise ? prodRes.value : null,
         };
     }
