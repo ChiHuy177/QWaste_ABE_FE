@@ -21,6 +21,8 @@ export const useAntdTableScroll = (minScrollY = 120) => {
             }
 
             animationFrameId = window.requestAnimationFrame(() => {
+                if (!container) return;
+
                 const tableHeader =
                     container.querySelector('.ant-table-header') ||
                     container.querySelector('.ant-table-thead');
@@ -29,33 +31,32 @@ export const useAntdTableScroll = (minScrollY = 120) => {
                     container.querySelector('.ant-pagination');
 
                 const containerRect = container.getBoundingClientRect();
-                // Đo qua getBoundingClientRect (vị trí thực trên viewport) thay vì cộng dồn
-                // margin/padding thủ công: tự động đúng dù container có padding riêng, hay
-                // footer (pagination) nằm trong div bọc có margin — những thứ dễ bị bỏ sót
-                // nếu chỉ cộng offsetHeight + margin của chính element tìm được.
+                if (containerRect.height === 0) return;
+
+                // Điểm kết thúc của header bảng
                 const headerBottom = tableHeader
                     ? tableHeader.getBoundingClientRect().bottom
                     : containerRect.top + 55;
-                const footerTop = pagination
-                    ? pagination.getBoundingClientRect().top
-                    : containerRect.bottom;
 
-                const rawScrollY = Math.max(minScrollY, Math.floor(footerTop - headerBottom - 2));
+                // Không gian chiếm dụng của pagination (chiều cao thật + margins)
+                let paginationSpace = 0;
+                if (pagination) {
+                    const pagRect = pagination.getBoundingClientRect();
+                    const computedStyle = window.getComputedStyle(pagination);
+                    const marginTop = parseFloat(computedStyle.marginTop) || 16;
+                    const marginBottom = parseFloat(computedStyle.marginBottom) || 16;
+                    paginationSpace = pagRect.height + marginTop + marginBottom;
+                }
 
-                // Làm tròn xuống bội số chiều cao 1 dòng thật (đo từ DOM, không hardcode) để
-                // ranh giới vùng cuộn luôn rơi đúng giữa 2 dòng — tránh cảnh dòng cuối bị cắt
-                // nửa ngay sát trước pagination. Lấy max thay vì dòng đầu tiên vì dòng đầu có
-                // thể là dòng "anchor" ẩn (rowSpan group-header, các ô còn lại co về height:0).
-                let rowHeight = 0;
-                container.querySelectorAll('.ant-table-tbody > tr').forEach((row) => {
-                    rowHeight = Math.max(rowHeight, row.getBoundingClientRect().height);
-                });
-                const nextScrollY =
-                    rowHeight > 0
-                        ? Math.max(minScrollY, Math.floor(rawScrollY / rowHeight) * rowHeight)
-                        : rawScrollY;
+                // Chiều cao khả dụng thực tế của body table trong container
+                // Dùng containerRect.bottom thay vì pagination.getBoundingClientRect().top
+                // để tránh vòng lặp tự co rút (collapsing feedback loop) khi zoom/resize.
+                const availableHeight = containerRect.bottom - headerBottom - paginationSpace - 2;
+                const nextScrollY = Math.max(minScrollY, Math.floor(availableHeight));
 
-                setTableScrollY((current) => (current === nextScrollY ? current : nextScrollY));
+                setTableScrollY((current) =>
+                    Math.abs(current - nextScrollY) > 2 ? nextScrollY : current
+                );
             });
         };
 
@@ -64,12 +65,15 @@ export const useAntdTableScroll = (minScrollY = 120) => {
         const resizeObserver = new ResizeObserver(updateTableScrollHeight);
         resizeObserver.observe(container);
 
+        window.addEventListener('resize', updateTableScrollHeight);
+
         const mutationObserver = new MutationObserver(updateTableScrollHeight);
         mutationObserver.observe(container, { childList: true, subtree: true });
 
         return () => {
             resizeObserver.disconnect();
             mutationObserver.disconnect();
+            window.removeEventListener('resize', updateTableScrollHeight);
             if (animationFrameId) {
                 window.cancelAnimationFrame(animationFrameId);
             }

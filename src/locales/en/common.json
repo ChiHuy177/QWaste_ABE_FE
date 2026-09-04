@@ -321,6 +321,7 @@
             "overview": "Overview",
             "taskBoard": "Task Board",
             "machine": "Machine",
+            "errorManagement": "Error & Incident Management",
             "machineStatus": "Machine Status",
             "machineDashboard": "Machine Dashboard",
             "staff": "Staff",
@@ -4778,8 +4779,149 @@
         "space_monitoring": "Space Monitoring",
         "production_monitor": "Production Monitor",
         "floor_map": "Floor Map",
+        "error_management": "Error & Incident Management",
         "all": "All",
         "other": "Other"
     },
-    "stepTemplates": "Step templates"
+    "stepTemplates": "Step templates",
+    "timeFilter": {
+        "title": "Time Filter",
+        "time": "Time",
+        "all": "All Time",
+        "periodType": "Period Selection Mode",
+        "week": "By Week",
+        "month": "By Month",
+        "quarter": "By Quarter",
+        "year": "By Year",
+        "customRange": "Date Range",
+        "selectWeek": "Select week",
+        "selectMonth": "Select month",
+        "selectQuarter": "Select quarter",
+        "selectYear": "Select year",
+        "selectDateRange": "Select date range",
+        "weekLabel": "Week {{week}}, {{year}}",
+        "monthLabel": "Month {{month}}/{{year}}",
+        "quarterLabel": "Q{{quarter}} {{year}}",
+        "yearLabel": "Year {{year}}",
+        "apply": "Apply",
+        "reset": "Reset"
+    },
+    "errorManagement": {
+        "title": "Error & Incident Management",
+        "subtitle": "Track equipment downtime, root cause analysis, and corrective action workflows",
+        "header": {
+            "btnReport": "Report New Incident",
+            "btnExport": "Export Excel",
+            "btnRefresh": "Refresh",
+            "activeIncidents": "active incidents"
+        },
+        "kpi": {
+            "totalIncidents": "Total Incidents",
+            "totalIncidentsDesc": "Recorded in period",
+            "totalDowntime": "Total Downtime",
+            "totalDowntimeDesc": "Production disruption time",
+            "ongoingIncidents": "Active Incidents",
+            "ongoingIncidentsDesc": "Immediate attention required",
+            "resolvedRate": "Resolution Rate",
+            "resolvedRateDesc": "Recovery efficiency",
+            "criticalCount": "Critical Incidents"
+        },
+        "filters": {
+            "searchPlaceholder": "Search by incident code, machine, cause, resolution...",
+            "category": "Category",
+            "severity": "Severity",
+            "status": "Status",
+            "allCategories": "All Categories",
+            "allSeverities": "All Severities",
+            "allStatuses": "All Statuses",
+            "dateRange": "Date Range",
+            "clearFilters": "Clear Filters"
+        },
+        "table": {
+            "columns": {
+                "incidentCode": "Incident Code",
+                "machine": "Affected Machine",
+                "severity": "Severity",
+                "status": "Status",
+                "startTime": "Start Time",
+                "endTime": "End Time",
+                "duration": "Duration",
+                "cause": "Root Cause",
+                "resolution": "Resolution / Countermeasure",
+                "actions": "Actions"
+            },
+            "ongoingBadge": "Ongoing",
+            "unresolved": "In Progress",
+            "noResolutionYet": "Resolution pending",
+            "viewDetail": "Details",
+            "edit": "Edit Cause & Countermeasure",
+            "delete": "Delete",
+            "confirmDelete": "Are you sure you want to delete this incident record?",
+            "empty": "No incident records found matching current filters"
+        },
+        "modal": {
+            "createTitle": "Report New Incident",
+            "editTitle": "Update Root Cause & Countermeasure",
+            "editSubtitle": "Equipment information is captured automatically from the machine. Only edit the root cause and countermeasure.",
+            "autoCaptured": "Auto-captured from machine",
+            "location": "Installation Location",
+            "updateSection": "Incident Handling Details",
+            "causeRequired": "Please enter the root cause of the incident",
+            "machine": "Affected Machine",
+            "selectMachine": "Select equipment",
+            "startTime": "Incident Start Time",
+            "endTime": "Incident End Time (leave empty if ongoing)",
+            "category": "Incident Category",
+            "severity": "Severity Level",
+            "status": "Incident Status",
+            "cause": "Root Cause Description",
+            "causePlaceholder": "Describe symptoms, triggers, and root cause...",
+            "resolution": "Resolution / Corrective Action",
+            "resolutionPlaceholder": "Detail technical steps taken or underway...",
+            "preventiveAction": "Preventive Action (Long-term)",
+            "preventiveActionPlaceholder": "Plan to prevent recurrence (maintenance, parameter calibration)...",
+            "notes": "Additional Notes",
+            "submit": "Save Incident",
+            "cancel": "Cancel"
+        },
+        "drawer": {
+            "title": "Incident Details",
+            "basicInfo": "Basic Information",
+            "timeAndDuration": "Timing & Downtime Impact",
+            "analysisAndAction": "Root Cause & Resolution",
+            "preventivePlan": "Preventive Action Plan",
+            "personnel": "Assigned Personnel",
+            "timeline": "Incident Timeline"
+        },
+        "categories": {
+            "mechanical": "Mechanical",
+            "electrical": "Electrical & Control",
+            "hydraulic": "Hydraulic & Pneumatic",
+            "mold": "Tooling & Mold",
+            "operational": "Operation Error",
+            "software": "Software & SCADA",
+            "material": "Material Defect",
+            "quality": "Quality Issue"
+        },
+        "severities": {
+            "critical": "Critical",
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low"
+        },
+        "statuses": {
+            "open": "New / Open",
+            "in_progress": "In Progress",
+            "resolved": "Resolved",
+            "closed": "Closed"
+        },
+        "messages": {
+            "createSuccess": "Incident reported successfully",
+            "updateSuccess": "Incident updated successfully",
+            "resolveSuccess": "Resolution saved successfully",
+            "deleteSuccess": "Incident record deleted",
+            "fetchError": "Failed to load incidents",
+            "exportSuccess": "Incidents exported successfully"
+        }
+    }
 }

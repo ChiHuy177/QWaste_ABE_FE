@@ -126,6 +126,12 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'production_monitor',
         action: 'view',
     },
+
+    // Error & Incident Management
+    '/admin/error-management': {
+        subject: 'error_management',
+        action: 'view',
+    },
 };
 
 const DEFAULT_ROUTE_PRIORITY: string[] = [

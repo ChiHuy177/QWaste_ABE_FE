@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Col, Input, Row, theme } from 'antd';
+import { Button, Col, Input, Row, Select, theme } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 
 const DEFAULT_COL_XS = 24;
@@ -19,6 +19,8 @@ export interface FilterField {
     label: string;
     placeholder?: string;
     value: string;
+    type?: 'text' | 'select';
+    options?: { label: string; value: string }[];
     onChange?: (value: string) => void;
     /** Override responsive column widths. Defaults to xs=24 sm=12 md=6 */
     colProps?: FilterFieldColProps;
@@ -44,7 +46,9 @@ const AdvancedFilterPanel = ({
 
     const [localValues, setLocalValues] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};
-        fields.forEach((f) => { initial[f.key] = f.value; });
+        fields.forEach((f) => {
+            initial[f.key] = f.value;
+        });
         return initial;
     });
 
@@ -52,7 +56,9 @@ const AdvancedFilterPanel = ({
     useEffect(() => {
         setLocalValues((prev) => {
             const next = { ...prev };
-            fields.forEach((f) => { next[f.key] = f.value; });
+            fields.forEach((f) => {
+                next[f.key] = f.value;
+            });
             return next;
         });
     }, [fields]);
@@ -100,29 +106,55 @@ const AdvancedFilterPanel = ({
                                     style={{
                                         fontWeight: 500,
                                         fontSize: 13,
-                                        color: hasValue ? token.colorPrimary : token.colorTextSecondary,
+                                        color: hasValue
+                                            ? token.colorPrimary
+                                            : token.colorTextSecondary,
                                         transition: 'color 0.2s',
                                     }}
                                 >
                                     {field.label}
                                 </span>
-                                <Input
-                                    ref={index === 0 ? firstInputRef : undefined}
-                                    placeholder={field.placeholder}
-                                    value={localVal}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setLocalValues((prev) => ({ ...prev, [field.key]: val }));
-                                    }}
-                                    onPressEnter={handleApply}
-                                    allowClear
-                                    style={{
-                                        borderRadius: 6,
-                                        height: 38,
-                                        borderColor: hasValue ? token.colorPrimaryBorder : undefined,
-                                        transition: 'border-color 0.2s',
-                                    }}
-                                />
+                                {field.type === 'select' ? (
+                                    <Select
+                                        placeholder={field.placeholder}
+                                        value={localVal || undefined}
+                                        onChange={(val) => {
+                                            setLocalValues((prev) => ({
+                                                ...prev,
+                                                [field.key]: val || '',
+                                            }));
+                                        }}
+                                        options={field.options}
+                                        allowClear
+                                        style={{
+                                            borderRadius: 6,
+                                            width: '100%',
+                                        }}
+                                    />
+                                ) : (
+                                    <Input
+                                        ref={index === 0 ? firstInputRef : undefined}
+                                        placeholder={field.placeholder}
+                                        value={localVal}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setLocalValues((prev) => ({
+                                                ...prev,
+                                                [field.key]: val,
+                                            }));
+                                        }}
+                                        onPressEnter={handleApply}
+                                        allowClear
+                                        style={{
+                                            borderRadius: 6,
+                                            height: 38,
+                                            borderColor: hasValue
+                                                ? token.colorPrimaryBorder
+                                                : undefined,
+                                            transition: 'border-color 0.2s',
+                                        }}
+                                    />
+                                )}
                             </div>
                         </Col>
                     );

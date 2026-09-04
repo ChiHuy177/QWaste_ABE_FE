@@ -705,6 +705,36 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Reset work calendar to default',
     },
+    // Error & Incident Management
+    {
+        slug: 'error_management:view',
+        subject: 'error_management',
+        action: 'view',
+        routes: ['/admin/error-management'],
+        menuKey: 'error-management',
+        description: 'View error and incident management',
+    },
+    {
+        slug: 'error_management:create',
+        subject: 'error_management',
+        action: 'create',
+        routes: [],
+        description: 'Create error incident',
+    },
+    {
+        slug: 'error_management:update',
+        subject: 'error_management',
+        action: 'update',
+        routes: [],
+        description: 'Update error incident',
+    },
+    {
+        slug: 'error_management:delete',
+        subject: 'error_management',
+        action: 'delete',
+        routes: [],
+        description: 'Delete error incident',
+    },
 ];
 
 // Helper functions

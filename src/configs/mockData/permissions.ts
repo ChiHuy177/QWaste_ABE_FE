@@ -23,6 +23,9 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'machine_monitoring' },
         { action: 'view', subject: 'machine_operator_history' },
         { action: 'view', subject: 'standard_step' },
+        { action: 'view', subject: 'error_management' },
+        { action: 'create', subject: 'error_management' },
+        { action: 'update', subject: 'error_management' },
     ],
 
     client: [
@@ -30,6 +33,7 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'space_monitoring' },
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
+        { action: 'view', subject: 'error_management' },
     ],
 
     manager: [
@@ -50,6 +54,9 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'view', subject: 'machine_monitoring' },
         { action: 'view', subject: 'machine_operator_history' },
         { action: 'view', subject: 'standard_step' },
+        { action: 'view', subject: 'error_management' },
+        { action: 'create', subject: 'error_management' },
+        { action: 'update', subject: 'error_management' },
     ],
 
     planner: [
@@ -79,21 +86,31 @@ export const MOCK_PERMISSIONS: Record<string, PermissionRule[]> = {
         { action: 'update', subject: 'work_calendar' },
         { action: 'delete', subject: 'work_calendar' },
         { action: 'manage', subject: 'work_calendar' },
+        { action: 'view', subject: 'error_management' },
+        { action: 'create', subject: 'error_management' },
+        { action: 'update', subject: 'error_management' },
     ],
 
     operator: [
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
+        { action: 'view', subject: 'error_management' },
+        { action: 'create', subject: 'error_management' },
+        { action: 'update', subject: 'error_management' },
     ],
 
     qc_staff: [
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
+        { action: 'view', subject: 'error_management' },
     ],
 
     maintenance: [
         { action: 'view', subject: 'profile' },
         { action: 'update', subject: 'profile' },
+        { action: 'view', subject: 'error_management' },
+        { action: 'create', subject: 'error_management' },
+        { action: 'update', subject: 'error_management' },
     ],
 };
 

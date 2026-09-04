@@ -68,6 +68,8 @@ export type Subject =
     // Space
     | 'space_monitoring'
     | 'floor_map'
+    // Error & Incident Management
+    | 'error_management'
     // Special
     | 'all';
 

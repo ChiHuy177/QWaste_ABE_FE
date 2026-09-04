@@ -36,6 +36,7 @@ const BASE_PATHS = {
     OPERATION_TYPES: `${API}/operationTypes/${V1}`,
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
     WORK_CALENDAR: `${API}/workCalendar/${V1}`,
+    INCIDENTS: `${API}/incidents/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -206,6 +207,12 @@ export const ENDPOINTS = {
         RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
         CHECK_ALARM: `${BASE_PATHS.WORK_CALENDAR}/checkAlarm`,
         CONFIRM_MONTH: `${BASE_PATHS.WORK_CALENDAR}/confirmMonth`,
+    },
+    INCIDENTS: {
+        BASE: BASE_PATHS.INCIDENTS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.INCIDENTS, id),
+        STATS: `${BASE_PATHS.INCIDENTS}/stats`,
+        RESOLVE: (id: PathParam) => `${BASE_PATHS.INCIDENTS}/${id}/resolve`,
     },
 } as const;
 

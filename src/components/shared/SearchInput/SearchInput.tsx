@@ -1,7 +1,7 @@
 'use client';
 import { Badge, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { CSSProperties, useState, useEffect, useRef } from 'react';
+import { CSSProperties, useState, useEffect, useRef, useCallback } from 'react';
 
 export interface SearchInputProps {
     value: string;
@@ -16,6 +16,7 @@ export interface SearchInputProps {
     onFilterClick?: () => void;
     isFilterActive?: boolean;
     activeFilterCount?: number;
+    onPressEnter?: (value: string) => void;
 }
 
 export const SearchInput = ({
@@ -26,37 +27,76 @@ export const SearchInput = ({
     style,
     className,
     allowClear = true,
-    debounceMs = 300,
+    debounceMs = 500,
     showFilterIcon = false,
     onFilterClick,
     isFilterActive = false,
     activeFilterCount = 0,
+    onPressEnter,
 }: SearchInputProps) => {
     const [inputValue, setInputValue] = useState(value);
-    const [prevValue, setPrevValue] = useState(value);
-    if (prevValue !== value) {
-        setPrevValue(value);
-        setInputValue(value);
-    }
-    const isFirstRender = useRef(true);
+    const lastEmittedValueRef = useRef(value);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
 
+    // Synchronize ONLY when external value changes (e.g. parent resets filters to '')
     useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
+        if (value !== lastEmittedValueRef.current) {
+            lastEmittedValueRef.current = value;
+            setInputValue(value);
+        }
+    }, [value]);
+
+    // Clear debounce timer on unmount
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+        };
+    }, []);
+
+    const emitChange = useCallback((val: string) => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+        if (val !== lastEmittedValueRef.current) {
+            lastEmittedValueRef.current = val;
+            onChangeRef.current(val);
+        }
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const nextVal = e.target.value;
+        setInputValue(nextVal);
+
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+
+        // Fast feedback on clear / backspace to empty
+        if (nextVal === '') {
+            emitChange('');
             return;
         }
 
-        if (debounceMs === 0) {
-            onChange(inputValue);
+        if (debounceMs <= 0) {
+            emitChange(nextVal);
             return;
         }
 
-        const timer = setTimeout(() => {
-            onChange(inputValue);
+        timerRef.current = setTimeout(() => {
+            emitChange(nextVal);
         }, debounceMs);
+    };
 
-        return () => clearTimeout(timer);
-    }, [inputValue, debounceMs, onChange]);
+    const handlePressEnter = () => {
+        emitChange(inputValue);
+        onPressEnter?.(inputValue);
+    };
 
     const FilterIcon = showFilterIcon ? require('@ant-design/icons').FilterOutlined : null;
 
@@ -84,7 +124,8 @@ export const SearchInput = ({
                 ) : undefined
             }
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleInputChange}
+            onPressEnter={handlePressEnter}
             allowClear={allowClear}
             style={{ width, ...style, marginBottom: '-2px' }}
             className={className}

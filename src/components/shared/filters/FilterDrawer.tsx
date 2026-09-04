@@ -1,6 +1,6 @@
 'use client';
 import { ReactNode, useState, useEffect, useRef } from 'react';
-import { Button, Col, Drawer, Grid, Input, Popover, Row, theme } from 'antd';
+import { Button, Col, Drawer, Grid, Input, Popover, Row, Select, theme } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { FilterField } from './AdvancedFilterPanel';
 
@@ -37,14 +37,18 @@ const FilterDrawer = ({
 
     const [localValues, setLocalValues] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};
-        fields.forEach((f) => { initial[f.key] = f.value; });
+        fields.forEach((f) => {
+            initial[f.key] = f.value;
+        });
         return initial;
     });
 
     useEffect(() => {
         setLocalValues((prev) => {
             const next = { ...prev };
-            fields.forEach((f) => { next[f.key] = f.value; });
+            fields.forEach((f) => {
+                next[f.key] = f.value;
+            });
             return next;
         });
     }, [fields]);
@@ -85,23 +89,45 @@ const FilterDrawer = ({
                             >
                                 {field.label}
                             </span>
-                            <Input
-                                ref={index === 0 ? firstInputRef : undefined}
-                                placeholder={field.placeholder}
-                                value={localVal}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    setLocalValues((prev) => ({ ...prev, [field.key]: val }));
-                                }}
-                                onPressEnter={handleApply}
-                                allowClear
-                                style={{
-                                    borderRadius: 6,
-                                    height: stackAll ? 34 : 38,
-                                    borderColor: hasValue ? token.colorPrimaryBorder : undefined,
-                                    transition: 'border-color 0.2s',
-                                }}
-                            />
+                            {field.type === 'select' ? (
+                                <Select
+                                    placeholder={field.placeholder}
+                                    value={localVal || undefined}
+                                    onChange={(val) => {
+                                        setLocalValues((prev) => ({
+                                            ...prev,
+                                            [field.key]: val || '',
+                                        }));
+                                    }}
+                                    options={field.options}
+                                    allowClear
+                                    style={{
+                                        borderRadius: 6,
+                                        width: '100%',
+                                        height: stackAll ? 34 : 38,
+                                    }}
+                                />
+                            ) : (
+                                <Input
+                                    ref={index === 0 ? firstInputRef : undefined}
+                                    placeholder={field.placeholder}
+                                    value={localVal}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setLocalValues((prev) => ({ ...prev, [field.key]: val }));
+                                    }}
+                                    onPressEnter={handleApply}
+                                    allowClear
+                                    style={{
+                                        borderRadius: 6,
+                                        height: stackAll ? 34 : 38,
+                                        borderColor: hasValue
+                                            ? token.colorPrimaryBorder
+                                            : undefined,
+                                        transition: 'border-color 0.2s',
+                                    }}
+                                />
+                            )}
                         </div>
                     </Col>
                 );
@@ -136,9 +162,11 @@ const FilterDrawer = ({
         return (
             <Popover
                 open={open}
-                onOpenChange={(visible) => { if (!visible) onClose(); }}
+                onOpenChange={(visible) => {
+                    if (!visible) onClose();
+                }}
                 content={
-                    <div style={{ width: 280 }}>
+                    <div style={{ width: 320 }}>
                         {renderFields(true)}
                         <div
                             style={{

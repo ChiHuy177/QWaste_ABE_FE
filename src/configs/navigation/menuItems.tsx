@@ -5,6 +5,7 @@ import {
     SafetyOutlined,
     AppstoreOutlined,
     CalendarOutlined,
+    WarningOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -38,21 +39,29 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
         );
     }
 
+    if (
+        ability.can('view', 'error_management') ||
+        ability.can('view', 'machine_overview') ||
+        ability.can('view', 'machine')
+    ) {
+        items.push(
+            createMenuItem(
+                '/admin/error-management',
+                t('sidebar.navigation.errorManagement'),
+                <WarningOutlined />
+            )
+        );
+    }
+
     const productionPlanItems: MenuItem[] = [];
     if (ability.can('view', 'production_plan')) {
         productionPlanItems.push(
-            createMenuItem(
-                '/admin/production-plan',
-                t('sidebar.navigation.productionPlan')
-            )
+            createMenuItem('/admin/production-plan', t('sidebar.navigation.productionPlan'))
         );
     }
     if (ability.can('view', 'work_calendar')) {
         productionPlanItems.push(
-            createMenuItem(
-                '/admin/work-calendar',
-                t('sidebar.navigation.workCalendar')
-            )
+            createMenuItem('/admin/work-calendar', t('sidebar.navigation.workCalendar'))
         );
     }
     if (ability.can('view', 'production_monitor')) {
@@ -88,10 +97,7 @@ export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     }
     if (ability.can('view', 'operation_type')) {
         machineManagementItems.push(
-            createMenuItem(
-                '/admin/categories/operationType',
-                t('sidebar.navigation.operationType')
-            )
+            createMenuItem('/admin/categories/operationType', t('sidebar.navigation.operationType'))
         );
     }
     // if (ability.can('view', 'machine_type')) {

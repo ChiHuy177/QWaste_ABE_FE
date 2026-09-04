@@ -312,6 +312,7 @@
             "overview": "Tổng quan",
             "taskBoard": "Bảng nhiệm vụ",
             "machine": "Máy móc",
+            "errorManagement": "Quản lý lỗi & sự cố",
             "machineStatus": "Trạng thái máy",
             "machineDashboard": "Bảng điều khiển máy",
             "staff": "Nhân viên",
@@ -4823,7 +4824,148 @@
         "space_monitoring": "Giám sát khu vực",
         "production_monitor": "Giám sát sản xuất",
         "floor_map": "Sơ đồ mặt bằng",
+        "error_management": "Quản lý lỗi & sự cố",
         "all": "Tất cả"
     },
-    "stepTemplates": "Các bước làm"
+    "stepTemplates": "Các bước làm",
+    "timeFilter": {
+        "title": "Thời gian",
+        "time": "Thời gian",
+        "all": "Tất cả thời gian",
+        "periodType": "Chế độ chọn thời gian",
+        "week": "Theo tuần",
+        "month": "Theo tháng",
+        "quarter": "Theo quý",
+        "year": "Theo năm",
+        "customRange": "Khoảng ngày",
+        "selectWeek": "Chọn tuần",
+        "selectMonth": "Chọn tháng",
+        "selectQuarter": "Chọn quý",
+        "selectYear": "Chọn năm",
+        "selectDateRange": "Chọn khoảng ngày",
+        "weekLabel": "Tuần {{week}}, {{year}}",
+        "monthLabel": "Tháng {{month}}/{{year}}",
+        "quarterLabel": "Quý {{quarter}}/{{year}}",
+        "yearLabel": "Năm {{year}}",
+        "apply": "Áp dụng",
+        "reset": "Đặt lại"
+    },
+    "errorManagement": {
+        "title": "Quản lý Lỗi & Sự Cố Thiết Bị",
+        "subtitle": "Theo dõi thời gian dừng máy, phân tích nguyên nhân gốc rễ và ghi nhận biện pháp khắc phục sự cố sản xuất",
+        "header": {
+            "btnReport": "Báo cáo sự cố mới",
+            "btnExport": "Xuất Excel",
+            "btnRefresh": "Làm mới",
+            "activeIncidents": "sự cố đang xử lý"
+        },
+        "kpi": {
+            "totalIncidents": "Tổng số sự cố",
+            "totalIncidentsDesc": "Ghi nhận trong hệ thống",
+            "totalDowntime": "Tổng thời gian dừng máy",
+            "totalDowntimeDesc": "Thời lượng gián đoạn sản xuất",
+            "ongoingIncidents": "Sự cố đang diễn ra",
+            "ongoingIncidentsDesc": "Cần can thiệp kỹ thuật ngay",
+            "resolvedRate": "Tỷ lệ đã khắc phục",
+            "resolvedRateDesc": "Hiệu quả xử lý sự cố",
+            "criticalCount": "Sự cố nghiêm trọng"
+        },
+        "filters": {
+            "searchPlaceholder": "Tìm theo mã lỗi, tên máy, mã thiết bị, nguyên nhân...",
+            "category": "Loại sự cố",
+            "severity": "Mức độ",
+            "status": "Trạng thái",
+            "allCategories": "Tất cả loại lỗi",
+            "allSeverities": "Tất cả mức độ",
+            "allStatuses": "Tất cả trạng thái",
+            "dateRange": "Khoảng thời gian",
+            "clearFilters": "Xóa bộ lọc"
+        },
+        "table": {
+            "columns": {
+                "incidentCode": "Mã sự cố",
+                "machine": "Thiết bị gặp sự cố",
+                "severity": "Mức độ",
+                "status": "Trạng thái",
+                "startTime": "Giờ bắt đầu",
+                "endTime": "Giờ kết thúc",
+                "duration": "Thời lượng",
+                "cause": "Nguyên nhân gốc rễ",
+                "resolution": "Cách khắc phục / Giải pháp",
+                "actions": "Thao tác"
+            },
+            "ongoingBadge": "Đang xử lý",
+            "unresolved": "Chưa hoàn thành",
+            "noResolutionYet": "Chưa cập nhật cách khắc phục",
+            "viewDetail": "Chi tiết",
+            "edit": "Chỉnh sửa nguyên nhân & khắc phục",
+            "delete": "Xóa",
+            "confirmDelete": "Bạn có chắc chắn muốn xóa bản ghi sự cố này không?",
+            "empty": "Không có dữ liệu sự cố phù hợp với bộ lọc"
+        },
+        "modal": {
+            "createTitle": "Báo Cáo Sự Cố Mới",
+            "editTitle": "Cập Nhật Nguyên Nhân & Khắc Phục Sự Cố",
+            "editSubtitle": "Thông tin thiết bị được máy tự động ghi nhận. Chỉ chỉnh sửa nguyên nhân và biện pháp khắc phục.",
+            "autoCaptured": "Ghi nhận tự động từ máy",
+            "location": "Vị trí lắp đặt",
+            "updateSection": "Nội dung xử lý sự cố",
+            "causeRequired": "Vui lòng nhập nguyên nhân sự cố",
+            "machine": "Thiết bị gặp sự cố",
+            "selectMachine": "Chọn máy móc",
+            "startTime": "Thời gian bắt đầu sự cố",
+            "endTime": "Thời gian kết thúc (để trống nếu đang xử lý)",
+            "category": "Phân loại sự cố",
+            "severity": "Mức độ nghiêm trọng",
+            "status": "Trạng thái xử lý",
+            "cause": "Nguyên nhân sự cố (Root Cause)",
+            "causePlaceholder": "Mô tả cụ thể hiện tượng và nguyên nhân gốc rễ gây lỗi...",
+            "resolution": "Cách khắc phục (Countermeasure)",
+            "resolutionPlaceholder": "Mô tả chi tiết các bước xử lý kỹ thuật hoặc phương án đã thực hiện...",
+            "preventiveAction": "Biện pháp phòng ngừa (Long-term Action)",
+            "preventiveActionPlaceholder": "Kế hoạch cải tiến, điều chỉnh thông số hoặc chu kỳ bảo dưỡng để chống tái diễn...",
+            "notes": "Ghi chú bổ sung",
+            "submit": "Lưu thông tin",
+            "cancel": "Hủy bỏ"
+        },
+        "drawer": {
+            "title": "Chi Tiết Sự Cố",
+            "basicInfo": "Thông tin cơ bản",
+            "timeAndDuration": "Thời gian & Dừng máy",
+            "analysisAndAction": "Phân tích nguyên nhân & Khắc phục",
+            "preventivePlan": "Kế hoạch phòng ngừa tái diễn",
+            "personnel": "Nhân sự liên quan",
+            "timeline": "Dòng thời gian sự cố"
+        },
+        "categories": {
+            "mechanical": "Cơ khí",
+            "electrical": "Điện - Điều khiển",
+            "hydraulic": "Thủy lực - Khí nén",
+            "mold": "Khuôn gá",
+            "operational": "Thao tác vận hành",
+            "software": "Phần mềm & SCADA",
+            "material": "Nguyên vật liệu",
+            "quality": "Chất lượng sản phẩm"
+        },
+        "severities": {
+            "critical": "Nghiêm trọng",
+            "high": "Cao",
+            "medium": "Trung bình",
+            "low": "Nhẹ"
+        },
+        "statuses": {
+            "open": "Mới phát hiện",
+            "in_progress": "Đang xử lý",
+            "resolved": "Đã khắc phục",
+            "closed": "Đã đóng sự cố"
+        },
+        "messages": {
+            "createSuccess": "Báo cáo sự cố thành công",
+            "updateSuccess": "Cập nhật sự cố thành công",
+            "resolveSuccess": "Đã cập nhật phương án khắc phục thành công",
+            "deleteSuccess": "Đã xóa bản ghi sự cố",
+            "fetchError": "Không thể tải danh sách sự cố",
+            "exportSuccess": "Đã xuất danh sách sự cố thành công"
+        }
+    }
 }
