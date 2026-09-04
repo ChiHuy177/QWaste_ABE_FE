@@ -8,10 +8,11 @@ import {
     Divider,
     Grid,
     Popover,
-    Radio,
     Select,
     Space,
+    Tabs,
     Tag,
+    theme,
     Tooltip,
     Typography,
 } from 'antd';
@@ -77,6 +78,9 @@ interface TimeFilterPopoverProps {
 
 const { useBreakpoint } = Grid;
 
+// Sentinel for the CheckableTagGroup "All shifts" option — group values must be string | number, not null.
+const SHIFT_ALL = '__ALL__';
+
 function checkShiftActive(filter: IndustryFilter): boolean {
     if (filter.category !== 'SHIFT') return false;
     const currentTime = dayjs().format('HH:mm:ss');
@@ -94,6 +98,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     grainOptions,
 }) => {
     const { t, i18n } = useTranslation();
+    const { token } = theme.useToken();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
     const lang = i18n.language;
@@ -112,6 +117,11 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     const [selectedQuarter, setSelectedQuarter] = useState<number | null>(null);
     const [draftGrain, setDraftGrain] = useState<TimeGrain | null>(value.grain ?? null);
     const [draftLabelStyle, setDraftLabelStyle] = useState<LabelStyle | null>(value.labelStyle ?? null);
+    // Shift/grain apply regardless of PRESET vs CUSTOM_RANGE, so only the preset-vs-range
+    // choice itself is tabbed — this key is a view toggle, not part of the applied filter.
+    const [activeTabKey, setActiveTabKey] = useState<'quick' | 'custom'>(
+        value.mode === 'CUSTOM_RANGE' ? 'custom' : 'quick'
+    );
 
     const yearOptions = useMemo(() => {
         const currentYear = dayjs().year();
@@ -152,6 +162,49 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         [industryFilters]
     );
 
+    // Shift chips include a synthetic "All" option; the active shift also gets a small
+    // dot indicator (not a nested pill) so the currently-running shift stays visible
+    // without the chip looking like a tag stuffed inside another tag.
+    const shiftChipOptions = useMemo<
+        Array<{ value: number | typeof SHIFT_ALL; label: React.ReactNode }>
+    >(
+        () => [
+            { value: SHIFT_ALL, label: lang === 'vi' ? 'Tất cả' : 'All' },
+            ...shiftFilters.map((filter) => ({
+                value: filter.filterId,
+                label: (
+                    <Space size={5} align="center">
+                        <span>{lang === 'vi' ? filter.displayNameVi : filter.displayNameEn}</span>
+                        {checkShiftActive(filter) && (
+                            <Tooltip title={lang === 'vi' ? 'Đang hoạt động' : 'Active'}>
+                                <span
+                                    style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: '50%',
+                                        background: token.colorSuccess,
+                                        display: 'inline-block',
+                                        flexShrink: 0,
+                                    }}
+                                />
+                            </Tooltip>
+                        )}
+                    </Space>
+                ),
+            })),
+        ],
+        [shiftFilters, lang, token.colorSuccess]
+    );
+
+    const periodChipOptions = useMemo(
+        () =>
+            periodFilters.map((filter) => ({
+                value: filter.filterId,
+                label: lang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+            })),
+        [periodFilters, lang]
+    );
+
     // byDateRange has no allow-list (all 8 grains, default DAY); byFilter is
     // restricted to the selected period's allowedGrains/defaultGrain.
     const activeAllowedGrains = useMemo<TimeGrain[]>(() => {
@@ -185,6 +238,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         setSelectedQuarter(null);
         setDraftGrain(value.grain ?? null);
         setDraftLabelStyle(value.labelStyle ?? null);
+        setActiveTabKey(value.mode === 'CUSTOM_RANGE' ? 'custom' : 'quick');
     }, [value]);
 
     const handleOpenChange = useCallback(
@@ -206,6 +260,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         setSelectedQuarter(null);
         setDraftGrain(null);
         setDraftLabelStyle(null);
+        setActiveTabKey('quick');
     }, [shiftFilters]);
 
     const handleYearChange = useCallback((year: number) => {
@@ -255,6 +310,40 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         }
         return null;
     }, [selectedWeek, selectedQuarter, draftYear, draftDateRange, lang]);
+
+    // Live "what will Apply do" summary — shift/period/grain are edited from different
+    // tabs, so this is the one place that always reflects the combined draft state.
+    const draftShiftLabel = useMemo(() => {
+        if (draftShiftId == null) return null;
+        const shift = shiftFilters.find((f) => f.filterId === draftShiftId);
+        return shift ? (lang === 'vi' ? shift.displayNameVi : shift.displayNameEn) : null;
+    }, [draftShiftId, shiftFilters, lang]);
+
+    const draftRangeLabel = useMemo(() => {
+        if (draftMode === 'CUSTOM_RANGE') {
+            return (
+                quickRangeLabel ??
+                `${draftDateRange[0].format('DD/MM/YYYY')} → ${draftDateRange[1].format('DD/MM/YYYY')}`
+            );
+        }
+        const period = periodFilters.find((f) => f.filterId === draftPeriodId);
+        return period ? (lang === 'vi' ? period.displayNameVi : period.displayNameEn) : null;
+    }, [draftMode, draftPeriodId, periodFilters, quickRangeLabel, draftDateRange, lang]);
+
+    const draftGrainLabel = useMemo(() => {
+        if (!grainEnabled || !draftGrain) return null;
+        const option = grainOptions?.find((o) => o.name === draftGrain);
+        return option ? (lang === 'vi' ? option.nameVi : option.nameEn) : draftGrain;
+    }, [grainEnabled, draftGrain, grainOptions, lang]);
+
+    const draftSummaryText = useMemo(() => {
+        const parts = [draftShiftLabel, draftRangeLabel, draftGrainLabel].filter(Boolean);
+        return parts.length > 0
+            ? parts.join(' • ')
+            : lang === 'vi'
+              ? 'Chưa chọn khoảng thời gian'
+              : 'No time range selected yet';
+    }, [draftShiftLabel, draftRangeLabel, draftGrainLabel, lang]);
 
     const handleApply = useCallback(() => {
         onApply({
@@ -312,265 +401,292 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     const isApplyDisabled =
         draftMode === 'PRESET' && draftPeriodId === null && draftShiftId === null;
 
+    const sectionLabelStyle: React.CSSProperties = {
+        display: 'block',
+        fontSize: 12,
+        fontWeight: 600,
+        marginBottom: 8,
+        textTransform: 'uppercase',
+    };
+
+    // Shift + the Quick/Custom choice always resolve to a real value (Apply is gated on
+    // them below) — Grain never blocks Apply and silently auto-fills, so it's the one
+    // truly optional section. Marking both ends makes that contrast legible at a glance.
+    const requiredMark = <span style={{ color: token.colorError, marginLeft: 4 }}>*</span>;
+    const optionalMark = (
+        <span
+            style={{
+                marginLeft: 6,
+                fontWeight: 400,
+                textTransform: 'none',
+                letterSpacing: 0,
+                color: token.colorTextTertiary,
+                fontSize: 11,
+            }}
+        >
+            {lang === 'vi' ? '(tuỳ chọn — tự động nếu bỏ qua)' : '(optional — auto-filled if skipped)'}
+        </span>
+    );
+
+    const quickTabContent =
+        periodFilters.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <Tag.CheckableTagGroup
+                    options={periodChipOptions}
+                    value={draftMode === 'PRESET' ? draftPeriodId : null}
+                    onChange={(nextValue) => {
+                        setDraftPeriodId(nextValue == null ? null : Number(nextValue));
+                        setDraftMode('PRESET');
+                        setSelectedWeek(null);
+                        setSelectedQuarter(null);
+                    }}
+                />
+            </div>
+        ) : (
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                {lang === 'vi' ? 'Chưa có preset nào được cấu hình.' : 'No presets configured yet.'}
+            </Typography.Text>
+        );
+
+    const customTabContent = (
+        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Space size={8}>
+                <Typography.Text type="secondary">{lang === 'vi' ? 'Năm' : 'Year'}</Typography.Text>
+                <Select
+                    size="small"
+                    style={{ width: 90 }}
+                    value={draftYear}
+                    options={yearOptions}
+                    onChange={handleYearChange}
+                />
+            </Space>
+            <Space size={8} wrap style={{ width: '100%' }}>
+                <Select
+                    size="small"
+                    style={{ flex: 1, minWidth: 120 }}
+                    placeholder={lang === 'vi' ? 'Chọn tuần' : 'Select week'}
+                    options={weekOptions}
+                    value={selectedWeek}
+                    onChange={handleSelectWeek}
+                    disabled={selectedQuarter !== null}
+                    allowClear
+                />
+                <Select
+                    size="small"
+                    style={{ flex: 1, minWidth: 120 }}
+                    placeholder={lang === 'vi' ? 'Chọn quý' : 'Select quarter'}
+                    options={quarterOptions}
+                    value={selectedQuarter}
+                    onChange={handleSelectQuarter}
+                    disabled={selectedWeek !== null}
+                    allowClear
+                />
+            </Space>
+            {quickRangeLabel && (
+                <Tag color="blue" style={{ margin: 0 }}>
+                    {quickRangeLabel}
+                </Tag>
+            )}
+            <DatePicker.RangePicker
+                value={draftDateRange}
+                onChange={(dates) => {
+                    if (dates?.[0] && dates?.[1]) {
+                        setDraftDateRange([dates[0], dates[1]]);
+                        setDraftMode('CUSTOM_RANGE');
+                        setDraftPeriodId(null);
+                    }
+                }}
+                format="DD/MM/YYYY"
+                style={{ width: '100%', borderRadius: 8 }}
+                disabledDate={(current) => current && current > dayjs().endOf('day')}
+                // No longer gated on draftMode === 'CUSTOM_RANGE': picking a date here is
+                // itself what switches the mode, now that there's no separate mode radio.
+                disabled={selectedWeek !== null || selectedQuarter !== null}
+            />
+        </Space>
+    );
+
     const content = (
         <div
             style={{
                 width: isMobile ? 'calc(100vw - 48px)' : 360,
                 maxWidth: 360,
-                // Content can grow past the viewport (shift list + period list + custom
-                // range + grain + advanced) — cap it and scroll internally instead of
-                // letting the popover overflow the screen and break page layout.
                 maxHeight: 'min(560px, calc(100vh - 96px))',
                 display: 'flex',
                 flexDirection: 'column',
             }}
         >
-            <Typography.Text strong style={{ flexShrink: 0 }}>
-                {lang === 'vi' ? 'Thời gian' : 'Time Filter'}
-            </Typography.Text>
-
-            <Divider style={{ margin: '12px 0', flexShrink: 0 }} />
-
-            <div style={{ overflowY: 'auto', flex: '1 1 auto', minHeight: 0, paddingRight: 2 }}>
-
-            {shiftFilters.length > 0 && (
-                <>
-                    <Typography.Text
-                        type="secondary"
-                        style={{
-                            display: 'block',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            marginBottom: 8,
-                            textTransform: 'uppercase',
-                        }}
-                    >
-                        {lang === 'vi' ? 'Ca làm việc' : 'Shifts'}
-                    </Typography.Text>
-                    <Radio.Group
-                        value={draftShiftId}
-                        onChange={(e) => setDraftShiftId(e.target.value as number | null)}
-                        style={{ width: '100%' }}
-                    >
-                        <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                            <Radio value={null}>{lang === 'vi' ? 'Tất cả' : 'All'}</Radio>
-                            {shiftFilters.map((filter) => {
-                                const active = checkShiftActive(filter);
-                                return (
-                                    <Radio key={filter.filterId} value={filter.filterId}>
-                                        <Space size={4}>
-                                            <Typography.Text
-                                                ellipsis
-                                                style={{
-                                                    maxWidth: isMobile
-                                                        ? 'calc(100vw - 150px)'
-                                                        : 220,
-                                                    verticalAlign: 'middle',
-                                                }}
-                                            >
-                                                {lang === 'vi'
-                                                    ? filter.displayNameVi
-                                                    : filter.displayNameEn}
-                                            </Typography.Text>
-                                            {active && (
-                                                <Tag
-                                                    color="green"
-                                                    style={{
-                                                        margin: 0,
-                                                        fontSize: 11,
-                                                        lineHeight: '18px',
-                                                        padding: '0 6px',
-                                                    }}
-                                                >
-                                                    {lang === 'vi' ? 'Đang hoạt động' : 'Active'}
-                                                </Tag>
-                                            )}
-                                        </Space>
-                                    </Radio>
-                                );
-                            })}
-                        </Space>
-                    </Radio.Group>
-                    <Divider style={{ margin: '12px 0' }} />
-                </>
-            )}
-
-            <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                {periodFilters.length > 0 && (
+            <div
+                style={{
+                    overflowY: 'auto',
+                    flex: '1 1 auto',
+                    minHeight: 0,
+                    paddingRight: 2,
+                    paddingTop: 4,
+                }}>
+                {/* Shift is independent of PRESET vs CUSTOM_RANGE, so it sits above the
+                    tabs — otherwise switching tabs would appear to drop the selection. */}
+                {shiftFilters.length > 0 && (
                     <>
-                        <Typography.Text type="secondary">
-                            {lang === 'vi' ? 'Chọn nhanh' : 'Quick Select'}
+                        <Typography.Text type="secondary" style={sectionLabelStyle}>
+                            {lang === 'vi' ? 'Ca làm việc' : 'Shifts'}
+                            {requiredMark}
                         </Typography.Text>
-                        <Radio.Group
-                            value={draftMode === 'PRESET' ? draftPeriodId : null}
-                            onChange={(e) => {
-                                setDraftPeriodId(e.target.value as number | null);
-                                setDraftMode('PRESET');
-                                setSelectedWeek(null);
-                                setSelectedQuarter(null);
-                            }}
-                            style={{ width: '100%' }}
-                        >
-                            <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                                {periodFilters.map((filter) => (
-                                    <Radio key={filter.filterId} value={filter.filterId}>
-                                        <Typography.Text
-                                            ellipsis
-                                            style={{
-                                                maxWidth: isMobile
-                                                    ? 'calc(100vw - 120px)'
-                                                    : 280,
-                                                verticalAlign: 'middle',
-                                            }}
-                                        >
-                                            {lang === 'vi'
-                                                ? filter.displayNameVi
-                                                : filter.displayNameEn}
-                                        </Typography.Text>
-                                    </Radio>
-                                ))}
-                            </Space>
-                        </Radio.Group>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            <Tag.CheckableTagGroup
+                                options={shiftChipOptions}
+                                value={draftShiftId ?? SHIFT_ALL}
+                                onChange={(nextValue) =>
+                                    setDraftShiftId(
+                                        nextValue == null || nextValue === SHIFT_ALL
+                                            ? null
+                                            : Number(nextValue)
+                                    )
+                                }
+                            />
+                        </div>
                     </>
                 )}
 
-                <Divider style={{ margin: '4px 0' }} />
-
-                <Radio
-                    checked={draftMode === 'CUSTOM_RANGE'}
-                    onChange={() => {
-                        setDraftMode('CUSTOM_RANGE');
-                        setDraftPeriodId(null);
-                        setSelectedWeek(null);
-                        setSelectedQuarter(null);
-                    }}
+                <Typography.Text
+                    type="secondary"
+                    style={{ ...sectionLabelStyle, marginTop: shiftFilters.length > 0 ? 16 : 0, marginBottom: 4 }}
                 >
-                    {lang === 'vi' ? 'Khoảng ngày' : 'Custom Date Range'}
-                </Radio>
-            </Space>
-
-            <Space direction="vertical" size={8} style={{ width: '100%', marginTop: 12 }}>
-                <Space size={8}>
-                    <Typography.Text type="secondary">
-                        {lang === 'vi' ? 'Năm' : 'Year'}
-                    </Typography.Text>
-                    <Select
-                        size="small"
-                        style={{ width: 90 }}
-                        value={draftYear}
-                        options={yearOptions}
-                        onChange={handleYearChange}
-                    />
-                </Space>
-                <Space size={8} wrap style={{ width: '100%' }}>
-                    <Select
-                        size="small"
-                        style={{ flex: 1, minWidth: 120 }}
-                        placeholder={lang === 'vi' ? 'Chọn tuần' : 'Select week'}
-                        options={weekOptions}
-                        value={selectedWeek}
-                        onChange={handleSelectWeek}
-                        disabled={selectedQuarter !== null}
-                        allowClear
-                    />
-                    <Select
-                        size="small"
-                        style={{ flex: 1, minWidth: 120 }}
-                        placeholder={lang === 'vi' ? 'Chọn quý' : 'Select quarter'}
-                        options={quarterOptions}
-                        value={selectedQuarter}
-                        onChange={handleSelectQuarter}
-                        disabled={selectedWeek !== null}
-                        allowClear
-                    />
-                </Space>
-                {quickRangeLabel && (
-                    <Tag color="blue" style={{ margin: 0 }}>
-                        {quickRangeLabel}
-                    </Tag>
-                )}
-                <DatePicker.RangePicker
-                    value={draftDateRange}
-                    onChange={(dates) => {
-                        if (dates?.[0] && dates?.[1]) {
-                            setDraftDateRange([dates[0], dates[1]]);
-                            setDraftMode('CUSTOM_RANGE');
-                            setDraftPeriodId(null);
-                        }
-                    }}
-                    format="DD/MM/YYYY"
-                    style={{ width: '100%', borderRadius: 8 }}
-                    disabledDate={(current) => current && current > dayjs().endOf('day')}
-                    disabled={
-                        draftMode !== 'CUSTOM_RANGE' || selectedWeek !== null || selectedQuarter !== null
-                    }
+                    {lang === 'vi' ? 'Khoảng thời gian' : 'Time range'}
+                    {requiredMark}
+                </Typography.Text>
+                <Tabs
+                    size="small"
+                    activeKey={activeTabKey}
+                    onChange={(key) => setActiveTabKey(key as 'quick' | 'custom')}
+                    items={[
+                        {
+                            key: 'quick',
+                            label: lang === 'vi' ? 'Nhanh' : 'Quick',
+                            children: quickTabContent,
+                        },
+                        {
+                            key: 'custom',
+                            label: lang === 'vi' ? 'Tuỳ chỉnh' : 'Custom',
+                            children: customTabContent,
+                        },
+                    ]}
                 />
-            </Space>
 
-            {grainEnabled && (
-                <>
-                    <Divider style={{ margin: '12px 0' }} />
-                    <Typography.Text
-                        type="secondary"
-                        style={{
-                            display: 'block',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            marginBottom: 8,
-                            textTransform: 'uppercase',
-                        }}
-                    >
-                        {lang === 'vi' ? 'Nhóm theo' : 'Group by'}
-                    </Typography.Text>
-                    <Select
-                        size="small"
-                        style={{ width: '100%' }}
-                        value={draftGrain}
-                        onChange={(nextGrain: TimeGrain) => setDraftGrain(nextGrain)}
-                        options={activeAllowedGrains.map((grainName) => {
-                            const option = grainOptions?.find((o) => o.name === grainName);
-                            const label = option
-                                ? lang === 'vi'
-                                    ? option.nameVi
-                                    : option.nameEn
-                                : grainName;
-                            return { value: grainName, label };
-                        })}
-                    />
-                    <Collapse
-                        ghost
-                        size="small"
-                        style={{ marginTop: 8 }}
-                        items={[
-                            {
-                                key: 'advanced',
-                                label:
-                                    lang === 'vi' ? 'Nâng cao — kiểu nhãn' : 'Advanced — label style',
-                                children: (
-                                    <Select
-                                        size="small"
-                                        style={{ width: '100%' }}
-                                        allowClear
-                                        placeholder="Auto"
-                                        value={draftLabelStyle}
-                                        onChange={(nextStyle: LabelStyle | undefined) =>
-                                            setDraftLabelStyle(nextStyle ?? null)
-                                        }
-                                        options={ALL_LABEL_STYLES.map((style) => ({
-                                            value: style,
-                                            label: getLabelStyleLabel(style, lang),
-                                        }))}
-                                    />
-                                ),
-                            },
-                        ]}
-                    />
-                </>
-            )}
-
+                {grainEnabled && (
+                    <>
+                        {/* The whole Grain section is now behind one collapsed-by-default
+                            panel — not just the label-style sub-option — since it's the one
+                            control that never blocks Apply and always has a working default. */}
+                        <Collapse
+                            ghost
+                            size="small"
+                            style={{ marginTop: 8 }}
+                            items={[
+                                {
+                                    key: 'grain',
+                                    label: (
+                                        <Typography.Text
+                                            type="secondary"
+                                            style={{ ...sectionLabelStyle, display: 'inline', marginBottom: 0 }}
+                                        >
+                                            {lang === 'vi' ? 'Nhóm theo' : 'Group by'}
+                                            {optionalMark}
+                                        </Typography.Text>
+                                    ),
+                                    children: (
+                                        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                                            <Select
+                                                size="small"
+                                                style={{ width: '100%' }}
+                                                value={draftGrain}
+                                                onChange={(nextGrain: TimeGrain) => setDraftGrain(nextGrain)}
+                                                options={activeAllowedGrains.map((grainName) => {
+                                                    const option = grainOptions?.find(
+                                                        (o) => o.name === grainName
+                                                    );
+                                                    const label = option
+                                                        ? lang === 'vi'
+                                                            ? option.nameVi
+                                                            : option.nameEn
+                                                        : grainName;
+                                                    return { value: grainName, label };
+                                                })}
+                                            />
+                                            <div>
+                                                <Typography.Text
+                                                    type="secondary"
+                                                    style={{ fontSize: 11, display: 'block', marginBottom: 4 }}
+                                                >
+                                                    {draftGrainLabel
+                                                        ? lang === 'vi'
+                                                            ? `Kiểu nhãn cho "${draftGrainLabel}"`
+                                                            : `Label style for "${draftGrainLabel}"`
+                                                        : lang === 'vi'
+                                                          ? 'Kiểu nhãn'
+                                                          : 'Label style'}
+                                                </Typography.Text>
+                                                <Select
+                                                    size="small"
+                                                    style={{ width: '100%' }}
+                                                    allowClear
+                                                    placeholder="Auto"
+                                                    value={draftLabelStyle}
+                                                    onChange={(nextStyle: LabelStyle | undefined) =>
+                                                        setDraftLabelStyle(nextStyle ?? null)
+                                                    }
+                                                    options={ALL_LABEL_STYLES.map((style) => ({
+                                                        value: style,
+                                                        label: getLabelStyleLabel(style, lang),
+                                                    }))}
+                                                />
+                                            </div>
+                                        </Space>
+                                    ),
+                                },
+                            ]}
+                        />
+                    </>
+                )}
             </div>
 
-            <Divider style={{ margin: '12px 0', flexShrink: 0 }} />
+            {/* Always-visible resolved summary — the one place that reflects the combined
+                draft state regardless of which tab is active. */}
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 8,
+                    background: token.colorPrimaryBg,
+                    border: `1px solid ${token.colorPrimaryBorder}`,
+                    borderRadius: token.borderRadius,
+                    padding: '8px 10px',
+                    margin: '12px 0',
+                    flexShrink: 0,
+                }}
+            >
+                <Typography.Text
+                    style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.4,
+                        color: token.colorPrimary,
+                        opacity: 0.75,
+                        flexShrink: 0,
+                    }}
+                >
+                    {lang === 'vi' ? 'Đang chọn' : 'Selected'}
+                </Typography.Text>
+                <Typography.Text
+                    ellipsis
+                    style={{ fontSize: 12.5, fontWeight: 600, color: token.colorPrimary }}
+                >
+                    {draftSummaryText}
+                </Typography.Text>
+            </div>
+
+            <Divider style={{ margin: '0 0 12px', flexShrink: 0 }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexShrink: 0 }}>
                 <Button onClick={handleReset}>{t('common.reset')}</Button>
