@@ -1,19 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Button, DatePicker, Popconfirm, Space, Tag, Alert, Tooltip, theme } from 'antd';
+import { Button, Popconfirm, Space, Tag, Alert, Tooltip, theme, Grid } from 'antd';
 import {
-    LeftOutlined,
-    RightOutlined,
     EditOutlined,
     SaveOutlined,
     UndoOutlined,
     ReloadOutlined,
-    WarningOutlined,
+    WarningFilled,
     CheckCircleOutlined,
     ClockCircleOutlined,
 } from '@ant-design/icons';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -27,7 +25,6 @@ interface WorkCalendarHeaderProps {
     isResetting: boolean;
     isConfirming?: boolean;
     hasDraftChanges: boolean;
-    onMonthChange: (year: number, month: number) => void;
     onEnterEditMode: () => void;
     onCancelEditMode: () => void;
     onSaveChanges: () => void;
@@ -45,40 +42,24 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
         isResetting,
         isConfirming = false,
         hasDraftChanges,
-        onMonthChange,
         onEnterEditMode,
         onCancelEditMode,
         onSaveChanges,
         onResetToDefault,
         onConfirmMonth,
     }) => {
-        const { t, i18n } = useTranslation('common');
+        const { t } = useTranslation('common');
         const { token } = theme.useToken();
+        const screens = Grid.useBreakpoint();
+        const isMobile = !screens.md;
         const ability = useAbility();
         const canUpdate = ability.can('update', 'work_calendar');
         const canReset = ability.can('reset', 'work_calendar');
 
         const currentDate = dayjs(`${year}-${String(month).padStart(2, '0')}-01`);
-        const datePickerFormat = i18n.language === 'en' ? 'MMMM, YYYY' : '[Tháng] MM, YYYY';
 
         // Check if the current month being viewed is in the past
         const isPastMonth = currentDate.isBefore(dayjs().startOf('month'));
-
-        const handlePrevMonth = () => {
-            const prev = currentDate.subtract(1, 'month');
-            onMonthChange(prev.year(), prev.month() + 1);
-        };
-
-        const handleNextMonth = () => {
-            const next = currentDate.add(1, 'month');
-            onMonthChange(next.year(), next.month() + 1);
-        };
-
-        const handleDatePickerChange = (date: Dayjs | null) => {
-            if (date) {
-                onMonthChange(date.year(), date.month() + 1);
-            }
-        };
 
         const titleContent = (
             <Space align="center" size="middle">
@@ -113,30 +94,6 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
 
         const rightContent = (
             <Space size="small" wrap style={{ width: '100%' }}>
-                {/* Month Picker Group */}
-                <Space size="small">
-                    <Button
-                        icon={<LeftOutlined />}
-                        onClick={handlePrevMonth}
-                        disabled={isEditMode}
-                        style={{ height: 38 }}
-                    />
-                    <DatePicker.MonthPicker
-                        value={currentDate}
-                        onChange={handleDatePickerChange}
-                        format={datePickerFormat}
-                        allowClear={false}
-                        disabled={isEditMode}
-                        style={{ width: 160, height: 38 }}
-                    />
-                    <Button
-                        icon={<RightOutlined />}
-                        onClick={handleNextMonth}
-                        disabled={isEditMode}
-                        style={{ height: 38 }}
-                    />
-                </Space>
-
                 {/* Confirm Month Button (Disabled when month is already confirmed OR in past) */}
                 {!isEditMode &&
                     canUpdate &&
@@ -310,12 +267,40 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
                 {/* Edit Mode Alert Banner */}
                 {isEditMode && (
                     <Alert
-                        title={t('workCalendar.header.editModeNotice')}
-                        description={t('workCalendar.header.editModeDesc')}
+                        title={
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    fontSize: isMobile ? 13 : 14,
+                                    color: token.colorWarningText,
+                                    letterSpacing: '-0.01em',
+                                }}
+                            >
+                                {t('workCalendar.header.editModeNotice')}
+                            </div>
+                        }
+                        description={
+                            <div
+                                style={{
+                                    fontSize: isMobile ? 11.5 : 12.5,
+                                    color: token.colorTextSecondary,
+                                    lineHeight: 1.35,
+                                    marginTop: 2,
+                                }}
+                            >
+                                {isMobile
+                                    ? t('workCalendar.header.editModeDescMobile')
+                                    : t('workCalendar.header.editModeDesc')}
+                            </div>
+                        }
                         type="warning"
                         showIcon
-                        icon={<WarningOutlined />}
-                        style={{ borderRadius: token.borderRadius, marginBottom: 16 }}
+                        icon={<WarningFilled style={{ fontSize: isMobile ? 16 : 18 }} />}
+                        style={{
+                            borderRadius: token.borderRadiusLG,
+                            marginBottom: 12,
+                            padding: isMobile ? '8px 12px' : '10px 16px',
+                        }}
                     />
                 )}
             </>

@@ -458,7 +458,6 @@ const SpaceMonitoringPage: React.FC = () => {
 
     // Data fetching is triggered only by the Search button (handleSearch).
     // No auto-fire on mount, factory change, or filter change.
-
     const handleExportExcel = useCallback(async () => {
         if (!activeFactoryId) return;
 

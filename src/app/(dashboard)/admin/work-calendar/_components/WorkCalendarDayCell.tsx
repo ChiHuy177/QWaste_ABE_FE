@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Tag, Tooltip, Checkbox, theme } from 'antd';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { DayType } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
@@ -21,6 +22,7 @@ export interface WorkCalendarDayCellProps {
     isMobile?: boolean;
     onCellMouseDown?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
     onCellMouseEnter?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
+    onCellKeyActivate?: (dateString: string, dayIndex: number, shiftKey: boolean) => void;
 }
 
 export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
@@ -39,12 +41,14 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         isMobile = false,
         onCellMouseDown,
         onCellMouseEnter,
+        onCellKeyActivate,
     }) => {
         const { t } = useTranslation('common');
         const { token } = theme.useToken();
 
         const isDark = token.colorBgContainer !== '#ffffff';
         const sc = isDark ? statusColors.dark : statusColors.light;
+        const isToday = dayjs().format('YYYY-MM-DD') === dateString;
 
         const handleMouseDown = (e: React.MouseEvent) => {
             if (isEditMode && onCellMouseDown) {
@@ -58,13 +62,21 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             }
         };
 
+        const handleKeyDown = (e: React.KeyboardEvent) => {
+            if (!isEditMode || !onCellKeyActivate) return;
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                onCellKeyActivate(dateString, dayIndex, e.shiftKey);
+            }
+        };
+
         if (!isCurrentMonth) {
             return (
                 <div
                     style={{
                         height: '100%',
-                        minHeight: isMobile ? 54 : 90,
-                        padding: isMobile ? '4px 2px' : 8,
+                        minHeight: isMobile ? (isEditMode ? 64 : 76) : 84,
+                        padding: isMobile ? '4px 3px' : '8px 10px',
                         opacity: 0.35,
                         background: token.colorBgLayout,
                         borderRadius: token.borderRadiusSM,
@@ -72,19 +84,19 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                         userSelect: 'none',
                         boxSizing: 'border-box',
                         display: 'flex',
-                        alignItems: isMobile ? 'center' : 'flex-start',
-                        justifyContent: isMobile ? 'center' : 'flex-start',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
                     }}
                 >
-                    <div
+                    <span
                         style={{
                             color: token.colorTextQuaternary,
-                            fontSize: isMobile ? 11 : 13,
-                            fontWeight: 500,
+                            fontSize: isMobile ? 12 : 13,
+                            fontWeight: 600,
                         }}
                     >
                         {dayNumber}
-                    </div>
+                    </span>
                 </div>
             );
         }
@@ -120,10 +132,16 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             <div
                 onMouseDown={handleMouseDown}
                 onMouseEnter={handleMouseEnter}
+                onKeyDown={handleKeyDown}
+                tabIndex={isEditMode ? 0 : undefined}
+                role={isEditMode ? 'button' : undefined}
+                aria-pressed={isEditMode ? isSelected : undefined}
+                aria-label={isEditMode ? `${dateString} ${typeLabel}` : undefined}
                 style={{
                     position: 'relative',
                     height: '100%',
-                    minHeight: isMobile ? 54 : 90,
+                    flex: 1,
+                    minHeight: isMobile ? (isEditMode ? 64 : 72) : 84,
                     padding: isMobile ? '4px 3px' : '8px 10px',
                     background: isSelected ? token.colorPrimaryBg : cellBg,
                     border: borderStyle,
@@ -136,23 +154,22 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                     boxSizing: 'border-box',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: isMobile ? 'space-between' : 'flex-start',
+                    justifyContent: 'space-between',
                 }}
             >
                 {isMobile ? (
-                    /* Mobile View: Compact, Clean, Never-Wrap */
+                    /* Mobile View: Taller, spacious 3-row layout filling frame */
                     <>
-                        {/* Top row: Checkbox/Day Number & Badges */}
+                        {/* Top row: Checkbox, Day Number & Dots */}
                         <div
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                lineHeight: 1,
-                                gap: 2,
+                                lineHeight: 1.1,
                             }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                                 {isEditMode && (
                                     <Checkbox
                                         checked={isSelected}
@@ -168,9 +185,19 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                                     style={{
                                         fontWeight: 700,
                                         fontSize: 12,
-                                        color: isWorkingDay
-                                            ? token.colorText
-                                            : token.colorTextSecondary,
+                                        lineHeight: '18px',
+                                        width: isToday ? 18 : undefined,
+                                        height: isToday ? 18 : undefined,
+                                        display: isToday ? 'inline-flex' : undefined,
+                                        alignItems: isToday ? 'center' : undefined,
+                                        justifyContent: isToday ? 'center' : undefined,
+                                        borderRadius: isToday ? '50%' : undefined,
+                                        background: isToday ? token.colorPrimary : undefined,
+                                        color: isToday
+                                            ? token.colorWhite
+                                            : isWorkingDay
+                                              ? token.colorText
+                                              : token.colorTextSecondary,
                                     }}
                                 >
                                     {dayNumber}
@@ -207,12 +234,12 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                             </div>
                         </div>
 
-                        {/* Bottom row: Compact planned hours / status label */}
-                        <div style={{ textAlign: 'center', marginTop: 2 }}>
+                        {/* Middle row: Status label */}
+                        <div style={{ textAlign: 'center', margin: '2px 0' }}>
                             <span
                                 style={{
                                     fontSize: 10,
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     color: typeColor,
                                     display: 'block',
                                     whiteSpace: 'nowrap',
@@ -221,14 +248,32 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                                     lineHeight: 1.2,
                                 }}
                             >
-                                {isWorkingDay ? `${plannedTime}h` : typeShortLabel}
+                                {typeShortLabel}
+                            </span>
+                        </div>
+
+                        {/* Bottom row: Planned hours */}
+                        <div style={{ textAlign: 'center', marginTop: 'auto' }}>
+                            <span
+                                style={{
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    color: isWorkingDay ? typeColor : token.colorTextTertiary,
+                                    display: 'block',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    lineHeight: 1.2,
+                                }}
+                            >
+                                {isWorkingDay ? `${plannedTime}h` : '—'}
                             </span>
                         </div>
                     </>
                 ) : (
                     /* Desktop View: Full detailed cards */
                     <>
-                        {/* Top row: Checkbox/Day Number & Badges */}
+                        {/* Top row: Checkbox, Solar Day & Badges */}
                         <div
                             style={{
                                 display: 'flex',
@@ -248,10 +293,20 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                                 <span
                                     style={{
                                         fontWeight: 700,
-                                        fontSize: 14,
-                                        color: isWorkingDay
-                                            ? token.colorText
-                                            : token.colorTextSecondary,
+                                        fontSize: 13,
+                                        lineHeight: '22px',
+                                        width: isToday ? 22 : undefined,
+                                        height: isToday ? 22 : undefined,
+                                        display: isToday ? 'inline-flex' : undefined,
+                                        alignItems: isToday ? 'center' : undefined,
+                                        justifyContent: isToday ? 'center' : undefined,
+                                        borderRadius: isToday ? '50%' : undefined,
+                                        background: isToday ? token.colorPrimary : undefined,
+                                        color: isToday
+                                            ? token.colorWhite
+                                            : isWorkingDay
+                                              ? token.colorText
+                                              : token.colorTextSecondary,
                                     }}
                                 >
                                     {dayNumber}
@@ -322,7 +377,7 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             </div>
         );
 
-        if (isMobile && !isEditMode) {
+        if (!isEditMode) {
             const tooltipTitle = `${dateString} (${typeLabel}): ${
                 isWorkingDay
                     ? t('workCalendar.grid.plannedHoursLabel', { hours: plannedTime })

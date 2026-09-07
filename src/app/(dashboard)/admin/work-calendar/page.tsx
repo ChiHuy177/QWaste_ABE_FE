@@ -277,9 +277,7 @@ export default function WorkCalendarPage() {
     return (
         <div
             style={{
-                height: isMobile ? 'auto' : '100%',
-                minHeight: 0,
-                overflow: isMobile ? 'visible' : 'auto',
+                minHeight: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 width: '100%',
@@ -295,7 +293,6 @@ export default function WorkCalendarPage() {
                 isResetting={isResetting}
                 isConfirming={isConfirming}
                 hasDraftChanges={hasDraftChanges}
-                onMonthChange={handleMonthChange}
                 onEnterEditMode={handleEnterEditMode}
                 onCancelEditMode={handleCancelEditMode}
                 onSaveChanges={handleSaveChanges}
@@ -313,6 +310,7 @@ export default function WorkCalendarPage() {
                 isEditMode={isEditMode}
                 loading={loading}
                 selectedDates={selectedDates}
+                onMonthChange={handleMonthChange}
                 onSelectDates={handleSelectDates}
                 onOpenEditModal={handleOpenEditModal}
                 onClearSelection={handleClearSelection}
