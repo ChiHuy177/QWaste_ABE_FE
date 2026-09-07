@@ -1,26 +1,16 @@
-﻿'use client';
+'use client';
 
 // TEMP DISABLED: factory list grid — performance issue (parallel API calls per factory)
 // To re-enable: remove the redirect block and restore the commented JSX below
 // Related: enhance/fe-space-monitoring branch
 
 import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
-import {
-    Button,
-    Grid,
-    Select,
-    Skeleton,
-    Spin,
-    Tooltip,
-    Typography,
-    message,
-} from 'antd';
+import { Button, Grid, Popover, Select, Skeleton, Spin, Tooltip, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import TimeFilterPopover, { TimeFilterValue } from '@/components/shared/filters/TimeFilterPopover';
 import FactoryStatsCards from './_components/FactoryStatsCards';
 import SpaceOverviewGrid from './_components/SpaceOverviewGrid';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
@@ -39,8 +29,16 @@ import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
 import { MachineWithStatusLogsSummary } from '@/types/Machine';
+import {
+    TimeFilterPopoverContent,
+    PeriodFilterMode,
+    TimeFilterApplyPayload,
+} from './_components/TimeFilterPopoverContent';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
-type TimeFilterMode = 'PRESET' | 'CUSTOM_RANGE';
+dayjs.extend(isoWeek);
+dayjs.extend(quarterOfYear);
 function collectDescendantIds(space: SpaceOverview): number[] {
     const ids: number[] = [];
     space.children.forEach((child) => {
@@ -80,13 +78,10 @@ const SpaceMonitoringPage: React.FC = () => {
     const screens = Grid.useBreakpoint();
     const isMobile = !screens.md;
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
-    const [timeFilterMode, setTimeFilterMode] = useState<TimeFilterMode>('PRESET');
+    const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode>('PRESET');
     const [expandedSpaces, setExpandedSpaces] = useState<Set<number>>(new Set());
     const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
-    // const [factoryCardsData, setFactoryCardsData] = useState<Record<number, SpaceOverview | null>>(
-    //     {}
-    // );
     const router = useRouter();
     const searchParams = useSearchParams();
     const dispatch = useAppDispatch();
@@ -105,6 +100,7 @@ const SpaceMonitoringPage: React.FC = () => {
     } = useAppSelector((state) => state.factoryOverview) as IFactoryOverviewStoreState;
 
     const [isExporting, setIsExporting] = useState(false);
+    const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
 
     type MachinePathEntry = { path: number[]; machineIndex: number };
     const machinePathMapRef = useRef<Map<string, MachinePathEntry>>(new Map());
@@ -194,7 +190,7 @@ const SpaceMonitoringPage: React.FC = () => {
         dispatch(factoryOverviewActions.setSelectedShiftFilterId(null));
     }, [industryFilters, selectedTimePeriod, timeFilterMode, isShiftActive, dispatch]);
 
-    const isCustomRangeMode = timeFilterMode === 'CUSTOM_RANGE';
+    const isCustomRangeMode = timeFilterMode !== 'PRESET';
     const isDateRange = isCustomRangeMode;
 
     const activeFactoryId = selectedFactoryId ?? selectedSpaceId;
@@ -315,7 +311,6 @@ const SpaceMonitoringPage: React.FC = () => {
     //     router.push('/admin/space-monitoring');
     // }, [router]);
 
-
     // Subscribe to machines only in expanded spaces (incremental)
     useEffect(() => {
         if (!wsConnected || !spaceData) {
@@ -363,20 +358,20 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
+                                | 'RUNTIME'
+                                | 'IDLE'
+                                | 'ERROR'
+                                | 'COMPLETE'
+                                | 'OFFLINE'
+                                | 'UNKNOWN';
+                        };
+                        newStatus:
                             | 'RUNTIME'
                             | 'IDLE'
                             | 'ERROR'
                             | 'COMPLETE'
                             | 'OFFLINE'
                             | 'UNKNOWN';
-                        };
-                        newStatus:
-                        | 'RUNTIME'
-                        | 'IDLE'
-                        | 'ERROR'
-                        | 'COMPLETE'
-                        | 'OFFLINE'
-                        | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
@@ -448,43 +443,31 @@ const SpaceMonitoringPage: React.FC = () => {
         };
     }, []);
 
+    const timePeriodOptions = useMemo((): {
+        label: string;
+        value: number;
+        category: IndustryFilter['category'];
+        disabled?: boolean;
+    }[] => {
+        const currentLang = i18n.language;
+
+        return industryFilters.map((filter: IndustryFilter) => ({
+            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+            value: filter.filterId,
+            category: filter.category,
+        }));
+    }, [industryFilters, i18n.language]);
+
+    const groupedTimePeriodOptions = useMemo(
+        () => ({
+            SHIFT: timePeriodOptions.filter((option) => option.category === 'SHIFT'),
+            PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
+        }),
+        [timePeriodOptions]
+    );
+
     // Data fetching is triggered only by the Search button (handleSearch).
     // No auto-fire on mount, factory change, or filter change.
-
-    // Derives the shared TimeFilterPopover's value shape from the applied filter state.
-    // Mirrors the primary/secondary filter convention used by handleTimeFilterApply below.
-    const timeFilterValue = useMemo<TimeFilterValue>(() => {
-        if (timeFilterMode === 'CUSTOM_RANGE') {
-            return {
-                mode: 'CUSTOM_RANGE',
-                periodId: null,
-                shiftId: selectedTimePeriod,
-                startDate: selectedStartDate,
-                endDate: selectedEndDate,
-            };
-        }
-
-        const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-        if (primaryFilter?.category === 'PERIOD') {
-            return {
-                mode: 'PRESET',
-                periodId: selectedTimePeriod,
-                shiftId: selectedShiftFilterId,
-                startDate: selectedStartDate,
-                endDate: selectedEndDate,
-            };
-        }
-
-        // SHIFT là primary (auto-select hoặc chỉ chọn Ca)
-        return {
-            mode: 'PRESET',
-            periodId: null,
-            shiftId: selectedTimePeriod,
-            startDate: selectedStartDate,
-            endDate: selectedEndDate,
-        };
-    }, [timeFilterMode, selectedTimePeriod, selectedShiftFilterId, selectedStartDate, selectedEndDate, industryFilters]);
-
     const handleExportExcel = useCallback(async () => {
         if (!activeFactoryId) return;
 
@@ -492,16 +475,16 @@ const SpaceMonitoringPage: React.FC = () => {
         try {
             const { blob, fileName } = isCustomRangeMode
                 ? await ExcelExportService.getMachineStatusLogReportByDateRange(
-                    activeFactoryId,
-                    selectedStartDate,
-                    selectedEndDate,
-                    selectedTimePeriod
-                )
+                      activeFactoryId,
+                      selectedStartDate,
+                      selectedEndDate,
+                      selectedTimePeriod
+                  )
                 : await ExcelExportService.getMachineStatusLogReportByFilter(
-                    activeFactoryId,
-                    selectedTimePeriod!,
-                    selectedShiftFilterId
-                );
+                      activeFactoryId,
+                      selectedTimePeriod!,
+                      selectedShiftFilterId
+                  );
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -528,43 +511,25 @@ const SpaceMonitoringPage: React.FC = () => {
         t,
     ]);
 
-    const handleTimeFilterApply = useCallback(
-        (value: TimeFilterValue) => {
-            let primaryFilterId: number | null;
-            let secondaryShiftId: number | null;
+    const handleApplyTimeFilter = useCallback(
+        (payload: TimeFilterApplyPayload) => {
+            const { mode, primaryFilterId, secondaryShiftId, startDate, endDate } = payload;
 
-            if (value.mode === 'PRESET') {
-                if (value.periodId !== null) {
-                    // Period selected → period là primary, Ca là secondary
-                    primaryFilterId = value.periodId;
-                    secondaryShiftId = value.shiftId;
-                } else if (value.shiftId !== null) {
-                    // Chỉ Ca selected → Ca làm primary, không có secondary
-                    primaryFilterId = value.shiftId;
-                    secondaryShiftId = null;
-                } else {
-                    return; // Không có gì được chọn
-                }
-            } else {
-                // CUSTOM_RANGE: shift dropdown (backward compat với selectedTimePeriod)
-                primaryFilterId = value.shiftId;
-                secondaryShiftId = null;
-            }
-
-            setTimeFilterMode(value.mode);
+            setTimeFilterMode(mode);
             dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
             dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
             dispatch(
                 factoryOverviewActions.setSelectedDateRange({
-                    startDate: value.startDate,
-                    endDate: value.endDate,
+                    startDate,
+                    endDate,
                 })
             );
+            setIsTimeFilterOpen(false);
 
             if (!activeFactoryId) return;
             setHasSearched(true);
 
-            if (value.mode === 'PRESET' && primaryFilterId !== null) {
+            if (mode === 'PRESET' && primaryFilterId !== null) {
                 dispatch(
                     factoryOverviewActions.fetchSpaceOverview(
                         activeFactoryId,
@@ -572,13 +537,13 @@ const SpaceMonitoringPage: React.FC = () => {
                         secondaryShiftId ?? undefined
                     )
                 );
-            } else if (value.mode === 'CUSTOM_RANGE') {
+            } else {
                 dispatch(
                     factoryOverviewActions.fetchSpaceOverviewByDateRange(
                         activeFactoryId,
-                        value.startDate,
-                        value.endDate,
-                        value.shiftId ?? undefined
+                        startDate,
+                        endDate,
+                        primaryFilterId ?? undefined
                     )
                 );
             }
@@ -586,13 +551,9 @@ const SpaceMonitoringPage: React.FC = () => {
         [dispatch, activeFactoryId]
     );
 
-
     useEffect(() => {
         if (!activeFactoryId || hasSearched) return;
         if (!isDateRange && !selectedTimePeriod) return;
-        // When the URL carries a factoryId, wait until the param effect has
-        // applied it — otherwise activeFactoryId still falls back to the stale
-        // selectedSpaceId from the store and we'd fetch the wrong factory.
         const paramValue = searchParams.get('factoryId');
         if (paramValue && Number(paramValue) !== selectedFactoryId) return;
         setHasSearched(true);
@@ -614,7 +575,18 @@ const SpaceMonitoringPage: React.FC = () => {
                 )
             );
         }
-    }, [activeFactoryId, selectedFactoryId, searchParams, selectedTimePeriod, selectedShiftFilterId, hasSearched, isDateRange, selectedStartDate, selectedEndDate, dispatch]);
+    }, [
+        activeFactoryId,
+        selectedFactoryId,
+        searchParams,
+        selectedTimePeriod,
+        selectedShiftFilterId,
+        hasSearched,
+        isDateRange,
+        selectedStartDate,
+        selectedEndDate,
+        dispatch,
+    ]);
 
     const handleSearch = useCallback(() => {
         if (!activeFactoryId) return;
@@ -652,19 +624,54 @@ const SpaceMonitoringPage: React.FC = () => {
 
     const activeTimePeriodLabel = useMemo(() => {
         const currentLang = i18n.language;
+        const shiftFilter =
+            selectedShiftFilterId != null
+                ? industryFilters.find((f) => f.filterId === selectedShiftFilterId)
+                : timeFilterMode !== 'PRESET' && selectedTimePeriod != null
+                  ? industryFilters.find((f) => f.filterId === selectedTimePeriod)
+                  : null;
+        const shiftLabel = shiftFilter
+            ? currentLang === 'vi'
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
+            : null;
 
-        if (isCustomRangeMode) {
+        if (timeFilterMode === 'WEEK') {
+            const startStr = dayjs(selectedStartDate).format('DD/MM');
+            const endStr = dayjs(selectedEndDate).format('DD/MM');
+            const weekNum = dayjs(selectedStartDate).isoWeek();
+            const yearStr = dayjs(selectedStartDate).format('YYYY');
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', { week: weekNum, year: yearStr })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'MONTH') {
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: dayjs(selectedStartDate).format('MM'),
+                year: dayjs(selectedStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'QUARTER') {
+            const quarterNum = dayjs(selectedStartDate).quarter();
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: dayjs(selectedStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'YEAR') {
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: dayjs(selectedStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'CUSTOM_RANGE') {
             const dateLabel = `${dayjs(selectedStartDate).format('DD/MM')} → ${dayjs(selectedEndDate).format('DD/MM')}`;
-            if (selectedTimePeriod != null) {
-                const shiftFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-                const shiftLabel = shiftFilter
-                    ? currentLang === 'vi'
-                        ? shiftFilter.displayNameVi
-                        : shiftFilter.displayNameEn
-                    : null;
-                if (shiftLabel) return `${dateLabel} • ${shiftLabel}`;
-            }
-            return dateLabel;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
         }
 
         const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
@@ -676,21 +683,67 @@ const SpaceMonitoringPage: React.FC = () => {
 
         if (!primaryLabel) return null;
 
-        if (primaryFilter?.category === 'PERIOD' && selectedShiftFilterId != null) {
-            const shiftFilter = industryFilters.find((f) => f.filterId === selectedShiftFilterId);
-            const shiftLabel = shiftFilter
-                ? currentLang === 'vi'
-                    ? shiftFilter.displayNameVi
-                    : shiftFilter.displayNameEn
-                : null;
-            return shiftLabel ? `${primaryLabel} • ${shiftLabel}` : primaryLabel;
+        if (primaryFilter?.category === 'PERIOD' && shiftLabel) {
+            return `${primaryLabel} • ${shiftLabel}`;
         }
 
         return primaryLabel;
-    }, [industryFilters, selectedTimePeriod, selectedShiftFilterId, isCustomRangeMode, selectedStartDate, selectedEndDate, i18n.language]);
+    }, [
+        industryFilters,
+        selectedTimePeriod,
+        selectedShiftFilterId,
+        timeFilterMode,
+        selectedStartDate,
+        selectedEndDate,
+        i18n.language,
+        t,
+    ]);
 
-    // TEMP DISABLED: factory list grid — do not fetch all-factory cards on load
-    // Re-enable by restoring the loadFactoryCards useEffect when the factory cards grid is re-enabled
+    const currentPeriodId = useMemo(() => {
+        if (timeFilterMode !== 'PRESET') return null;
+        const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+        return primary?.category === 'PERIOD' ? selectedTimePeriod : null;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+
+    const currentShiftId = useMemo(() => {
+        if (timeFilterMode === 'PRESET') {
+            const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+            return primary?.category === 'PERIOD' ? selectedShiftFilterId : selectedTimePeriod;
+        }
+        return selectedTimePeriod;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod, selectedShiftFilterId]);
+
+    const timeFilterPopoverContent = useMemo(
+        () => (
+            <TimeFilterPopoverContent
+                currentMode={timeFilterMode}
+                currentPeriodId={currentPeriodId}
+                currentShiftId={currentShiftId}
+                currentStartDate={selectedStartDate}
+                currentEndDate={selectedEndDate}
+                groupedOptions={groupedTimePeriodOptions}
+                industryFilters={industryFilters}
+                isShiftActive={isShiftActive}
+                isMobile={isMobile}
+                isOpen={isTimeFilterOpen}
+                onApply={handleApplyTimeFilter}
+                onCancel={() => setIsTimeFilterOpen(false)}
+            />
+        ),
+        [
+            timeFilterMode,
+            currentPeriodId,
+            currentShiftId,
+            selectedStartDate,
+            selectedEndDate,
+            groupedTimePeriodOptions,
+            industryFilters,
+            isShiftActive,
+            isMobile,
+            isTimeFilterOpen,
+            handleApplyTimeFilter,
+        ]
+    );
 
     const headerActions = useMemo(
         () =>
@@ -710,31 +763,62 @@ const SpaceMonitoringPage: React.FC = () => {
                                     value: f.spaceId,
                                 }))}
                                 style={{ width: '100%' }}
-                                showSearch={{ filterOption: (input, option) => ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase()) }}
+                                showSearch={{
+                                    filterOption: (input, option) =>
+                                        ((option?.label as string) ?? '')
+                                            .toLowerCase()
+                                            .includes(input.toLowerCase()),
+                                }}
                             />
                         ))}
 
-                    <TimeFilterPopover
-                        industryFilters={industryFilters}
-                        value={timeFilterValue}
-                        onApply={handleTimeFilterApply}
+                    <Popover
+                        open={isTimeFilterOpen}
+                        onOpenChange={setIsTimeFilterOpen}
+                        trigger="click"
                         placement="bottomLeft"
-                    />
+                        content={timeFilterPopoverContent}
+                    >
+                        <Button
+                            block
+                            style={{
+                                borderRadius: 8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-start',
+                                gap: 4,
+                            }}
+                        >
+                            <span style={{ flexShrink: 0 }}>
+                                {t('spaceMonitoring.timeFilter.time')}:
+                            </span>
+                            <Typography.Text
+                                ellipsis
+                                style={{
+                                    maxWidth: 'calc(100% - 76px)',
+                                    color: 'inherit',
+                                    lineHeight: 'inherit',
+                                }}
+                            >
+                                {activeTimePeriodLabel ?? t('common.filter')}
+                            </Typography.Text>
+                        </Button>
+                    </Popover>
 
                     <Button
                         block
-                        type='primary'
+                        type="primary"
                         icon={<ReloadOutlined />}
                         onClick={handleSearch}
                         loading={isLoading}
                         style={{ borderRadius: 8 }}
                     >
-                        {i18n.language === 'vi' ? 'Làm mới dữ liệu' : 'Refresh data'}
+                        {t('spaceMonitoring.timeFilter.refreshData')}
                     </Button>
 
                     <Button
                         block
-                        type='primary'
+                        type="primary"
                         icon={<FileExcelOutlined />}
                         onClick={handleExportExcel}
                         loading={isExporting}
@@ -755,8 +839,8 @@ const SpaceMonitoringPage: React.FC = () => {
                         flexWrap: 'wrap',
                     }}
                 >
-                    {selectedFactoryId !== null && (
-                        isLoadingSpaces ? (
+                    {selectedFactoryId !== null &&
+                        (isLoadingSpaces ? (
                             <Skeleton.Input active style={{ width: 220, height: 32 }} />
                         ) : (
                             <Select
@@ -769,21 +853,51 @@ const SpaceMonitoringPage: React.FC = () => {
                                     value: f.spaceId,
                                 }))}
                                 style={{ width: 220 }}
-                                showSearch={{ filterOption: (input, option) => ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase()) }}
+                                showSearch={{
+                                    filterOption: (input, option) =>
+                                        ((option?.label as string) ?? '')
+                                            .toLowerCase()
+                                            .includes(input.toLowerCase()),
+                                }}
                             />
-                        )
-                    )}
+                        ))}
 
-                    <TimeFilterPopover
-                        industryFilters={industryFilters}
-                        value={timeFilterValue}
-                        onApply={handleTimeFilterApply}
+                    <Popover
+                        open={isTimeFilterOpen}
+                        onOpenChange={setIsTimeFilterOpen}
+                        trigger="click"
                         placement="bottomRight"
-                    />
-
-                    <Tooltip
-                        title={i18n.language === 'vi' ? 'Làm mới dữ liệu' : 'Refresh data'}
+                        content={timeFilterPopoverContent}
                     >
+                        <Tooltip title={activeTimePeriodLabel}>
+                            <Button
+                                style={{
+                                    borderRadius: 8,
+                                    width: 220,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start',
+                                    gap: 4,
+                                }}
+                            >
+                                <span style={{ flexShrink: 0 }}>
+                                    {t('spaceMonitoring.timeFilter.time')}:
+                                </span>
+                                <Typography.Text
+                                    ellipsis
+                                    style={{
+                                        maxWidth: 135,
+                                        color: 'inherit',
+                                        lineHeight: 'inherit',
+                                    }}
+                                >
+                                    {activeTimePeriodLabel ?? t('common.filter')}
+                                </Typography.Text>
+                            </Button>
+                        </Tooltip>
+                    </Popover>
+
+                    <Tooltip title={t('spaceMonitoring.timeFilter.refreshData')}>
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={handleSearch}
@@ -791,12 +905,12 @@ const SpaceMonitoringPage: React.FC = () => {
                             style={{
                                 borderRadius: 8,
                             }}
-                            type='primary'
+                            type="primary"
                         />
                     </Tooltip>
 
                     <Button
-                        type='primary'
+                        type="primary"
                         icon={<FileExcelOutlined />}
                         onClick={handleExportExcel}
                         loading={isExporting}
@@ -822,39 +936,22 @@ const SpaceMonitoringPage: React.FC = () => {
             selectedTimePeriod,
             router,
             t,
-            industryFilters,
-            timeFilterValue,
-            handleTimeFilterApply,
+            timeFilterPopoverContent,
+            isTimeFilterOpen,
             activeTimePeriodLabel,
             isMobile,
             i18n.language,
         ]
     );
 
-    // const selectedFactoryName = useMemo(() => {
-    //     if (!selectedFactoryId) return null;
-    //     return spaces.find((space) => space.spaceId === selectedFactoryId)?.spaceName ?? null;
-    // }, [selectedFactoryId, spaces]);
-
-    // const breadcrumbItems = useMemo(() => {
-    //     const base = [
-    //         { title: <Link href="/">{t('common.home', 'Home')}</Link> },
-    //         {
-    //             title: (
-    //                 <Link href="/admin/space-monitoring">
-    //                     {t('permissionSubjects.space_monitoring')}
-    //                 </Link>
-    //             ),
-    //         },
-    //     ];
-    //     if (!selectedFactoryName) return base;
-    //     return [
-    //         ...base,
-    //         {
-    //             title: <span>{selectedFactoryName}</span>,
-    //         },
-    //     ];
-    // }, [selectedFactoryId, selectedFactoryName, t]);
+    const gridFilterInfo = useMemo(
+        () => ({
+            factoryName: spaces.find((s) => s.spaceId === activeFactoryId)?.spaceName,
+            timePeriod: activeTimePeriodLabel ?? undefined,
+            timePeriodValue: selectedTimePeriod?.toString() ?? undefined,
+        }),
+        [spaces, activeFactoryId, activeTimePeriodLabel, selectedTimePeriod]
+    );
 
     const factoryStats = useMemo(() => {
         if (!spaceData) {
@@ -876,28 +973,9 @@ const SpaceMonitoringPage: React.FC = () => {
         };
     }, [spaceData]);
 
-    // const factoryGridStats = useMemo(() => {
-    //     const allOverviews = Object.values(factoryCardsData).filter(Boolean) as SpaceOverview[];
-    //     if (allOverviews.length === 0) {
-    //         return { energyConsumption: 0, totalRunTime: 0, totalStopTime: 0, totalErrorTime: 0 };
-    //     }
-    //     const allMachines = allOverviews.flatMap(collectAllMachines);
-    //     const stats = computeStatsFromMachines(allMachines);
-    //     return {
-    //         energyConsumption: stats.energyKwh,
-    //         totalRunTime: stats.runtimeSeconds / 3600,
-    //         totalStopTime: stats.idleSeconds / 3600,
-    //         totalErrorTime: stats.errorSeconds / 3600,
-    //     };
-    // }, [factoryCardsData]);
-
     const showFactoryCards = selectedFactoryId === null;
     const isZoneViewLoading = !showFactoryCards && hasSearched && isLoading;
 
-    // PART 1: redirect to first factory when spaces are loaded and no factory is selected.
-    // Skip when the URL already carries a factoryId (e.g. arriving from floor-map) —
-    // selectedFactoryId is still null on first render and the param effect hasn't
-    // applied it yet, so replacing here would clobber the requested factory.
     useEffect(() => {
         if (!showFactoryCards || isLoadingSpaces || spaces.length === 0) return;
         if (searchParams.get('factoryId')) return;
@@ -911,13 +989,7 @@ const SpaceMonitoringPage: React.FC = () => {
                 rightContent={headerActions}
             />
 
-            {/* <Breadcrumb
-                items={breadcrumbItems}
-                style={{ marginBottom: 16, color: 'inherit' }}
-            /> */}
-
             {showFactoryCards ? (
-                // PART 1: factory list disabled — show spinner while fetching, then redirect fires
                 isLoadingSpaces ? (
                     <div style={{ padding: '80px 0', textAlign: 'center' }}>
                         <Spin size="large" />
@@ -926,9 +998,8 @@ const SpaceMonitoringPage: React.FC = () => {
                     <div style={{ padding: '80px 0', textAlign: 'center', color: '#999' }}>
                         No factories found.
                     </div>
-                ) : null /* redirect is in flight */
+                ) : null
             ) : !hasSearched ? (
-                // PART 2a: factory selected but Search not yet clicked — show placeholder
                 <div style={{ padding: '80px 0', textAlign: 'center', color: '#999' }}>
                     <Typography.Text type="secondary">
                         {t(
@@ -945,7 +1016,6 @@ const SpaceMonitoringPage: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                // PART 2b: factory detail view — data loaded after Search click
                 <>
                     <FactoryStatsCards
                         energyConsumption={factoryStats.energyConsumption}
@@ -958,84 +1028,12 @@ const SpaceMonitoringPage: React.FC = () => {
                         spaceData={spaceData}
                         expandedSpaces={expandedSpaces}
                         onToggle={handleToggleSpace}
-                        filterInfo={{
-                            factoryName: spaces.find((s) => s.spaceId === activeFactoryId)
-                                ?.spaceName,
-                            timePeriod: activeTimePeriodLabel ?? undefined,
-                            timePeriodValue: selectedTimePeriod?.toString() ?? undefined,
-                        }}
+                        filterInfo={gridFilterInfo}
                     />
                 </>
             )}
-
         </>
     );
 };
-
-/*
- * TEMP DISABLED — original factory list return preserved below for restore.
- * To re-enable: remove the redirect useEffect above and swap this back in.
- *
- * return (
- *     <>
- *         <ResponsivePageHeader title={t('permissionSubjects.space_monitoring')} rightContent={headerActions} />
- *         <Breadcrumb items={breadcrumbItems} style={{ marginBottom: 16, color: 'inherit' }} />
- *
- *         {showFactoryCards ? (
- *             isLoadingSpaces ? (
- *                 <div style={{ padding: '80px 0', textAlign: 'center' }}>
- *                     <Spin size="large" description={t('common.loading')} />
- *                 </div>
- *             ) : (
- *                 <>
- *                     <FactoryStatsCards
- *                         energyConsumption={factoryGridStats.energyConsumption}
- *                         totalRunTime={factoryGridStats.totalRunTime}
- *                         totalStopTime={factoryGridStats.totalStopTime}
- *                         totalErrorTime={factoryGridStats.totalErrorTime}
- *                     />
- *                     <FactoryCardsGrid
- *                         factories={spaces}
- *                         overviewMap={factoryCardsData}
- *                         loading={isFactoryCardsLoading}
- *                         onSelect={handleFactorySelect}
- *                     />
- *                 </>
- *             )
- *         ) : isZoneViewLoading ? (
- *             <div style={{ padding: '80px 0', textAlign: 'center' }}>
- *                 <Spin size="large" description={t('common.loading')} />
- *             </div>
- *         ) : (
- *             <>
- *                 <Button
- *                     type="link"
- *                     icon={<LeftOutlined />}
- *                     onClick={handleBackToFactories}
- *                     style={{ padding: 0, marginBottom: 16 }}
- *                 >
- *                     {t('factoryOverview.allFactories', 'All factories')}
- *                 </Button>
- *                 <FactoryStatsCards
- *                     energyConsumption={factoryStats.energyConsumption}
- *                     totalRunTime={factoryStats.totalRunTime}
- *                     totalStopTime={factoryStats.totalStopTime}
- *                     totalErrorTime={factoryStats.totalErrorTime}
- *                 />
- *                 <SpaceOverviewGrid
- *                     spaceData={spaceData}
- *                     expandedSpaces={expandedSpaces}
- *                     onToggle={handleToggleSpace}
- *                     filterInfo={{
- *                         factoryName: spaces.find((s) => s.spaceId === activeFactoryId)?.spaceName,
- *                         timePeriod: timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)?.label,
- *                         timePeriodValue: selectedTimePeriod?.toString() ?? undefined,
- *                     }}
- *                 />
- *             </>
- *         )}
- *     </>
- * );
- */
 
 export default SpaceMonitoringPage;

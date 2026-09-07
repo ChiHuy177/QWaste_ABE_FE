@@ -178,4 +178,4 @@ const FactoryStatsCards: React.FC<FactoryStatsCardsProps> = ({
     );
 };
 
-export default FactoryStatsCards;
+export default React.memo(FactoryStatsCards);
