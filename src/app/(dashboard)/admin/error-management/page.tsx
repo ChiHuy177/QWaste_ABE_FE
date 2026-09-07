@@ -36,11 +36,14 @@ import { ErrorManagementService } from '@/services/ErrorManagementService';
 import { getErrorTableColumns } from './_components/Column';
 import { CreateOrEditErrorModal } from './_components/CreateOrEditErrorModal';
 import { ErrorDetailDrawer } from './_components/ErrorDetailDrawer';
+import { IndustryFilterService } from '@/services/IndustryFilterService';
+import { IndustryFilter } from '@/types/IndustryFilter';
 import {
     TimeFilterPopoverContent,
-    ErrorPeriodFilterMode,
-    ErrorTimeFilterApplyPayload,
-} from './_components/TimeFilterPopoverContent';
+    PeriodFilterMode,
+    TimeFilterApplyPayload,
+    formatTimeFilterLabel,
+} from '@/components/shared/filters/TimeFilterPopover';
 
 dayjs.extend(isoWeek);
 dayjs.extend(quarterOfYear);
@@ -68,8 +71,10 @@ export default function ErrorManagementPage() {
     const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
 
     // Time period filter state (default to all time)
+    const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
+    const [selectedTimePeriod, setSelectedTimePeriod] = useState<number | null>(null);
     const [isTimeFilterOpen, setIsTimeFilterOpen] = useState<boolean>(false);
-    const [timeFilterMode, setTimeFilterMode] = useState<ErrorPeriodFilterMode | null>(null);
+    const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode | null>(null);
     const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
     const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
 
@@ -86,61 +91,67 @@ export default function ErrorManagementPage() {
     const [selectedIncident, setSelectedIncident] = useState<ErrorIncident | null>(null);
     const [modalSubmitting, setModalSubmitting] = useState<boolean>(false);
 
-    // Active time period label formatted
-    const activeTimePeriodLabel = useMemo(() => {
-        if (!timeFilterMode || !selectedStartDate || !selectedEndDate) {
-            return t('timeFilter.all', { defaultValue: 'Tất cả thời gian' });
-        }
+    // Fetch industry filters for quick select
+    useEffect(() => {
+        const fetchIndustryFilters = async () => {
+            try {
+                const filters = await IndustryFilterService.getIndustryFiltersForPicking();
+                setIndustryFilters(filters);
+            } catch (error) {
+                console.error('Failed to fetch industry filters:', error);
+            }
+        };
+        fetchIndustryFilters();
+    }, []);
 
-        if (timeFilterMode === 'WEEK') {
-            const startStr = dayjs(selectedStartDate).format('DD/MM');
-            const endStr = dayjs(selectedEndDate).format('DD/MM');
-            const weekNum = dayjs(selectedStartDate).isoWeek();
-            const yearStr = dayjs(selectedStartDate).format('YYYY');
-            return `${t('timeFilter.weekLabel', {
-                week: weekNum,
-                year: yearStr,
-                defaultValue: `Tuần ${weekNum}, ${yearStr}`,
-            })} (${startStr} → ${endStr})`;
-        }
+    const timePeriodOptions = useMemo((): {
+        label: string;
+        value: number;
+        category: IndustryFilter['category'];
+    }[] => {
+        const currentLang = i18n.language;
 
-        if (timeFilterMode === 'MONTH') {
-            const monthStr = dayjs(selectedStartDate).format('MM');
-            const yearStr = dayjs(selectedStartDate).format('YYYY');
-            return t('timeFilter.monthLabel', {
-                month: monthStr,
-                year: yearStr,
-                defaultValue: `Tháng ${monthStr}/${yearStr}`,
-            });
-        }
+        return industryFilters.map((filter: IndustryFilter) => ({
+            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+            value: filter.filterId,
+            category: filter.category,
+        }));
+    }, [industryFilters, i18n.language]);
 
-        if (timeFilterMode === 'QUARTER') {
-            const quarterNum = dayjs(selectedStartDate).quarter();
-            const yearStr = dayjs(selectedStartDate).format('YYYY');
-            return t('timeFilter.quarterLabel', {
-                quarter: quarterNum,
-                year: yearStr,
-                defaultValue: `Quý ${quarterNum}/${yearStr}`,
-            });
-        }
+    const groupedTimePeriodOptions = useMemo(
+        () => ({
+            PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
+        }),
+        [timePeriodOptions]
+    );
 
-        if (timeFilterMode === 'YEAR') {
-            const yearStr = dayjs(selectedStartDate).format('YYYY');
-            return t('timeFilter.yearLabel', {
-                year: yearStr,
-                defaultValue: `Năm ${yearStr}`,
-            });
-        }
+    // Active time period label formatted using shared helper (showShifts: false)
+    const activeTimePeriodLabel = useMemo(
+        () =>
+            formatTimeFilterLabel({
+                mode: timeFilterMode,
+                startDate: selectedStartDate,
+                endDate: selectedEndDate,
+                periodId: selectedTimePeriod,
+                industryFilters,
+                showShifts: false,
+                lang: i18n.language,
+                t,
+            }),
+        [
+            timeFilterMode,
+            selectedStartDate,
+            selectedEndDate,
+            selectedTimePeriod,
+            industryFilters,
+            i18n.language,
+            t,
+        ]
+    );
 
-        if (timeFilterMode === 'CUSTOM_RANGE') {
-            return `${dayjs(selectedStartDate).format('DD/MM/YYYY')} → ${dayjs(selectedEndDate).format('DD/MM/YYYY')}`;
-        }
-
-        return t('timeFilter.all', { defaultValue: 'Tất cả thời gian' });
-    }, [timeFilterMode, selectedStartDate, selectedEndDate, t]);
-
-    const handleApplyTimeFilter = useCallback((payload: ErrorTimeFilterApplyPayload) => {
+    const handleApplyTimeFilter = useCallback((payload: TimeFilterApplyPayload) => {
         setTimeFilterMode(payload.mode);
+        setSelectedTimePeriod(payload.primaryFilterId);
         setSelectedStartDate(payload.startDate);
         setSelectedEndDate(payload.endDate);
         setIsTimeFilterOpen(false);
@@ -149,11 +160,44 @@ export default function ErrorManagementPage() {
 
     const handleResetTimeFilter = useCallback(() => {
         setTimeFilterMode(null);
+        setSelectedTimePeriod(null);
         setSelectedStartDate(null);
         setSelectedEndDate(null);
         setIsTimeFilterOpen(false);
         setPage(0);
     }, []);
+
+    const timeFilterPopoverContent = useMemo(
+        () => (
+            <TimeFilterPopoverContent
+                currentMode={timeFilterMode}
+                currentPeriodId={selectedTimePeriod}
+                currentStartDate={selectedStartDate}
+                currentEndDate={selectedEndDate}
+                groupedOptions={groupedTimePeriodOptions}
+                industryFilters={industryFilters}
+                showShifts={false}
+                isMobile={isMobile}
+                isOpen={isTimeFilterOpen}
+                onApply={handleApplyTimeFilter}
+                onReset={handleResetTimeFilter}
+                onCancel={() => setIsTimeFilterOpen(false)}
+                defaultDate="2025-08-25"
+            />
+        ),
+        [
+            timeFilterMode,
+            selectedTimePeriod,
+            selectedStartDate,
+            selectedEndDate,
+            groupedTimePeriodOptions,
+            industryFilters,
+            isMobile,
+            isTimeFilterOpen,
+            handleApplyTimeFilter,
+            handleResetTimeFilter,
+        ]
+    );
 
     const handleSearchChange = useCallback((value: string) => {
         setSearchTerm(value.trim());
@@ -442,6 +486,7 @@ export default function ErrorManagementPage() {
                                         icon={<FilterOutlined />}
                                         type={showAdvancedFilters ? 'primary' : 'default'}
                                         onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                        style={{ borderRadius: 8 }}
                                     />
                                 </Badge>
                             </FilterDrawer>
@@ -453,30 +498,19 @@ export default function ErrorManagementPage() {
                             onOpenChange={setIsTimeFilterOpen}
                             trigger="click"
                             placement="bottomRight"
-                            content={
-                                <TimeFilterPopoverContent
-                                    currentMode={timeFilterMode}
-                                    currentStartDate={selectedStartDate}
-                                    currentEndDate={selectedEndDate}
-                                    isOpen={isTimeFilterOpen}
-                                    onApply={handleApplyTimeFilter}
-                                    onReset={handleResetTimeFilter}
-                                    onCancel={() => setIsTimeFilterOpen(false)}
-                                    defaultDate="2025-08-25"
-                                />
-                            }
+                            content={timeFilterPopoverContent}
                         >
                             <Tooltip title={activeTimePeriodLabel}>
                                 <Button
+                                    icon={<CalendarOutlined />}
                                     style={{
                                         borderRadius: 8,
+                                        width: 220,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'flex-start',
                                         gap: 6,
-                                        minWidth: 170,
                                     }}
-                                    icon={<CalendarOutlined />}
                                 >
                                     <span
                                         style={{ flexShrink: 0, color: token.colorTextSecondary }}
@@ -486,13 +520,13 @@ export default function ErrorManagementPage() {
                                     <Typography.Text
                                         ellipsis
                                         style={{
-                                            maxWidth: 140,
+                                            maxWidth: 125,
                                             color: 'inherit',
                                             lineHeight: 'inherit',
-                                            fontWeight: timeFilterMode ? 600 : 400,
+                                            fontWeight: 500,
                                         }}
                                     >
-                                        {activeTimePeriodLabel}
+                                        {activeTimePeriodLabel ?? t('common.filter')}
                                     </Typography.Text>
                                 </Button>
                             </Tooltip>
