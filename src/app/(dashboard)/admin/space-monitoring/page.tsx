@@ -358,10 +358,20 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
-                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
+                                | 'RUNTIME'
+                                | 'IDLE'
+                                | 'ERROR'
+                                | 'COMPLETE'
+                                | 'OFFLINE'
+                                | 'UNKNOWN';
                         };
                         newStatus:
-                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
+                            | 'RUNTIME'
+                            | 'IDLE'
+                            | 'ERROR'
+                            | 'COMPLETE'
+                            | 'OFFLINE'
+                            | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
