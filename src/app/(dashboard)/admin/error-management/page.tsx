@@ -31,16 +31,9 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import FilterDrawer from '@/components/shared/filters/FilterDrawer';
 import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
-import {
-    CreateErrorIncidentDto,
-    ErrorIncident,
-    ErrorStatus,
-    ErrorSummaryStats,
-} from '@/types/ErrorManagement';
+import { CreateErrorIncidentDto, ErrorIncident, ErrorStatus } from '@/types/ErrorManagement';
 import { ErrorManagementService } from '@/services/ErrorManagementService';
-import { initialErrorSummaryStats } from '@/configs/mockData/errorManagementMockData';
 import { getErrorTableColumns } from './_components/Column';
-import { ErrorInfoBar } from './_components/ErrorInfoBar';
 import { CreateOrEditErrorModal } from './_components/CreateOrEditErrorModal';
 import { ErrorDetailDrawer } from './_components/ErrorDetailDrawer';
 import {
@@ -64,7 +57,6 @@ export default function ErrorManagementPage() {
     usePageTitle(t('errorManagement.title'));
 
     const [incidents, setIncidents] = useState<ErrorIncident[]>([]);
-    const [stats, setStats] = useState<ErrorSummaryStats>(initialErrorSummaryStats);
     const [loading, setLoading] = useState<boolean>(true);
     const [isExporting, setIsExporting] = useState<boolean>(false);
 
@@ -75,11 +67,11 @@ export default function ErrorManagementPage() {
     const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
     const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
 
-    // Time period filter state (default to MONTH 2025-08 where incidents exist)
+    // Time period filter state (default to all time)
     const [isTimeFilterOpen, setIsTimeFilterOpen] = useState<boolean>(false);
-    const [timeFilterMode, setTimeFilterMode] = useState<ErrorPeriodFilterMode | null>('MONTH');
-    const [selectedStartDate, setSelectedStartDate] = useState<string | null>('2025-08-01');
-    const [selectedEndDate, setSelectedEndDate] = useState<string | null>('2025-08-31');
+    const [timeFilterMode, setTimeFilterMode] = useState<ErrorPeriodFilterMode | null>(null);
+    const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
+    const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
 
     // Pagination
     const [page, setPage] = useState(0);
@@ -178,10 +170,7 @@ export default function ErrorManagementPage() {
                 startDate: selectedStartDate || undefined,
                 endDate: selectedEndDate || undefined,
             };
-            const [listResult, statsResult] = await Promise.all([
-                ErrorManagementService.getIncidents(filterParams),
-                ErrorManagementService.getSummaryStats(filterParams),
-            ]);
+            const listResult = await ErrorManagementService.getIncidents(filterParams);
 
             // Additional client-side filter matching advanced fields
             let data = listResult.data;
@@ -199,7 +188,6 @@ export default function ErrorManagementPage() {
             }
 
             setIncidents(data);
-            setStats(statsResult);
         } catch (_err) {
             toast.error(t('errorManagement.messages.fetchError'));
         } finally {
@@ -539,14 +527,6 @@ export default function ErrorManagementPage() {
                         </Button>
                     </div>
                 }
-            />
-
-            {/* Filter Info Bar */}
-            <ErrorInfoBar
-                totalIncidents={stats.totalIncidents}
-                displayedIncidents={incidents.length}
-                stats={stats}
-                isFiltered={Boolean(searchTerm || activeFilterCount > 0)}
             />
 
             {/* Active Filter Tags */}
