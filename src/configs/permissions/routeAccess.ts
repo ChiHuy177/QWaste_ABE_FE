@@ -54,6 +54,10 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = {
         subject: 'step',
         action: 'view',
     },
+    '/admin/categories/industryFilter': {
+        subject: 'industry_filter',
+        action: 'view',
+    },
     '/admin/setting': {
         subject: 'profile',
         action: 'view',

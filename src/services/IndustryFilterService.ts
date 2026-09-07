@@ -3,16 +3,20 @@ import {
     IndustryFilterFormData,
     IndustryFilterUpdateData,
 } from '@/types/IndustryFilter';
+import { PaginatedResult } from '@/types/Common';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
 export class IndustryFilterService {
     static async getAllIndustryFilters(): Promise<IndustryFilter[]> {
-        const response = await NetworkService.requestJson<IndustryFilter[]>({
+        const response = await NetworkService.requestJson<
+            IndustryFilter[] | PaginatedResult<IndustryFilter>
+        >({
             method: 'GET',
             url: ENDPOINTS.INDUSTRY_FILTER.BASE,
         });
-        return response.result as IndustryFilter[];
+        const result = response.result;
+        return Array.isArray(result) ? result : (result?.content ?? []);
     }
 
     static async getIndustryFiltersForPicking(): Promise<IndustryFilter[]> {
