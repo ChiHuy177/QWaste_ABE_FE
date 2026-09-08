@@ -1,7 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, DatePicker, Divider, Radio, Space, Tag, Typography, theme } from 'antd';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+    Button,
+    DatePicker,
+    Divider,
+    Grid,
+    Popover,
+    Radio,
+    Space,
+    Tag,
+    theme,
+    Tooltip,
+    Typography,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import dayjs, { Dayjs } from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
@@ -21,7 +33,7 @@ export interface TimeFilterApplyPayload {
     endDate: string;
 }
 
-export interface TimeFilterPopoverContentProps {
+export interface TimeFilterPopoverProps {
     currentMode: PeriodFilterMode;
     currentPeriodId: number | null;
     currentShiftId: number | null;
@@ -33,13 +45,13 @@ export interface TimeFilterPopoverContentProps {
     };
     industryFilters: IndustryFilter[];
     isShiftActive: (filter: IndustryFilter) => boolean;
-    isMobile: boolean;
-    isOpen: boolean;
     onApply: (payload: TimeFilterApplyPayload) => void;
-    onCancel: () => void;
+    placement?: 'bottomLeft' | 'bottomRight';
 }
 
-export function computeDateRangeForMode(
+const { useBreakpoint } = Grid;
+
+function computeDateRangeForMode(
     mode: PeriodFilterMode,
     values: {
         dateRange: [Dayjs, Dayjs];
@@ -412,8 +424,12 @@ const FooterActions = React.memo<FooterActionsProps>(
 );
 FooterActions.displayName = 'FooterActions';
 
-// Main Popover Component
-export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> = ({
+// Self-contained Popover: owns the trigger Button and open state itself, unlike the
+// previous split (page.tsx wired Popover + trigger + isOpen, this file only rendered
+// the inner content). One instantiation per breakpoint still needed for the differing
+// trigger layout (block+no-tooltip on mobile vs fixed-width+Tooltip on desktop) — the
+// caller picks that via `placement`, everything else adapts internally via isMobile.
+const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     currentMode,
     currentPeriodId,
     currentShiftId,
@@ -422,38 +438,45 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
     groupedOptions,
     industryFilters,
     isShiftActive,
-    isMobile,
-    isOpen,
     onApply,
-    onCancel,
+    placement = 'bottomRight',
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { token } = theme.useToken();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
+    const [open, setOpen] = useState(false);
     const [draftMode, setDraftMode] = useState<PeriodFilterMode>(currentMode);
     const [draftPeriodId, setDraftPeriodId] = useState<number | null>(currentPeriodId);
     const [draftShiftId, setDraftShiftId] = useState<number | null>(currentShiftId);
-    const [draftWeek, setDraftWeek] = useState<Dayjs>(dayjs(currentStartDate));
-    const [draftMonth, setDraftMonth] = useState<Dayjs>(dayjs(currentStartDate));
-    const [draftQuarter, setDraftQuarter] = useState<Dayjs>(dayjs(currentStartDate));
-    const [draftYear, setDraftYear] = useState<Dayjs>(dayjs(currentStartDate));
+    const [draftWeek, setDraftWeek] = useState<Dayjs>(() => dayjs(currentStartDate));
+    const [draftMonth, setDraftMonth] = useState<Dayjs>(() => dayjs(currentStartDate));
+    const [draftQuarter, setDraftQuarter] = useState<Dayjs>(() => dayjs(currentStartDate));
+    const [draftYear, setDraftYear] = useState<Dayjs>(() => dayjs(currentStartDate));
     const [draftDateRange, setDraftDateRange] = useState<[Dayjs, Dayjs]>([
         dayjs(currentStartDate),
         dayjs(currentEndDate),
     ]);
 
-    useEffect(() => {
-        if (isOpen) {
-            setDraftMode(currentMode);
-            setDraftPeriodId(currentPeriodId);
-            setDraftShiftId(currentShiftId);
-            setDraftDateRange([dayjs(currentStartDate), dayjs(currentEndDate)]);
-            setDraftWeek(dayjs(currentStartDate));
-            setDraftMonth(dayjs(currentStartDate));
-            setDraftQuarter(dayjs(currentStartDate));
-            setDraftYear(dayjs(currentStartDate));
-        }
-    }, [isOpen, currentMode, currentPeriodId, currentShiftId, currentStartDate, currentEndDate]);
+    const syncDraft = useCallback(() => {
+        setDraftMode(currentMode);
+        setDraftPeriodId(currentPeriodId);
+        setDraftShiftId(currentShiftId);
+        setDraftWeek(dayjs(currentStartDate));
+        setDraftMonth(dayjs(currentStartDate));
+        setDraftQuarter(dayjs(currentStartDate));
+        setDraftYear(dayjs(currentStartDate));
+        setDraftDateRange([dayjs(currentStartDate), dayjs(currentEndDate)]);
+    }, [currentMode, currentPeriodId, currentShiftId, currentStartDate, currentEndDate]);
+
+    const handleOpenChange = useCallback(
+        (nextOpen: boolean) => {
+            if (nextOpen) syncDraft();
+            setOpen(nextOpen);
+        },
+        [syncDraft]
+    );
 
     const handleReset = useCallback(() => {
         const activeShift = industryFilters.find(
@@ -520,6 +543,7 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
             startDate,
             endDate,
         });
+        setOpen(false);
     }, [
         draftMode,
         draftPeriodId,
@@ -555,7 +579,68 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
     const isApplyDisabled =
         draftMode === 'PRESET' && draftPeriodId === null && draftShiftId === null;
 
-    return (
+    // Trigger-button label, resolved from the committed (applied) filter — not the draft
+    // being edited inside the popover. Mirrors the old page-level activeTimePeriodLabel.
+    const activeLabel = useMemo(() => {
+        const currentLang = i18n.language;
+        const shiftFilter =
+            currentShiftId != null ? industryFilters.find((f) => f.filterId === currentShiftId) : null;
+        const shiftLabel = shiftFilter
+            ? currentLang === 'vi'
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
+            : null;
+
+        if (currentMode === 'WEEK') {
+            const startStr = dayjs(currentStartDate).format('DD/MM');
+            const endStr = dayjs(currentEndDate).format('DD/MM');
+            const weekNum = dayjs(currentStartDate).isoWeek();
+            const yearStr = dayjs(currentStartDate).format('YYYY');
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', { week: weekNum, year: yearStr })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'MONTH') {
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: dayjs(currentStartDate).format('MM'),
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'QUARTER') {
+            const quarterNum = dayjs(currentStartDate).quarter();
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'YEAR') {
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'CUSTOM_RANGE') {
+            const dateLabel = `${dayjs(currentStartDate).format('DD/MM')} → ${dayjs(currentEndDate).format('DD/MM')}`;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
+        }
+
+        const period = industryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
+            ? currentLang === 'vi'
+                ? period.displayNameVi
+                : period.displayNameEn
+            : null;
+
+        if (!periodLabel) return shiftLabel;
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
+    }, [currentMode, currentPeriodId, currentShiftId, currentStartDate, currentEndDate, industryFilters, i18n.language, t]);
+
+    const content = (
         <div style={{ width: isMobile ? 'calc(100vw - 48px)' : 340, maxWidth: 340 }}>
             <Typography.Text strong style={{ fontSize: 14 }}>
                 {t('spaceMonitoring.timeFilter.title')}
@@ -621,13 +706,19 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                     </Typography.Text>
                     <DatePicker
                         picker="week"
+                        showWeek={false}
                         value={draftWeek}
                         onChange={(date) => date && setDraftWeek(date)}
+                        // Default week format ("2026-37") surfaces the raw ISO week number,
+                        // which reads as a confusing extra "week" to users — show the
+                        // resolved date range instead.
+                        format={(date) =>
+                            `${date.startOf('isoWeek').format('DD/MM')} - ${date.endOf('isoWeek').format('DD/MM/YYYY')}`
+                        }
                         style={{ width: '100%', borderRadius: 6 }}
                         placeholder={t('spaceMonitoring.timeFilter.selectWeek')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {renderDatePreview(draftWeek.startOf('isoWeek'), draftWeek.endOf('isoWeek'))}
                 </div>
             )}
 
@@ -691,10 +782,7 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                         placeholder={t('spaceMonitoring.timeFilter.selectQuarter')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {renderDatePreview(
-                        draftQuarter.startOf('quarter'),
-                        draftQuarter.endOf('quarter')
-                    )}
+                    {renderDatePreview(draftQuarter.startOf('quarter'), draftQuarter.endOf('quarter'))}
                 </div>
             )}
 
@@ -766,7 +854,7 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
             {/* Action buttons */}
             <FooterActions
                 onReset={handleReset}
-                onCancel={onCancel}
+                onCancel={() => setOpen(false)}
                 onApply={handleApplyClick}
                 isApplyDisabled={isApplyDisabled}
                 resetLabel={t('common.reset')}
@@ -775,6 +863,58 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
             />
         </div>
     );
+
+    return (
+        <Popover
+            open={open}
+            onOpenChange={handleOpenChange}
+            trigger="click"
+            placement={placement}
+            content={content}
+        >
+            {isMobile ? (
+                <Button
+                    block
+                    style={{
+                        borderRadius: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: 4,
+                    }}
+                >
+                    <span style={{ flexShrink: 0 }}>{t('spaceMonitoring.timeFilter.time')}:</span>
+                    <Typography.Text
+                        ellipsis
+                        style={{ maxWidth: 'calc(100% - 76px)', color: 'inherit', lineHeight: 'inherit' }}
+                    >
+                        {activeLabel ?? t('common.filter')}
+                    </Typography.Text>
+                </Button>
+            ) : (
+                <Tooltip title={activeLabel}>
+                    <Button
+                        style={{
+                            borderRadius: 8,
+                            width: 220,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start',
+                            gap: 4,
+                        }}
+                    >
+                        <span style={{ flexShrink: 0 }}>{t('spaceMonitoring.timeFilter.time')}:</span>
+                        <Typography.Text
+                            ellipsis
+                            style={{ maxWidth: 135, color: 'inherit', lineHeight: 'inherit' }}
+                        >
+                            {activeLabel ?? t('common.filter')}
+                        </Typography.Text>
+                    </Button>
+                </Tooltip>
+            )}
+        </Popover>
+    );
 };
 
-export default React.memo(TimeFilterPopoverContent);
+export default TimeFilterPopover;

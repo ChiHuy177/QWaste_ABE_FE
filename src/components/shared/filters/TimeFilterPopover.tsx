@@ -37,7 +37,8 @@ dayjs.extend(quarterOfYear);
 // ISO 8601: a year has 53 weeks iff Jan 1 falls on a Thursday, or it's a leap
 // year and Jan 1 falls on a Wednesday — captured by this day-of-week congruence.
 function isoWeeksInYear(year: number): number {
-    const p = (y: number) => (y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400)) % 7;
+    const p = (y: number) =>
+        (y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400)) % 7;
     return p(year) === 4 || p(year - 1) === 3 ? 53 : 52;
 }
 
@@ -116,7 +117,9 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
     const [selectedQuarter, setSelectedQuarter] = useState<number | null>(null);
     const [draftGrain, setDraftGrain] = useState<TimeGrain | null>(value.grain ?? null);
-    const [draftLabelStyle, setDraftLabelStyle] = useState<LabelStyle | null>(value.labelStyle ?? null);
+    const [draftLabelStyle, setDraftLabelStyle] = useState<LabelStyle | null>(
+        value.labelStyle ?? null
+    );
     // Shift/grain apply regardless of PRESET vs CUSTOM_RANGE, so only the preset-vs-range
     // choice itself is tabbed — this key is a view toggle, not part of the applied filter.
     const [activeTabKey, setActiveTabKey] = useState<'quick' | 'custom'>(
@@ -356,7 +359,16 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
             labelStyle: grainEnabled ? draftLabelStyle : undefined,
         });
         setOpen(false);
-    }, [draftMode, draftPeriodId, draftShiftId, draftDateRange, grainEnabled, draftGrain, draftLabelStyle, onApply]);
+    }, [
+        draftMode,
+        draftPeriodId,
+        draftShiftId,
+        draftDateRange,
+        grainEnabled,
+        draftGrain,
+        draftLabelStyle,
+        onApply,
+    ]);
 
     const activeLabel = useMemo(() => {
         if (value.mode === 'CUSTOM_RANGE') {
@@ -424,24 +436,26 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                 fontSize: 11,
             }}
         >
-            {lang === 'vi' ? '(tuỳ chọn — tự động nếu bỏ qua)' : '(optional — auto-filled if skipped)'}
+            {lang === 'vi'
+                ? '(tuỳ chọn — tự động nếu bỏ qua)'
+                : '(optional — auto-filled if skipped)'}
         </span>
     );
 
     const quickTabContent =
         periodFilters.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                <Tag.CheckableTagGroup
-                    options={periodChipOptions}
-                    value={draftMode === 'PRESET' ? draftPeriodId : null}
-                    onChange={(nextValue) => {
-                        setDraftPeriodId(nextValue == null ? null : Number(nextValue));
-                        setDraftMode('PRESET');
-                        setSelectedWeek(null);
-                        setSelectedQuarter(null);
-                    }}
-                />
-            </div>
+            <Tag.CheckableTagGroup
+                className="qw-time-filter-chips qw-preset-grid"
+                style={{ gap: 6 }}
+                options={periodChipOptions}
+                value={draftMode === 'PRESET' ? draftPeriodId : null}
+                onChange={(nextValue) => {
+                    setDraftPeriodId(nextValue == null ? null : Number(nextValue));
+                    setDraftMode('PRESET');
+                    setSelectedWeek(null);
+                    setSelectedQuarter(null);
+                }}
+            />
         ) : (
             <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 {lang === 'vi' ? 'Chưa có preset nào được cấu hình.' : 'No presets configured yet.'}
@@ -450,20 +464,22 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
 
     const customTabContent = (
         <Space direction="vertical" size={8} style={{ width: '100%' }}>
-            <Space size={8}>
-                <Typography.Text type="secondary">{lang === 'vi' ? 'Năm' : 'Year'}</Typography.Text>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                <Typography.Text type="secondary" style={{ flexShrink: 0 }}>
+                    {lang === 'vi' ? 'Năm' : 'Year'}
+                </Typography.Text>
                 <Select
                     size="small"
-                    style={{ width: 90 }}
+                    style={{ flex: 1 }}
                     value={draftYear}
                     options={yearOptions}
                     onChange={handleYearChange}
                 />
-            </Space>
-            <Space size={8} wrap style={{ width: '100%' }}>
+            </div>
+            <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <Select
                     size="small"
-                    style={{ flex: 1, minWidth: 120 }}
+                    style={{ flex: 1, minWidth: 0 }}
                     placeholder={lang === 'vi' ? 'Chọn tuần' : 'Select week'}
                     options={weekOptions}
                     value={selectedWeek}
@@ -473,7 +489,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                 />
                 <Select
                     size="small"
-                    style={{ flex: 1, minWidth: 120 }}
+                    style={{ flex: 1, minWidth: 0 }}
                     placeholder={lang === 'vi' ? 'Chọn quý' : 'Select quarter'}
                     options={quarterOptions}
                     value={selectedQuarter}
@@ -481,7 +497,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                     disabled={selectedWeek !== null}
                     allowClear
                 />
-            </Space>
+            </div>
             {quickRangeLabel && (
                 <Tag color="blue" style={{ margin: 0 }}>
                     {quickRangeLabel}
@@ -516,6 +532,33 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                 flexDirection: 'column',
             }}
         >
+            {/* Unchecked CheckableTags render with a transparent border/background by
+                antd default, so they read as plain links rather than tappable chips.
+                Scoped to this popover so it doesn't affect CheckableTag usage elsewhere. */}
+            <style jsx global>{`
+                .qw-time-filter-chips .ant-tag-checkable:not(.ant-tag-checkable-checked) {
+                    background-color: ${token.colorBgContainer};
+                    border-color: ${token.colorBorder};
+                }
+                .qw-time-filter-chips .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
+                    border-color: ${token.colorPrimary};
+                }
+                /* Presets vary in label length (Hôm nay vs. Tháng trước) — a plain flex-wrap
+                   sizes each chip to its own text, so columns drift out of alignment as the
+                   popover width changes. A fixed 2-column grid keeps them aligned always. */
+                .qw-preset-grid.ant-tag-checkable-group {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                }
+                .qw-preset-grid .ant-tag-checkable {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: ${token.controlHeightSM}px;
+                    box-sizing: border-box;
+                }
+            `}</style>
             <div
                 style={{
                     overflowY: 'auto',
@@ -523,7 +566,8 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                     minHeight: 0,
                     paddingRight: 2,
                     paddingTop: 4,
-                }}>
+                }}
+            >
                 {/* Shift is independent of PRESET vs CUSTOM_RANGE, so it sits above the
                     tabs — otherwise switching tabs would appear to drop the selection. */}
                 {shiftFilters.length > 0 && (
@@ -532,7 +576,10 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                             {lang === 'vi' ? 'Ca làm việc' : 'Shifts'}
                             {requiredMark}
                         </Typography.Text>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        <div
+                            className="qw-time-filter-chips"
+                            style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+                        >
                             <Tag.CheckableTagGroup
                                 options={shiftChipOptions}
                                 value={draftShiftId ?? SHIFT_ALL}
@@ -550,7 +597,11 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
 
                 <Typography.Text
                     type="secondary"
-                    style={{ ...sectionLabelStyle, marginTop: shiftFilters.length > 0 ? 16 : 0, marginBottom: 4 }}
+                    style={{
+                        ...sectionLabelStyle,
+                        marginTop: shiftFilters.length > 0 ? 16 : 0,
+                        marginBottom: 4,
+                    }}
                 >
                     {lang === 'vi' ? 'Khoảng thời gian' : 'Time range'}
                     {requiredMark}
@@ -588,19 +639,29 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                                     label: (
                                         <Typography.Text
                                             type="secondary"
-                                            style={{ ...sectionLabelStyle, display: 'inline', marginBottom: 0 }}
+                                            style={{
+                                                ...sectionLabelStyle,
+                                                display: 'inline',
+                                                marginBottom: 0,
+                                            }}
                                         >
                                             {lang === 'vi' ? 'Nhóm theo' : 'Group by'}
                                             {optionalMark}
                                         </Typography.Text>
                                     ),
                                     children: (
-                                        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                                        <Space
+                                            direction="vertical"
+                                            size={10}
+                                            style={{ width: '100%' }}
+                                        >
                                             <Select
                                                 size="small"
                                                 style={{ width: '100%' }}
                                                 value={draftGrain}
-                                                onChange={(nextGrain: TimeGrain) => setDraftGrain(nextGrain)}
+                                                onChange={(nextGrain: TimeGrain) =>
+                                                    setDraftGrain(nextGrain)
+                                                }
                                                 options={activeAllowedGrains.map((grainName) => {
                                                     const option = grainOptions?.find(
                                                         (o) => o.name === grainName
@@ -616,7 +677,11 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                                             <div>
                                                 <Typography.Text
                                                     type="secondary"
-                                                    style={{ fontSize: 11, display: 'block', marginBottom: 4 }}
+                                                    style={{
+                                                        fontSize: 11,
+                                                        display: 'block',
+                                                        marginBottom: 4,
+                                                    }}
                                                 >
                                                     {draftGrainLabel
                                                         ? lang === 'vi'
@@ -688,7 +753,9 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
 
             <Divider style={{ margin: '0 0 12px', flexShrink: 0 }} />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexShrink: 0 }}>
+            <div
+                style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexShrink: 0 }}
+            >
                 <Button onClick={handleReset}>{t('common.reset')}</Button>
                 <div style={{ display: 'flex', gap: 8 }}>
                     <Button
@@ -726,9 +793,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                         gap: 4,
                     }}
                 >
-                    <span style={{ flexShrink: 0 }}>
-                        {lang === 'vi' ? 'Thời gian' : 'Time'}:
-                    </span>
+                    <span style={{ flexShrink: 0 }}>{lang === 'vi' ? 'Thời gian' : 'Time'}:</span>
                     <Typography.Text
                         ellipsis
                         style={{

@@ -5,7 +5,7 @@
 // Related: enhance/fe-space-monitoring branch
 
 import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
-import { Button, Grid, Popover, Select, Skeleton, Spin, Tooltip, Typography, message } from 'antd';
+import { Button, Grid, Select, Skeleton, Spin, Tooltip, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -29,11 +29,10 @@ import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
 import { MachineWithStatusLogsSummary } from '@/types/Machine';
-import {
-    TimeFilterPopoverContent,
+import TimeFilterPopover, {
     PeriodFilterMode,
     TimeFilterApplyPayload,
-} from './_components/TimeFilterPopoverContent';
+} from './_components/TimeFilterPopover';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
@@ -100,7 +99,6 @@ const SpaceMonitoringPage: React.FC = () => {
     } = useAppSelector((state) => state.factoryOverview) as IFactoryOverviewStoreState;
 
     const [isExporting, setIsExporting] = useState(false);
-    const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
 
     type MachinePathEntry = { path: number[]; machineIndex: number };
     const machinePathMapRef = useRef<Map<string, MachinePathEntry>>(new Map());
@@ -524,7 +522,6 @@ const SpaceMonitoringPage: React.FC = () => {
                     endDate,
                 })
             );
-            setIsTimeFilterOpen(false);
 
             if (!activeFactoryId) return;
             setHasSearched(true);
@@ -622,14 +619,27 @@ const SpaceMonitoringPage: React.FC = () => {
         selectedEndDate,
     ]);
 
+    const currentPeriodId = useMemo(() => {
+        if (timeFilterMode !== 'PRESET') return null;
+        const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+        return primary?.category === 'PERIOD' ? selectedTimePeriod : null;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+
+    const currentShiftId = useMemo(() => {
+        if (timeFilterMode === 'PRESET') {
+            const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+            return primary?.category === 'PERIOD' ? selectedShiftFilterId : selectedTimePeriod;
+        }
+        return selectedTimePeriod;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod, selectedShiftFilterId]);
+
+    // Only feeds the SpaceOverviewGrid caption now — the popover's own trigger button
+    // computes this label internally from the same currentMode/currentPeriodId/
+    // currentShiftId props (see TimeFilterPopover.tsx).
     const activeTimePeriodLabel = useMemo(() => {
         const currentLang = i18n.language;
         const shiftFilter =
-            selectedShiftFilterId != null
-                ? industryFilters.find((f) => f.filterId === selectedShiftFilterId)
-                : timeFilterMode !== 'PRESET' && selectedTimePeriod != null
-                  ? industryFilters.find((f) => f.filterId === selectedTimePeriod)
-                  : null;
+            currentShiftId != null ? industryFilters.find((f) => f.filterId === currentShiftId) : null;
         const shiftLabel = shiftFilter
             ? currentLang === 'vi'
                 ? shiftFilter.displayNameVi
@@ -674,76 +684,25 @@ const SpaceMonitoringPage: React.FC = () => {
             return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
         }
 
-        const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-        const primaryLabel = primaryFilter
+        const period = industryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
             ? currentLang === 'vi'
-                ? primaryFilter.displayNameVi
-                : primaryFilter.displayNameEn
+                ? period.displayNameVi
+                : period.displayNameEn
             : null;
 
-        if (!primaryLabel) return null;
-
-        if (primaryFilter?.category === 'PERIOD' && shiftLabel) {
-            return `${primaryLabel} • ${shiftLabel}`;
-        }
-
-        return primaryLabel;
+        if (!periodLabel) return shiftLabel;
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
     }, [
+        currentPeriodId,
+        currentShiftId,
         industryFilters,
-        selectedTimePeriod,
-        selectedShiftFilterId,
         timeFilterMode,
         selectedStartDate,
         selectedEndDate,
         i18n.language,
         t,
     ]);
-
-    const currentPeriodId = useMemo(() => {
-        if (timeFilterMode !== 'PRESET') return null;
-        const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-        return primary?.category === 'PERIOD' ? selectedTimePeriod : null;
-    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
-
-    const currentShiftId = useMemo(() => {
-        if (timeFilterMode === 'PRESET') {
-            const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-            return primary?.category === 'PERIOD' ? selectedShiftFilterId : selectedTimePeriod;
-        }
-        return selectedTimePeriod;
-    }, [timeFilterMode, industryFilters, selectedTimePeriod, selectedShiftFilterId]);
-
-    const timeFilterPopoverContent = useMemo(
-        () => (
-            <TimeFilterPopoverContent
-                currentMode={timeFilterMode}
-                currentPeriodId={currentPeriodId}
-                currentShiftId={currentShiftId}
-                currentStartDate={selectedStartDate}
-                currentEndDate={selectedEndDate}
-                groupedOptions={groupedTimePeriodOptions}
-                industryFilters={industryFilters}
-                isShiftActive={isShiftActive}
-                isMobile={isMobile}
-                isOpen={isTimeFilterOpen}
-                onApply={handleApplyTimeFilter}
-                onCancel={() => setIsTimeFilterOpen(false)}
-            />
-        ),
-        [
-            timeFilterMode,
-            currentPeriodId,
-            currentShiftId,
-            selectedStartDate,
-            selectedEndDate,
-            groupedTimePeriodOptions,
-            industryFilters,
-            isShiftActive,
-            isMobile,
-            isTimeFilterOpen,
-            handleApplyTimeFilter,
-        ]
-    );
 
     const headerActions = useMemo(
         () =>
@@ -772,38 +731,18 @@ const SpaceMonitoringPage: React.FC = () => {
                             />
                         ))}
 
-                    <Popover
-                        open={isTimeFilterOpen}
-                        onOpenChange={setIsTimeFilterOpen}
-                        trigger="click"
+                    <TimeFilterPopover
+                        currentMode={timeFilterMode}
+                        currentPeriodId={currentPeriodId}
+                        currentShiftId={currentShiftId}
+                        currentStartDate={selectedStartDate}
+                        currentEndDate={selectedEndDate}
+                        groupedOptions={groupedTimePeriodOptions}
+                        industryFilters={industryFilters}
+                        isShiftActive={isShiftActive}
+                        onApply={handleApplyTimeFilter}
                         placement="bottomLeft"
-                        content={timeFilterPopoverContent}
-                    >
-                        <Button
-                            block
-                            style={{
-                                borderRadius: 8,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'flex-start',
-                                gap: 4,
-                            }}
-                        >
-                            <span style={{ flexShrink: 0 }}>
-                                {t('spaceMonitoring.timeFilter.time')}:
-                            </span>
-                            <Typography.Text
-                                ellipsis
-                                style={{
-                                    maxWidth: 'calc(100% - 76px)',
-                                    color: 'inherit',
-                                    lineHeight: 'inherit',
-                                }}
-                            >
-                                {activeTimePeriodLabel ?? t('common.filter')}
-                            </Typography.Text>
-                        </Button>
-                    </Popover>
+                    />
 
                     <Button
                         block
@@ -862,40 +801,18 @@ const SpaceMonitoringPage: React.FC = () => {
                             />
                         ))}
 
-                    <Popover
-                        open={isTimeFilterOpen}
-                        onOpenChange={setIsTimeFilterOpen}
-                        trigger="click"
+                    <TimeFilterPopover
+                        currentMode={timeFilterMode}
+                        currentPeriodId={currentPeriodId}
+                        currentShiftId={currentShiftId}
+                        currentStartDate={selectedStartDate}
+                        currentEndDate={selectedEndDate}
+                        groupedOptions={groupedTimePeriodOptions}
+                        industryFilters={industryFilters}
+                        isShiftActive={isShiftActive}
+                        onApply={handleApplyTimeFilter}
                         placement="bottomRight"
-                        content={timeFilterPopoverContent}
-                    >
-                        <Tooltip title={activeTimePeriodLabel}>
-                            <Button
-                                style={{
-                                    borderRadius: 8,
-                                    width: 220,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    gap: 4,
-                                }}
-                            >
-                                <span style={{ flexShrink: 0 }}>
-                                    {t('spaceMonitoring.timeFilter.time')}:
-                                </span>
-                                <Typography.Text
-                                    ellipsis
-                                    style={{
-                                        maxWidth: 135,
-                                        color: 'inherit',
-                                        lineHeight: 'inherit',
-                                    }}
-                                >
-                                    {activeTimePeriodLabel ?? t('common.filter')}
-                                </Typography.Text>
-                            </Button>
-                        </Tooltip>
-                    </Popover>
+                    />
 
                     <Tooltip title={t('spaceMonitoring.timeFilter.refreshData')}>
                         <Button
@@ -936,9 +853,15 @@ const SpaceMonitoringPage: React.FC = () => {
             selectedTimePeriod,
             router,
             t,
-            timeFilterPopoverContent,
-            isTimeFilterOpen,
-            activeTimePeriodLabel,
+            timeFilterMode,
+            currentPeriodId,
+            currentShiftId,
+            selectedStartDate,
+            selectedEndDate,
+            groupedTimePeriodOptions,
+            industryFilters,
+            isShiftActive,
+            handleApplyTimeFilter,
             isMobile,
             i18n.language,
         ]
