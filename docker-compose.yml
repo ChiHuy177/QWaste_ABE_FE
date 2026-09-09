@@ -1,34 +1,22 @@
-version: '3.8'
-
 services:
-  qwaste-v2:
+  qwaste-abe:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: qwaste-v2-local
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    image: qwaste-abe:latest
+    container_name: qwaste-abe
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
-      - NODE_ENV=production
-      - NEXT_TELEMETRY_DISABLED=1
+      BFF_COOKIE_SECURE: ${BFF_COOKIE_SECURE:-false}
+      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Optional: Add a reverse proxy for production-like setup
-  nginx:
-    image: nginx:alpine
-    container_name: qwaste-v2-nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - qwaste-v2
-    restart: unless-stopped
-    profiles:
-      - with-nginx
