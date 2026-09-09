@@ -7,6 +7,18 @@ export interface PermissionConfig {
     routes: string[];
     menuKey?: string;
     description: string;
+    /** i18n key for the sidebar label. Only set when this permission has a sidebar entry. */
+    i18nKey?: string;
+    /** Top-level sidebar group this item belongs to, if any. */
+    group?: 'categories' | 'rbac' | 'production_plan';
+    /** Sub-group within `group`, if any. */
+    subGroup?: 'machine_management' | 'space_configuration' | 'staff_others';
+    /** AND-condition: ability must also grant this action on the same subject. */
+    alsoRequiresAction?: Action;
+    /** OR-condition: ability granting this action on the same subject is enough too (e.g. machine_overview view OR update). */
+    alternativeAction?: Action;
+    /** Sidebar item shown regardless of ability (e.g. settings). */
+    alwaysShowInMenu?: boolean;
 }
 
 /**
@@ -22,6 +34,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/rbac/users'],
         menuKey: 'rbac-users',
         description: 'View user list',
+        i18nKey: 'sidebar.navigation.rbacUsers',
+        group: 'rbac',
     },
     {
         slug: 'user:create',
@@ -53,6 +67,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/rbac/roles'],
         menuKey: 'rbac-roles',
         description: 'View roles',
+        i18nKey: 'sidebar.navigation.rbacRoles',
+        group: 'rbac',
     },
     {
         slug: 'role:create',
@@ -84,6 +100,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/rbac/permissions'],
         menuKey: 'rbac-permissions',
         description: 'View permissions',
+        i18nKey: 'sidebar.navigation.rbacPermissions',
+        group: 'rbac',
     },
     {
         slug: 'permission:create',
@@ -115,6 +133,7 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/space-monitoring'],
         menuKey: 'space-monitoring',
         description: 'View space monitoring',
+        i18nKey: 'permissionSubjects.space_monitoring',
     },
     // Production Monitor
     {
@@ -124,6 +143,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/production-plan/monitor'],
         menuKey: 'production-plan-monitor',
         description: 'View production plan monitor',
+        i18nKey: 'sidebar.navigation.productionMonitor',
+        group: 'production_plan',
     },
 
     // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
@@ -135,6 +156,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/production-plan'],
         menuKey: 'production-plan',
         description: 'View production plans',
+        i18nKey: 'sidebar.navigation.productionPlan',
+        group: 'production_plan',
     },
     {
         slug: 'product:create',
@@ -201,6 +224,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/machineList'],
         menuKey: 'machine-list',
         description: 'View machine list',
+        i18nKey: 'sidebar.navigation.machineList',
+        group: 'categories',
+        subGroup: 'machine_management',
     },
     {
         slug: 'machine:create',
@@ -263,6 +289,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/mold'],
         menuKey: 'mold',
         description: 'View mold list',
+        i18nKey: 'sidebar.navigation.mold',
+        group: 'categories',
+        subGroup: 'machine_management',
     },
     {
         slug: 'mold:create',
@@ -301,6 +330,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/operationType'],
         menuKey: 'operation-type',
         description: 'View operation type list',
+        i18nKey: 'sidebar.navigation.operationType',
+        group: 'categories',
+        subGroup: 'machine_management',
     },
     {
         slug: 'operation_type:create',
@@ -442,6 +474,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/space'],
         menuKey: 'space',
         description: 'View space hierarchy',
+        i18nKey: 'sidebar.navigation.space',
+        group: 'categories',
+        subGroup: 'space_configuration',
     },
     {
         slug: 'space:create',
@@ -473,6 +508,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/spaceLevel'],
         menuKey: 'spaceLevel',
         description: 'View space levels',
+        i18nKey: 'sidebar.navigation.spaceLevel',
+        group: 'categories',
+        subGroup: 'space_configuration',
     },
     {
         slug: 'space_level:create',
@@ -504,6 +542,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/step'],
         menuKey: 'step',
         description: 'View steps',
+        i18nKey: 'stepManagement.title',
+        group: 'categories',
+        subGroup: 'staff_others',
     },
     {
         slug: 'step:create',
@@ -535,6 +576,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/categories/industryFilter'],
         menuKey: 'industryFilter',
         description: 'View industry filters',
+        i18nKey: 'sidebar.navigation.industryFilter',
+        group: 'categories',
+        subGroup: 'staff_others',
     },
     {
         slug: 'industry_filter:create',
@@ -566,6 +610,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/setting'],
         menuKey: 'settings',
         description: 'View profile settings',
+        i18nKey: 'sidebar.navigation.settings',
+        alwaysShowInMenu: true,
     },
     {
         slug: 'profile:update',
@@ -690,6 +736,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: ['/admin/work-calendar'],
         menuKey: 'work-calendar',
         description: 'View work calendar',
+        i18nKey: 'sidebar.navigation.workCalendar',
+        group: 'production_plan',
     },
     {
         slug: 'work_calendar:update',
@@ -704,6 +752,95 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         action: 'reset',
         routes: [],
         description: 'Reset work calendar to default',
+    },
+
+    // Staff Management
+    {
+        slug: 'staff:view',
+        subject: 'staff',
+        action: 'view',
+        routes: ['/admin/categories/staffList'],
+        menuKey: 'staff-list',
+        description: 'View staff list',
+        i18nKey: 'sidebar.navigation.staffList',
+        group: 'categories',
+        subGroup: 'staff_others',
+    },
+    {
+        slug: 'staff:create',
+        subject: 'staff',
+        action: 'create',
+        routes: [],
+        description: 'Create staff',
+    },
+    {
+        slug: 'staff:update',
+        subject: 'staff',
+        action: 'update',
+        routes: [],
+        description: 'Update staff',
+    },
+    {
+        slug: 'staff:delete',
+        subject: 'staff',
+        action: 'delete',
+        routes: [],
+        description: 'Delete staff',
+    },
+
+    // Machine Overview
+    {
+        slug: 'machine_overview:view',
+        subject: 'machine_overview',
+        action: 'view',
+        routes: ['/admin/machines'],
+        menuKey: 'machines',
+        description: 'View machine overview',
+        i18nKey: 'sidebar.navigation.machine',
+        alternativeAction: 'update',
+    },
+    {
+        slug: 'machine_overview:update',
+        subject: 'machine_overview',
+        action: 'update',
+        routes: [],
+        description: 'Update machine overview',
+    },
+
+    // Process Management
+    {
+        slug: 'process:view',
+        subject: 'process',
+        action: 'view',
+        routes: ['/admin/process'],
+        description: 'View process management',
+    },
+
+    // Tasks Management
+    {
+        slug: 'tasks:view',
+        subject: 'tasks',
+        action: 'view',
+        routes: ['/admin/tasks'],
+        description: 'View tasks management',
+    },
+
+    // QC
+    {
+        slug: 'qc_dashboard:view',
+        subject: 'qc_dashboard',
+        action: 'view',
+        routes: ['/qc'],
+        description: 'View QC dashboard',
+    },
+
+    // Manager
+    {
+        slug: 'manager_reviews:view',
+        subject: 'manager_reviews',
+        action: 'view',
+        routes: ['/manager/review-dashboard'],
+        description: 'View manager review dashboard',
     },
 ];
 

@@ -1,9 +1,10 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { getAllSubjects } from '@/configs/permissions/permissionRegistry';
+import { ACTIONS } from '@/configs/permissions/caslAbility';
 
 export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFieldConfig[] => {
     const subjects = getAllSubjects();
-    const actions = ['create', 'view', 'update', 'delete'];
+    const actions = ACTIONS;
 
     return [
         // Permission Name
@@ -37,7 +38,10 @@ export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFi
             type: 'select',
             placeholder: t('permissionManagement.form.subject.placeholder'),
             required: true,
-            options: subjects.map((s) => ({ value: s, label: t(`permissionSubjects.${s}`, { defaultValue: s }) })),
+            options: subjects.map((s) => ({
+                value: s,
+                label: t(`permissionSubjects.${s}`, { defaultValue: s }),
+            })),
             rules: [
                 {
                     required: true,
