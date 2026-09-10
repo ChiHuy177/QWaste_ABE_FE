@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BFF_ACCESS_TOKEN_COOKIE, BFF_COOKIE_OPTIONS, AUTH_PATHS } from '@/lib/server-auth';
+import {
+    BffConfigError,
+    BffError,
+    BffNetworkError,
+    BffUnexpectedError,
+    normalizeErrorBody,
+    toBffErrorBody,
+} from '@/lib/bff-error';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
@@ -8,6 +16,26 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 // giờ áp dụng ở production.
 if (process.env.NODE_ENV !== 'production' && BACKEND_URL.startsWith('https:')) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
+type BackendResponseBody = {
+    code?: number;
+    message?: string;
+    error?: string;
+    errors?: unknown;
+    result?: {
+        tokens?: { accessToken?: string };
+        message?: string;
+        errors?: unknown;
+    };
+};
+
+// Xoá cookie access token phía BFF — đây là cookie do proxy tự set ra, việc
+// dọn nó không phụ thuộc backend logout trả về ok hay lỗi (token đã invalid
+// là lý do gọi logout, nên logout call rất hay tự 401 — vẫn phải xoá).
+function clearAccessTokenCookie(response: NextResponse) {
+    const cookieString = `${BFF_ACCESS_TOKEN_COOKIE}=; HttpOnly; Path=/; Max-Age=0`;
+    response.headers.append('Set-Cookie', cookieString);
 }
 
 /**
@@ -25,9 +53,16 @@ if (process.env.NODE_ENV !== 'production' && BACKEND_URL.startsWith('https:')) {
  *   Proxy forward: ${BACKEND_URL}/api/users/v1/me + Authorization: Bearer {token}
  */
 
-async function proxyRequest(request: NextRequest, pathSegments: string[]) {
+async function handleProxy(request: NextRequest, pathSegments: string[]) {
     const path = pathSegments.join('/');
-    const backendUrl = new URL(`/${path}`, BACKEND_URL);
+
+    let backendUrl: URL;
+    try {
+        backendUrl = new URL(`/${path}`, BACKEND_URL);
+    } catch {
+        // NEXT_PUBLIC_API_BASE_URL misconfigured (vd. port ngoài range 0-65535)
+        throw new BffConfigError('Invalid backend URL configuration');
+    }
 
     // Forward query params
     request.nextUrl.searchParams.forEach((value, key) => {
@@ -67,10 +102,7 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
         } else {
             try {
                 const ct = request.headers.get('content-type') || '';
-                if (
-                    ct.includes('multipart/form-data') ||
-                    ct.includes('application/octet-stream')
-                ) {
+                if (ct.includes('multipart/form-data') || ct.includes('application/octet-stream')) {
                     body = await request.arrayBuffer();
                 } else {
                     body = await request.text();
@@ -91,17 +123,15 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
         });
     } catch (error) {
         console.error(`[Proxy] Không kết nối được backend: ${method} ${backendUrl}`, error);
-        return NextResponse.json(
-            { code: 502, message: 'Không kết nối được tới backend server', error: String(error) },
-            { status: 502 },
-        );
+        // Backend unreachable — vẫn trả JSON theo đúng contract lỗi thay vì để Next.js render error page
+        throw new BffNetworkError('Không kết nối được tới backend server');
     }
 
     // Parse response — BE có thể trả lỗi không phải JSON (error page mặc định, body rỗng...),
     // nếu không catch thì exception sẽ văng ra ngoài route handler và bị Next.js nuốt thành
     // 500 generic không rõ nguyên nhân, mất luôn status/message gốc từ BE.
     const rawBody = await backendRes.text();
-    let data: { code?: number; result?: { tokens?: { accessToken?: string } } };
+    let data: BackendResponseBody;
     try {
         data = rawBody ? JSON.parse(rawBody) : {};
     } catch {
@@ -112,16 +142,34 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
             {
                 code: backendRes.status,
                 message: 'Backend trả về response không phải JSON',
-                rawBody: rawBody.slice(0, 2000),
+                isSuccess: false,
+                source: 'upstream',
             },
             { status: backendRes.status },
         );
     }
 
+    // Chuẩn hoá lỗi về 1 shape cố định (code, message, errors) — backend trả lỗi
+    // ở nhiều shape khác nhau tuỳ endpoint, FE không nên phải tự đoán từng đường fallback
     if (!backendRes.ok) {
         console.error(
             `[Proxy] Backend error: ${method} ${backendUrl} -> ${backendRes.status}\n${JSON.stringify(data)}`,
         );
+
+        const response = NextResponse.json(normalizeErrorBody(data, backendRes.status), {
+            status: backendRes.status,
+        });
+
+        const setCookies = backendRes.headers.getSetCookie();
+        for (const cookie of setCookies) {
+            response.headers.append('Set-Cookie', cookie);
+        }
+
+        if (isLogout) {
+            clearAccessTokenCookie(response);
+        }
+
+        return response;
     }
 
     // Xử lý auth-specific: lưu/xóa access token trong httpOnly cookie
@@ -155,11 +203,30 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
 
     // Logout: xóa access token cookie
     if (isLogout) {
-        const cookieString = `${BFF_ACCESS_TOKEN_COOKIE}=; HttpOnly; Path=/; Max-Age=0`;
-        response.headers.append('Set-Cookie', cookieString);
+        clearAccessTokenCookie(response);
     }
 
     return response;
+}
+
+/**
+ * Điểm catch tập trung duy nhất — phân biệt lỗi do chính BFF phát sinh (BffError,
+ * source: 'bff') với lỗi backend trả về (đã xử lý trong handleProxy qua
+ * normalizeErrorBody, source: 'upstream') hoặc bug chưa lường trước (fallback 500).
+ */
+async function proxyRequest(request: NextRequest, pathSegments: string[]) {
+    try {
+        return await handleProxy(request, pathSegments);
+    } catch (error) {
+        if (error instanceof BffError) {
+            return NextResponse.json(toBffErrorBody(error), { status: error.httpStatus });
+        }
+
+        console.error('Unexpected BFF error:', error);
+        return NextResponse.json(toBffErrorBody(new BffUnexpectedError('Unexpected BFF error')), {
+            status: 500,
+        });
+    }
 }
 
 type RouteContext = { params: Promise<{ path: string[] }> };

@@ -5,6 +5,8 @@ import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { AuthService } from '@/services/AuthService';
 
+const BACKEND_UNREACHABLE_MESSAGE = 'KHÔNG THỂ KẾT NỐI MÁY CHỦ. VUI LÒNG THỬ LẠI SAU';
+
 export default function GlobalErrorHandler() {
     const router = useRouter();
 
@@ -48,6 +50,16 @@ export default function GlobalErrorHandler() {
         }, 1000);
     }, [router]);
 
+    // Backend unreachable (network/502/503...) — chỉ báo lỗi tạm thời, KHÔNG logout:
+    // đây không phải phiên hết hạn, user vẫn đang đăng nhập hợp lệ.
+    const handleBackendUnreachable = useCallback(() => {
+        console.log('[GlobalErrorHandler] Backend unreachable - showing toast without logout');
+        toast.error(BACKEND_UNREACHABLE_MESSAGE, {
+            duration: 3000,
+            position: 'top-center',
+        });
+    }, []);
+
     const handleForbidden = useCallback((event: Event) => {
         const customEvent = event as CustomEvent;
         const detail = customEvent.detail;
@@ -65,14 +77,16 @@ export default function GlobalErrorHandler() {
     useEffect(() => {
         window.addEventListener('sessionExpired', handleSessionExpired);
         window.addEventListener('forbidden_access', handleForbidden);
+        window.addEventListener('backendUnreachable', handleBackendUnreachable);
         console.log('[GlobalErrorHandler] Event listeners added successfully');
 
         return () => {
             window.removeEventListener('sessionExpired', handleSessionExpired);
             window.removeEventListener('forbidden_access', handleForbidden);
+            window.removeEventListener('backendUnreachable', handleBackendUnreachable);
             console.log('[GlobalErrorHandler] Event listeners removed');
         };
-    }, [handleSessionExpired, handleForbidden]);
+    }, [handleSessionExpired, handleForbidden, handleBackendUnreachable]);
 
     return null;
 }

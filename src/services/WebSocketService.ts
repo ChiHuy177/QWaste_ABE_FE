@@ -56,7 +56,7 @@ export class WebSocketService {
             this.isConnecting = true;
 
             // BFF: Lấy token từ server endpoint (httpOnly cookie không đọc được từ JS)
-            fetch('/api/bff/ws-token', { credentials: 'include' })
+            fetch('/qwaste/ws-token', { credentials: 'include' })
                 .then((res) => {
                     if (!res.ok) throw new Error('Unauthorized');
                     return res.json();
