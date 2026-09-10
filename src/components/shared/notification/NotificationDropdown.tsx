@@ -32,9 +32,9 @@ export default function NotificationDropdown() {
     }, []);
 
     useEffect(() => {
-        dispatch(notificationActions.fetchUnreadCount() as any);
+        dispatch(notificationActions.fetchUnreadCount());
         const interval = setInterval(() => {
-            dispatch(notificationActions.fetchUnreadCount() as any);
+            dispatch(notificationActions.fetchUnreadCount());
         }, 30000);
         return () => clearInterval(interval);
     }, [dispatch]);
@@ -58,7 +58,7 @@ export default function NotificationDropdown() {
     const handleOpenChange = (visible: boolean) => {
         setOpen(visible);
         if (visible) {
-            dispatch(notificationActions.fetchUnreadCount() as any);
+            dispatch(notificationActions.fetchUnreadCount());
         }
     };
 
@@ -134,7 +134,7 @@ export default function NotificationDropdown() {
                 ref={notificationListRef}
                 onNotificationClick={(notification) => {
                     console.log('Notification clicked:', notification);
-                    dispatch(notificationActions.fetchUnreadCount() as any);
+                    dispatch(notificationActions.fetchUnreadCount());
                 }}
             />
         </div>

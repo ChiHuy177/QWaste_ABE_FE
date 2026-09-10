@@ -30,7 +30,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             const backendRole = `${role.toUpperCase()}`;
             const destination = `/topic/role/${backendRole}`;
 
-            const unsub = service.subscribe(destination, (msg: any) => {
+            const unsub = service.subscribe(destination, (msg: unknown) => {
                 if (isDev) console.log(`[WebSocket] Role broadcast [${backendRole}]:`, msg);
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(

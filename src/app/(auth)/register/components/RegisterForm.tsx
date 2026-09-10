@@ -15,6 +15,7 @@ import {
     Radio,
     Select,
 } from 'antd';
+import type { GlobalToken } from 'antd/es/theme/interface';
 import {
     UserOutlined,
     LockOutlined,
@@ -37,6 +38,7 @@ import { RegisterFormData } from '@/types/Register';
 import { getDefaultRoute } from '@/configs/permissions/routeAccess';
 import { defineAbilityFor } from '@/configs/permissions/defineAbility';
 import { AccountRole } from '@/types/User';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -63,7 +65,15 @@ const calculatePasswordStrength = (password: string): number => {
 };
 
 const PasswordStrengthIndicator = React.memo(
-    ({ password, token, t }: { password: string; token: any; t: (key: string) => string }) => {
+    ({
+        password,
+        token,
+        t,
+    }: {
+        password: string;
+        token: GlobalToken;
+        t: (key: string) => string;
+    }) => {
         const strength = calculatePasswordStrength(password);
 
         const color = useMemo(() => {
@@ -185,12 +195,12 @@ const RegisterForm = React.memo(() => {
             } else {
                 setGeneralError(result.error || t('registerPage.messages.registerFailed'));
             }
-        } catch (err: any) {
-            if (err.errorFields) {
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'errorFields' in err) {
                 return;
             }
             console.error(err);
-            setGeneralError(err.response?.data?.message || t('registerPage.messages.serverError'));
+            setGeneralError(getApiErrorMessage(err, t('registerPage.messages.serverError')));
         } finally {
             setIsSubmitting(false);
         }
@@ -216,8 +226,8 @@ const RegisterForm = React.memo(() => {
             const ability = defineAbilityFor(userRoles, result.user?.permissions);
             const route = getDefaultRoute(ability);
             router.replace(route);
-        } catch (err: any) {
-            setGeneralError(err.response?.data?.message || t('registerPage.messages.verifyFailed'));
+        } catch (err: unknown) {
+            setGeneralError(getApiErrorMessage(err, t('registerPage.messages.verifyFailed')));
         } finally {
             setIsVerifying(false);
         }

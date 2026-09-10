@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 
 const VALIDATION_CONFIG = Object.freeze({
@@ -8,7 +9,7 @@ const VALIDATION_CONFIG = Object.freeze({
     DESCRIPTION: { max: 500, required: false },
 });
 
-export const getSpaceFormFields = (t: any, _mode: 'create' | 'edit'): FormFieldConfig[] => {
+export const getSpaceFormFields = (t: TFunction, _mode: 'create' | 'edit'): FormFieldConfig[] => {
     return [
         {
             name: 'spaceCode',

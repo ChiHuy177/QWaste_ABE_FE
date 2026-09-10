@@ -14,6 +14,7 @@ import {
 } from '@/types/WorkCalendar';
 import { WorkCalendarService } from '@/services/WorkCalendarService';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { WorkCalendarHeader } from './_components/WorkCalendarHeader';
 import { WorkCalendarSummary } from './_components/WorkCalendarSummary';
 import { WorkCalendarGrid } from './_components/WorkCalendarGrid';
@@ -28,13 +29,6 @@ const createDaysMap = (days: WorkCalendarDayResponse[]): Map<string, WorkCalenda
     const map = new Map<string, WorkCalendarDayResponse>();
     days.forEach((day) => map.set(day.date, { ...day }));
     return map;
-};
-
-/**
- * Helper to extract clean error message
- */
-const getErrorMessage = (err: any, fallbackMessage: string): string => {
-    return err?.response?.data?.message || err?.message || fallbackMessage;
 };
 
 export default function WorkCalendarPage() {
@@ -76,8 +70,8 @@ export default function WorkCalendarPage() {
                 const data = await WorkCalendarService.getMonthCalendar(targetYear, targetMonth);
                 setMonthData(data);
                 setDraftDaysMap(createDaysMap(data.days));
-            } catch (err: any) {
-                toast.error(getErrorMessage(err, t('workCalendar.notifications.fetchError')));
+            } catch (err: unknown) {
+                toast.error(getApiErrorMessage(err, t('workCalendar.notifications.fetchError')));
             } finally {
                 setLoading(false);
             }
@@ -190,8 +184,8 @@ export default function WorkCalendarPage() {
             setIsEditMode(false);
             setSelectedDates([]);
             toast.success(t('workCalendar.notifications.saveSuccess'));
-        } catch (err: any) {
-            toast.error(getErrorMessage(err, t('workCalendar.notifications.saveError')));
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.saveError')));
         } finally {
             setIsSaving(false);
         }
@@ -207,8 +201,8 @@ export default function WorkCalendarPage() {
             setIsEditMode(false);
             setSelectedDates([]);
             toast.success(t('workCalendar.notifications.resetSuccess'));
-        } catch (err: any) {
-            toast.error(getErrorMessage(err, t('workCalendar.notifications.resetError')));
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.resetError')));
         } finally {
             setIsResetting(false);
         }
@@ -220,8 +214,8 @@ export default function WorkCalendarPage() {
             const confirmedData = await WorkCalendarService.confirmMonth(year, month);
             setMonthData(confirmedData);
             toast.success(t('workCalendar.notifications.confirmMonthSuccess', { month, year }));
-        } catch (err: any) {
-            toast.error(getErrorMessage(err, t('workCalendar.notifications.confirmMonthError')));
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.confirmMonthError')));
         } finally {
             setIsConfirming(false);
         }

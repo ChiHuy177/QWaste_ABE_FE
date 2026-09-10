@@ -9,6 +9,7 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import {
     MachineOperatorHistory,
     MachineOperatorHistoryFormData,
+    MachineOperatorHistoryModalData,
 } from '@/types/MachineOperatorHistory';
 import {
     machineOperatorHistoryTableColumnProps,
@@ -33,7 +34,7 @@ const MachineStaffingPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: MachineOperatorHistoryModalData | null;
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
@@ -106,7 +107,7 @@ const MachineStaffingPage = () => {
                         step.machineId
                     );
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching machine staffing details:', error);
                 handleError(error, { fallbackKey: 'machineStaffingManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });

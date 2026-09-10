@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { OperationType } from '@/types/OperationType';
 
@@ -9,7 +10,7 @@ const VALIDATION = Object.freeze({
 });
 
 export const getMoldFormFields = (
-    t: (key: string, options?: any) => string,
+    t: TFunction,
     mode: 'create' | 'edit',
     operationTypeOptions: { value: number; label: string }[] = [],
     isLoadingOperationTypes: boolean = false

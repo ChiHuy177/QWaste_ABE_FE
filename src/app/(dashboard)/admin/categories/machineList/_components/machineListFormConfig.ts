@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { SelectOption } from '@/types/Common';
 import { OperationType } from '@/types/OperationType';
@@ -15,7 +16,7 @@ const VALIDATION_CONFIG = Object.freeze({
 });
 
 export const getMachineListFormFields = (
-    t: any,
+    t: TFunction,
     mode: 'create' | 'edit',
     operationTypeOptions: SelectOption[] = [],
     isLoadingOperationTypes: boolean = false

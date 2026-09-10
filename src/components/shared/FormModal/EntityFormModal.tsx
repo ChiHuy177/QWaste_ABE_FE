@@ -82,8 +82,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
             await handleFormSubmit(values, mode);
             onOpenChange(false);
             setTimeout(() => form.resetFields(), 300);
-        } catch (error: any) {
-            if (error?.message !== 'CONFIRMATION_PENDING') {
+        } catch (error: unknown) {
+            if (!(error instanceof Error) || error.message !== 'CONFIRMATION_PENDING') {
                 console.error('Error submitting form:', error);
             }
         } finally {
@@ -101,7 +101,7 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
             } else {
                 form.resetFields();
                 // Set default values for create mode
-                const defaultValues: any = {};
+                const defaultValues: Record<string, unknown> = {};
                 fields.forEach((field) => {
                     if (field.defaultValue !== undefined) {
                         defaultValues[field.name] = field.defaultValue;
@@ -111,7 +111,7 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                     Object.assign(defaultValues, initialData);
                 }
                 if (Object.keys(defaultValues).length > 0) {
-                    form.setFieldsValue(defaultValues);
+                    form.setFieldsValue(defaultValues as Partial<TFormData>);
                 }
             }
         }
@@ -144,7 +144,7 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
         const rules = field.rules || [];
 
         // Add required rule if specified
-        if (field.required && !rules.some((rule: any) => rule.required)) {
+        if (field.required && !rules.some((rule) => 'required' in rule && rule.required)) {
             rules.unshift({
                 required: true,
                 message: `${field.label} is required`,

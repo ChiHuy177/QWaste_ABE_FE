@@ -8,7 +8,7 @@ export interface Notification {
     contentArgs?: unknown[];
     isRead: boolean;
     createdAt: string;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
 }
 
 export interface NotificationApiItem {
@@ -19,7 +19,7 @@ export interface NotificationApiItem {
     contentArgs: unknown[];
     isRead: boolean;
     createdAt: string;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
 }
 
 export interface NotificationResponse {

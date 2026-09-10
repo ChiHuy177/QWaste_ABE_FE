@@ -115,7 +115,7 @@ export const getMachineListTableColumns = (
             width: 100,
             align: 'center' as const,
             ...(props?.isMobile ? {} : { fixed: 'right' }),
-            render: (_: any, record: MachineOperatorHistory) => {
+            render: (_: unknown, record: MachineOperatorHistory) => {
                 return (
                     <Space size="small">
                         {canView && (

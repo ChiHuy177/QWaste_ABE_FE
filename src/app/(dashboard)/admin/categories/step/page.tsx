@@ -33,7 +33,7 @@ const StepListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: Partial<StepDTO> | null;
     }>({ open: false, mode: 'create', data: null });
 
     const [isFormLoading, setIsFormLoading] = useState(false);
@@ -110,7 +110,7 @@ const StepListPage = () => {
                     mode: 'edit',
                     data: detailData,
                 });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching step details:', error);
                 handleError(error, { fallbackKey: 'stepManagement.fetchError' });
                 setModalState({ open: false, mode: 'create', data: null });
@@ -134,7 +134,7 @@ const StepListPage = () => {
                         await StandardStepService.deleteStep(step.standardStepId);
                         toast.success(t('stepManagement.deleteSuccess'));
                         fetchStepData();
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                         console.error('Error deleting step:', error);
                         handleError(error, {
                             fallbackKey: 'stepManagement.deleteError',
@@ -153,7 +153,7 @@ const StepListPage = () => {
             try {
                 const detailData = await StandardStepService.getStepById(step.standardStepId);
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching step details:', error);
                 handleError(error, { fallbackKey: 'stepManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
@@ -192,7 +192,7 @@ const StepListPage = () => {
         fetchStepData();
     }, [fetchStepData]);
 
-    const handleSubmit = async (data: any, mode: 'create' | 'edit') => {
+    const handleSubmit = async (data: CreateStepRequest, mode: 'create' | 'edit') => {
         setConfirmModalState({
             open: true,
             type: mode,
@@ -201,7 +201,7 @@ const StepListPage = () => {
         throw new Error('CONFIRMATION_PENDING');
     };
 
-    const executeSubmit = async (data: any, mode: 'create' | 'edit') => {
+    const executeSubmit = async (data: CreateStepRequest, mode: 'create' | 'edit') => {
         try {
             if (mode === 'create') {
                 const payload: CreateStepRequest = {
@@ -228,7 +228,7 @@ const StepListPage = () => {
                 }
             }
             fetchStepData();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error submitting step:', error);
             handleError(error, {
                 fallbackKey:
@@ -442,7 +442,7 @@ const StepListPage = () => {
                 </div>
             </Card>
 
-            <EntityFormModal<any>
+            <EntityFormModal<CreateStepRequest>
                 open={modalState.open}
                 onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleSubmit}

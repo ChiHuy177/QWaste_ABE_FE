@@ -13,7 +13,7 @@ export class WebSocketService {
     private isConnected: boolean = false;
     private isConnecting: boolean = false;
     private connectionPromise: Promise<void> | null = null;
-    private connectionReject: ((reason?: any) => void) | null = null;
+    private connectionReject: ((reason?: unknown) => void) | null = null;
     private reconnectAttempts: number = 0;
     private maxReconnectAttempts: number = 5;
     private baseReconnectInterval: number = 2000; // Start at 2s
@@ -276,7 +276,7 @@ export class WebSocketService {
         this.notifyConnectionChange(false);
     }
 
-    public subscribe<T = any>(destination: string, callback: (message: T) => void): () => void {
+    public subscribe<T = unknown>(destination: string, callback: (message: T) => void): () => void {
         if (!this.client || !this.isConnected) {
             if (isDev) {
                 console.warn('[WebSocket] Cannot subscribe - not connected', {
@@ -328,7 +328,7 @@ export class WebSocketService {
         }
     }
 
-    public send(destination: string, payload: any): void {
+    public send(destination: string, payload: unknown): void {
         if (!this.client || !this.isConnected) {
             if (isDev) console.warn('[WebSocket] Cannot send - not connected');
             return;

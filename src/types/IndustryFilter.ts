@@ -25,7 +25,7 @@ export interface IndustryFilter {
 export interface IndustryFilterFormData {
     displayNameEn: string;
     displayNameVi: string;
-    shortNameEn?: string;
+    shortNameEn?: string | null;
     startTime: string;
     endTime: string;
     sortOrder?: number;

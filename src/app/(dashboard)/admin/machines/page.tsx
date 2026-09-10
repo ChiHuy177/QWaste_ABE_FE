@@ -16,6 +16,12 @@ import MachineTimelineModal from './_components/MachineTimelineModal';
 import MachineDashboardSummary from './_components/MachineDashboardSummary';
 import MachineDurationSummaryTable from './_components/MachineDurationSummaryTable';
 import { MachineOverview } from '@/types/Machine';
+
+interface ZoneEnergyWsFrame {
+    payload?:
+        | { type: 'MACHINES_CURRENT_POWER'; machines: Record<string, number> }
+        | { type: 'MACHINES_FULL_POWER'; data: MachineOverview[] };
+}
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { machineActions } from '@/stores';
 import { SpaceWithChildrenResponse } from '@/types/Space';
@@ -160,7 +166,7 @@ const MachinesPage: React.FC = () => {
         const topic = `/topic/energy/zone/${selectedSpaceId}`;
         if (isDev) console.log('[Machine Page] Subscribing to:', topic);
 
-        const unsubscribe = wsService.subscribe<any>(topic, (message) => {
+        const unsubscribe = wsService.subscribe<ZoneEnergyWsFrame>(topic, (message) => {
             if (message.payload?.type === 'MACHINES_CURRENT_POWER') {
                 dispatch(machineActions.updateMachinesPower(message.payload.machines));
             }

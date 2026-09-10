@@ -3,10 +3,10 @@
 import { useState, ReactNode } from 'react';
 import { Grid, Button, Tooltip } from 'antd';
 import { FilterOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
 import { Input, Typography } from 'antd';
 import PageHeader from './PageHeader';
 import { useTheme } from '@/hooks/useTheme';
+import type { SimpleMenuItem } from './MobilePageHeader';
 
 const { useBreakpoint } = Grid;
 const { Title } = Typography;
@@ -28,7 +28,7 @@ interface ResponsivePageHeaderProps {
 
     mobileSearch?: MobileSearchConfig;
     /** Extra icon buttons for mobile header (e.g. "Add" button) */
-    mobileMenuItems?: MenuProps['items'];
+    mobileMenuItems?: SimpleMenuItem[];
     /** When true, use PageHeader for both desktop and mobile */
     desktopOnly?: boolean;
 }
@@ -197,7 +197,7 @@ export default function ResponsivePageHeader({
                             />
                         )}
 
-                        {(mobileMenuItems || []).map((item: any) => (
+                        {(mobileMenuItems || []).map((item) => (
                             <Tooltip key={item.key} title={item.label}>
                                 <Button
                                     type="text"

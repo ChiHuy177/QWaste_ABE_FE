@@ -1,7 +1,8 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { PermissionChecklist } from './PermissionChecklist';
 
-export const getRoleFormFields = (t: any, mode: 'create' | 'edit'): FormFieldConfig[] => {
+export const getRoleFormFields = (t: TFunction, mode: 'create' | 'edit'): FormFieldConfig[] => {
     return [
         // Role Name
         {

@@ -29,7 +29,7 @@ const IndustryFilterListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: IndustryFilter | null;
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
@@ -98,7 +98,7 @@ const IndustryFilterListPage = () => {
                     mode: 'edit',
                     data: detailData,
                 });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching industry filter details:', error);
                 handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
             } finally {
@@ -140,7 +140,7 @@ const IndustryFilterListPage = () => {
             try {
                 const detailData = await IndustryFilterService.getIndustryFilterById(step.filterId);
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching industry filter details:', error);
                 handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
@@ -211,7 +211,7 @@ const IndustryFilterListPage = () => {
                         ...data,
                         filterId: modalState.data.filterId,
                     };
-                    await IndustryFilterService.updateIndustryFilter(submitData as any);
+                    await IndustryFilterService.updateIndustryFilter(submitData);
                     toast.success(t('industryFilterManagement.updateSuccess'));
                 }
             }

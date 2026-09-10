@@ -7,6 +7,7 @@ import ZoneCard from './ZoneCard';
 import MachineTimelineModal from '../../machines/_components/MachineTimelineModal';
 import { FactoryOverviewResponse } from '@/types/Factory';
 import { MachineOverview } from '@/types/Machine';
+import { MachineInFactoryOverview } from '@/types/Zone';
 import { Empty } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 
@@ -42,7 +43,7 @@ const FactoryZonesGrid: React.FC<FactoryZonesGridProps> = ({
         [factoryId, router]
     );
 
-    const handleMachineClick = useCallback((machine: any, e: React.MouseEvent) => {
+    const handleMachineClick = useCallback((machine: MachineInFactoryOverview, e: React.MouseEvent) => {
         e.stopPropagation();
 
         const mapStatus = (currentStatus: string): 'running' | 'idle' | 'error' | 'empty' => {
@@ -59,16 +60,12 @@ const FactoryZonesGrid: React.FC<FactoryZonesGridProps> = ({
             }
         };
 
-        const convertRuntimeToLogs = (runtimeByStatus: any) => {
+        const convertRuntimeToLogs = (runtimeByStatus: MachineInFactoryOverview['runtimeByStatus']) => {
             if (!runtimeByStatus) return [];
 
             const logs = [];
-            const statusMap =
-                runtimeByStatus instanceof Map
-                    ? runtimeByStatus
-                    : new Map(Object.entries(runtimeByStatus));
 
-            for (const [status, timeInSeconds] of statusMap) {
+            for (const [status, timeInSeconds] of runtimeByStatus) {
                 if (timeInSeconds > 0) {
                     logs.push({
                         logStatus: status as
@@ -86,15 +83,20 @@ const FactoryZonesGrid: React.FC<FactoryZonesGridProps> = ({
             return logs;
         };
 
+        // Zone/line overview API doesn't declare `productionCounter` on MachineInFactoryOverview;
+        // read it defensively in case the backend includes it anyway (matches prior any-typed behavior).
+        const productionCounter = (machine as unknown as { productionCounter?: number })
+            .productionCounter;
+
         const machineOverview: MachineOverview = {
             machineId: machine.machineId,
             machineName: machine.machineName,
             machineCode: machine.machineCode,
             power: machine.power,
             status: mapStatus(machine.currentStatus),
-            currentStatus: machine.currentStatus,
+            currentStatus: machine.currentStatus as MachineOverview['currentStatus'],
             currentEnergyConsumption: machine.currentEnergyConsumption || 0,
-            productionCounter: machine.productionCounter || 0,
+            productionCounter: productionCounter || 0,
             totalProductions: machine.totalProductions || 0,
             logs: convertRuntimeToLogs(machine.runtimeByStatus),
             operatorCount: machine.operatorCount || 0,

@@ -13,9 +13,11 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 import { getDefaultRoute } from '@/configs/permissions/routeAccess';
 import { defineAbilityFor } from '@/configs/permissions/defineAbility';
 import { AccountRole } from '@/types/User';
+import { getErrorStatus } from '@/utils/apiError';
 
 const { Text } = Typography;
 
@@ -57,7 +59,7 @@ const BRAND_COLORS = Object.freeze({
 
 const validateUsername = (
     username: string,
-    t: (key: string, options?: any) => string
+    t: TFunction
 ): string | undefined => {
     if (!username) return t('common.form.validation.usernameRequired');
     if (username.length < VALIDATION_CONFIG.MIN_PASSWORD_LENGTH)
@@ -69,7 +71,7 @@ const validateUsername = (
 
 const validatePassword = (
     password: string,
-    t: (key: string, options?: any) => string
+    t: TFunction
 ): string | undefined => {
     if (!password) return t('common.form.validation.passwordRequired');
     if (password.length < VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
@@ -185,7 +187,7 @@ const LoginForm = React.memo(() => {
             // Navigation will be handled by useEffect when user state updates
         } catch (_err: unknown) {
             console.log(_err);
-            const status = (_err as any).response?.status;
+            const status = getErrorStatus(_err);
             let errorKey = 'auth.errors.loginFailed';
             if (status === 400) {
                 errorKey = 'auth.errors.incorrectCredentials';

@@ -12,20 +12,17 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import LineSection from './LineSection';
+import { ZoneInFactoryOverview, MachineInFactoryOverview } from '@/types/Zone';
+import { LineInFactoryOverview } from '@/types/Line';
 
 const { Title, Text } = Typography;
 
 interface ZoneCardProps {
-    zone: {
-        zoneId: number;
-        zoneName: string;
-        zoneCode: string;
-        lines: any[];
-    };
+    zone: ZoneInFactoryOverview;
     isExpanded: boolean;
     onToggle: () => void;
     onLineClick: (zoneId: number, lineId: number) => void;
-    onMachineClick: (machine: any, e: React.MouseEvent) => void;
+    onMachineClick: (machine: MachineInFactoryOverview, e: React.MouseEvent) => void;
 }
 
 const ZoneCard: React.FC<ZoneCardProps> = ({
@@ -39,23 +36,22 @@ const ZoneCard: React.FC<ZoneCardProps> = ({
     const { t } = useTranslation();
     const [expandedLines, setExpandedLines] = useState<Set<number>>(new Set());
 
-    const calculateRuntimeByStatus = (runtimeByStatus: any, status: string): number => {
+    const calculateRuntimeByStatus = (
+        runtimeByStatus: MachineInFactoryOverview['runtimeByStatus'],
+        status: string
+    ): number => {
         if (!runtimeByStatus) return 0;
-
-        if (runtimeByStatus instanceof Map) {
-            return runtimeByStatus.get(status) || 0;
-        }
-        return runtimeByStatus[status] || 0;
+        return runtimeByStatus.get(status) || 0;
     };
 
-    const getTotalMachinesInZone = (lines: any[]): number => {
+    const getTotalMachinesInZone = (lines: LineInFactoryOverview[]): number => {
         return lines.reduce((total, line) => total + line.machines.length, 0);
     };
 
-    const calculateZoneRuntimeByStatus = (lines: any[], status: string): string => {
+    const calculateZoneRuntimeByStatus = (lines: LineInFactoryOverview[], status: string): string => {
         let totalSeconds = 0;
         lines.forEach((line) => {
-            line.machines.forEach((machine: any) => {
+            line.machines.forEach((machine) => {
                 totalSeconds += calculateRuntimeByStatus(machine.runtimeByStatus, status);
             });
         });
@@ -65,13 +61,13 @@ const ZoneCard: React.FC<ZoneCardProps> = ({
         return minutes > 0 ? `${hours}h${minutes}m` : `${hours}h`;
     };
 
-    const calculateZoneStats = (lines: any[]) => {
+    const calculateZoneStats = (lines: LineInFactoryOverview[]) => {
         let totalCalculatedEnergy = 0;
         let totalMeasuredEnergy = 0;
         let totalOperatorCount = 0;
 
         lines.forEach((line) => {
-            line.machines.forEach((machine: any) => {
+            line.machines.forEach((machine) => {
                 const machineRuntime = calculateRuntimeByStatus(machine.runtimeByStatus, 'RUNTIME');
                 const machineIdle = calculateRuntimeByStatus(machine.runtimeByStatus, 'IDLE');
                 const machineError = calculateRuntimeByStatus(machine.runtimeByStatus, 'ERROR');

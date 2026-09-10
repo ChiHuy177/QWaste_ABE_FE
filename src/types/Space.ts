@@ -73,6 +73,35 @@ export interface SpaceUpdationRequest {
     description?: string;
     displayOrder?: number;
 }
+
+/** Form values submitted by the create/edit Space modal (see spaceFormConfig.tsx). */
+export interface SpaceFormData {
+    spaceCode: string;
+    spaceName: string;
+    displayOrder: number;
+    description?: string | null;
+    floorPlanImageUrl?: string | File | null;
+}
+
+/** Context passed as `EntityFormModal` initialData: fields from the full record
+ * when editing (see SpaceDetailResponse), or just the parent/level context when
+ * creating a new space under a given level — all optional since only one set
+ * of fields is populated depending on `modalState.mode`. */
+export interface SpaceModalData {
+    spaceId?: number;
+    parentId?: number | null;
+    parentSpaceId?: number | null;
+    parentName?: string;
+    spaceLevelId?: number;
+    spaceLevelName?: string;
+    spaceCode?: string;
+    spaceName?: string;
+    floorPlanImageUrl?: string | null;
+    description?: string | null;
+    displayOrder?: number;
+    auditMetaData?: AuditMetaData;
+    spaceLevel?: SpaceLevel;
+}
 export interface SpacePickingWithChildren {
     spaceId: number;
     parentId: number;

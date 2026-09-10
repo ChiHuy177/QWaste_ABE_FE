@@ -18,7 +18,7 @@ import {
     FilePdfOutlined,
 } from '@ant-design/icons';
 import { FormFieldConfig } from './types';
-import type { UploadFile } from 'antd/es/upload/interface';
+import type { UploadFile, RcFile } from 'antd/es/upload/interface';
 import { toast } from 'sonner';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { DurationPicker } from '../DurationPicker';
@@ -56,7 +56,9 @@ export const compressImage = (file: File, quality = 0.7, maxWidth = 1920): Promi
                             type: 'image/jpeg',
                             lastModified: Date.now(),
                         });
-                        (compressedFile as any).uid = (file as any).uid;
+                        (compressedFile as File & { uid?: string }).uid = (
+                            file as File & { uid?: string }
+                        ).uid;
                         resolve(compressedFile);
                     },
                     'image/jpeg',
@@ -333,11 +335,11 @@ const ImageUploader = ({
             setPreviewUrl(url);
             setFileList([
                 {
-                    uid: (value as any).uid || '-1',
+                    uid: (value as File & { uid?: string }).uid || '-1',
                     name: value.name,
                     status: 'done',
                     url,
-                    originFileObj: value as any,
+                    originFileObj: value as unknown as RcFile,
                 },
             ]);
         } else if (typeof value === 'string' && value) {
@@ -625,11 +627,11 @@ const PdfUploader = ({
         }
     }, [value]);
 
-    const customRequest = (options: any) => {
+    const customRequest = (options: Parameters<NonNullable<UploadProps['customRequest']>>[0]) => {
         const { file, onSuccess } = options;
         // Store File object instead of uploading
-        onChange?.(file);
-        onSuccess({ url: '' });
+        onChange?.(file as File);
+        onSuccess?.({ url: '' });
     };
 
     const uploadProps: UploadProps = {

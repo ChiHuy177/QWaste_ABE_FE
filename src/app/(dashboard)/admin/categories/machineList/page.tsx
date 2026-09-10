@@ -19,6 +19,8 @@ import {
     Typography,
     Tag,
 } from 'antd';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { FilterOutlined, PlusOutlined } from '@ant-design/icons';
@@ -89,7 +91,7 @@ const MachineListPageContent = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: (Partial<Machine> & { spaceId?: number }) | null;
     }>({ open: false, mode: 'create', data: null });
     const { t } = useTranslation();
     const searchParams = useSearchParams();
@@ -144,10 +146,14 @@ const MachineListPageContent = () => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    const handleTableChange = (
+        pagination: TablePaginationConfig,
+        _filters: Record<string, FilterValue | null>,
+        sorter: SorterResult<Machine> | SorterResult<Machine>[]
+    ) => {
         if (pagination) {
-            setPage(pagination.current - 1);
-            setPageSize(pagination.pageSize);
+            setPage((pagination.current ?? 1) - 1);
+            setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
         }
 
         if (sorter) {
@@ -155,7 +161,9 @@ const MachineListPageContent = () => {
             const validSorters = sorters
                 .filter((s) => s.field && s.order)
                 .map((s) => {
-                    const field = Array.isArray(s.field) ? s.field.join('.') : s.field;
+                    const field = Array.isArray(s.field)
+                        ? s.field.map(String).join('.')
+                        : String(s.field);
                     const order = s.order === 'ascend' ? 'ASC' : 'DESC';
                     return `${field},${order}`;
                 });
@@ -238,7 +246,7 @@ const MachineListPageContent = () => {
                         spaceId: detailData.space?.spaceId ?? undefined,
                     },
                 });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching machine details:', error);
                 handleError(error, { fallbackKey: 'machineListManagement.fetchError' });
                 setModalState({ open: false, mode: 'create', data: null });
@@ -482,11 +490,11 @@ const MachineListPageContent = () => {
 
     const executeSubmit = async (data: MachineFormData, mode: 'create' | 'edit') => {
         try {
-            const machineImage = await uploadMachineImageIfNeeded((data as any).machineImage);
+            const machineImage = await uploadMachineImageIfNeeded(data.machineImage);
             const submitValues = { ...data, machineImage };
 
             if (mode === 'create') {
-                await createMachine(submitValues as MachineFormData);
+                await createMachine(submitValues);
                 try {
                     const spaceDetail = await SpaceService.getSpaceById(submitValues.spaceId);
                     toast.success(
@@ -508,7 +516,7 @@ const MachineListPageContent = () => {
                         ...submitValues,
                         machineId: modalState.data.machineId,
                     };
-                    await updateMachine(submitData as MachineUpdateFormData);
+                    await updateMachine(submitData);
                     toast.success(t('machineListManagement.updateSuccess'));
 
                     if (selectedSpaceId !== submitValues.spaceId) {
@@ -517,7 +525,7 @@ const MachineListPageContent = () => {
                     }
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error submitting machine:', error);
             handleError(error, {
                 fallbackKey:

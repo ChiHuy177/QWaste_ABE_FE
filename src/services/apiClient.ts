@@ -1,6 +1,7 @@
 'use client';
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { getApiErrorMessage, getErrorStatus } from '@/utils/apiError';
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
@@ -18,10 +19,10 @@ const apiClient: AxiosInstance = axios.create({
 let isRefreshing = false;
 let failedQueue: {
     resolve: () => void;
-    reject: (error?: any) => void;
+    reject: (error?: unknown) => void;
 }[] = [];
 
-const processQueue = (error: any) => {
+const processQueue = (error: unknown) => {
     failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve()));
     failedQueue = [];
 };
@@ -48,7 +49,7 @@ apiClient.interceptors.response.use(
                 return new Promise((resolve, reject) => {
                     failedQueue.push({
                         resolve: () => resolve(apiClient(originalRequest)),
-                        reject: (err: any) => reject(err),
+                        reject: (err: unknown) => reject(err),
                     });
                 });
             }
@@ -60,9 +61,9 @@ apiClient.interceptors.response.use(
                 // Proxy đã cập nhật httpOnly cookie — chỉ cần retry
                 processQueue(null);
                 return apiClient(originalRequest);
-            } catch (refreshErr: any) {
-                const status = refreshErr.response?.status;
-                const errorMessage = refreshErr.response?.data?.message || refreshErr.message;
+            } catch (refreshErr: unknown) {
+                const status = getErrorStatus(refreshErr);
+                const errorMessage = getApiErrorMessage(refreshErr);
 
                 if (status === 417) {
                     console.error('[AUTH] Refresh token invalid (417):', errorMessage);

@@ -1,7 +1,7 @@
 'use client';
 import { Badge, Input } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import { CSSProperties, useState, useEffect, useRef } from 'react';
+import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { CSSProperties, MouseEvent, useState, useEffect, useRef } from 'react';
 
 export interface SearchInputProps {
     value: string;
@@ -58,16 +58,15 @@ export const SearchInput = ({
         return () => clearTimeout(timer);
     }, [inputValue, debounceMs, onChange]);
 
-    const FilterIcon = showFilterIcon ? require('@ant-design/icons').FilterOutlined : null;
 
     return (
         <Input
             placeholder={placeholder}
             prefix={<SearchOutlined />}
             suffix={
-                showFilterIcon && FilterIcon ? (
+                showFilterIcon ? (
                     <Badge count={activeFilterCount} size="small" offset={[-2, 2]}>
-                        <FilterIcon
+                        <FilterOutlined
                             aria-label="Open filters"
                             style={{
                                 color: isFilterActive ? '#1677ff' : '#bfbfbf',
@@ -75,7 +74,7 @@ export const SearchInput = ({
                                 fontSize: 16,
                                 transition: 'color 0.3s',
                             }}
-                            onClick={(e: any) => {
+                            onClick={(e: MouseEvent) => {
                                 e.stopPropagation();
                                 onFilterClick?.();
                             }}

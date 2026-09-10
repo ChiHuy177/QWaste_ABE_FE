@@ -486,7 +486,7 @@ export const chartColors = [
 export const spaceLevelColors: Record<number, string> = new Proxy(_spaceLevelBaseColors, {
     get: (target, prop) => {
         const level = Number(prop);
-        if (isNaN(level) || level <= 0) return target[prop as any];
+        if (isNaN(level) || level <= 0) return Reflect.get(target, prop);
         const wrappedLevel = ((level - 1) % 8) + 1;
         return target[wrappedLevel];
     },
@@ -506,7 +506,7 @@ const _spaceLevelTextColors: Record<number, string> = {
 export const spaceLevelTextColors: Record<number, string> = new Proxy(_spaceLevelTextColors, {
     get: (target, prop) => {
         const level = Number(prop);
-        if (isNaN(level) || level <= 0) return target[prop as any];
+        if (isNaN(level) || level <= 0) return Reflect.get(target, prop);
         const wrappedLevel = ((level - 1) % 8) + 1;
         return target[wrappedLevel];
     },

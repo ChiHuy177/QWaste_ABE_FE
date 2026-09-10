@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { SpaceWithChildrenResponse } from '@/types/Space';
 import { Button, Dropdown, Tag, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
@@ -10,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
 import { spaceLevelColors, spaceLevelTextColors } from '@/configs/antdTheme';
+import { AppAbility } from '@/configs/permissions/caslAbility';
 
 
 const ACTION_BUTTON_SIZE = 34;
@@ -22,8 +24,8 @@ export interface SpaceTableColumnProps {
     onAddChild: (parentSpace: SpaceWithChildrenResponse) => void;
     maxSpaceLevel: number;
     isMobile: boolean;
-    t: (key: string, options?: any) => string;
-    ability: any;
+    t: TFunction;
+    ability: AppAbility;
 }
 
 export const getSpaceTableColumns = ({

@@ -104,7 +104,7 @@ const MachineTypeListPage = () => {
             try {
                 const detailData = await MachineTypeService.getMachineTypeById(step.machineTypeId);
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching machine type details:', error);
                 handleError(error, { fallbackKey: 'machineTypeManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });

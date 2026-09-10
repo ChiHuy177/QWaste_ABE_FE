@@ -85,7 +85,7 @@ const ElectricalChart: React.FC<ElectricalChartProps> = ({ zones }) => {
         });
 
         const data = filteredLabels.map((label) => {
-            const dataPoint: any = { label };
+            const dataPoint: Record<string, string | number> = { label };
             zones.forEach((zone) => {
                 const consumption = zone.filterConsumptionResult.dateConsumption.find(
                     (point) => point.label === label
@@ -138,7 +138,7 @@ const ElectricalChart: React.FC<ElectricalChartProps> = ({ zones }) => {
         setZoomDomain(null);
     };
 
-    const handleBrushChange = (brushArea: any) => {
+    const handleBrushChange = (brushArea: { startIndex?: number; endIndex?: number }) => {
         if (brushArea && brushArea.startIndex !== undefined && brushArea.endIndex !== undefined) {
             setBrushIndexes({
                 startIndex: brushArea.startIndex,

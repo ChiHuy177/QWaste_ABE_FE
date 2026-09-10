@@ -2,11 +2,19 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Typography, Button, Badge, Input, Tooltip } from 'antd';
+import type { InputRef } from 'antd';
 import { SearchOutlined, FilterOutlined, CloseOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
 import { useTheme } from '@/hooks/useTheme';
 
 const { Title } = Typography;
+
+/** Simple icon-button item — not a full antd MenuItemType (no dividers/submenus/groups). */
+export interface SimpleMenuItem {
+    key: string;
+    label: React.ReactNode;
+    icon?: React.ReactNode;
+    onClick?: () => void;
+}
 
 interface MobilePageHeaderProps {
     title: string;
@@ -18,7 +26,7 @@ interface MobilePageHeaderProps {
     onFilterClick?: () => void;
     activeFiltersCount?: number;
     /** Action buttons rendered as icon buttons (use items with icon + onClick) */
-    additionalMenuItems?: MenuProps['items'];
+    additionalMenuItems?: SimpleMenuItem[];
 }
 
 const MobilePageHeader: React.FC<MobilePageHeaderProps> = ({
@@ -33,7 +41,7 @@ const MobilePageHeader: React.FC<MobilePageHeaderProps> = ({
     additionalMenuItems = [],
 }) => {
     const [searchExpanded, setSearchExpanded] = useState(false);
-    const searchInputRef = useRef<any>(null);
+    const searchInputRef = useRef<InputRef>(null);
     const { resolvedTheme } = useTheme();
 
     useEffect(() => {
@@ -140,7 +148,7 @@ const MobilePageHeader: React.FC<MobilePageHeaderProps> = ({
                         </Tooltip>
                     )}
 
-                    {(additionalMenuItems || []).map((item: any) => (
+                    {(additionalMenuItems || []).map((item) => (
                         <Tooltip key={item.key} title={item.label}>
                             <Button
                                 type="text"

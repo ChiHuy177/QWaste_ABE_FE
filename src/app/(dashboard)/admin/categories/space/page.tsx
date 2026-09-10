@@ -1,6 +1,6 @@
 'use client';
 import { cloneElement, useCallback, useEffect, useMemo, useState } from 'react';
-import type { CSSProperties, ReactElement } from 'react';
+import type { CSSProperties, ReactElement, MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceService } from '@/services/SpaceService';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
@@ -25,6 +25,8 @@ import {
     SpaceWithChildrenResponse,
     SpaceCreationRequest,
     SpaceUpdationRequest,
+    SpaceFormData,
+    SpaceModalData,
 } from '@/types/Space';
 import { getSpaceTableColumns, SpaceTableColumnProps } from './_components/Columns';
 import { EntityFormModal } from '@/components/shared/FormModal';
@@ -75,7 +77,7 @@ const SpaceListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: SpaceModalData | null;
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
@@ -224,7 +226,7 @@ const SpaceListPage = () => {
                     mode: 'edit',
                     data: detailData,
                 });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching space details:', error);
                 handleError(error, { fallbackKey: 'spaceManagement.fetchError' });
                 setModalState({ open: false, mode: 'create', data: null });
@@ -289,7 +291,7 @@ const SpaceListPage = () => {
                     queryFn: () => SpaceService.getSpaceById(step.spaceId),
                 });
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching step details:', error);
                 handleError(error, { fallbackKey: 'spaceManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
@@ -383,7 +385,7 @@ const SpaceListPage = () => {
         }
     }, [searchTerm, filteredData]);
 
-    const handleSubmit = async (data: any, mode: 'create' | 'edit') => {
+    const handleSubmit = async (data: SpaceFormData, mode: 'create' | 'edit') => {
         setConfirmModalState({
             open: true,
             type: mode,
@@ -410,7 +412,7 @@ const SpaceListPage = () => {
         return imageUrl;
     };
 
-    const executeSubmit = async (data: any, mode: 'create' | 'edit') => {
+    const executeSubmit = async (data: SpaceFormData, mode: 'create' | 'edit') => {
         try {
             const floorPlanImageUrl = await uploadFloorPlanIfNeeded(data.floorPlanImageUrl);
 
@@ -419,7 +421,7 @@ const SpaceListPage = () => {
                     spaceCode: data.spaceCode,
                     spaceName: data.spaceName,
                     floorPlanImageUrl,
-                    description: data.description,
+                    description: data.description ?? undefined,
                     displayOrder: data.displayOrder,
                     spaceLevelId: modalState.data?.spaceLevelId,
                     parentSpaceId: modalState.data?.parentSpaceId,
@@ -433,7 +435,7 @@ const SpaceListPage = () => {
                         spaceCode: data.spaceCode,
                         spaceName: data.spaceName,
                         floorPlanImageUrl,
-                        description: data.description,
+                        description: data.description ?? undefined,
                         displayOrder: data.displayOrder,
                         parentSpaceId: modalState.data.parentId,
                     };
@@ -441,7 +443,7 @@ const SpaceListPage = () => {
                     toast.success(t('spaceManagement.form.updateSuccess'));
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error submitting space:', error);
             handleError(error, {
                 fallbackKey:
@@ -715,7 +717,10 @@ const SpaceListPage = () => {
                                     <span
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onExpand(record, e as any);
+                                            onExpand(
+                                                record,
+                                                e as unknown as MouseEvent<HTMLButtonElement>
+                                            );
                                         }}
                                         style={{
                                             marginRight: 8,
@@ -751,7 +756,7 @@ const SpaceListPage = () => {
                 </div>
             </Card>
 
-            <EntityFormModal<any>
+            <EntityFormModal<SpaceFormData>
                 open={modalState.open}
                 onOpenChange={(open) => setModalState({ ...modalState, open })}
                 onSubmit={handleSubmit}

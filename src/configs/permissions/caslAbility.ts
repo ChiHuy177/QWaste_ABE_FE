@@ -81,5 +81,5 @@ export type Subject =
 export type AppAbility = PureAbility<[Action, Subject]>;
 export interface Conditions {
     userId?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }

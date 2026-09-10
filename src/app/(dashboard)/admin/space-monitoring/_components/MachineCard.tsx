@@ -3,16 +3,32 @@
 import React from 'react';
 import { Flex, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { MachineWithStatusLogsSummary } from '@/types/Machine';
-
 const { Text } = Typography;
 
-interface MachineCardProps {
-    machine: MachineWithStatusLogsSummary;
-    onClick: (machine: MachineWithStatusLogsSummary, e: React.MouseEvent) => void;
+/**
+ * MachineCard is shared by two real data shapes with incompatible
+ * `runtimeByStatus` representations: the factory/zone/line overview grid
+ * (`MachineInFactoryOverview`, `runtimeByStatus` as a `Map`) and the flat
+ * machine grid (`MachineWithStatusLogsSummary`, `runtimeByStatus` as a plain
+ * object). Kept generic so each caller's own concrete type flows through
+ * untouched instead of being widened to `any`.
+ */
+export interface MachineCardData {
+    machineId: string;
+    machineName: string;
+    topic?: string;
+    currentStatus: string;
+    operatorCount?: number;
+    totalProductions: number;
+    runtimeByStatus?: Map<string, number> | Record<string, number | undefined>;
 }
 
-const MachineCard: React.FC<MachineCardProps> = ({ machine, onClick }) => {
+interface MachineCardProps<T extends MachineCardData> {
+    machine: T;
+    onClick: (machine: T, e: React.MouseEvent) => void;
+}
+
+function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: MachineCardProps<T>) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
@@ -91,16 +107,21 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onClick }) => {
         }
     };
 
-    const calculateRuntimeByStatus = (runtimeByStatus: any, status: string): number => {
+    const calculateRuntimeByStatus = (
+        runtimeByStatus: MachineCardData['runtimeByStatus'],
+        status: string
+    ): number => {
         if (!runtimeByStatus) return 0;
 
         if (runtimeByStatus instanceof Map) {
             return runtimeByStatus.get(status) || 0;
         }
-        return runtimeByStatus[status] || 0;
+        return (runtimeByStatus as Record<string, number | undefined>)[status] || 0;
     };
 
-    const calculateOnlineTime = (runtimeByStatus: any): number => {
+    const calculateOnlineTime = (
+        runtimeByStatus: MachineCardData['runtimeByStatus']
+    ): number => {
         if (!runtimeByStatus) return 0;
 
         let totalSeconds = 0;
@@ -349,4 +370,6 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onClick }) => {
     );
 };
 
-export default React.memo(MachineCard);
+const MachineCard = React.memo(MachineCardComponent) as typeof MachineCardComponent;
+
+export default MachineCard;

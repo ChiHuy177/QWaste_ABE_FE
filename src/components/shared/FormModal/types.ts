@@ -27,9 +27,14 @@ export interface FormFieldConfig {
     placeholder?: string;
     required?: boolean;
     disabled?: boolean | ((mode: 'create' | 'edit') => boolean);
-    disabledWhen?: (values: Record<string, any>) => boolean;
+    disabledWhen?: (values: Record<string, unknown>) => boolean;
     dependencies?: string[];
     rules?: Rule[];
+    // `value`/`defaultValue`/`onChange`/`normalize`/`render` below are deliberately `any`:
+    // this config drives ~10 FieldType variants (text/number/date/image/switch/...) each with
+    // a different value shape (string/number/Dayjs/File/boolean/...). Tightening to `unknown`
+    // would require narrowing at every one of those call sites for no real safety gain, since
+    // the actual type is already determined by `type` at each usage site.
     options?: { value: any; label: string }[];
     loading?: boolean;
     span?: {
@@ -67,12 +72,12 @@ export interface FormFieldConfig {
     };
 }
 
-export interface EntityFormModalProps<TFormData extends Record<string, any>> {
+export interface EntityFormModalProps<TFormData extends Record<string, unknown>> {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (data: TFormData, mode: 'create' | 'edit') => Promise<void>;
     mode: 'create' | 'edit';
-    initialData?: TFormData | null;
+    initialData?: Partial<TFormData> | null;
     fields: FormFieldConfig[];
     title?: {
         create: string;

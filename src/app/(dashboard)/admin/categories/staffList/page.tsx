@@ -85,7 +85,7 @@ const StaffListPage = () => {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
-                    gender: (fullStaffData as any).gender || '',
+                    gender: fullStaffData.gender || '',
                     accessibleFactoryIds:
                         fullStaffData.accessibleFactories?.map((f) => f.factoryId) || [],
                 };
@@ -501,11 +501,9 @@ const StaffListPage = () => {
                         key: 'status',
                         icon: <CheckCircleOutlined />,
                         label: t('staffManagement.table.headers.status'),
-                        children:
-                            viewModalState.data?.softDeleteMetaData?.isDeleted ||
-                            (viewModalState.data?.softDeleteMetaData as any)?.deleted
-                                ? t('staffManagement.status.notWorking')
-                                : t('staffManagement.status.working'),
+                        children: viewModalState.data?.softDeleteMetaData?.isDeleted
+                            ? t('staffManagement.status.notWorking')
+                            : t('staffManagement.status.working'),
                     },
                 ]}
             />

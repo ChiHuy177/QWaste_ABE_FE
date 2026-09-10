@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button, Col, Input, Row, theme } from 'antd';
+import type { InputRef } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 
 const DEFAULT_COL_XS = 24;
@@ -40,7 +41,7 @@ const AdvancedFilterPanel = ({
     resetLabel,
 }: AdvancedFilterPanelProps) => {
     const { token } = theme.useToken();
-    const firstInputRef = useRef<any>(null);
+    const firstInputRef = useRef<InputRef>(null);
 
     const [localValues, setLocalValues] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};
