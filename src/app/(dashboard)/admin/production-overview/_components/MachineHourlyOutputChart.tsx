@@ -30,14 +30,10 @@ interface MachineHourlyOutputChartProps {
     subtitle?: string;
 }
 
-export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> = ({
-    machineCode,
-    seriesData,
-    isLoading = false,
-    subtitle: customSubtitle,
-}) => {
-    const { t } = useTranslation();
-    const { token } = theme.useToken();
+export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> = React.memo(
+    ({ machineCode, seriesData, isLoading = false, subtitle: customSubtitle }) => {
+        const { t } = useTranslation();
+        const { token } = theme.useToken();
 
     // Determine effective granularity
     const effectiveGranularity: MachineProductionBucketGranularity = useMemo(() => {
@@ -108,7 +104,7 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
     }, [hasPlannedData, chartData]);
 
     // Title, Subtitle and Unit Label based on granularity
-    const { title, subtitle, unitLabel, granTagLabel } = useMemo(() => {
+    const { title, subtitle, granTagLabel } = useMemo(() => {
         let tagText = t('productionOverview.performanceReport.granularityDay', 'Theo ngày');
         let titleText = t('productionOverview.machineDetail.dailyOutput', 'Sản lượng theo ngày');
         let subText = `${machineCode} – ${t('productionOverview.machineDetail.dailyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo ngày')} (${t('productionOverview.machineDetail.pcsPerDay', 'sp/ngày')})`;
@@ -504,4 +500,6 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
             )}
         </Card>
     );
-};
+});
+
+MachineHourlyOutputChart.displayName = 'MachineHourlyOutputChart';

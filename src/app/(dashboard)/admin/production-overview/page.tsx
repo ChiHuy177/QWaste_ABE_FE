@@ -5,13 +5,12 @@ import { ErrorAnalyticsModal } from './_components/ErrorAnalyticsModal';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Col, Row, Spin } from 'antd';
 import { toast } from 'sonner';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { factoryOverviewActions } from '@/stores';
-import { IFactoryOverviewStoreState } from '@/stores/FactoryOverviewStore';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { DashboardService } from '@/services/DashboardService';
 import { IndustryFilter } from '@/types/IndustryFilter';
@@ -23,7 +22,7 @@ import {
     SingleMachinePerformanceResponse,
     SingleMachineKpiSummaryState,
 } from '@/types/Dashboard';
-import { KpiSummaryData } from '@/configs/mockData/productionOverviewMockData';
+import { KpiSummaryData } from '@/types/ProductionOverview';
 import { ExcelExportService } from '@/services/ExcelExportService';
 
 import { ProductionOverviewHeader } from './_components/ProductionOverviewHeader';
@@ -51,9 +50,8 @@ const ProductionOverviewPage: React.FC = () => {
     const dispatch = useAppDispatch();
     usePageTitle(t('permissionSubjects.production_overview'));
 
-    const { spaces, isLoadingSpaces } = useAppSelector(
-        (state) => state.factoryOverview
-    ) as IFactoryOverviewStoreState;
+    const spaces = useAppSelector((state) => state.factoryOverview.spaces);
+    const isLoadingSpaces = useAppSelector((state) => state.factoryOverview.isLoadingSpaces);
 
     const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null);
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
@@ -112,7 +110,7 @@ const ProductionOverviewPage: React.FC = () => {
             try {
                 const filters = await IndustryFilterService.getIndustryFiltersForPicking();
                 setIndustryFilters(filters);
-                if (filters.length > 0 && selectedTimePeriod === null) {
+                if (filters.length > 0) {
                     const dayShiftFilter =
                         filters.find(
                             (f) =>
@@ -142,7 +140,7 @@ const ProductionOverviewPage: React.FC = () => {
             }
         };
         fetchFilters();
-    }, [selectedTimePeriod]);
+    }, []);
 
     const isCustomRangeMode = timeFilterMode !== 'PRESET';
 
@@ -345,8 +343,10 @@ const ProductionOverviewPage: React.FC = () => {
                         },
                         maxCapacity: {
                             current: 0,
-                            unit: 'sp/h',
+                            unit: 'h',
+                            seconds: 0,
                         },
+                        maxCapacitySeconds: 0,
                         downtimeMinutes: {
                             current: downtimeMins,
                             overTargetMinutes: 0,
@@ -465,8 +465,10 @@ const ProductionOverviewPage: React.FC = () => {
             },
             maxCapacity: {
                 current: 0,
-                unit: 'sp/h',
+                unit: 'h',
+                seconds: 0,
             },
+            maxCapacitySeconds: 0,
             actualCapacity: {
                 current: 0,
                 unit: 'sp/h',
@@ -535,6 +537,26 @@ const ProductionOverviewPage: React.FC = () => {
         } else {
             setSelectedMachineId(null);
         }
+    }, []);
+
+    const handleFactoryChange = useCallback((id: number) => {
+        setSelectedFactoryId(id);
+    }, []);
+
+    const handleBackToOverview = useCallback(() => {
+        setSelectedMachineCode(null);
+        setSelectedMachineId(null);
+        setMachineProductionSeries(null);
+        setSingleMachinePerformance(null);
+        setSingleMachineKpis(null);
+    }, []);
+
+    const handleOpenErrorModal = useCallback(() => {
+        setIsErrorModalOpen(true);
+    }, []);
+
+    const handleCloseErrorModal = useCallback(() => {
+        setIsErrorModalOpen(false);
     }, []);
 
     // Resolve machineId from live datasets or selectedMachineId
@@ -769,14 +791,33 @@ const ProductionOverviewPage: React.FC = () => {
         t,
     ]);
 
+    const selectedMachineName = useMemo(() => {
+        return (
+            singleMachinePerformance?.machineName ||
+            machineProductionSeries?.machineName ||
+            singleMachineKpis?.efficiency?.machineName ||
+            singleMachineKpis?.capacity?.machineName ||
+            selectedMachineCode
+        );
+    }, [
+        singleMachinePerformance?.machineName,
+        machineProductionSeries?.machineName,
+        singleMachineKpis?.efficiency?.machineName,
+        singleMachineKpis?.capacity?.machineName,
+        selectedMachineCode,
+    ]);
+
+    const restrictMachineIds = useMemo(
+        () => (selectedMachineCode ? [selectedMachineCode] : undefined),
+        [selectedMachineCode]
+    );
+
     const headerActions = useMemo(
         () => (
             <ProductionOverviewHeader
                 spaces={spaces}
                 selectedFactoryId={selectedFactoryId}
-                onFactoryChange={(id) => {
-                    setSelectedFactoryId(id);
-                }}
+                onFactoryChange={handleFactoryChange}
                 industryFilters={industryFilters}
                 currentMode={timeFilterMode}
                 currentPeriodId={currentPeriodId}
@@ -796,6 +837,7 @@ const ProductionOverviewPage: React.FC = () => {
         [
             spaces,
             selectedFactoryId,
+            handleFactoryChange,
             industryFilters,
             timeFilterMode,
             currentPeriodId,
@@ -826,13 +868,7 @@ const ProductionOverviewPage: React.FC = () => {
                     <MachineDetailView
                         machineCode={selectedMachineCode}
                         machineId={resolvedMachineId}
-                        machineName={
-                            singleMachinePerformance?.machineName ||
-                            machineProductionSeries?.machineName ||
-                            singleMachineKpis?.efficiency?.machineName ||
-                            singleMachineKpis?.capacity?.machineName ||
-                            selectedMachineCode
-                        }
+                        machineName={selectedMachineName}
                         machineList={availableMachineList}
                         productionSeries={machineProductionSeries}
                         performanceSeries={singleMachinePerformance}
@@ -842,14 +878,8 @@ const ProductionOverviewPage: React.FC = () => {
                         isLoadingKpis={isLoadingMachineKpis}
                         subtitle={activeFilterLabel}
                         onSelectMachine={handleSelectMachine}
-                        onBack={() => {
-                            setSelectedMachineCode(null);
-                            setSelectedMachineId(null);
-                            setMachineProductionSeries(null);
-                            setSingleMachinePerformance(null);
-                            setSingleMachineKpis(null);
-                        }}
-                        onDowntimeClick={() => setIsErrorModalOpen(true)}
+                        onBack={handleBackToOverview}
+                        onDowntimeClick={handleOpenErrorModal}
                     />
                 ) : (
                     /* Plant Overview View */
@@ -857,7 +887,7 @@ const ProductionOverviewPage: React.FC = () => {
                         {/* 1. Top KPI Summary Cards (Plant-wide with live API data) */}
                         <KpiCardsSection
                             data={currentKpiData}
-                            onDowntimeClick={() => setIsErrorModalOpen(true)}
+                            onDowntimeClick={handleOpenErrorModal}
                         />
 
                         {/* 2. Middle Row: Machine Efficiency (50%) & Machine Plan vs Actual (50%) */}
@@ -892,13 +922,13 @@ const ProductionOverviewPage: React.FC = () => {
             </Spin>
             <ErrorAnalyticsModal
                 isOpen={isErrorModalOpen}
-                onClose={() => setIsErrorModalOpen(false)}
+                onClose={handleCloseErrorModal}
                 spaceId={selectedFactoryId}
                 filterId={selectedTimePeriod}
                 startDate={startDate}
                 endDate={endDate}
                 isDateRange={isCustomRangeMode}
-                restrictToMachineIds={selectedMachineCode ? [selectedMachineCode] : undefined}
+                restrictToMachineIds={restrictMachineIds}
             />
         </div>
     );

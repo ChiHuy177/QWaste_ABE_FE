@@ -40,14 +40,10 @@ interface PerformanceChartItem {
     efficiency: number | null;
 }
 
-export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartProps> = ({
-    machineCode,
-    performanceData,
-    isLoading = false,
-    subtitle: customSubtitle,
-}) => {
-    const { t } = useTranslation();
-    const { token } = theme.useToken();
+export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartProps> = React.memo(
+    ({ machineCode, performanceData, isLoading = false, subtitle: customSubtitle }) => {
+        const { t } = useTranslation();
+        const { token } = theme.useToken();
 
     const maxCapLabel = t(
         'productionOverview.machineDetail.maxCapacityHoursLabel',
@@ -450,4 +446,6 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
             )}
         </Card>
     );
-};
+});
+
+Machine7DaysEfficiencyChart.displayName = 'Machine7DaysEfficiencyChart';

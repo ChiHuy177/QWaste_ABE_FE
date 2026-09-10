@@ -1,20 +1,18 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Button, Col, Row, Select, Space, Tag, Tooltip, Typography, theme } from 'antd';
+import { Col, Row } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeftOutlined, LaptopOutlined } from '@ant-design/icons';
 import {
     DashboardMachineProductionSeriesResponse,
     SingleMachinePerformanceResponse,
     SingleMachineKpiSummaryState,
 } from '@/types/Dashboard';
-import { KpiSummaryData } from '@/configs/mockData/productionOverviewMockData';
+import { KpiSummaryData } from '@/types/ProductionOverview';
+import { MachineDetailHeader } from './MachineDetailHeader';
 import { KpiCardsSection } from './KpiCardsSection';
 import { MachineHourlyOutputChart } from './MachineHourlyOutputChart';
 import { Machine7DaysEfficiencyChart } from './Machine7DaysEfficiencyChart';
-
-const { Text, Title } = Typography;
 
 export interface MachineListItem {
     machineId?: string;
@@ -39,23 +37,23 @@ interface MachineDetailViewProps {
     onDowntimeClick?: () => void;
 }
 
-export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
-    machineCode,
-    machineName,
-    machineList,
-    productionSeries,
-    performanceSeries,
-    singleMachineKpis,
-    isLoadingSeries = false,
-    isLoadingPerformance = false,
-    isLoadingKpis = false,
-    subtitle,
-    onSelectMachine,
-    onBack,
-    onDowntimeClick,
-}) => {
-    const { t } = useTranslation();
-    const { token } = theme.useToken();
+export const MachineDetailView: React.FC<MachineDetailViewProps> = React.memo(
+    ({
+        machineCode,
+        machineName,
+        machineList,
+        productionSeries,
+        performanceSeries,
+        singleMachineKpis,
+        isLoadingSeries = false,
+        isLoadingPerformance = false,
+        isLoadingKpis: _isLoadingKpis = false,
+        subtitle,
+        onSelectMachine,
+        onBack,
+        onDowntimeClick,
+    }) => {
+        const { t } = useTranslation();
 
     // Compute live KPI summary prioritizing dedicated single machine KPI endpoints
     const computedKpi = useMemo<KpiSummaryData>(() => {
@@ -105,7 +103,11 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                     ? Math.round(plannedQty / plannedWorkingHoursVal)
                     : 0;
             const rateVsMax =
-                plannedCap > 0 ? Math.min(100, Math.round((actualCap / plannedCap) * 100)) : 0;
+                plannedCap > 0
+                    ? Math.min(100, Math.round((actualCap / plannedCap) * 100))
+                    : plannedWorkingSec > 0 && totalRuntimeSec > 0
+                      ? Math.min(100, Math.round((totalRuntimeSec / plannedWorkingSec) * 100))
+                      : 0;
 
             const statusTag =
                 oeeVal >= 85
@@ -122,10 +124,14 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                     statusTag,
                 },
                 maxCapacity: {
-                    current: plannedCap,
-                    unit: 'sp/h',
+                    current: plannedWorkingSec,
+                    unit: 'h',
+                    seconds: plannedWorkingSec,
+                    hours: Math.floor(plannedWorkingSec / 3600),
+                    minutes: Math.round((plannedWorkingSec % 3600) / 60),
                     target: plannedCap,
                 },
+                maxCapacitySeconds: plannedWorkingSec,
                 downtimeMinutes: {
                     current: downtimeMins,
                     overTargetMinutes: 0,
@@ -218,7 +224,11 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                 ? Math.round(totalPlannedQty / plannedWorkingHoursVal)
                 : 0;
         const rateVsMax =
-            plannedCap > 0 ? Math.min(100, Math.round((actualCap / plannedCap) * 100)) : 0;
+            plannedCap > 0
+                ? Math.min(100, Math.round((actualCap / plannedCap) * 100))
+                : totalPlannedWorkingSec > 0 && totalRuntimeSec > 0
+                  ? Math.min(100, Math.round((totalRuntimeSec / totalPlannedWorkingSec) * 100))
+                  : 0;
 
         return {
             oee: {
@@ -228,10 +238,14 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                 statusTag,
             },
             maxCapacity: {
-                current: plannedCap,
-                unit: 'sp/h',
+                current: totalPlannedWorkingSec,
+                unit: 'h',
+                seconds: totalPlannedWorkingSec,
+                hours: Math.floor(totalPlannedWorkingSec / 3600),
+                minutes: Math.round((totalPlannedWorkingSec % 3600) / 60),
                 target: plannedCap,
             },
+            maxCapacitySeconds: totalPlannedWorkingSec,
             downtimeMinutes: {
                 current: downtimeMins,
                 overTargetMinutes: 0,
@@ -276,194 +290,48 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         return (lastBucket?.runtimeSeconds ?? 0) > 0;
     }, [singleMachineKpis, performanceSeries]);
 
-    const displayName = machineName && machineName !== machineCode ? machineName : null;
+        return (
+            <div>
+                {/* Isolated, memoized Machine Header & Switcher Bar */}
+                <MachineDetailHeader
+                    machineCode={machineCode}
+                    machineName={machineName}
+                    machineList={machineList}
+                    isRunning={isRunning}
+                    onSelectMachine={onSelectMachine}
+                    onBack={onBack}
+                />
 
-    return (
-        <div>
-            {/* Machine Header & Switcher Bar */}
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 12,
-                    padding: '12px 16px',
-                    borderRadius: token.borderRadiusLG,
-                    backgroundColor: token.colorBgContainer,
-                    border: `1px solid ${token.colorBorderSecondary}`,
-                    marginBottom: 16,
-                }}
-            >
-                {/* Left: Back button + Machine Title & Status */}
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        flexWrap: 'wrap',
-                        minWidth: 0,
-                        flex: 1,
-                    }}
-                >
-                    <Button
-                        icon={<ArrowLeftOutlined />}
-                        onClick={onBack}
-                        style={{ borderRadius: token.borderRadius }}
-                    >
-                        {t('productionOverview.machineDetail.backToOverview')}
-                    </Button>
+                {/* 4 KPI Cards for this machine (computed dynamically from live data) */}
+                <KpiCardsSection
+                    data={computedKpi}
+                    isMachineView={true}
+                    machineCode={machineCode}
+                    onDowntimeClick={onDowntimeClick}
+                />
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                        <div
-                            style={{
-                                width: 32,
-                                height: 32,
-                                minWidth: 32,
-                                borderRadius: 8,
-                                backgroundColor: token.colorPrimaryBg,
-                                color: token.colorPrimary,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 16,
-                            }}
-                        >
-                            <LaptopOutlined />
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                    minWidth: 0,
-                                }}
-                            >
-                                <Tooltip
-                                    title={
-                                        displayName
-                                            ? `${machineCode} (${displayName})`
-                                            : machineCode
-                                    }
-                                >
-                                    <Title
-                                        level={4}
-                                        style={{
-                                            margin: 0,
-                                            fontWeight: 800,
-                                            maxWidth: 280,
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                        }}
-                                    >
-                                        {machineCode}
-                                    </Title>
-                                </Tooltip>
-                                {displayName && (
-                                    <Tooltip title={displayName}>
-                                        <Tag
-                                            color="blue"
-                                            style={{
-                                                borderRadius: 6,
-                                                margin: 0,
-                                                fontSize: 11,
-                                                maxWidth: 140,
-                                                whiteSpace: 'nowrap',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                            }}
-                                        >
-                                            {displayName}
-                                        </Tag>
-                                    </Tooltip>
-                                )}
-                                <Tag
-                                    color={isRunning ? 'success' : 'error'}
-                                    style={{
-                                        borderRadius: 6,
-                                        margin: 0,
-                                        fontSize: 11,
-                                        fontWeight: 600,
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    ●{' '}
-                                    {isRunning
-                                        ? t('productionOverview.machineDetail.statusRunning')
-                                        : t('productionOverview.machineDetail.statusStopped')}
-                                </Tag>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right: Fast Machine Switcher Dropdown (compact fixed width) */}
-                <Space size={8} align="center" style={{ flexShrink: 0 }}>
-                    <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>
-                        {t('productionOverview.machineDetail.selectMachine')}:
-                    </Text>
-                    <Select
-                        value={machineCode}
-                        onChange={(code) => {
-                            const found = machineList.find((m) => m.machineCode === code);
-                            onSelectMachine(code, found?.machineId);
-                        }}
-                        style={{ width: 220, borderRadius: token.borderRadius }}
-                        popupMatchSelectWidth={false}
-                        dropdownStyle={{ minWidth: 260, maxWidth: 420 }}
-                        options={machineList.map((m) => {
-                            const labelText = m.machineCode || m.machineName || 'N/A';
-                            return {
-                                label: (
-                                    <Tooltip title={labelText} placement="left">
-                                        <span
-                                            style={{
-                                                display: 'block',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                            }}
-                                        >
-                                            {labelText}
-                                        </span>
-                                    </Tooltip>
-                                ),
-                                value: m.machineCode,
-                            };
-                        })}
-                    />
-                </Space>
+                {/* Charts Section: Timeline Output & Performance Operating Hours / Efficiency */}
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} lg={12}>
+                        <MachineHourlyOutputChart
+                            machineCode={machineCode}
+                            seriesData={productionSeries}
+                            isLoading={isLoadingSeries}
+                            subtitle={subtitle}
+                        />
+                    </Col>
+                    <Col xs={24} lg={12}>
+                        <Machine7DaysEfficiencyChart
+                            machineCode={machineCode}
+                            performanceData={performanceSeries}
+                            isLoading={isLoadingPerformance}
+                            subtitle={subtitle}
+                        />
+                    </Col>
+                </Row>
             </div>
+        );
+    }
+);
 
-            {/* 4 KPI Cards for this machine (computed dynamically from live data) */}
-            <KpiCardsSection
-                data={computedKpi}
-                isMachineView={true}
-                machineCode={machineCode}
-                onDowntimeClick={onDowntimeClick}
-            />
-
-            {/* Charts Section: Timeline Output & Performance Operating Hours / Efficiency */}
-            <Row gutter={[16, 16]}>
-                <Col xs={24} lg={12}>
-                    <MachineHourlyOutputChart
-                        machineCode={machineCode}
-                        seriesData={productionSeries}
-                        isLoading={isLoadingSeries}
-                        subtitle={subtitle}
-                    />
-                </Col>
-                <Col xs={24} lg={12}>
-                    <Machine7DaysEfficiencyChart
-                        machineCode={machineCode}
-                        performanceData={performanceSeries}
-                        isLoading={isLoadingPerformance}
-                        subtitle={subtitle}
-                    />
-                </Col>
-            </Row>
-        </div>
-    );
-};
+MachineDetailView.displayName = 'MachineDetailView';

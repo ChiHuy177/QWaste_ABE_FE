@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Col, Progress, Row, Tag, Tooltip, Typography, theme } from 'antd';
+import { Card, Col, Progress, Row, Tag, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
     ClockCircleOutlined,
@@ -10,9 +10,8 @@ import {
     RiseOutlined,
     BarChartOutlined,
     DashboardOutlined,
-    ThunderboltOutlined,
 } from '@ant-design/icons';
-import { KpiSummaryData } from '@/configs/mockData/productionOverviewMockData';
+import { KpiSummaryData } from '@/types/ProductionOverview';
 
 const { Text, Title } = Typography;
 
@@ -23,13 +22,14 @@ interface KpiCardsSectionProps {
     onDowntimeClick?: () => void;
 }
 
-export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
-    data,
-    isMachineView = false,
-    machineCode: _machineCode,
-    onDowntimeClick,
-}) => {
-    const { t } = useTranslation();
+export const KpiCardsSection: React.FC<KpiCardsSectionProps> = React.memo(
+    ({
+        data,
+        isMachineView = false,
+        machineCode: _machineCode,
+        onDowntimeClick,
+    }) => {
+        const { t } = useTranslation();
     const { token } = theme.useToken();
 
     const cardThemes = React.useMemo(
@@ -87,19 +87,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
         [token]
     );
 
-    const maxCapacityValue = data.maxCapacity?.current ?? 0;
-    const maxCapacityUnit = data.maxCapacity?.unit ?? 'sp/h';
-    const actualCapacityValue =
-        data.actualCapacity?.current ??
-        (data.runtimeHours?.current && data.runtimeHours.current > 0
-            ? Math.round(data.actualProduction.current / data.runtimeHours.current)
-            : 0);
-    const actualCapacityUnit = data.actualCapacity?.unit ?? 'sp/h';
-    const actualRateVsMax =
-        data.actualCapacity?.rateVsMax ??
-        (maxCapacityValue > 0
-            ? Math.min(100, Math.round((actualCapacityValue / maxCapacityValue) * 100))
-            : 0);
+    const totalCapacitySeconds =
+        data.maxCapacitySeconds ?? data.maxCapacity?.seconds ?? data.maxCapacity?.current ?? 0;
+    const capacityTotalMinutes = Math.round(totalCapacitySeconds / 60);
+    const capacityHours = Math.floor(capacityTotalMinutes / 60);
+    const capacityMins = capacityTotalMinutes % 60;
 
     const totalDowntimeMinutes = data.downtimeMinutes?.current ?? 0;
     const downtimeHours = Math.floor(totalDowntimeMinutes / 60);
@@ -110,6 +102,11 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
         data.runtimeMinutes?.current ?? Math.round(totalRuntimeSeconds / 60);
     const runtimeHours = Math.floor(runtimeTotalMinutes / 60);
     const runtimeMins = runtimeTotalMinutes % 60;
+
+    const runtimeRateVsCapacity =
+        totalCapacitySeconds > 0
+            ? Math.min(100, Math.round((totalRuntimeSeconds / totalCapacitySeconds) * 100))
+            : (data.actualCapacity?.rateVsMax ?? 0);
 
     const renderDowntimeOverTarget = (totalMinutes: number) => {
         if (!totalMinutes || totalMinutes <= 0) {
@@ -351,27 +348,77 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     display: 'flex',
                                     alignItems: 'baseline',
                                     gap: 6,
+                                    flexWrap: 'wrap',
                                 }}
                             >
-                                <Title
-                                    level={2}
-                                    style={{
-                                        margin: 0,
-                                        fontWeight: 800,
-                                        color: cardThemes.maxCapacity.main,
-                                    }}
-                                >
-                                    {maxCapacityValue.toLocaleString()}
-                                </Title>
-                                <Text
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                        color: cardThemes.maxCapacity.text,
-                                    }}
-                                >
-                                    {maxCapacityUnit}
-                                </Text>
+                                {capacityHours > 0 ? (
+                                    <>
+                                        <Title
+                                            level={2}
+                                            style={{
+                                                margin: 0,
+                                                fontWeight: 800,
+                                                color: cardThemes.maxCapacity.main,
+                                            }}
+                                        >
+                                            {capacityHours.toLocaleString()}
+                                        </Title>
+                                        <Text
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: cardThemes.maxCapacity.text,
+                                            }}
+                                        >
+                                            {t('productionOverview.kpi.hours', 'giờ')}
+                                        </Text>
+                                        {capacityMins > 0 && (
+                                            <>
+                                                <Title
+                                                    level={3}
+                                                    style={{
+                                                        margin: 0,
+                                                        fontWeight: 700,
+                                                        color: cardThemes.maxCapacity.main,
+                                                    }}
+                                                >
+                                                    {capacityMins}
+                                                </Title>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 12,
+                                                        fontWeight: 600,
+                                                        color: cardThemes.maxCapacity.text,
+                                                    }}
+                                                >
+                                                    {t('productionOverview.kpi.minutes', 'phút')}
+                                                </Text>
+                                            </>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Title
+                                            level={2}
+                                            style={{
+                                                margin: 0,
+                                                fontWeight: 800,
+                                                color: cardThemes.maxCapacity.main,
+                                            }}
+                                        >
+                                            {capacityMins}
+                                        </Title>
+                                        <Text
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: cardThemes.maxCapacity.text,
+                                            }}
+                                        >
+                                            {t('productionOverview.kpi.minutes', 'phút')}
+                                        </Text>
+                                    </>
+                                )}
                             </div>
 
                             <div style={{ marginTop: 16 }}>
@@ -684,9 +731,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             style={{
                                 flex: 1,
                                 borderRadius: 12,
-                                borderColor: cardThemes.actualCapacity.border,
-                                border: `1px solid ${cardThemes.actualCapacity.border}`,
-                                backgroundColor: cardThemes.actualCapacity.bg,
+                                borderColor: cardThemes.actualOperating.border,
+                                border: `1px solid ${cardThemes.actualOperating.border}`,
+                                backgroundColor: cardThemes.actualOperating.bg,
                                 boxShadow: token.boxShadowSecondary,
                                 position: 'relative',
                                 overflow: 'hidden',
@@ -702,7 +749,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                     right: 0,
                                     width: 60,
                                     height: 60,
-                                    background: `${cardThemes.actualCapacity.main}15`,
+                                    background: `${cardThemes.actualOperating.main}15`,
                                     borderBottomLeftRadius: '100%',
                                 }}
                             />
@@ -720,19 +767,19 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             fontSize: 11,
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
-                                            color: cardThemes.actualCapacity.text,
+                                            color: cardThemes.actualOperating.text,
                                             letterSpacing: '0.5px',
                                         }}
                                     >
                                         {t(
-                                            'productionOverview.kpi.actualCapacity',
-                                            'Công suất thực tế'
+                                            'productionOverview.kpi.actualOperating',
+                                            'VẬN HÀNH THỰC TẾ'
                                         )}
                                     </Text>
-                                    <ThunderboltOutlined
+                                    <DashboardOutlined
                                         style={{
                                             fontSize: 16,
-                                            color: cardThemes.actualCapacity.icon,
+                                            color: cardThemes.actualOperating.icon,
                                         }}
                                     />
                                 </div>
@@ -742,44 +789,98 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                         margin: '8px 0 4px 0',
                                         display: 'flex',
                                         alignItems: 'baseline',
-                                        gap: 6,
+                                        gap: 5,
+                                        flexWrap: 'wrap',
                                     }}
                                 >
-                                    <Title
-                                        level={3}
-                                        style={{
-                                            margin: 0,
-                                            fontWeight: 800,
-                                            color: cardThemes.actualCapacity.main,
-                                        }}
-                                    >
-                                        {actualCapacityValue.toLocaleString()}
-                                    </Title>
-                                    <Text
-                                        style={{
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            color: cardThemes.actualCapacity.text,
-                                        }}
-                                    >
-                                        {actualCapacityUnit}
-                                    </Text>
+                                    {runtimeHours > 0 ? (
+                                        <>
+                                            <Title
+                                                level={3}
+                                                style={{
+                                                    margin: 0,
+                                                    fontWeight: 800,
+                                                    color: cardThemes.actualOperating.main,
+                                                }}
+                                            >
+                                                {runtimeHours.toLocaleString()}
+                                            </Title>
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    fontWeight: 600,
+                                                    color: cardThemes.actualOperating.text,
+                                                }}
+                                            >
+                                                {t('productionOverview.kpi.hours', 'giờ')}
+                                            </Text>
+                                            {runtimeMins > 0 && (
+                                                <>
+                                                    <Title
+                                                        level={4}
+                                                        style={{
+                                                            margin: 0,
+                                                            fontWeight: 700,
+                                                            color: cardThemes.actualOperating.main,
+                                                        }}
+                                                    >
+                                                        {runtimeMins}
+                                                    </Title>
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 11,
+                                                            fontWeight: 600,
+                                                            color: cardThemes.actualOperating.text,
+                                                        }}
+                                                    >
+                                                        {t(
+                                                            'productionOverview.kpi.minutes',
+                                                            'phút'
+                                                        )}
+                                                    </Text>
+                                                </>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Title
+                                                level={3}
+                                                style={{
+                                                    margin: 0,
+                                                    fontWeight: 800,
+                                                    color: cardThemes.actualOperating.main,
+                                                }}
+                                            >
+                                                {runtimeMins}
+                                            </Title>
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    fontWeight: 600,
+                                                    color: cardThemes.actualOperating.text,
+                                                }}
+                                            >
+                                                {t('productionOverview.kpi.minutes', 'phút')}
+                                            </Text>
+                                        </>
+                                    )}
                                 </div>
 
                                 <Text
                                     style={{
                                         fontSize: 11,
-                                        color: cardThemes.actualCapacity.text,
+                                        color: cardThemes.actualOperating.text,
                                         fontWeight: 600,
                                     }}
                                 >
                                     <RiseOutlined
                                         style={{
-                                            color: cardThemes.actualCapacity.main,
+                                            color: cardThemes.actualOperating.main,
                                             marginRight: 4,
                                         }}
                                     />
-                                    {actualRateVsMax}% {t('productionOverview.kpi.vsMaxCapacity')}
+                                    {runtimeRateVsCapacity}%{' '}
+                                    {t('productionOverview.kpi.vsMaxCapacity', 'so với tối đa')}
                                 </Text>
                             </div>
                         </Card>
@@ -1646,4 +1747,6 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
             </Col>
         </Row>
     );
-};
+});
+
+KpiCardsSection.displayName = 'KpiCardsSection';

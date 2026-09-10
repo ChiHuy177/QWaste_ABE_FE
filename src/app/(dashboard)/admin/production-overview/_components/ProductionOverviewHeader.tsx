@@ -36,26 +36,27 @@ export interface ProductionOverviewHeaderProps {
     isExporting?: boolean;
 }
 
-export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> = ({
-    spaces,
-    selectedFactoryId,
-    onFactoryChange,
-    industryFilters,
-    currentMode,
-    currentPeriodId,
-    currentShiftId,
-    startDate,
-    endDate,
-    groupedOptions,
-    isShiftActive,
-    onApplyTimeFilter,
-    onRefresh,
-    onExportExcel,
-    isLoadingSpaces,
-    isLoadingData,
-    isExporting = false,
-}) => {
-    const { t } = useTranslation();
+export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> = React.memo(
+    ({
+        spaces,
+        selectedFactoryId,
+        onFactoryChange,
+        industryFilters,
+        currentMode,
+        currentPeriodId,
+        currentShiftId,
+        startDate,
+        endDate,
+        groupedOptions,
+        isShiftActive,
+        onApplyTimeFilter,
+        onRefresh,
+        onExportExcel,
+        isLoadingSpaces,
+        isLoadingData,
+        isExporting = false,
+    }) => {
+        const { t } = useTranslation();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
@@ -188,6 +189,8 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
             </Button>
         </div>
     );
-};
+});
+
+ProductionOverviewHeader.displayName = 'ProductionOverviewHeader';
 
 export default ProductionOverviewHeader;

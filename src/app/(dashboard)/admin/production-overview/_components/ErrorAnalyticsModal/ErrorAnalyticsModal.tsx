@@ -1,24 +1,18 @@
 'use client';
 
-import { toast } from 'sonner';
-
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Modal, Typography, Table, Tabs, Tag, Select, Button, theme, Skeleton, Grid } from 'antd';
+import { Modal, Typography, Table, Tag, Select, Button, theme, Skeleton, Grid } from 'antd';
 import { LeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import {
     RuntimeAnalyticsChart,
-    SimpleLineChart,
     MachineDetailAreaChart,
     QuickSelectFilter,
     formatHours,
-    parseChartData,
-    ParsedChartData,
 } from './AnalyticsCharts';
 import { SpaceService } from '@/services/SpaceService';
 import { MachineStatusSummaryItem, MachineErrorDetailItem } from '@/types/Monitoring';
-import { chartColors } from '@/configs/antdTheme';
 import { SearchInput } from '@/components/shared/SearchInput/SearchInput';
 import { useAppSelector } from '@/stores/hook';
 import { IFactoryOverviewStoreState } from '@/stores/FactoryOverviewStore';
@@ -27,17 +21,9 @@ import {
     MOCK_MACHINE_STATUS_SUMMARY,
     MOCK_WORKSHOPS,
     getMockMachineErrorDetails,
-    getMockMtbfData,
-    getMockMttrData,
 } from './mockErrorAnalyticsData';
 
 const { Title, Text } = Typography;
-
-interface ErrorMetricItem {
-    id: string;
-    name: string;
-    value: number;
-}
 
 interface ErrorAnalyticsModalProps {
     isOpen: boolean;
@@ -50,151 +36,127 @@ interface ErrorAnalyticsModalProps {
     restrictToMachineIds?: string[];
 }
 
-const getMachineAverageMetrics = (
-    chartData: ParsedChartData,
-    allowedIds: Set<string>
-): ErrorMetricItem[] =>
-    chartData.machines
-        .filter((machine: any) => allowedIds.has(machine.id))
-        .map((machine: any) => {
-            let total = 0;
-            let count = 0;
+const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.memo(
+    ({
+        isOpen,
+        onClose,
+        spaceId,
+        filterId,
+        startDate,
+        endDate,
+        isDateRange,
+        restrictToMachineIds,
+    }) => {
+        const { t } = useTranslation();
+        const { token } = theme.useToken();
+        const screens = Grid.useBreakpoint();
+        const isMobile = screens.md === false;
+        const isXs = screens.xs === true;
 
-            chartData.data.forEach((point: any) => {
-                const value = Number(point[machine.id]);
-                if (Number.isFinite(value)) {
-                    total += value;
-                    count += 1;
-                }
-            });
+        const [loading, setLoading] = useState(false);
+        const [filterMode, setFilterMode] = useState<'CUSTOM' | 'TOP_10_HIGH' | 'TOP_10_LOW'>(
+            'CUSTOM'
+        );
+        const [customSelectedIds, setCustomSelectedIds] = useState<string[]>([]);
+        const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null);
+        const [currentPage, setCurrentPage] = useState(1);
+        const [currentSortedData, setCurrentSortedData] = useState<
+            MachineStatusSummaryItem[] | null
+        >(null);
 
-            return {
-                id: machine.id,
-                name: machine.name,
-                value: count > 0 ? total / count : machine.totalValue,
-            };
-        })
-        .filter((machine: any) => machine.value > 0);
+        const [summaryData, setSummaryData] = useState<MachineStatusSummaryItem[]>([]);
+        const [selectedRow, setSelectedRow] = useState<MachineStatusSummaryItem | null>(null);
+        const [searchText, setSearchText] = useState('');
+        const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | 'all' | null>('all');
+        const [errorDetails, setErrorDetails] = useState<MachineErrorDetailItem[]>([]);
+        const [loadingErrorDetails, setLoadingErrorDetails] = useState(false);
 
-const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = ({
-    isOpen,
-    onClose,
-    spaceId,
-    filterId,
-    startDate,
-    endDate,
-    isDateRange,
-    restrictToMachineIds,
-}) => {
-    const { t } = useTranslation();
-    const { token } = theme.useToken();
-    const screens = Grid.useBreakpoint();
-    const isMobile = screens.md === false;
-    const isXs = screens.xs === true;
+        const reduxState = useAppSelector((state) => state.factoryOverview) as
+            | IFactoryOverviewStoreState
+            | undefined;
 
-    const [loading, setLoading] = useState(false);
-    const [mtbfData, setMtbfData] = useState<ParsedChartData>({ data: [], machines: [] });
-    const [mttrData, setMttrData] = useState<ParsedChartData>({ data: [], machines: [] });
-    const [filterMode, setFilterMode] = useState<'CUSTOM' | 'TOP_10_HIGH' | 'TOP_10_LOW'>('CUSTOM');
-    const [customSelectedIds, setCustomSelectedIds] = useState<string[]>([]);
-    const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [currentSortedData, setCurrentSortedData] = useState<MachineStatusSummaryItem[] | null>(
-        null
-    );
-    const [machineOptions, setMachineOptions] = useState<{ label: string; value: string }[]>([]);
+        // Use Redux spaceData or fallback to custom mock data if not loaded in store
+        const spaceData = useMemo(() => {
+            return reduxState?.spaceData || null;
+        }, [reduxState]);
 
-    const [summaryData, setSummaryData] = useState<MachineStatusSummaryItem[]>([]);
-    const [selectedRow, setSelectedRow] = useState<MachineStatusSummaryItem | null>(null);
-    const [searchText, setSearchText] = useState('');
-    const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | 'all' | null>('all');
-    const [errorDetails, setErrorDetails] = useState<MachineErrorDetailItem[]>([]);
-    const [loadingErrorDetails, setLoadingErrorDetails] = useState(false);
-
-    const reduxState = useAppSelector((state) => state.factoryOverview) as
-        IFactoryOverviewStoreState | undefined;
-
-    // Use Redux spaceData or fallback to custom mock data if not loaded in store
-    const spaceData = useMemo(() => {
-        return reduxState?.spaceData || null;
-    }, [reduxState]);
-
-    const workshopOptions = useMemo(() => {
-        if (spaceData?.children && spaceData.children.length > 0) {
+        const workshopOptions = useMemo(() => {
+            if (spaceData?.children && spaceData.children.length > 0) {
+                return [
+                    { label: t('common.all') || 'Tất cả', value: 'all' as const },
+                    ...spaceData.children.map((child: any) => ({
+                        label: child.spaceName,
+                        value: child.spaceId,
+                    })),
+                ];
+            }
             return [
                 { label: t('common.all') || 'Tất cả', value: 'all' as const },
-                ...spaceData.children.map((child: any) => ({
-                    label: child.spaceName,
-                    value: child.spaceId,
+                ...MOCK_WORKSHOPS.map((ws) => ({
+                    label: ws.spaceName,
+                    value: ws.spaceId,
                 })),
             ];
-        }
-        return [
-            { label: t('common.all') || 'Tất cả', value: 'all' as const },
-            ...MOCK_WORKSHOPS.map((ws) => ({
-                label: ws.spaceName,
-                value: ws.spaceId,
-            })),
-        ];
-    }, [spaceData, t]);
+        }, [spaceData, t]);
 
-    const machineWorkshopMap = useMemo(() => {
-        const map = new Map<string, number>();
-        if (spaceData?.children && spaceData.children.length > 0) {
-            spaceData.children.forEach((workshop: any) => {
-                const machines = collectAllMachines(workshop);
-                machines.forEach((m) => map.set(m.machineId, workshop.spaceId));
+        const machineWorkshopMap = useMemo(() => {
+            const map = new Map<string, number>();
+            if (spaceData?.children && spaceData.children.length > 0) {
+                spaceData.children.forEach((workshop: any) => {
+                    const machines = collectAllMachines(workshop);
+                    machines.forEach((m) => map.set(m.machineId, workshop.spaceId));
+                });
+                return map;
+            }
+            MOCK_WORKSHOPS.forEach((ws) => {
+                ws.machineIds.forEach((mId) => map.set(mId, ws.spaceId));
             });
             return map;
-        }
-        MOCK_WORKSHOPS.forEach((ws) => {
-            ws.machineIds.forEach((mId) => map.set(mId, ws.spaceId));
-        });
-        return map;
-    }, [spaceData]);
+        }, [spaceData]);
 
-    const filteredSummaryData = useMemo(() => {
-        let result = summaryData;
+        const filteredSummaryData = useMemo(() => {
+            let result = summaryData;
 
-        if (selectedWorkshopId !== null && selectedWorkshopId !== 'all') {
-            result = result.filter(
-                (item) => machineWorkshopMap.get(item.machineId) === selectedWorkshopId
-            );
-        }
+            if (selectedWorkshopId !== null && selectedWorkshopId !== 'all') {
+                result = result.filter(
+                    (item) => machineWorkshopMap.get(item.machineId) === selectedWorkshopId
+                );
+            }
 
-        if (searchText.trim() !== '') {
-            const lowerSearch = searchText.toLowerCase();
-            result = result.filter((item) => item.machineName.toLowerCase().includes(lowerSearch));
-        }
+            if (searchText.trim() !== '') {
+                const lowerSearch = searchText.toLowerCase();
+                result = result.filter((item) =>
+                    item.machineName.toLowerCase().includes(lowerSearch)
+                );
+            }
 
-        return result;
-    }, [summaryData, searchText, selectedWorkshopId, machineWorkshopMap]);
+            return result;
+        }, [summaryData, searchText, selectedWorkshopId, machineWorkshopMap]);
 
-    const filteredMachineIds = useMemo(
-        () => new Set(filteredSummaryData.map((item) => item.machineId)),
-        [filteredSummaryData]
-    );
+        const filteredMachineIds = useMemo(
+            () => new Set(filteredSummaryData.map((item) => item.machineId)),
+            [filteredSummaryData]
+        );
 
-    const runtimeOptions = useMemo(
-        () =>
-            filteredSummaryData.map((item) => ({ label: item.machineName, value: item.machineId })),
-        [filteredSummaryData]
-    );
-    const allRuntimeIds = useMemo(
-        () => filteredSummaryData.map((item) => item.machineId),
-        [filteredSummaryData]
-    );
+        const runtimeOptions = useMemo(
+            () =>
+                filteredSummaryData.map((item) => ({
+                    label: item.machineName,
+                    value: item.machineId,
+                })),
+            [filteredSummaryData]
+        );
+        const allRuntimeIds = useMemo(
+            () => filteredSummaryData.map((item) => item.machineId),
+            [filteredSummaryData]
+        );
 
-    const { top10HighRuntimeIds, top10LowRuntimeIds, top10HighErrorIds, top10LowErrorIds } =
-        useMemo(() => {
+        const { top10HighRuntimeIds, top10LowRuntimeIds } = useMemo(() => {
             const totalCount = filteredSummaryData.length;
             const limitCount = totalCount <= 10 ? 3 : totalCount <= 20 ? 5 : 10;
 
             const sortedByRuntime = [...filteredSummaryData].sort(
                 (a, b) => b.totalRuntimeHours - a.totalRuntimeHours
-            );
-            const sortedByError = [...filteredSummaryData].sort(
-                (a, b) => b.totalErrorHours - a.totalErrorHours
             );
 
             return {
@@ -205,904 +167,328 @@ const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = ({
                     .reverse()
                     .slice(0, limitCount)
                     .map((m: any) => m.machineId),
-                top10HighErrorIds: sortedByError.slice(0, limitCount).map((m: any) => m.machineId),
-                top10LowErrorIds: [...sortedByError]
-                    .reverse()
-                    .slice(0, limitCount)
-                    .map((m: any) => m.machineId),
             };
         }, [filteredSummaryData]);
 
-    const handleFilterChange = useCallback(
-        (newIds: string[], tabType: 'runtime' | 'error') => {
-            const isTop10High =
-                tabType === 'runtime'
-                    ? newIds.length > 0 &&
-                      newIds.length === top10HighRuntimeIds.length &&
-                      top10HighRuntimeIds.every((id) => newIds.includes(id))
-                    : newIds.length > 0 &&
-                      newIds.length === top10HighErrorIds.length &&
-                      top10HighErrorIds.every((id) => newIds.includes(id));
+        const handleFilterChange = useCallback(
+            (newIds: string[]) => {
+                const isTop10High =
+                    newIds.length > 0 &&
+                    newIds.length === top10HighRuntimeIds.length &&
+                    top10HighRuntimeIds.every((id) => newIds.includes(id));
 
-            const isTop10Low =
-                tabType === 'runtime'
-                    ? newIds.length > 0 &&
-                      newIds.length === top10LowRuntimeIds.length &&
-                      top10LowRuntimeIds.every((id) => newIds.includes(id))
-                    : newIds.length > 0 &&
-                      newIds.length === top10LowErrorIds.length &&
-                      top10LowErrorIds.every((id) => newIds.includes(id));
+                const isTop10Low =
+                    newIds.length > 0 &&
+                    newIds.length === top10LowRuntimeIds.length &&
+                    top10LowRuntimeIds.every((id) => newIds.includes(id));
 
-            if (isTop10High) {
-                setFilterMode('TOP_10_HIGH');
-            } else if (isTop10Low) {
-                setFilterMode('TOP_10_LOW');
-            } else {
-                setFilterMode('CUSTOM');
-                setCustomSelectedIds(newIds);
-            }
-        },
-        [top10HighRuntimeIds, top10LowRuntimeIds, top10HighErrorIds, top10LowErrorIds]
-    );
+                if (isTop10High) {
+                    setFilterMode('TOP_10_HIGH');
+                } else if (isTop10Low) {
+                    setFilterMode('TOP_10_LOW');
+                } else {
+                    setFilterMode('CUSTOM');
+                    setCustomSelectedIds(newIds);
+                }
+            },
+            [top10HighRuntimeIds, top10LowRuntimeIds]
+        );
 
-    const effectiveRuntimeIds = useMemo(() => {
-        let ids = customSelectedIds;
-        if (filterMode === 'TOP_10_HIGH') ids = top10HighRuntimeIds;
-        if (filterMode === 'TOP_10_LOW') ids = top10LowRuntimeIds;
-        return ids.filter((id) => filteredMachineIds.has(id));
-    }, [
-        filterMode,
-        customSelectedIds,
-        top10HighRuntimeIds,
-        top10LowRuntimeIds,
-        filteredMachineIds,
-    ]);
+        const effectiveRuntimeIds = useMemo(() => {
+            let ids = customSelectedIds;
+            if (filterMode === 'TOP_10_HIGH') ids = top10HighRuntimeIds;
+            if (filterMode === 'TOP_10_LOW') ids = top10LowRuntimeIds;
+            return ids.filter((id) => filteredMachineIds.has(id));
+        }, [
+            filterMode,
+            customSelectedIds,
+            top10HighRuntimeIds,
+            top10LowRuntimeIds,
+            filteredMachineIds,
+        ]);
 
-    const effectiveErrorIds = useMemo(() => {
-        let ids = customSelectedIds;
-        if (filterMode === 'TOP_10_HIGH') ids = top10HighErrorIds;
-        if (filterMode === 'TOP_10_LOW') ids = top10LowErrorIds;
-        return ids.filter((id) => filteredMachineIds.has(id));
-    }, [filterMode, customSelectedIds, top10HighErrorIds, top10LowErrorIds, filteredMachineIds]);
+        const restrictKey = restrictToMachineIds?.join(',');
 
-    const restrictKey = restrictToMachineIds?.join(',');
+        useEffect(() => {
+            if (!isOpen) return;
 
-    useEffect(() => {
-        if (!isOpen) return;
+            const fetchData = async () => {
+                setLoading(true);
+                try {
+                    let summaryRes: any;
 
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                let mtbfRes: any, mttrRes: any, summaryRes: any;
-
-                if (isDateRange) {
-                    [mtbfRes, mttrRes, summaryRes] = await Promise.allSettled([
-                        (SpaceService as any).getMtbfByDateRange?.(
-                            startDate,
-                            endDate,
-                            spaceId ?? 1
-                        ),
-                        (SpaceService as any).getMttrByDateRange?.(
-                            startDate,
-                            endDate,
-                            spaceId ?? 1
-                        ),
-                        (SpaceService as any).getMachineStatusSummaryByDateRange?.(
+                    if (isDateRange) {
+                        summaryRes = await (
+                            SpaceService as any
+                        ).getMachineStatusSummaryByDateRange?.(
                             startDate,
                             endDate,
                             spaceId ?? 1,
                             filterId ?? undefined
-                        ),
-                    ]).then((results) =>
-                        results.map((r) => (r.status === 'fulfilled' ? r.value : null))
-                    );
-                } else {
-                    [mtbfRes, mttrRes, summaryRes] = await Promise.allSettled([
-                        (SpaceService as any).getMtbfByFilter?.(filterId ?? 1, spaceId ?? 1),
-                        (SpaceService as any).getMttrByFilter?.(filterId ?? 1, spaceId ?? 1),
-                        (SpaceService as any).getMachineStatusSummaryByFilter?.(
+                        );
+                    } else {
+                        summaryRes = await (SpaceService as any).getMachineStatusSummaryByFilter?.(
                             filterId ?? 1,
                             spaceId ?? 1
-                        ),
-                    ]).then((results) =>
-                        results.map((r) => (r.status === 'fulfilled' ? r.value : null))
+                        );
+                    }
+
+                    let items: MachineStatusSummaryItem[] = Array.isArray(summaryRes?.data)
+                        ? summaryRes.data
+                        : Array.isArray(summaryRes)
+                          ? summaryRes
+                          : [];
+
+                    if (items.length === 0) {
+                        items = [...MOCK_MACHINE_STATUS_SUMMARY];
+                    }
+
+                    if (restrictToMachineIds && restrictToMachineIds.length > 0) {
+                        items = items.filter((i) => restrictToMachineIds.includes(i.machineId));
+                    }
+
+                    setSummaryData(items);
+
+                    const allInitialIds = new Set(items.map((i) => i.machineId));
+                    setCustomSelectedIds(Array.from(allInitialIds));
+                    setFilterMode('CUSTOM');
+                } catch (error) {
+                    console.warn(
+                        'Backend machine status summary not available yet, using mock data:',
+                        error
                     );
+                    let mockItems = [...MOCK_MACHINE_STATUS_SUMMARY];
+                    if (restrictToMachineIds && restrictToMachineIds.length > 0) {
+                        mockItems = mockItems.filter((i) =>
+                            restrictToMachineIds.includes(i.machineId)
+                        );
+                    }
+                    setSummaryData(mockItems);
+                    setCustomSelectedIds(mockItems.map((i) => i.machineId));
+                    setFilterMode('CUSTOM');
+                } finally {
+                    setLoading(false);
                 }
+            };
 
-                const parsedMtbf =
-                    mtbfRes?.series && mtbfRes.series.length > 0
-                        ? parseChartData(mtbfRes)
-                        : parseChartData(getMockMtbfData());
+            fetchData();
+        }, [isOpen, spaceId, filterId, startDate, endDate, isDateRange, restrictKey]);
 
-                const parsedMttr =
-                    mttrRes?.series && mttrRes.series.length > 0
-                        ? parseChartData(mttrRes)
-                        : parseChartData(getMockMttrData());
-
-                if (restrictToMachineIds && restrictToMachineIds.length > 0) {
-                    const restrictSet = new Set(restrictToMachineIds);
-                    parsedMtbf.machines = parsedMtbf.machines.filter((m: any) =>
-                        restrictSet.has(m.id)
-                    );
-                    parsedMttr.machines = parsedMttr.machines.filter((m: any) =>
-                        restrictSet.has(m.id)
-                    );
-                }
-
-                setMtbfData(parsedMtbf);
-                setMttrData(parsedMttr);
-
-                const primaryMachines =
-                    parsedMtbf.machines.length > 0 ? parsedMtbf.machines : parsedMttr.machines;
-                const options = primaryMachines.map((m: any) => ({ label: m.name, value: m.id }));
-                setMachineOptions(options);
-
-                let items: MachineStatusSummaryItem[] = Array.isArray(summaryRes?.data)
-                    ? summaryRes.data
-                    : Array.isArray(summaryRes)
-                      ? summaryRes
-                      : [];
-
-                if (items.length === 0) {
-                    items = [...MOCK_MACHINE_STATUS_SUMMARY];
-                }
-
-                if (restrictToMachineIds && restrictToMachineIds.length > 0) {
-                    items = items.filter((i) => restrictToMachineIds.includes(i.machineId));
-                }
-
-                setSummaryData(items);
-
-                const allInitialIds = new Set([
-                    ...primaryMachines.map((m: any) => m.id),
-                    ...items.map((i) => i.machineId),
-                ]);
-                setCustomSelectedIds(Array.from(allInitialIds));
-                setFilterMode('CUSTOM');
-            } catch (error) {
-                console.warn('Backend error analytics not available yet, using mock data:', error);
-                const mockMtbf = parseChartData(getMockMtbfData());
-                const mockMttr = parseChartData(getMockMttrData());
-                setMtbfData(mockMtbf);
-                setMttrData(mockMttr);
-                setMachineOptions(
-                    mockMtbf.machines.map((m: any) => ({ label: m.name, value: m.id }))
-                );
-                let mockItems = [...MOCK_MACHINE_STATUS_SUMMARY];
-                if (restrictToMachineIds && restrictToMachineIds.length > 0) {
-                    mockItems = mockItems.filter((i) => restrictToMachineIds.includes(i.machineId));
-                }
-                setSummaryData(mockItems);
-                setCustomSelectedIds(mockItems.map((i) => i.machineId));
-                setFilterMode('CUSTOM');
-            } finally {
-                setLoading(false);
+        useEffect(() => {
+            if (!selectedRow) {
+                setErrorDetails([]);
+                return;
             }
-        };
 
-        fetchData();
-    }, [isOpen, spaceId, filterId, startDate, endDate, isDateRange, restrictKey]);
-
-    useEffect(() => {
-        if (!selectedRow) {
-            setErrorDetails([]);
-            return;
-        }
-
-        const fetchErrorDetails = async () => {
-            setLoadingErrorDetails(true);
-            try {
-                let res: any;
-                if (isDateRange) {
-                    res = await (SpaceService as any).getErrorDetailByDateRange?.(
-                        startDate,
-                        endDate,
-                        selectedRow.machineId,
-                        filterId ?? undefined
-                    );
-                } else if (filterId) {
-                    res = await (SpaceService as any).getErrorDetailByFilter?.(
-                        filterId,
-                        selectedRow.machineId
-                    );
-                }
-                const items = Array.isArray(res?.errors)
-                    ? res.errors
-                    : Array.isArray(res?.errors?.content)
-                      ? res.errors.content
-                      : [];
-                if (items.length > 0) {
-                    setErrorDetails(items);
-                } else {
+            const fetchErrorDetails = async () => {
+                setLoadingErrorDetails(true);
+                try {
+                    let res: any;
+                    if (isDateRange) {
+                        res = await (SpaceService as any).getErrorDetailByDateRange?.(
+                            startDate,
+                            endDate,
+                            selectedRow.machineId,
+                            filterId ?? undefined
+                        );
+                    } else if (filterId) {
+                        res = await (SpaceService as any).getErrorDetailByFilter?.(
+                            filterId,
+                            selectedRow.machineId
+                        );
+                    }
+                    const items = Array.isArray(res?.errors)
+                        ? res.errors
+                        : Array.isArray(res?.errors?.content)
+                          ? res.errors.content
+                          : [];
+                    if (items.length > 0) {
+                        setErrorDetails(items);
+                    } else {
+                        setErrorDetails(getMockMachineErrorDetails(selectedRow.machineId));
+                    }
+                } catch (_error) {
                     setErrorDetails(getMockMachineErrorDetails(selectedRow.machineId));
+                } finally {
+                    setLoadingErrorDetails(false);
                 }
-            } catch (_error) {
-                setErrorDetails(getMockMachineErrorDetails(selectedRow.machineId));
-            } finally {
-                setLoadingErrorDetails(false);
+            };
+
+            fetchErrorDetails();
+        }, [selectedRow, filterId, startDate, endDate, isDateRange]);
+
+        useEffect(() => {
+            if (!isOpen) {
+                setSelectedRow(null);
+                setSearchText('');
+                setSelectedWorkshopId('all');
             }
-        };
+        }, [isOpen]);
 
-        fetchErrorDetails();
-    }, [selectedRow, filterId, startDate, endDate, isDateRange]);
+        useEffect(() => {
+            setCurrentPage(1);
+            setCurrentSortedData(null);
+        }, [filteredSummaryData]);
 
-    useEffect(() => {
-        if (!isOpen) {
-            setSelectedRow(null);
-            setSearchText('');
-            setSelectedWorkshopId('all');
-        }
-    }, [isOpen]);
+        const handleBarClick = useCallback(
+            (machineId: string) => {
+                setHoveredMachineId(machineId);
 
-    useEffect(() => {
-        setCurrentPage(1);
-        setCurrentSortedData(null);
-    }, [filteredSummaryData]);
+                const dataToSearch = currentSortedData || filteredSummaryData;
+                const index = dataToSearch.findIndex((item) => item.machineId === machineId);
 
-    const handleBarClick = useCallback(
-        (machineId: string) => {
-            setHoveredMachineId(machineId);
-
-            const dataToSearch = currentSortedData || filteredSummaryData;
-            const index = dataToSearch.findIndex((item) => item.machineId === machineId);
-
-            if (index !== -1) {
-                const targetPage = Math.floor(index / 12) + 1;
-                setCurrentPage(targetPage);
-            }
-
-            setTimeout(() => {
-                const row = document.querySelector(`tr[data-row-key="${machineId}"]`);
-                if (row) {
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (index !== -1) {
+                    const targetPage = Math.floor(index / 12) + 1;
+                    setCurrentPage(targetPage);
                 }
-            }, 50);
 
-            setTimeout(() => {
-                setHoveredMachineId((prev) => (prev === machineId ? null : prev));
-            }, 3000);
-        },
-        [filteredSummaryData, currentSortedData]
-    );
+                setTimeout(() => {
+                    const row = document.querySelector(`tr[data-row-key="${machineId}"]`);
+                    if (row) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 50);
 
-    const errorColumns: ColumnsType<MachineErrorDetailItem> = useMemo(
-        () => [
-            {
-                title: t('factoryOverview.table.header.start') || 'Bắt đầu',
-                dataIndex: 'startTime',
-                key: 'startTime',
-                width: 140,
-                sorter: (a, b) =>
-                    new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime(),
-                render: (v) => (v ? new Date(v).toLocaleString() : '—'),
+                setTimeout(() => {
+                    setHoveredMachineId((prev) => (prev === machineId ? null : prev));
+                }, 3000);
             },
-            {
-                title: t('factoryOverview.table.header.end') || 'Kết thúc',
-                dataIndex: 'endTime',
-                key: 'endTime',
-                width: 140,
-                sorter: (a, b) =>
-                    new Date(a.endTime || 0).getTime() - new Date(b.endTime || 0).getTime(),
-                render: (v) => (v ? new Date(v).toLocaleString() : '—'),
-            },
-            {
-                title: t('factoryOverview.table.header.duration') || 'Thời lượng',
-                dataIndex: 'durationHours',
-                key: 'durationHours',
-                align: 'right',
-                width: 100,
-                sorter: (a, b) => (Number(a.durationHours) || 0) - (Number(b.durationHours) || 0),
-                render: (v) => (v != null ? formatHours(Number(v)) : '—'),
-            },
-        ],
-        [t]
-    );
+            [filteredSummaryData, currentSortedData]
+        );
 
-    const tableColumns: ColumnsType<MachineStatusSummaryItem> = useMemo(
-        () => [
-            {
-                title: t('factoryOverview.table.header.machineName') || 'Thiết bị',
-                dataIndex: 'machineName',
-                key: 'machineName',
-                width: 140,
-                ellipsis: true,
-                render: (v: string) => <Text strong>{v}</Text>,
-            },
-            {
-                title: t('factoryOverview.table.header.runTime') || 'Thời gian chạy',
-                dataIndex: 'totalRuntimeHours',
-                key: 'totalRuntimeHours',
-                align: 'right' as const,
-                sorter: (a, b) => (a.totalRuntimeHours || 0) - (b.totalRuntimeHours || 0),
-                render: (v: number, row: MachineStatusSummaryItem) => {
-                    const total =
-                        row.totalRuntimeHours +
-                        row.totalIdleHours +
-                        row.totalErrorHours +
-                        row.totalOfflineHours;
-                    const pct = total > 0 ? Math.round((row.totalRuntimeHours / total) * 100) : 0;
-                    return (
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'flex-end',
-                                gap: 2,
-                            }}
-                        >
-                            <Text>{formatHours(v)}</Text>
-                            <Tag
-                                color={pct >= 90 ? 'success' : pct >= 75 ? 'warning' : 'error'}
-                                style={{ margin: 0, fontSize: 11 }}
-                            >
-                                {pct}%
-                            </Tag>
-                        </div>
-                    );
+        const errorColumns: ColumnsType<MachineErrorDetailItem> = useMemo(
+            () => [
+                {
+                    title: t('factoryOverview.table.header.start') || 'Bắt đầu',
+                    dataIndex: 'startTime',
+                    key: 'startTime',
+                    width: 140,
+                    sorter: (a, b) =>
+                        new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime(),
+                    render: (v) => (v ? new Date(v).toLocaleString() : '—'),
                 },
-            },
-            {
-                title: t('factoryOverview.table.header.stopTime') || 'Thời gian dừng',
-                dataIndex: 'totalIdleHours',
-                key: 'totalIdleHours',
-                align: 'right' as const,
-                sorter: (a, b) => (a.totalIdleHours || 0) - (b.totalIdleHours || 0),
-                render: (v: number) => <Text type="secondary">{formatHours(v)}</Text>,
-            },
-            {
-                title: t('factoryOverview.table.header.errorTime') || 'Thời gian lỗi',
-                dataIndex: 'totalErrorHours',
-                key: 'totalErrorHours',
-                align: 'right' as const,
-                sorter: (a, b) => (a.totalErrorHours || 0) - (b.totalErrorHours || 0),
-                render: (v: number) => <Text type="danger">{formatHours(v)}</Text>,
-            },
-            {
-                title: t('factoryOverview.table.header.offlineTime') || 'Ngoại tuyến',
-                dataIndex: 'totalOfflineHours',
-                key: 'totalOfflineHours',
-                align: 'right' as const,
-                sorter: (a, b) => (a.totalOfflineHours || 0) - (b.totalOfflineHours || 0),
-                render: (v: number) => (
-                    <Text style={{ color: token.colorTextQuaternary }}>{formatHours(v)}</Text>
-                ),
-            },
-        ],
-        [token, t]
-    );
+                {
+                    title: t('factoryOverview.table.header.end') || 'Kết thúc',
+                    dataIndex: 'endTime',
+                    key: 'endTime',
+                    width: 140,
+                    sorter: (a, b) =>
+                        new Date(a.endTime || 0).getTime() - new Date(b.endTime || 0).getTime(),
+                    render: (v) => (v ? new Date(v).toLocaleString() : '—'),
+                },
+                {
+                    title: t('factoryOverview.table.header.duration') || 'Thời lượng',
+                    dataIndex: 'durationHours',
+                    key: 'durationHours',
+                    align: 'right',
+                    width: 100,
+                    sorter: (a, b) =>
+                        (Number(a.durationHours) || 0) - (Number(b.durationHours) || 0),
+                    render: (v) => (v != null ? formatHours(Number(v)) : '—'),
+                },
+            ],
+            [t]
+        );
 
-    const rightTabItems = useMemo(() => {
-        return [
-            {
-                key: 'runtime',
-                label: t('factoryOverview.tabs.runtimeAnalytics') || 'Phân tích thời gian chạy',
-                children: (
-                    <div
-                        style={{
-                            paddingTop: 8,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            height: isMobile ? 400 : 'calc(95vh - 195px)',
-                            gap: 8,
-                            overflow: 'hidden',
-                        }}
-                    >
-                        {!selectedRow && runtimeOptions.length > 0 && (
-                            <QuickSelectFilter
-                                allIds={allRuntimeIds}
-                                selectedIds={effectiveRuntimeIds}
-                                onChange={(ids: string[]) => handleFilterChange(ids, 'runtime')}
-                                options={runtimeOptions}
-                                top10HighIds={top10HighRuntimeIds}
-                                top10LowIds={top10LowRuntimeIds}
-                                placeholder={
-                                    t('factoryOverview.filter.selectMachines') || 'Chọn thiết bị...'
-                                }
-                            />
-                        )}
-                        {selectedRow ? (
-                            <MachineDetailAreaChart
-                                selectedRow={selectedRow}
-                                filterId={filterId}
-                                startDate={startDate}
-                                endDate={endDate}
-                                isDateRange={isDateRange}
-                            />
-                        ) : (
-                            <RuntimeAnalyticsChart
-                                summaryData={filteredSummaryData}
-                                selectedIds={effectiveRuntimeIds}
-                                onBarClick={handleBarClick}
-                            />
-                        )}
-                    </div>
-                ),
-            },
-            {
-                key: 'error',
-                label: t('factoryOverview.tabs.errorAnalytics') || 'Phân tích lỗi',
-                children: (() => {
-                    const activeMachinesForError = selectedRow
-                        ? [selectedRow.machineId]
-                        : effectiveErrorIds;
-                    const activeMachineSet = new Set(activeMachinesForError);
-                    const mttrRanking = getMachineAverageMetrics(mttrData, activeMachineSet)
-                        .sort((a, b) => b.value - a.value)
-                        .slice(0, 5);
-                    const mtbfRanking = getMachineAverageMetrics(mtbfData, activeMachineSet)
-                        .sort((a, b) => a.value - b.value)
-                        .slice(0, 5);
-                    const worstMttr = mttrRanking[0];
-                    const worstMtbf = mtbfRanking[0];
-                    const trendMachineIds =
-                        selectedRow || activeMachinesForError.length <= 5
-                            ? activeMachinesForError
-                            : Array.from(
-                                  new Set([
-                                      ...mttrRanking.slice(0, 3).map((machine) => machine.id),
-                                      ...mtbfRanking.slice(0, 3).map((machine) => machine.id),
-                                  ])
-                              ).slice(0, 5);
-
-                    const sharedMachines = (
-                        mttrData.machines.length > 0 ? mttrData.machines : mtbfData.machines
-                    ).filter((m: any) => trendMachineIds.includes(m.id));
-                    const maxMttrValue = Math.max(
-                        ...mttrRanking.map((machine) => machine.value),
-                        1
-                    );
-                    const maxMtbfValue = Math.max(
-                        ...mtbfRanking.map((machine) => machine.value),
-                        1
-                    );
-                    const selectedMttrMetric = selectedRow
-                        ? getMachineAverageMetrics(mttrData, activeMachineSet)[0]
-                        : undefined;
-                    const selectedMtbfMetric = selectedRow
-                        ? getMachineAverageMetrics(mtbfData, activeMachineSet)[0]
-                        : undefined;
-
-                    return (
-                        <div
-                            style={{
-                                paddingTop: 8,
-                                display: 'flex',
-                                flexDirection: 'column' as const,
-                                height: isMobile ? 650 : 'calc(95vh - 195px)',
-                                gap: 8,
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {!selectedRow && runtimeOptions.length > 0 && (
-                                <QuickSelectFilter
-                                    allIds={allRuntimeIds}
-                                    selectedIds={effectiveErrorIds}
-                                    onChange={(ids: string[]) => handleFilterChange(ids, 'error')}
-                                    options={runtimeOptions}
-                                    top10HighIds={top10HighErrorIds}
-                                    top10LowIds={top10LowErrorIds}
-                                    placeholder={
-                                        t('factoryOverview.filter.selectMachines') ||
-                                        'Chọn thiết bị...'
-                                    }
-                                />
-                            )}
-
-                            {selectedRow ? (
-                                <div
-                                    style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: isXs ? '1fr 1fr' : 'repeat(4, 1fr)',
-                                        gap: 8,
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    {[
-                                        {
-                                            label:
-                                                t('factoryOverview.errorAnalytics.avgMttr') ||
-                                                'MTTR trung bình',
-                                            value: selectedMttrMetric
-                                                ? formatHours(selectedMttrMetric.value)
-                                                : '-',
-                                            color: token.colorError,
-                                            bg: token.colorErrorBg,
-                                        },
-                                        {
-                                            label:
-                                                t('factoryOverview.errorAnalytics.avgMtbf') ||
-                                                'MTBF trung bình',
-                                            value: selectedMtbfMetric
-                                                ? formatHours(selectedMtbfMetric.value)
-                                                : '-',
-                                            color: token.colorWarning,
-                                            bg: token.colorWarningBg,
-                                        },
-                                        {
-                                            label:
-                                                t('factoryOverview.stats.totalErrorTime') ||
-                                                'Tổng thời gian lỗi',
-                                            value: formatHours(selectedRow.totalErrorHours),
-                                            color: token.colorError,
-                                            bg: token.colorErrorBg,
-                                        },
-                                        {
-                                            label:
-                                                t('factoryOverview.errorAnalytics.errorEvents') ||
-                                                'Sự cố lỗi',
-                                            value: errorDetails.length.toString(),
-                                            color: token.colorText,
-                                            bg: token.colorFillAlter,
-                                        },
-                                    ].map((item) => (
-                                        <div
-                                            key={item.label}
-                                            style={{
-                                                padding: '10px 12px',
-                                                borderRadius: token.borderRadiusLG,
-                                                border: `1px solid ${token.colorBorderSecondary}`,
-                                                background: item.bg || token.colorFillAlter,
-                                                minWidth: 0,
-                                            }}
-                                        >
-                                            <Text
-                                                ellipsis
-                                                style={{
-                                                    display: 'block',
-                                                    fontSize: 12,
-                                                    color: token.colorTextSecondary,
-                                                    marginBottom: 4,
-                                                }}
-                                            >
-                                                {item.label}
-                                            </Text>
-                                            <Text
-                                                strong
-                                                style={{ color: item.color, fontSize: 16 }}
-                                            >
-                                                {item.value}
-                                            </Text>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <>
-                                    <div
-                                        style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                                            gap: 8,
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        {[
-                                            {
-                                                label:
-                                                    t('factoryOverview.errorAnalytics.worstMttr') ||
-                                                    'MTTR tệ nhất',
-                                                value: worstMttr
-                                                    ? formatHours(worstMttr.value)
-                                                    : '-',
-                                                machineName:
-                                                    worstMttr?.name ??
-                                                    (t('common.noData') || 'Không có dữ liệu'),
-                                                color: token.colorError,
-                                                bg: token.colorErrorBg,
-                                            },
-                                            {
-                                                label:
-                                                    t('factoryOverview.errorAnalytics.worstMtbf') ||
-                                                    'MTBF tệ nhất',
-                                                value: worstMtbf
-                                                    ? formatHours(worstMtbf.value)
-                                                    : '-',
-                                                machineName:
-                                                    worstMtbf?.name ??
-                                                    (t('common.noData') || 'Không có dữ liệu'),
-                                                color: token.colorWarning,
-                                                bg: token.colorWarningBg,
-                                            },
-                                        ].map((item) => (
-                                            <div
-                                                key={item.label}
-                                                style={{
-                                                    padding: '10px 12px',
-                                                    borderRadius: token.borderRadiusLG,
-                                                    border: `1px solid ${token.colorBorderSecondary}`,
-                                                    background: item.bg || token.colorFillAlter,
-                                                }}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        display: 'block',
-                                                        fontSize: 12,
-                                                        color: token.colorTextSecondary,
-                                                        marginBottom: 3,
-                                                    }}
-                                                >
-                                                    {item.label}
-                                                </Text>
-                                                <div
-                                                    style={{
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        gap: 12,
-                                                        alignItems: 'baseline',
-                                                    }}
-                                                >
-                                                    <Text strong ellipsis style={{ minWidth: 0 }}>
-                                                        {item.machineName}
-                                                    </Text>
-                                                    <Text
-                                                        strong
-                                                        style={{
-                                                            color: item.color,
-                                                            flexShrink: 0,
-                                                        }}
-                                                    >
-                                                        {item.value}
-                                                    </Text>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div
-                                        style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                                            gap: 8,
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        {[
-                                            {
-                                                title:
-                                                    t(
-                                                        'factoryOverview.errorAnalytics.mttrRanking'
-                                                    ) || 'Xếp hạng MTTR',
-                                                subtitle:
-                                                    t(
-                                                        'factoryOverview.errorAnalytics.higherIsWorse'
-                                                    ) || 'Cao hơn là tệ hơn',
-                                                rows: mttrRanking,
-                                                maxValue: maxMttrValue,
-                                                color: token.colorError,
-                                            },
-                                            {
-                                                title:
-                                                    t(
-                                                        'factoryOverview.errorAnalytics.mtbfRanking'
-                                                    ) || 'Xếp hạng MTBF',
-                                                subtitle:
-                                                    t(
-                                                        'factoryOverview.errorAnalytics.lowerIsWorse'
-                                                    ) || 'Thấp hơn là tệ hơn',
-                                                rows: mtbfRanking,
-                                                maxValue: maxMtbfValue,
-                                                color: token.colorWarning,
-                                            },
-                                        ].map((group) => (
-                                            <div
-                                                key={group.title}
-                                                style={{
-                                                    padding: '10px 12px',
-                                                    borderRadius: token.borderRadiusLG,
-                                                    border: `1px solid ${token.colorBorderSecondary}`,
-                                                    background: token.colorBgContainer,
-                                                    minWidth: 0,
-                                                }}
-                                            >
-                                                <div
-                                                    style={{
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        gap: 8,
-                                                        marginBottom: 8,
-                                                    }}
-                                                >
-                                                    <Text strong>{group.title}</Text>
-                                                    <Text type="secondary" style={{ fontSize: 12 }}>
-                                                        {group.subtitle}
-                                                    </Text>
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: 7,
-                                                    }}
-                                                >
-                                                    {group.rows.length === 0 ? (
-                                                        <Text type="secondary">
-                                                            {t('common.noData') ||
-                                                                'Không có dữ liệu'}
-                                                        </Text>
-                                                    ) : (
-                                                        group.rows.map((machine: any) => (
-                                                            <button
-                                                                key={machine.id}
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    handleFilterChange(
-                                                                        [machine.id],
-                                                                        'error'
-                                                                    )
-                                                                }
-                                                                style={{
-                                                                    display: 'grid',
-                                                                    gridTemplateColumns:
-                                                                        '96px 1fr auto',
-                                                                    gap: 8,
-                                                                    alignItems: 'center',
-                                                                    border: 0,
-                                                                    padding: 0,
-                                                                    background: 'transparent',
-                                                                    cursor: 'pointer',
-                                                                    textAlign: 'left',
-                                                                }}
-                                                            >
-                                                                <Text
-                                                                    ellipsis
-                                                                    style={{ fontSize: 12 }}
-                                                                >
-                                                                    {machine.name}
-                                                                </Text>
-                                                                <div
-                                                                    style={{
-                                                                        height: 8,
-                                                                        borderRadius: 4,
-                                                                        background:
-                                                                            token.colorFillSecondary,
-                                                                        overflow: 'hidden',
-                                                                    }}
-                                                                >
-                                                                    <div
-                                                                        style={{
-                                                                            width: `${Math.max(
-                                                                                (machine.value /
-                                                                                    group.maxValue) *
-                                                                                    100,
-                                                                                4
-                                                                            )}%`,
-                                                                            height: '100%',
-                                                                            borderRadius: 4,
-                                                                            background: group.color,
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <Text style={{ fontSize: 12 }}>
-                                                                    {formatHours(machine.value)}
-                                                                </Text>
-                                                            </button>
-                                                        ))
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-
+        const tableColumns: ColumnsType<MachineStatusSummaryItem> = useMemo(
+            () => [
+                {
+                    title: t('factoryOverview.table.header.machineName') || 'Thiết bị',
+                    dataIndex: 'machineName',
+                    key: 'machineName',
+                    width: 140,
+                    ellipsis: true,
+                    render: (v: string) => <Text strong>{v}</Text>,
+                },
+                {
+                    title: t('factoryOverview.table.header.runTime') || 'Thời gian chạy',
+                    dataIndex: 'totalRuntimeHours',
+                    key: 'totalRuntimeHours',
+                    align: 'right' as const,
+                    sorter: (a, b) => (a.totalRuntimeHours || 0) - (b.totalRuntimeHours || 0),
+                    render: (v: number, row: MachineStatusSummaryItem) => {
+                        const total =
+                            row.totalRuntimeHours +
+                            row.totalIdleHours +
+                            row.totalErrorHours +
+                            row.totalOfflineHours;
+                        const pct =
+                            total > 0 ? Math.round((row.totalRuntimeHours / total) * 100) : 0;
+                        return (
                             <div
                                 style={{
-                                    flex: 1,
                                     display: 'flex',
-                                    flexDirection: 'column' as const,
-                                    minHeight: 0,
-                                    gap: 8,
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-end',
+                                    gap: 2,
                                 }}
                             >
-                                <SimpleLineChart
-                                    chartData={mttrData}
-                                    selectedMachines={trendMachineIds}
-                                    title={
-                                        t('factoryOverview.chartDescriptions.mttr') ||
-                                        'Biểu đồ MTTR'
-                                    }
-                                    useFlex
-                                    showLegend={false}
-                                />
-                                <SimpleLineChart
-                                    chartData={mtbfData}
-                                    selectedMachines={trendMachineIds}
-                                    title={
-                                        t('factoryOverview.chartDescriptions.mtbf') ||
-                                        'Biểu đồ MTBF'
-                                    }
-                                    useFlex
-                                    showLegend={false}
-                                />
-                            </div>
-
-                            {/* Shared legend */}
-                            {sharedMachines.length > 0 && (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: '4px 14px',
-                                        paddingTop: 4,
-                                        flexShrink: 0,
-                                    }}
+                                <Text>{formatHours(v)}</Text>
+                                <Tag
+                                    color={pct >= 90 ? 'success' : pct >= 75 ? 'warning' : 'error'}
+                                    style={{ margin: 0, fontSize: 11 }}
                                 >
-                                    {sharedMachines.map((machine: any, index: number) => (
-                                        <div
-                                            key={machine.id}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 6,
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    width: 20,
-                                                    height: 2,
-                                                    borderRadius: 1,
-                                                    backgroundColor:
-                                                        chartColors[index % chartColors.length],
-                                                    flexShrink: 0,
-                                                }}
-                                            />
-                                            <span style={{ fontSize: 11 }}>{machine.name}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })(),
-            },
-        ];
-    }, [
-        mttrData,
-        mtbfData,
-        runtimeOptions,
-        allRuntimeIds,
-        t,
-        effectiveRuntimeIds,
-        effectiveErrorIds,
-        filteredSummaryData,
-        selectedRow,
-        isMobile,
-        filterId,
-        startDate,
-        endDate,
-        isDateRange,
-        top10HighRuntimeIds,
-        top10LowRuntimeIds,
-        top10HighErrorIds,
-        top10LowErrorIds,
-        handleFilterChange,
-        handleBarClick,
-    ]);
-
-    return (
-        <Modal
-            title={
-                <Title level={4} style={{ margin: 0 }}>
-                    {t('factoryOverview.table.title.timeAnalytics') ||
-                        'Phân tích thời gian hoạt động'}
-                </Title>
-            }
-            open={isOpen}
-            onCancel={onClose}
-            footer={null}
-            width="95%"
-            style={{ top: isMobile ? 0 : 20, paddingBottom: 0 }}
-            styles={{
-                body: {
-                    height: isMobile ? 'auto' : 'calc(95vh - 110px)',
-                    overflow: isMobile ? 'auto' : 'hidden',
-                    padding: isMobile ? '12px' : '12px 24px 16px',
+                                    {pct}%
+                                </Tag>
+                            </div>
+                        );
+                    },
                 },
-            }}
-            destroyOnClose
-            centered={false}
-        >
-            <style>
-                {`
+                {
+                    title: t('factoryOverview.table.header.stopTime') || 'Thời gian dừng',
+                    dataIndex: 'totalIdleHours',
+                    key: 'totalIdleHours',
+                    align: 'right' as const,
+                    sorter: (a, b) => (a.totalIdleHours || 0) - (b.totalIdleHours || 0),
+                    render: (v: number) => <Text type="secondary">{formatHours(v)}</Text>,
+                },
+                {
+                    title: t('factoryOverview.table.header.errorTime') || 'Thời gian lỗi',
+                    dataIndex: 'totalErrorHours',
+                    key: 'totalErrorHours',
+                    align: 'right' as const,
+                    sorter: (a, b) => (a.totalErrorHours || 0) - (b.totalErrorHours || 0),
+                    render: (v: number) => <Text type="danger">{formatHours(v)}</Text>,
+                },
+                {
+                    title: t('factoryOverview.table.header.offlineTime') || 'Ngoại tuyến',
+                    dataIndex: 'totalOfflineHours',
+                    key: 'totalOfflineHours',
+                    align: 'right' as const,
+                    sorter: (a, b) => (a.totalOfflineHours || 0) - (b.totalOfflineHours || 0),
+                    render: (v: number) => (
+                        <Text style={{ color: token.colorTextQuaternary }}>{formatHours(v)}</Text>
+                    ),
+                },
+            ],
+            [token, t]
+        );
+
+        return (
+            <Modal
+                title={
+                    <Title level={4} style={{ margin: 0 }}>
+                        {t('factoryOverview.table.title.timeAnalytics') ||
+                            'Phân tích thời gian hoạt động'}
+                    </Title>
+                }
+                open={isOpen}
+                onCancel={onClose}
+                footer={null}
+                width="95%"
+                style={{ top: isMobile ? 0 : 20, paddingBottom: 0 }}
+                styles={{
+                    body: {
+                        height: isMobile ? 'auto' : 'calc(95vh - 110px)',
+                        overflow: isMobile ? 'auto' : 'hidden',
+                        padding: isMobile ? '12px' : '12px 24px 16px',
+                    },
+                }}
+                destroyOnHidden
+                centered={false}
+            >
+                <style>
+                    {`
                 .highlighted-row > td {
                     background-color: ${token.colorPrimaryBgHover} !important;
                     transition: background-color 0.3s ease;
@@ -1143,363 +529,414 @@ const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = ({
                     flex-shrink: 0;
                 }
                 `}
-            </style>
-            {loading ? (
-                <div
-                    style={{
-                        height: isMobile ? 'auto' : '100%',
-                        display: isMobile ? 'flex' : 'grid',
-                        flexDirection: isMobile ? 'column' : 'row',
-                        gridTemplateColumns: isMobile ? undefined : '1fr 1fr',
-                        gap: 24,
-                        paddingTop: 24,
-                    }}
-                >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        <Skeleton.Input active block size="large" style={{ height: 40 }} />
-                        <Skeleton active paragraph={{ rows: 12 }} />
-                    </div>
+                </style>
+                {loading ? (
                     <div
                         style={{
-                            paddingLeft: isMobile ? 0 : 24,
-                            borderLeft: isMobile
-                                ? 'none'
-                                : `1px solid ${token.colorBorderSecondary}`,
-                            borderTop: isMobile
-                                ? `1px solid ${token.colorBorderSecondary}`
-                                : 'none',
-                            paddingTop: isMobile ? 24 : 0,
+                            height: isMobile ? 'auto' : '100%',
+                            display: isMobile ? 'flex' : 'grid',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            gridTemplateColumns: isMobile ? undefined : '1fr 1fr',
+                            gap: 24,
+                            paddingTop: 24,
                         }}
                     >
-                        <Skeleton active paragraph={{ rows: 14 }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <Skeleton.Input active block size="large" style={{ height: 40 }} />
+                            <Skeleton active paragraph={{ rows: 12 }} />
+                        </div>
+                        <div
+                            style={{
+                                paddingLeft: isMobile ? 0 : 24,
+                                borderLeft: isMobile
+                                    ? 'none'
+                                    : `1px solid ${token.colorBorderSecondary}`,
+                                borderTop: isMobile
+                                    ? `1px solid ${token.colorBorderSecondary}`
+                                    : 'none',
+                                paddingTop: isMobile ? 24 : 0,
+                            }}
+                        >
+                            <Skeleton active paragraph={{ rows: 14 }} />
+                        </div>
                     </div>
-                </div>
-            ) : (
-                <div
-                    style={{
-                        display: isMobile ? 'flex' : 'grid',
-                        flexDirection: isMobile ? 'column' : 'row',
-                        gridTemplateColumns: isMobile ? undefined : '1fr 1fr',
-                        gap: 24,
-                        height: isMobile ? 'auto' : '100%',
-                        paddingTop: 4,
-                    }}
-                >
+                ) : (
                     <div
                         style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 10,
-                            height: '100%',
-                            overflow: 'hidden',
+                            display: isMobile ? 'flex' : 'grid',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            gridTemplateColumns: isMobile ? undefined : '1fr 1fr',
+                            gap: 24,
+                            height: isMobile ? 'auto' : '100%',
+                            paddingTop: 4,
                         }}
                     >
-                        {selectedRow ? (
-                            <>
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 12,
-                                        flexShrink: 0,
-                                        paddingBottom: 4,
-                                    }}
-                                >
-                                    <Button
-                                        type="default"
-                                        size="small"
-                                        onClick={() => setSelectedRow(null)}
-                                        style={{ borderRadius: token.borderRadius }}
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 10,
+                                height: '100%',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            {selectedRow ? (
+                                <>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 12,
+                                            flexShrink: 0,
+                                            paddingBottom: 4,
+                                        }}
                                     >
-                                        <LeftOutlined />
-                                        {t('common.back') || 'Quay lại'}
-                                    </Button>
-                                    <Text strong style={{ fontSize: 15 }}>
-                                        {selectedRow.machineName}
-                                    </Text>
-                                </div>
+                                        <Button
+                                            type="default"
+                                            size="small"
+                                            onClick={() => setSelectedRow(null)}
+                                            style={{ borderRadius: token.borderRadius }}
+                                        >
+                                            <LeftOutlined />
+                                            {t('common.back') || 'Quay lại'}
+                                        </Button>
+                                        <Text strong style={{ fontSize: 15 }}>
+                                            {selectedRow.machineName}
+                                        </Text>
+                                    </div>
 
-                                {/* Summary cards */}
-                                <div
-                                    style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: isXs ? '1fr' : 'repeat(2, 1fr)',
-                                        gap: 12,
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    {[
-                                        {
-                                            label:
-                                                t('factoryOverview.stats.totalRunTime') ||
-                                                'Tổng thời gian chạy',
-                                            value: formatHours(selectedRow.totalRuntimeHours),
-                                            color: token.colorSuccess,
-                                            bg: token.colorSuccessBg || 'rgba(61, 138, 107, 0.08)',
-                                            borderColor:
-                                                token.colorSuccessBorder ||
-                                                'rgba(61, 138, 107, 0.2)',
-                                        },
-                                        {
-                                            label:
-                                                t('factoryOverview.stats.totalStopTime') ||
-                                                'Tổng thời gian dừng',
-                                            value: formatHours(selectedRow.totalIdleHours),
-                                            color: token.colorWarning,
-                                            bg: token.colorWarningBg || 'rgba(196, 136, 58, 0.08)',
-                                            borderColor:
-                                                token.colorWarningBorder ||
-                                                'rgba(196, 136, 58, 0.2)',
-                                        },
-                                        {
-                                            label:
-                                                t('factoryOverview.stats.totalErrorTime') ||
-                                                'Tổng thời gian lỗi',
-                                            value: formatHours(selectedRow.totalErrorHours),
-                                            color: token.colorError,
-                                            bg: token.colorErrorBg || 'rgba(199, 84, 84, 0.08)',
-                                            borderColor:
-                                                token.colorErrorBorder || 'rgba(199, 84, 84, 0.2)',
-                                        },
-                                        {
-                                            label:
-                                                t('factoryOverview.stats.totalOfflineTime') ||
-                                                'Tổng thời gian ngoại tuyến',
-                                            value: formatHours(selectedRow.totalOfflineHours),
-                                            color: token.colorTextSecondary,
-                                            bg: token.colorFillAlter,
-                                            borderColor: token.colorBorderSecondary,
-                                        },
-                                    ].map((item) => (
+                                    {/* Summary cards */}
+                                    <div
+                                        style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: isXs ? '1fr' : 'repeat(2, 1fr)',
+                                            gap: 12,
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        {[
+                                            {
+                                                label:
+                                                    t('factoryOverview.stats.totalRunTime') ||
+                                                    'Tổng thời gian chạy',
+                                                value: formatHours(selectedRow.totalRuntimeHours),
+                                                color: token.colorSuccess,
+                                                bg:
+                                                    token.colorSuccessBg ||
+                                                    'rgba(61, 138, 107, 0.08)',
+                                                borderColor:
+                                                    token.colorSuccessBorder ||
+                                                    'rgba(61, 138, 107, 0.2)',
+                                            },
+                                            {
+                                                label:
+                                                    t('factoryOverview.stats.totalStopTime') ||
+                                                    'Tổng thời gian dừng',
+                                                value: formatHours(selectedRow.totalIdleHours),
+                                                color: token.colorWarning,
+                                                bg:
+                                                    token.colorWarningBg ||
+                                                    'rgba(196, 136, 58, 0.08)',
+                                                borderColor:
+                                                    token.colorWarningBorder ||
+                                                    'rgba(196, 136, 58, 0.2)',
+                                            },
+                                            {
+                                                label:
+                                                    t('factoryOverview.stats.totalErrorTime') ||
+                                                    'Tổng thời gian lỗi',
+                                                value: formatHours(selectedRow.totalErrorHours),
+                                                color: token.colorError,
+                                                bg: token.colorErrorBg || 'rgba(199, 84, 84, 0.08)',
+                                                borderColor:
+                                                    token.colorErrorBorder ||
+                                                    'rgba(199, 84, 84, 0.2)',
+                                            },
+                                            {
+                                                label:
+                                                    t('factoryOverview.stats.totalOfflineTime') ||
+                                                    'Tổng thời gian ngoại tuyến',
+                                                value: formatHours(selectedRow.totalOfflineHours),
+                                                color: token.colorTextSecondary,
+                                                bg: token.colorFillAlter,
+                                                borderColor: token.colorBorderSecondary,
+                                            },
+                                        ].map((item) => (
+                                            <div
+                                                key={item.label}
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    borderRadius: token.borderRadiusLG,
+                                                    border: `1px solid ${item.borderColor}`,
+                                                    background: item.bg,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        fontSize: 13,
+                                                        color: item.color,
+                                                        fontWeight: 500,
+                                                        marginBottom: 4,
+                                                    }}
+                                                >
+                                                    {item.label}
+                                                </Text>
+                                                <Text
+                                                    strong
+                                                    style={{ fontSize: 20, color: item.color }}
+                                                >
+                                                    {item.value}
+                                                </Text>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            border: `1px solid ${token.colorBorderSecondary}`,
+                                            borderRadius: token.borderRadiusLG,
+                                            overflow: 'auto',
+                                            minHeight: 0,
+                                            background: token.colorBgContainer,
+                                        }}
+                                    >
                                         <div
-                                            key={item.label}
                                             style={{
                                                 padding: '12px 16px',
-                                                borderRadius: token.borderRadiusLG,
-                                                border: `1px solid ${item.borderColor}`,
-                                                background: item.bg,
+                                                borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                                                background: token.colorFillAlter,
                                                 display: 'flex',
-                                                flexDirection: 'column',
-                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
                                             }}
                                         >
                                             <Text
-                                                style={{
-                                                    fontSize: 13,
-                                                    color: item.color,
-                                                    fontWeight: 500,
-                                                    marginBottom: 4,
-                                                }}
-                                            >
-                                                {item.label}
-                                            </Text>
-                                            <Text
                                                 strong
-                                                style={{ fontSize: 20, color: item.color }}
+                                                style={{ fontSize: 15, color: token.colorPrimary }}
                                             >
-                                                {item.value}
+                                                {t('factoryOverview.table.title.errorHistory') ||
+                                                    'Lịch sử lỗi'}
+                                            </Text>
+                                            <Text type="secondary" style={{ fontSize: 14 }}>
+                                                {t('factoryOverview.table.subtitle.errorDetails') ||
+                                                    'Chi tiết các sự cố lỗi'}
                                             </Text>
                                         </div>
-                                    ))}
-                                </div>
-
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        border: `1px solid ${token.colorBorderSecondary}`,
-                                        borderRadius: token.borderRadiusLG,
-                                        overflow: 'auto',
-                                        minHeight: 0,
-                                        background: token.colorBgContainer,
-                                    }}
-                                >
+                                        <Table<MachineErrorDetailItem>
+                                            className="full-height-table"
+                                            loading={loadingErrorDetails}
+                                            columns={errorColumns}
+                                            dataSource={errorDetails}
+                                            rowKey={(record, index) =>
+                                                record.id?.toString() || index?.toString() || ''
+                                            }
+                                            pagination={{
+                                                pageSize: 12,
+                                                size: 'small',
+                                                showSizeChanger: false,
+                                                style: {
+                                                    textAlign: 'center',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    width: '100%',
+                                                    padding: '8px 0',
+                                                },
+                                            }}
+                                            size="small"
+                                            scroll={
+                                                isMobile
+                                                    ? { x: 'max-content' }
+                                                    : { y: 'calc(95vh - 360px)', x: 'max-content' }
+                                            }
+                                            style={{
+                                                height: isMobile ? 'auto' : '100%',
+                                                margin: 0,
+                                            }}
+                                            locale={{
+                                                emptyText:
+                                                    t('factoryOverview.table.noErrorData') ||
+                                                    'Không ghi nhận sự cố lỗi',
+                                            }}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
                                     <div
                                         style={{
-                                            padding: '12px 16px',
-                                            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-                                            background: token.colorFillAlter,
+                                            flexShrink: 0,
                                             display: 'flex',
-                                            alignItems: 'center',
+                                            gap: 8,
                                             justifyContent: 'space-between',
+                                            alignItems: 'center',
                                         }}
                                     >
                                         <Text
                                             strong
-                                            style={{ fontSize: 15, color: token.colorPrimary }}
+                                            style={{ fontSize: 16, color: token.colorPrimary }}
                                         >
-                                            {t('factoryOverview.table.title.errorHistory') ||
-                                                'Lịch sử lỗi'}
+                                            {spaceData?.spaceName}
                                         </Text>
-                                        <Text type="secondary" style={{ fontSize: 14 }}>
-                                            {t('factoryOverview.table.subtitle.errorDetails') ||
-                                                'Chi tiết các sự cố lỗi'}
-                                        </Text>
-                                    </div>
-                                    <Table<MachineErrorDetailItem>
-                                        className="full-height-table"
-                                        loading={loadingErrorDetails}
-                                        columns={errorColumns}
-                                        dataSource={errorDetails}
-                                        rowKey={(record, index) =>
-                                            record.id?.toString() || index?.toString() || ''
-                                        }
-                                        pagination={{
-                                            pageSize: 12,
-                                            size: 'small',
-                                            showSizeChanger: false,
-                                            style: {
-                                                textAlign: 'center',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                width: '100%',
-                                                padding: '8px 0',
-                                            },
-                                        }}
-                                        size="small"
-                                        scroll={
-                                            isMobile
-                                                ? { x: 'max-content' }
-                                                : { y: 'calc(95vh - 360px)', x: 'max-content' }
-                                        }
-                                        style={{ height: isMobile ? 'auto' : '100%', margin: 0 }}
-                                        locale={{
-                                            emptyText:
-                                                t('factoryOverview.table.noErrorData') ||
-                                                'Không ghi nhận sự cố lỗi',
-                                        }}
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div
-                                    style={{
-                                        flexShrink: 0,
-                                        display: 'flex',
-                                        gap: 8,
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    <Text
-                                        strong
-                                        style={{ fontSize: 16, color: token.colorPrimary }}
-                                    >
-                                        {spaceData?.spaceName}
-                                    </Text>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        {workshopOptions.length > 0 && (
-                                            <Select
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            {workshopOptions.length > 0 && (
+                                                <Select
+                                                    placeholder={
+                                                        t('factoryOverview.filter.chooseZone') ||
+                                                        'Chọn phân xưởng'
+                                                    }
+                                                    value={selectedWorkshopId}
+                                                    onChange={setSelectedWorkshopId}
+                                                    options={workshopOptions}
+                                                    allowClear
+                                                    style={{ width: 220 }}
+                                                />
+                                            )}
+                                            <SearchInput
+                                                value={searchText}
+                                                onChange={setSearchText}
                                                 placeholder={
-                                                    t('factoryOverview.filter.chooseZone') ||
-                                                    'Chọn phân xưởng'
+                                                    t('factoryOverview.filter.searchMachines') ||
+                                                    'Tìm thiết bị...'
                                                 }
-                                                value={selectedWorkshopId}
-                                                onChange={setSelectedWorkshopId}
-                                                options={workshopOptions}
-                                                allowClear
-                                                style={{ width: 220 }}
+                                                width={220}
+                                                debounceMs={200}
                                             />
-                                        )}
-                                        <SearchInput
-                                            value={searchText}
-                                            onChange={setSearchText}
-                                            placeholder={
-                                                t('factoryOverview.filter.searchMachines') ||
-                                                'Tìm thiết bị...'
+                                        </div>
+                                    </div>
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            minHeight: 0,
+                                            overflow: 'hidden',
+                                        }}
+                                    >
+                                        <Table<MachineStatusSummaryItem>
+                                            className="full-height-table"
+                                            columns={tableColumns}
+                                            dataSource={filteredSummaryData}
+                                            rowKey="machineId"
+                                            rowClassName={(record) =>
+                                                record.machineId === hoveredMachineId
+                                                    ? 'highlighted-row'
+                                                    : ''
                                             }
-                                            width={220}
-                                            debounceMs={200}
+                                            onChange={(pagination, filters, sorter, extra) => {
+                                                setCurrentPage(pagination.current || 1);
+                                                setCurrentSortedData(
+                                                    extra.currentDataSource as MachineStatusSummaryItem[]
+                                                );
+                                            }}
+                                            pagination={{
+                                                current: currentPage,
+                                                pageSize: 12,
+                                                size: 'small',
+                                                showSizeChanger: false,
+                                                style: {
+                                                    textAlign: 'center',
+                                                    marginTop: 8,
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                },
+                                            }}
+                                            size="small"
+                                            scroll={
+                                                isMobile
+                                                    ? { x: 'max-content' }
+                                                    : { y: 'calc(95vh - 200px)', x: 'max-content' }
+                                            }
+                                            style={{ height: isMobile ? 'auto' : '100%' }}
+                                            locale={{
+                                                emptyText: t('common.noData') || 'Không có dữ liệu',
+                                            }}
+                                            onRow={(row) => ({
+                                                onClick: () => setSelectedRow(row),
+                                                style: { cursor: 'pointer' },
+                                            })}
                                         />
                                     </div>
-                                </div>
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        minHeight: 0,
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    <Table<MachineStatusSummaryItem>
-                                        className="full-height-table"
-                                        columns={tableColumns}
-                                        dataSource={filteredSummaryData}
-                                        rowKey="machineId"
-                                        rowClassName={(record) =>
-                                            record.machineId === hoveredMachineId
-                                                ? 'highlighted-row'
-                                                : ''
-                                        }
-                                        onChange={(pagination, filters, sorter, extra) => {
-                                            setCurrentPage(pagination.current || 1);
-                                            setCurrentSortedData(
-                                                extra.currentDataSource as MachineStatusSummaryItem[]
-                                            );
-                                        }}
-                                        pagination={{
-                                            current: currentPage,
-                                            pageSize: 12,
-                                            size: 'small',
-                                            showSizeChanger: false,
-                                            style: {
-                                                textAlign: 'center',
-                                                marginTop: 8,
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                            },
-                                        }}
-                                        size="small"
-                                        scroll={
-                                            isMobile
-                                                ? { x: 'max-content' }
-                                                : { y: 'calc(95vh - 200px)', x: 'max-content' }
-                                        }
-                                        style={{ height: isMobile ? 'auto' : '100%' }}
-                                        locale={{
-                                            emptyText: t('common.noData') || 'Không có dữ liệu',
-                                        }}
-                                        onRow={(row) => ({
-                                            onClick: () => setSelectedRow(row),
-                                            style: { cursor: 'pointer' },
-                                        })}
-                                    />
-                                </div>
-                            </>
-                        )}
-                    </div>
+                                </>
+                            )}
+                        </div>
 
-                    <div
-                        style={{
-                            borderLeft: isMobile
-                                ? 'none'
-                                : `1px solid ${token.colorBorderSecondary}`,
-                            borderTop: isMobile
-                                ? `1px solid ${token.colorBorderSecondary}`
-                                : 'none',
-                            paddingLeft: isMobile ? 0 : 24,
-                            paddingTop: isMobile ? 24 : 0,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            height: isMobile ? 'auto' : '100%',
-                            overflow: isMobile ? 'visible' : 'hidden',
-                        }}
-                    >
-                        <Tabs
-                            items={rightTabItems}
-                            defaultActiveKey="runtime"
-                            size="small"
-                            style={{ flex: 1, minHeight: 0 }}
-                            tabBarStyle={{ flexShrink: 0, marginBottom: 8 }}
-                        />
+                        <div
+                            style={{
+                                borderLeft: isMobile
+                                    ? 'none'
+                                    : `1px solid ${token.colorBorderSecondary}`,
+                                borderTop: isMobile
+                                    ? `1px solid ${token.colorBorderSecondary}`
+                                    : 'none',
+                                paddingLeft: isMobile ? 0 : 24,
+                                paddingTop: isMobile ? 24 : 0,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                height: isMobile ? 'auto' : '100%',
+                                overflow: isMobile ? 'visible' : 'hidden',
+                            }}
+                        >
+                            <div style={{ marginBottom: 12, flexShrink: 0 }}>
+                                <Text strong style={{ fontSize: 16 }}>
+                                    {t('factoryOverview.tabs.runtimeAnalytics') ||
+                                        'Phân tích thời gian chạy'}
+                                </Text>
+                            </div>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    flex: 1,
+                                    minHeight: 0,
+                                    height: isMobile ? 400 : 'calc(95vh - 200px)',
+                                    gap: 8,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                {!selectedRow && runtimeOptions.length > 0 && (
+                                    <QuickSelectFilter
+                                        allIds={allRuntimeIds}
+                                        selectedIds={effectiveRuntimeIds}
+                                        onChange={handleFilterChange}
+                                        options={runtimeOptions}
+                                        top10HighIds={top10HighRuntimeIds}
+                                        top10LowIds={top10LowRuntimeIds}
+                                        placeholder={
+                                            t('factoryOverview.filter.selectMachines') ||
+                                            'Chọn thiết bị...'
+                                        }
+                                    />
+                                )}
+                                {selectedRow ? (
+                                    <MachineDetailAreaChart
+                                        selectedRow={selectedRow}
+                                        filterId={filterId}
+                                        startDate={startDate}
+                                        endDate={endDate}
+                                        isDateRange={isDateRange}
+                                    />
+                                ) : (
+                                    <RuntimeAnalyticsChart
+                                        summaryData={filteredSummaryData}
+                                        selectedIds={effectiveRuntimeIds}
+                                        onBarClick={handleBarClick}
+                                    />
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
-        </Modal>
-    );
-};
+                )}
+            </Modal>
+        );
+    }
+);
+
+ErrorAnalyticsModal.displayName = 'ErrorAnalyticsModal';
 
 export default ErrorAnalyticsModal;

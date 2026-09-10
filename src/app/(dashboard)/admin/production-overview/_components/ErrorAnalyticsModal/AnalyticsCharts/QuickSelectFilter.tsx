@@ -135,7 +135,6 @@ export const QuickSelectFilter: React.FC<QuickSelectFilterProps> = ({
                     onChange={(value) => onChange(value as string[])}
                     style={{ flex: 1, minWidth: 200, maxWidth: 280 }}
                     popupMatchSelectWidth={false}
-                    dropdownMatchSelectWidth={false}
                     allowClear
                 />
             </div>

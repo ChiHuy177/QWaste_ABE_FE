@@ -463,7 +463,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         );
 
     const customTabContent = (
-        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={8} style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                 <Typography.Text type="secondary" style={{ flexShrink: 0 }}>
                     {lang === 'vi' ? 'Năm' : 'Year'}
@@ -651,7 +651,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                                     ),
                                     children: (
                                         <Space
-                                            direction="vertical"
+                                            orientation="vertical"
                                             size={10}
                                             style={{ width: '100%' }}
                                         >

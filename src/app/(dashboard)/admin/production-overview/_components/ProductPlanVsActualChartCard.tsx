@@ -15,7 +15,7 @@ import {
     Cell,
 } from 'recharts';
 import { DashboardItemProductionResponse } from '@/types/Dashboard';
-import { ProductOutputData } from '@/configs/mockData/productionOverviewMockData';
+import { ProductOutputData } from '@/types/ProductionOverview';
 
 const { Text } = Typography;
 
@@ -31,12 +31,10 @@ interface ProductPlanVsActualChartCardProps {
     subtitle?: string;
 }
 
-export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCardProps> = ({
-    data,
-    subtitle,
-}) => {
-    const { t } = useTranslation();
-    const { token } = theme.useToken();
+export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCardProps> =
+    React.memo(({ data, subtitle }) => {
+        const { t } = useTranslation();
+        const { token } = theme.useToken();
 
     // Normalize incoming data (handles both API response and mock data)
     const chartData = useMemo<NormalizedItemProductionItem[]>(() => {
@@ -195,4 +193,6 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
             )}
         </Card>
     );
-};
+});
+
+ProductPlanVsActualChartCard.displayName = 'ProductPlanVsActualChartCard';
