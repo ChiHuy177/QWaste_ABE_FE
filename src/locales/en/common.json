@@ -328,6 +328,7 @@
             "order": "Order",
             "tasks": "Tasks",
             "productionPlan": "Production Plan",
+            "workCalendar": "Work Calendar",
             "productionMonitor": "Production Monitor",
             "history": "History",
             "reports": "Reports",
@@ -363,6 +364,100 @@
         },
         "logo": {
             "alt": "Logo"
+        }
+    },
+    "workCalendar": {
+        "header": {
+            "title": "Work Calendar",
+            "btnEdit": "Edit",
+            "btnSave": "Save Changes",
+            "btnCancel": "Cancel",
+            "btnReset": "Reset Default",
+            "btnConfirmMonth": "Confirm Schedule",
+            "btnAlreadyConfirmed": "Schedule Locked",
+            "alreadyConfirmedTooltip": "Work schedule for Month {{month}}/{{year}} is already confirmed.",
+            "confirmedBadge": "Confirmed",
+            "unconfirmedBadge": "Unconfirmed",
+            "confirmMonthTitle": "Confirm Work Schedule",
+            "confirmMonthContent": "Are you sure you want to confirm the work schedule for Month {{month}}/{{year}}?",
+            "hasChanges": "Modified",
+            "confirmResetTitle": "Reset Calendar to Default",
+            "confirmResetContent": "Are you sure you want to reset the calendar to default values for this month?",
+            "editModeNotice": "In Edit Mode",
+            "editModeDesc": "Click day cells to select/unselect, or click and drag mouse to bulk select. Once finished, click 'Save Changes'.",
+            "editModeDescMobile": "Tap day cells to select or use 'Select All'. When finished, tap 'Save Changes'.",
+            "pastMonthEditDisabled": "Cannot edit schedule for past months",
+            "confirmedMonthEditDisabled": "Work schedule for Month {{month}}/{{year}} is already confirmed and cannot be edited."
+        },
+        "summary": {
+            "workingDays": "Total Working Days",
+            "offDays": "Total Off Days",
+            "plannedHours": "Total Planned Hours",
+            "unitDays": "days",
+            "unitHours": "hours"
+        },
+        "grid": {
+            "selectTip": "Tip: You can click day cells or click and drag mouse to select multiple days.",
+            "selectTipMobile": "Tap day cells to select or use 'Select All'.",
+            "selectedCount": "{{count}} days selected",
+            "btnSelectAll": "Select All ({{count}})",
+            "btnClearSelection": "Clear Selection",
+            "btnSingleEdit": "Edit This Day",
+            "btnBulkEdit": "Edit Selected ({{count}})",
+            "editedBadge": "Edited",
+            "overrideBadge": "Customized",
+            "overrideTooltip": "Date modified differently from default rule",
+            "pastDayTooltip": "Cannot edit schedule for past dates",
+            "plannedHoursLabel": "{{hours}}h planned",
+            "plannedOffLabel": "0h (Off)"
+        },
+        "dayType": {
+            "working": "Working",
+            "weekendOff": "Weekend Off",
+            "holiday": "Holiday",
+            "workingShort": "Work",
+            "weekendOffShort": "Off",
+            "holidayShort": "Holiday",
+            "workingDesc": "Official Working Day",
+            "weekendOffDesc": "Weekly Rest / Sunday",
+            "holidayDesc": "Public Holiday"
+        },
+        "modal": {
+            "editDayTitle": "Edit Date {{date}}",
+            "selectedDateLabel": "Selected Date: ",
+            "workingStatusLabel": "Working Status",
+            "dayTypeLabel": "Day Type",
+            "statusWorking": "Working",
+            "statusOff": "Off",
+            "btnApply": "Apply"
+        },
+        "drawer": {
+            "bulkEditTitle": "Edit Selected Date(s)",
+            "bulkEditNotice": "Edit Selected Date(s)",
+            "bulkEditDesc": "The settings below will be applied to the {{count}} selected date(s) on the calendar grid.",
+            "btnApplyBulk": "Apply for {{count}} days"
+        },
+        "alarm": {
+            "eyebrow": "SYSTEM WARNING",
+            "modalTitle": "Work Calendar Alert",
+            "targetNotice": "Month {{month}}/{{year}} unconfirmed",
+            "targetSub": "Please review and lock schedule promptly",
+            "modalDesc": "Month {{month}} work schedule has not been confirmed. Please review and confirm to ensure accurate performance calculations.",
+            "btnConfigureNow": "Configure Now",
+            "btnCloseLater": "Later"
+        },
+        "notifications": {
+            "loadingData": "Loading work calendar data...",
+            "saveSuccess": "Work calendar saved successfully!",
+            "resetSuccess": "Calendar reset to default successfully!",
+            "confirmMonthSuccess": "Work schedule for Month {{month}}/{{year}} confirmed successfully!",
+            "confirmMonthError": "Failed to confirm work schedule. Please try again.",
+            "singleUpdateSuccess": "Updated status for {{date}}",
+            "bulkUpdateSuccess": "Bulk updated {{count}} selected days.",
+            "saveError": "Failed to save work calendar.",
+            "resetError": "Failed to reset calendar.",
+            "fetchError": "Failed to load work calendar data.",
+            "missingDataError": "Data missing for {{date}}. Please check again."
         }
     },
     "navUser": {
@@ -1895,6 +1990,9 @@
             "createdBy": "Created By",
             "updatedAt": "Updated At",
             "updatedBy": "Updated By"
+        },
+        "viewModal": {
+            "groupInfo": "Group Information"
         }
     },
     "staffManagement": {
@@ -2106,6 +2204,9 @@
                 "badRequest": "Invalid request. Please check your input and try again.",
                 "unauthorized": "You are not authorized to perform this action."
             }
+        },
+        "viewModal": {
+            "staffInfo": "Staff Information"
         }
     },
     "zoneManagement": {
@@ -3880,7 +3981,8 @@
         "lineList": "Line Management",
         "spaceLevelList": "Hierarchy Level Management",
         "spaceList": "Space Management",
-        "industryFilterList": "Industry Filter List"
+        "industryFilterList": "Industry Filter List",
+        "workCalendar": "Work Calendar"
     },
     "settingsPage": {
         "success": "Settings updated successfully",
@@ -4823,6 +4925,34 @@
             "needImprove": "Needs Improvement (<70%)",
             "noSchedule": "N/A (Off-shift / No Plan)",
             "noData": "No machine performance data available for this period"
+        }
+    },
+    "spaceMonitoring": {
+        "timeFilter": {
+            "title": "Time Filter",
+            "time": "Time",
+            "shifts": "Shifts",
+            "allShifts": "All",
+            "active": "Active",
+            "periodType": "Period Selection Mode",
+            "quickSelect": "Quick Select",
+            "presetOptions": "Preset Options",
+            "week": "By Week",
+            "month": "By Month",
+            "quarter": "By Quarter",
+            "year": "By Year",
+            "customRange": "Custom Date Range",
+            "selectWeek": "Select week",
+            "selectMonth": "Select month",
+            "selectQuarter": "Select quarter",
+            "selectYear": "Select year",
+            "selectDateRange": "Select date range",
+            "weekLabel": "Week {{week}}, {{year}}",
+            "monthLabel": "Month {{month}}/{{year}}",
+            "quarterLabel": "Q{{quarter}} {{year}}",
+            "yearLabel": "Year {{year}}",
+            "refreshData": "Refresh data",
+            "apply": "Apply"
         }
     }
 }

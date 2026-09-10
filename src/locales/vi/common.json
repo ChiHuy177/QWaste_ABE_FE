@@ -319,6 +319,7 @@
             "order": "Đơn hàng",
             "tasks": "Nhiệm vụ",
             "productionPlan": "Kế hoạch sản xuất",
+            "workCalendar": "Lịch làm việc",
             "productionMonitor": "Giám sát sản xuất",
             "history": "Lịch sử",
             "reports": "Báo cáo",
@@ -354,6 +355,100 @@
         },
         "logo": {
             "alt": "Logo"
+        }
+    },
+    "workCalendar": {
+        "header": {
+            "title": "Lịch Làm Việc",
+            "btnEdit": "Chỉnh sửa",
+            "btnSave": "Lưu thay đổi",
+            "btnCancel": "Hủy bỏ",
+            "btnReset": "Reset mặc định",
+            "btnConfirmMonth": "Chốt lịch",
+            "btnAlreadyConfirmed": "Đã chốt lịch",
+            "alreadyConfirmedTooltip": "Lịch làm việc Tháng {{month}}/{{year}} đã được chốt.",
+            "confirmedBadge": "Đã chốt lịch",
+            "unconfirmedBadge": "Chưa chốt lịch",
+            "confirmMonthTitle": "Xác nhận chốt lịch làm việc",
+            "confirmMonthContent": "Bạn có chắc chắn muốn chốt lịch làm việc cho Tháng {{month}}/{{year}} không?",
+            "hasChanges": "Có thay đổi",
+            "confirmResetTitle": "Reset lịch về mặc định",
+            "confirmResetContent": "Bạn có chắc chắn muốn khôi phục lại lịch mặc định cho tháng này không?",
+            "editModeNotice": "Đang trong chế độ chỉnh sửa",
+            "editModeDesc": "Click vào ô ngày để chọn/bỏ chọn, hoặc nhấp giữ rê chuột để chọn hàng loạt. Sau khi chỉnh sửa xong, bấm 'Lưu thay đổi'.",
+            "editModeDescMobile": "Chạm vào các ô ngày để chọn hoặc dùng 'Chọn tất cả'. Khi hoàn tất, bấm 'Lưu thay đổi'.",
+            "pastMonthEditDisabled": "Không thể điều chỉnh lịch của các tháng trong quá khứ",
+            "confirmedMonthEditDisabled": "Lịch làm việc Tháng {{month}}/{{year}} đã được chốt, không thể chỉnh sửa."
+        },
+        "summary": {
+            "workingDays": "Tổng Ngày Làm Việc",
+            "offDays": "Tổng Ngày Nghỉ",
+            "plannedHours": "Tổng Giờ Kế Hoạch",
+            "unitDays": "ngày",
+            "unitHours": "giờ"
+        },
+        "grid": {
+            "selectTip": "Mẹo: Bạn có thể click vào các ô ngày hoặc nhấp giữ kéo rê chuột để chọn nhiều ngày.",
+            "selectTipMobile": "Chạm vào các ô ngày để chọn hoặc bấm 'Chọn tất cả'.",
+            "selectedCount": "Đã chọn {{count}} ngày",
+            "btnSelectAll": "Chọn tất cả ({{count}})",
+            "btnClearSelection": "Bỏ chọn tất cả",
+            "btnSingleEdit": "Chỉnh sửa ngày này",
+            "btnBulkEdit": "Chỉnh sửa ngày đã chọn ({{count}})",
+            "editedBadge": "Đã sửa",
+            "overrideBadge": "Đã tùy chỉnh",
+            "overrideTooltip": "Ngày đã được chỉnh sửa khác quy tắc mặc định",
+            "pastDayTooltip": "Không thể chỉnh sửa lịch của ngày trong quá khứ",
+            "plannedHoursLabel": "{{hours}}h kế hoạch",
+            "plannedOffLabel": "0h (Nghỉ)"
+        },
+        "dayType": {
+            "working": "Làm việc",
+            "weekendOff": "Nghỉ tuần",
+            "holiday": "Ngày lễ",
+            "workingShort": "Đi làm",
+            "weekendOffShort": "Nghỉ",
+            "holidayShort": "Lễ",
+            "workingDesc": "Ngày làm việc chính thức",
+            "weekendOffDesc": "Nghỉ hàng tuần / Chủ nhật",
+            "holidayDesc": "Ngày nghỉ lễ / Tết"
+        },
+        "modal": {
+            "editDayTitle": "Chỉnh sửa ngày {{date}}",
+            "selectedDateLabel": "Ngày chọn: ",
+            "workingStatusLabel": "Trạng thái đi làm",
+            "dayTypeLabel": "Loại ngày",
+            "statusWorking": "Đi làm",
+            "statusOff": "Nghỉ",
+            "btnApply": "Áp dụng"
+        },
+        "drawer": {
+            "bulkEditTitle": "Chỉnh sửa ngày đã chọn",
+            "bulkEditNotice": "Chỉnh sửa ngày đã chọn",
+            "bulkEditDesc": "Các thiết lập dưới đây sẽ được áp dụng cho {{count}} ngày mà bạn đã chọn trên lưới lịch.",
+            "btnApplyBulk": "Áp dụng cho {{count}} ngày"
+        },
+        "alarm": {
+            "eyebrow": "CẢNH BÁO HỆ THỐNG",
+            "modalTitle": "Cảnh báo chốt lịch làm việc",
+            "targetNotice": "Tháng {{month}}/{{year}} chưa chốt lịch",
+            "targetSub": "Vui lòng kiểm tra & chốt lịch sớm nhất",
+            "modalDesc": "Tháng {{month}} chưa được chốt lịch làm việc. Vui lòng rà soát và chốt lịch để hệ thống tính hiệu suất chính xác.",
+            "btnConfigureNow": "Cấu hình ngay",
+            "btnCloseLater": "Để sau"
+        },
+        "notifications": {
+            "loadingData": "Đang tải dữ liệu lịch làm việc...",
+            "saveSuccess": "Lưu thay đổi lịch làm việc thành công!",
+            "resetSuccess": "Khôi phục lịch mặc định thành công!",
+            "confirmMonthSuccess": "Chốt lịch làm việc Tháng {{month}}/{{year}} thành công!",
+            "confirmMonthError": "Không thể chốt lịch làm việc. Vui lòng thử lại.",
+            "singleUpdateSuccess": "Đã cập nhật trạng thái ngày {{date}}",
+            "bulkUpdateSuccess": "Đã cập nhật đồng loạt {{count}} ngày đã chọn.",
+            "saveError": "Có lỗi xảy ra khi lưu lịch làm việc.",
+            "resetError": "Không thể khôi phục lịch mặc định.",
+            "fetchError": "Không thể tải dữ liệu lịch làm việc.",
+            "missingDataError": "Dữ liệu thiếu ngày {{date}}. Vui lòng kiểm tra lại."
         }
     },
     "navUser": {
@@ -1853,6 +1948,9 @@
             "createdBy": "Người tạo",
             "updatedAt": "Ngày cập nhật",
             "updatedBy": "Người cập nhật"
+        },
+        "viewModal": {
+            "groupInfo": "Thông tin nhóm"
         }
     },
     "staffManagement": {
@@ -2063,6 +2161,9 @@
                 "badRequest": "Yêu cầu không hợp lệ. Vui lòng kiểm tra đầu vào",
                 "unauthorized": "Bạn không được ủy quyền thực hiện hành động này"
             }
+        },
+        "viewModal": {
+            "staffInfo": "Thông tin nhân viên"
         }
     },
     "zoneManagement": {
@@ -3658,7 +3759,8 @@
         "lineList": "Quản lý băng chuyền",
         "spaceLevelList": "Quản lý cấp độ khu vực",
         "spaceList": "Quản lý khu vực",
-        "industryFilterList": "Quản lý bộ lọc"
+        "industryFilterList": "Quản lý bộ lọc",
+        "workCalendar": "Lịch làm việc"
     },
     "addTaskForm": {
         "title": "Thêm Công việc Mới",
@@ -4867,6 +4969,34 @@
             "needImprove": "Cần cải thiện (<70%)",
             "noSchedule": "N/A (Ngoài ca / Không có KH)",
             "noData": "Không có dữ liệu báo cáo hiệu suất cho khoảng thời gian này"
+        }
+    },
+    "spaceMonitoring": {
+        "timeFilter": {
+            "title": "Thời gian",
+            "time": "Thời gian",
+            "shifts": "Ca làm việc",
+            "allShifts": "Tất cả",
+            "active": "Đang hoạt động",
+            "periodType": "Chế độ chọn thời gian",
+            "quickSelect": "Chọn nhanh",
+            "presetOptions": "Tùy chọn có sẵn",
+            "week": "Theo tuần",
+            "month": "Theo tháng",
+            "quarter": "Theo quý",
+            "year": "Theo năm",
+            "customRange": "Khoảng ngày",
+            "selectWeek": "Chọn tuần",
+            "selectMonth": "Chọn tháng",
+            "selectQuarter": "Chọn quý",
+            "selectYear": "Chọn năm",
+            "selectDateRange": "Chọn khoảng ngày",
+            "weekLabel": "Tuần {{week}}, {{year}}",
+            "monthLabel": "Tháng {{month}}/{{year}}",
+            "quarterLabel": "Quý {{quarter}}/{{year}}",
+            "yearLabel": "Năm {{year}}",
+            "refreshData": "Làm mới dữ liệu",
+            "apply": "Áp dụng"
         }
     }
 }

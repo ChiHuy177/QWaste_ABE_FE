@@ -57,12 +57,7 @@ const SpaceOverviewGrid: React.FC<SpaceOverviewGridProps> = ({
                     .filter(([, time]) => time > 0)
                     .map(([status, time]) => ({
                         logStatus: status as
-                            | 'RUNTIME'
-                            | 'IDLE'
-                            | 'ERROR'
-                            | 'OFFLINE'
-                            | 'COMPLETE'
-                            | 'UNKNOWN',
+                            'RUNTIME' | 'IDLE' | 'ERROR' | 'OFFLINE' | 'COMPLETE' | 'UNKNOWN',
                         totalLogStateTime: time,
                     }));
             };
@@ -175,4 +170,4 @@ const SpaceOverviewGrid: React.FC<SpaceOverviewGridProps> = ({
     );
 };
 
-export default SpaceOverviewGrid;
+export default React.memo(SpaceOverviewGrid);

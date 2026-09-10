@@ -7,7 +7,6 @@ import { useAuth } from './AuthContext';
 import { defineAbilityFor } from '@/configs/permissions/defineAbility';
 import { AppAbility } from '@/configs/permissions/caslAbility';
 import { AccountRole } from '@/types';
-import { USE_MOCK_PERMISSIONS, getPermissionsForRoles } from '@/configs/mockData/permissions';
 import { convertApiPermissions } from '@/configs/permissions/permissionParser';
 
 const defaultAbility = createMongoAbility() as AppAbility;
@@ -31,6 +30,7 @@ export function AbilityProvider({ children }: { children: React.ReactNode }) {
                 'admin',
                 'director',
                 'manager',
+                'planner',
                 'operator',
                 'qc_staff',
                 'maintenance',
@@ -54,11 +54,6 @@ export function AbilityProvider({ children }: { children: React.ReactNode }) {
 
         if (user.permissions && user.permissions.length > 0) {
             return defineAbilityFor(normalizeRole, user.permissions);
-        }
-
-        if (USE_MOCK_PERMISSIONS) {
-            const mockPermissions = getPermissionsForRoles(normalizeRole);
-            return defineAbilityFor(normalizeRole, mockPermissions);
         }
 
         return defineAbilityFor(normalizeRole);

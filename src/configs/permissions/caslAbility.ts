@@ -1,23 +1,32 @@
 import { PureAbility } from '@casl/ability';
 
-export type Action =
-    | 'view'
-    | 'create'
-    | 'update'
-    | 'delete'
-    | 'manage'
-    | 'restore'
-    | 'overview_view'
-    | 'store'
-    | 'update_sensitive'
-    | 'confirm'
-    | 'decline'
-    | 'reorder'
-    | 'import'
-    | 'incident'
-    | 'move';
+/**
+ * Single source of truth for valid CASL actions.
+ * Action type is derived from this array — add new actions here only.
+ */
+export const ACTIONS = [
+    'view',
+    'create',
+    'update',
+    'delete',
+    'manage',
+    'restore',
+    'overview_view',
+    'store',
+    'update_sensitive',
+    'confirm',
+    'decline',
+    'reorder',
+    'import',
+    'incident',
+    'move',
+    'reset',
+] as const;
+
+export type Action = (typeof ACTIONS)[number];
 
 export type Subject =
+    | 'work_calendar'
     // Overview
     | 'overview'
     // Categories

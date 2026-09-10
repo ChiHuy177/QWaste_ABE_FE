@@ -1,10 +1,10 @@
 import { AbilityBuilder, createMongoAbility } from '@casl/ability';
 import { AccountRole, PermissionRule } from '@/types/User';
 import { Action, Subject, AppAbility } from './caslAbility';
+import { getDefaultPermissionsForRoles } from './rolePermissions';
 
 export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionRule[]): AppAbility {
     const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
-    const normalizedRoles = roles.map((role) => role.toLowerCase());
 
     if (permissions && permissions.length > 0) {
         const hasManageAll = permissions.some(
@@ -19,57 +19,14 @@ export function defineAbilityFor(roles: AccountRole[], permissions?: PermissionR
             });
         }
 
+        // Backend permissions are the source of truth here — no role-based
+        // patching on top of them.
         return build();
     }
 
-    // Fallback to role-based permissions if no custom permissions
-    const hasAdminRole = normalizedRoles.some((role) => role === 'admin' || role === 'super_admin');
-
-    if (hasAdminRole) {
-        can('manage', 'all');
-        return build();
-    }
-
-    // Base permissions for all authenticated roles
-    can(['view', 'update'], 'profile');
-
-    // Grant access to process, staff, and tasks for all authenticated users
-    can('view', ['process', 'staff', 'tasks', 'production_monitor', 'production_overview']);
-
-    normalizedRoles.forEach((normalizedRole) => {
-        switch (normalizedRole) {
-            case 'director':
-            case 'manager':
-                can('view', [
-                    'machine',
-                    'machine_type',
-                    'staffing',
-                    'factory',
-                    'zone',
-                    'line',
-                    'space_level',
-                    'staff',
-                    'group',
-                    'space',
-                    'energy',
-                    'machine_monitoring',
-                    'machine_operator_history',
-                    'space_monitoring',
-                    'production_overview',
-                    'standard_step',
-                ]);
-                can('view', 'space_monitoring');
-                can('view', 'production_overview');
-                can('view', 'machine_overview');
-                // All 40 permissions are usually granted via API,
-                // but this fallback ensures they have basic view access.
-                break;
-
-            case 'client':
-                can('view', 'space_monitoring');
-                can('view', 'production_overview');
-                break;
-        }
+    // No permissions from the backend: fall back to role defaults.
+    getDefaultPermissionsForRoles(roles).forEach((rule) => {
+        can(rule.action, rule.subject, rule.conditions);
     });
 
     return build();

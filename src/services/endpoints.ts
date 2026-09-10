@@ -36,6 +36,7 @@ const BASE_PATHS = {
     OPERATION_TYPES: `${API}/operationTypes/${V1}`,
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
     DASHBOARD: `${API}/dashboard/${V1}`,
+    WORK_CALENDAR: `${API}/workCalendar/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -88,7 +89,7 @@ export const ENDPOINTS = {
     SPACE_LEVELS: {
         BASE: BASE_PATHS.SPACE_LEVELS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SPACE_LEVELS, id),
-        PAGINATION: `${BASE_PATHS.SPACE_LEVELS}/all`,
+        PAGINATION: BASE_PATHS.SPACE_LEVELS,
     },
     STANDARD_STEPS: {
         BASE: BASE_PATHS.STANDARD_STEPS,
@@ -107,7 +108,7 @@ export const ENDPOINTS = {
             `${BASE_PATHS.MACHINES_MONITORING}/overview/byCurrentShift/${machineId}`,
         RESTORE: (id: PathParam) => `${BASE_PATHS.MACHINES}/${id}/restoring`,
         MACHINE_LIST: `${BASE_PATHS.MACHINES_V2}/machineList`,
-        PAGINATION: `${BASE_PATHS.MACHINES}/all`,
+        PAGINATION: BASE_PATHS.MACHINES,
         PICKING_BY_OPERATION_TYPE: `${BASE_PATHS.MACHINES}/pickingByOperationType`,
         MACHINE_OPERATOR_HISTORY: {
             BASE: BASE_PATHS.MACHINES_OP_HISTORY,
@@ -249,6 +250,13 @@ export const ENDPOINTS = {
             WITH_PARAM(`${BASE_PATHS.DASHBOARD}/runtime/byFilter`, machineId),
         RUNTIME_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
             WITH_PARAM(`${BASE_PATHS.DASHBOARD}/runtime/byDateRange`, machineId),
+    },
+    WORK_CALENDAR: {
+        BASE: BASE_PATHS.WORK_CALENDAR,
+        BATCH_UPDATE: `${BASE_PATHS.WORK_CALENDAR}/batchUpdate`,
+        RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
+        CHECK_ALARM: `${BASE_PATHS.WORK_CALENDAR}/checkAlarm`,
+        CONFIRM_MONTH: `${BASE_PATHS.WORK_CALENDAR}/confirmMonth`,
     },
 } as const;
 

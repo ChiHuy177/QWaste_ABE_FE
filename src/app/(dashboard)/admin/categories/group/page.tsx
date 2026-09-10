@@ -7,7 +7,13 @@ import { toast } from 'sonner';
 import { getGroupTableColumns, GroupTableColumnProps } from './_components/Columns';
 import { Button, Card, Table, TableProps } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { PlusOutlined, ToolOutlined } from '@ant-design/icons';
+import {
+    PlusOutlined,
+    ToolOutlined,
+    NumberOutlined,
+    TeamOutlined,
+    FileTextOutlined,
+} from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { EntityFormModal } from '../../../../../components/shared/FormModal';
 import { getGroupFormFields } from './_components/groupFormConfig';
@@ -177,20 +183,20 @@ const GroupListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                styles={{ body: {
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingBottom: 0,
-                } }}
+                styles={{
+                    body: {
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
+                }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<UserGroup>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={groupData}
                         rowSelection={rowSelection}
@@ -246,22 +252,27 @@ const GroupListPage = () => {
                 title={viewModalState.data?.groupName || t('common.view')}
                 onClose={() => setViewModalState({ open: false, data: null })}
                 t={t}
+                sectionLabel={t('groupManagement.viewModal.groupInfo')}
                 auditMetaData={viewModalState.data?.auditMetaData}
                 items={[
                     {
                         key: 'groupId',
+                        icon: <NumberOutlined />,
                         label: t('groupManagement.table.headers.groupId'),
                         children: viewModalState.data?.groupId ?? '-',
                     },
                     {
                         key: 'groupName',
+                        icon: <TeamOutlined />,
                         label: t('groupManagement.table.headers.groupName'),
                         children: viewModalState.data?.groupName || '-',
                     },
                     {
                         key: 'description',
+                        icon: <FileTextOutlined />,
                         label: t('groupManagement.table.headers.description'),
                         children: viewModalState.data?.description || '-',
+                        span: 24,
                     },
                 ]}
             />

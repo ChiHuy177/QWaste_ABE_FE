@@ -7,7 +7,7 @@ const { Title } = Typography;
 const { useBreakpoint } = Grid;
 
 interface PageHeaderProps {
-    title: string;
+    title: ReactNode;
     icon?: ReactNode;
     loading?: boolean;
     rightContent?: ReactNode;

@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+    output: 'standalone',
     outputFileTracingRoot: __dirname,
     images: {
         remotePatterns: [
@@ -39,7 +40,11 @@ const nextConfig: NextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production',
     },
-
+    // Turbopack is the default bundler (dev --turbopack, and build as of
+    // Next 16); this empty block just acknowledges that on purpose so Next
+    // doesn't flag the webpack() config below as a possible mistake. The
+    // webpack() hook still applies if the app is ever built with --webpack.
+    turbopack: {},
     webpack: (config, { isServer }) => {
         if (!isServer) {
             config.optimization = {

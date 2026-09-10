@@ -74,6 +74,7 @@ export type AccountRole =
     | 'admin'
     | 'director'
     | 'manager'
+    | 'planner'
     | 'operator'
     | 'qc_staff'
     | 'maintenance'
