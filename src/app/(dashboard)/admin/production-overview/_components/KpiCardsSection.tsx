@@ -76,6 +76,13 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                 text: token.purple8,
                 icon: token.purple,
             },
+            actualOperating: {
+                main: token.colorInfo,
+                border: token.colorInfoBorder,
+                bg: token.colorInfoBg,
+                text: token.colorInfoText,
+                icon: token.colorInfo,
+            },
         }),
         [token]
     );
@@ -97,6 +104,12 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
     const totalDowntimeMinutes = data.downtimeMinutes?.current ?? 0;
     const downtimeHours = Math.floor(totalDowntimeMinutes / 60);
     const downtimeMins = totalDowntimeMinutes % 60;
+
+    const totalRuntimeSeconds = data.runtimeSeconds ?? (data.runtimeHours?.current ?? 0) * 3600;
+    const runtimeTotalMinutes =
+        data.runtimeMinutes?.current ?? Math.round(totalRuntimeSeconds / 60);
+    const runtimeHours = Math.floor(runtimeTotalMinutes / 60);
+    const runtimeMins = runtimeTotalMinutes % 60;
 
     const renderDowntimeOverTarget = (totalMinutes: number) => {
         if (!totalMinutes || totalMinutes <= 0) {
@@ -868,12 +881,14 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
     }
 
     return (
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-            <Col xs={24} sm={12} lg={6}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }} align="stretch">
+            {/* Cột trái: Thẻ HIỆU SUẤT TỔNG NHÀ MÁY (chiều cao bằng cả 2 hàng bên phải) */}
+            <Col xs={24} lg={12} style={{ display: 'flex', flexDirection: 'column' }}>
                 <Card
                     variant="borderless"
                     hoverable
                     style={{
+                        flex: 1,
                         height: '100%',
                         borderRadius: 12,
                         borderColor: cardThemes.operatingRate.border,
@@ -882,6 +897,9 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                         boxShadow: token.boxShadowSecondary,
                         position: 'relative',
                         overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
                     }}
                 >
                     <div
@@ -889,98 +907,115 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             position: 'absolute',
                             top: 0,
                             right: 0,
-                            width: 80,
-                            height: 80,
+                            width: 110,
+                            height: 110,
                             background: `${cardThemes.operatingRate.main}15`,
                             borderBottomLeftRadius: '100%',
                         }}
                     />
 
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                            }}
-                        >
-                            <div>
-                                <Text
+                    <div
+                        style={{
+                            position: 'relative',
+                            zIndex: 1,
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <div>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                }}
+                            >
+                                <div>
+                                    <Text
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            color: cardThemes.operatingRate.main,
+                                            letterSpacing: '0.5px',
+                                        }}
+                                    >
+                                        {t('productionOverview.kpi.overallPlantOee')}
+                                    </Text>
+                                    <div
+                                        style={{
+                                            fontSize: 12,
+                                            color: token.colorTextSecondary,
+                                            marginTop: 3,
+                                            fontWeight: 500,
+                                        }}
+                                    >
+                                        {t('productionOverview.kpi.target')}: {data.oee.target}%
+                                    </div>
+                                </div>
+                                <Tag
+                                    color={data.oee.yesterdayDiff >= 0 ? 'success' : 'warning'}
                                     style={{
-                                        fontSize: 12,
-                                        fontWeight: 700,
-                                        textTransform: 'uppercase',
-                                        color: cardThemes.operatingRate.main,
-                                        letterSpacing: '0.5px',
+                                        borderRadius: 6,
+                                        fontSize: 11,
+                                        margin: 0,
+                                        fontWeight: 600,
                                     }}
                                 >
-                                    {t('productionOverview.kpi.overallPlantOee')}
-                                </Text>
-                                <div
+                                    {data.oee.yesterdayDiff >= 0 ? (
+                                        <RiseOutlined />
+                                    ) : (
+                                        <FallOutlined />
+                                    )}{' '}
+                                    {data.oee.yesterdayDiff >= 0
+                                        ? `+${data.oee.yesterdayDiff}`
+                                        : data.oee.yesterdayDiff}
+                                    %
+                                </Tag>
+                            </div>
+
+                            <div
+                                style={{
+                                    margin: '18px 0 10px 0',
+                                    display: 'flex',
+                                    alignItems: 'baseline',
+                                    gap: 8,
+                                }}
+                            >
+                                <Title
+                                    level={1}
                                     style={{
-                                        fontSize: 11,
+                                        margin: 0,
+                                        fontSize: 36,
+                                        fontWeight: 800,
+                                        color: cardThemes.operatingRate.main,
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    {data.oee.current} %
+                                </Title>
+                                <Text
+                                    style={{
+                                        fontSize: 13,
                                         color: token.colorTextSecondary,
-                                        marginTop: 2,
                                         fontWeight: 500,
                                     }}
                                 >
-                                    {t('productionOverview.kpi.target')}: {data.oee.target}%
-                                </div>
+                                    {t('productionOverview.kpi.vsYesterday')}
+                                </Text>
                             </div>
-                            <Tag
-                                color={data.oee.yesterdayDiff >= 0 ? 'success' : 'warning'}
-                                style={{
-                                    borderRadius: 6,
-                                    fontSize: 11,
-                                    margin: 0,
-                                    fontWeight: 600,
-                                }}
-                            >
-                                {data.oee.yesterdayDiff >= 0 ? <RiseOutlined /> : <FallOutlined />}{' '}
-                                {data.oee.yesterdayDiff >= 0
-                                    ? `+${data.oee.yesterdayDiff}`
-                                    : data.oee.yesterdayDiff}
-                                %
-                            </Tag>
-                        </div>
 
-                        <div
-                            style={{
-                                margin: '12px 0 8px 0',
-                                display: 'flex',
-                                alignItems: 'baseline',
-                                gap: 6,
-                            }}
-                        >
-                            <Title
-                                level={2}
-                                style={{
-                                    margin: 0,
-                                    fontWeight: 800,
-                                    color: cardThemes.operatingRate.main,
-                                }}
-                            >
-                                {data.oee.current} %
-                            </Title>
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    color: token.colorTextSecondary,
-                                    fontWeight: 500,
-                                }}
-                            >
-                                {t('productionOverview.kpi.vsYesterday')}
-                            </Text>
-                        </div>
-
-                        <div style={{ marginTop: 8 }}>
-                            <Progress
-                                percent={data.oee.current}
-                                strokeColor={cardThemes.operatingRate.main}
-                                railColor={token.colorFillSecondary}
-                                showInfo={false}
-                                size={['100%', 8]}
-                            />
+                            <div style={{ marginTop: 8 }}>
+                                <Progress
+                                    percent={data.oee.current}
+                                    strokeColor={cardThemes.operatingRate.main}
+                                    railColor={token.colorFillSecondary}
+                                    showInfo={false}
+                                    size={['100%', 8]}
+                                />
+                            </div>
                         </div>
 
                         <div
@@ -988,7 +1023,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginTop: 10,
+                                marginTop: 16,
                             }}
                         >
                             <Tag
@@ -996,7 +1031,7 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                 style={{
                                     borderRadius: 12,
                                     fontWeight: 600,
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     padding: '2px 8px',
                                 }}
                             >
@@ -1004,359 +1039,610 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                             </Tag>
                             <Text
                                 style={{
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     color: token.colorTextSecondary,
                                     fontWeight: 600,
                                 }}
                             >
-                                {data.oee.target}%
+                                {t('productionOverview.kpi.target', 'Mục tiêu')}: {data.oee.target}%
                             </Text>
                         </div>
                     </div>
                 </Card>
             </Col>
 
-            <Col xs={24} sm={12} lg={6}>
-                <Card
-                    variant="borderless"
-                    hoverable
-                    onClick={onDowntimeClick}
-                    style={{
-                        cursor: 'pointer',
-                        height: '100%',
-                        borderRadius: 12,
-                        borderColor: cardThemes.downtime.border,
-                        border: `1px solid ${cardThemes.downtime.border}`,
-                        backgroundColor: cardThemes.downtime.bg,
-                        boxShadow: token.boxShadowSecondary,
-                        position: 'relative',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            width: 80,
-                            height: 80,
-                            background: `${cardThemes.downtime.main}15`,
-                            borderBottomLeftRadius: '100%',
-                        }}
-                    />
-
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div
+            {/* Cột phải: Grid 2x2 gồm 4 thẻ */}
+            <Col xs={24} lg={12} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Hàng trên: THỜI GIAN DOWNTIME | VẬN HÀNH THỰC TẾ */}
+                <Row gutter={[16, 16]} style={{ flex: 1 }} align="stretch">
+                    {/* Thẻ 2: THỜI GIAN DOWNTIME */}
+                    <Col xs={24} sm={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Card
+                            variant="borderless"
+                            hoverable
+                            onClick={onDowntimeClick}
                             style={{
+                                cursor: 'pointer',
+                                flex: 1,
+                                height: '100%',
+                                minHeight: 120,
+                                borderRadius: 12,
+                                borderColor: cardThemes.downtime.border,
+                                border: `1px solid ${cardThemes.downtime.border}`,
+                                backgroundColor: cardThemes.downtime.bg,
+                                boxShadow: token.boxShadowSecondary,
+                                position: 'relative',
+                                overflow: 'hidden',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 justifyContent: 'space-between',
-                                alignItems: 'center',
                             }}
                         >
-                            <Text
+                            <div
                                 style={{
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    color: cardThemes.downtime.main,
-                                    letterSpacing: '0.5px',
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.downtime.main}15`,
+                                    borderBottomLeftRadius: '100%',
+                                }}
+                            />
+
+                            <div
+                                style={{
+                                    position: 'relative',
+                                    zIndex: 1,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
                                 }}
                             >
-                                {t('productionOverview.kpi.totalDowntime')}
-                            </Text>
-                            <ClockCircleOutlined
-                                style={{ fontSize: 18, color: cardThemes.downtime.icon }}
-                            />
-                        </div>
-
-                        <div
-                            style={{
-                                margin: '16px 0 8px 0',
-                                display: 'flex',
-                                alignItems: 'baseline',
-                                gap: 6,
-                                flexWrap: 'wrap',
-                            }}
-                        >
-                            {downtimeHours > 0 ? (
-                                <>
-                                    <Title
-                                        level={2}
+                                <div>
+                                    <div
                                         style={{
-                                            margin: 0,
-                                            fontWeight: 800,
-                                            color: cardThemes.downtime.main,
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
                                         }}
                                     >
-                                        {downtimeHours.toLocaleString()}
-                                    </Title>
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase',
+                                                color: cardThemes.downtime.main,
+                                                letterSpacing: '0.5px',
+                                            }}
+                                        >
+                                            {t('productionOverview.kpi.totalDowntime')}
+                                        </Text>
+                                        <ClockCircleOutlined
+                                            style={{
+                                                fontSize: 16,
+                                                color: cardThemes.downtime.icon,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            margin: '8px 0 2px 0',
+                                            display: 'flex',
+                                            alignItems: 'baseline',
+                                            gap: 6,
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        {downtimeHours > 0 ? (
+                                            <>
+                                                <Title
+                                                    level={2}
+                                                    style={{
+                                                        margin: 0,
+                                                        fontWeight: 800,
+                                                        color: cardThemes.downtime.main,
+                                                    }}
+                                                >
+                                                    {downtimeHours.toLocaleString()}
+                                                </Title>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 13,
+                                                        fontWeight: 600,
+                                                        color: cardThemes.downtime.text,
+                                                    }}
+                                                >
+                                                    {t('productionOverview.kpi.hours', 'giờ')}
+                                                </Text>
+                                                {downtimeMins > 0 && (
+                                                    <>
+                                                        <Title
+                                                            level={3}
+                                                            style={{
+                                                                margin: 0,
+                                                                fontWeight: 700,
+                                                                color: cardThemes.downtime.main,
+                                                            }}
+                                                        >
+                                                            {downtimeMins}
+                                                        </Title>
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 12,
+                                                                fontWeight: 600,
+                                                                color: cardThemes.downtime.text,
+                                                            }}
+                                                        >
+                                                            {t(
+                                                                'productionOverview.kpi.minutes',
+                                                                'phút'
+                                                            )}
+                                                        </Text>
+                                                    </>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Title
+                                                    level={2}
+                                                    style={{
+                                                        margin: 0,
+                                                        fontWeight: 800,
+                                                        color: cardThemes.downtime.main,
+                                                    }}
+                                                >
+                                                    {downtimeMins}
+                                                </Title>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 13,
+                                                        fontWeight: 600,
+                                                        color: cardThemes.downtime.text,
+                                                    }}
+                                                >
+                                                    {t('productionOverview.kpi.minutes', 'phút')}
+                                                </Text>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 4 }}>
                                     <Text
                                         style={{
-                                            fontSize: 14,
-                                            fontWeight: 600,
+                                            fontSize: 11,
                                             color: cardThemes.downtime.text,
+                                            fontWeight: 600,
                                         }}
                                     >
-                                        {t('productionOverview.kpi.hours', 'giờ')}
+                                        {renderDowntimeOverTarget(
+                                            data.downtimeMinutes.overTargetMinutes
+                                        )}
                                     </Text>
-                                    {downtimeMins > 0 && (
-                                        <>
-                                            <Title
-                                                level={3}
-                                                style={{
-                                                    margin: 0,
-                                                    fontWeight: 700,
-                                                    color: cardThemes.downtime.main,
-                                                }}
-                                            >
-                                                {downtimeMins}
-                                            </Title>
-                                            <Text
-                                                style={{
-                                                    fontSize: 13,
-                                                    fontWeight: 600,
-                                                    color: cardThemes.downtime.text,
-                                                }}
-                                            >
-                                                {t('productionOverview.kpi.minutes', 'phút')}
-                                            </Text>
-                                        </>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <Title
-                                        level={2}
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+
+                    {/* Thẻ 3: VẬN HÀNH THỰC TẾ (MỚI) */}
+                    <Col xs={24} sm={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Card
+                            variant="borderless"
+                            hoverable
+                            style={{
+                                flex: 1,
+                                height: '100%',
+                                minHeight: 120,
+                                borderRadius: 12,
+                                borderColor: cardThemes.actualOperating.border,
+                                border: `1px solid ${cardThemes.actualOperating.border}`,
+                                backgroundColor: cardThemes.actualOperating.bg,
+                                boxShadow: token.boxShadowSecondary,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.actualOperating.main}15`,
+                                    borderBottomLeftRadius: '100%',
+                                }}
+                            />
+
+                            <div
+                                style={{
+                                    position: 'relative',
+                                    zIndex: 1,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                }}
+                            >
+                                <div>
+                                    <div
                                         style={{
-                                            margin: 0,
-                                            fontWeight: 800,
-                                            color: cardThemes.downtime.main,
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
                                         }}
                                     >
-                                        {downtimeMins}
-                                    </Title>
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase',
+                                                color: cardThemes.actualOperating.main,
+                                                letterSpacing: '0.5px',
+                                            }}
+                                        >
+                                            {t(
+                                                'productionOverview.kpi.actualOperating',
+                                                'VẬN HÀNH THỰC TẾ'
+                                            )}
+                                        </Text>
+                                        <DashboardOutlined
+                                            style={{
+                                                fontSize: 16,
+                                                color: cardThemes.actualOperating.icon,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            margin: '8px 0 2px 0',
+                                            display: 'flex',
+                                            alignItems: 'baseline',
+                                            gap: 6,
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        {runtimeHours > 0 ? (
+                                            <>
+                                                <Title
+                                                    level={2}
+                                                    style={{
+                                                        margin: 0,
+                                                        fontWeight: 800,
+                                                        color: cardThemes.actualOperating.main,
+                                                    }}
+                                                >
+                                                    {runtimeHours.toLocaleString()}
+                                                </Title>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 13,
+                                                        fontWeight: 600,
+                                                        color: cardThemes.actualOperating.text,
+                                                    }}
+                                                >
+                                                    {t('productionOverview.kpi.hours', 'giờ')}
+                                                </Text>
+                                                {runtimeMins > 0 && (
+                                                    <>
+                                                        <Title
+                                                            level={3}
+                                                            style={{
+                                                                margin: 0,
+                                                                fontWeight: 700,
+                                                                color: cardThemes.actualOperating
+                                                                    .main,
+                                                            }}
+                                                        >
+                                                            {runtimeMins}
+                                                        </Title>
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 12,
+                                                                fontWeight: 600,
+                                                                color: cardThemes.actualOperating
+                                                                    .text,
+                                                            }}
+                                                        >
+                                                            {t(
+                                                                'productionOverview.kpi.minutes',
+                                                                'phút'
+                                                            )}
+                                                        </Text>
+                                                    </>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Title
+                                                    level={2}
+                                                    style={{
+                                                        margin: 0,
+                                                        fontWeight: 800,
+                                                        color: cardThemes.actualOperating.main,
+                                                    }}
+                                                >
+                                                    {runtimeMins}
+                                                </Title>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 13,
+                                                        fontWeight: 600,
+                                                        color: cardThemes.actualOperating.text,
+                                                    }}
+                                                >
+                                                    {t('productionOverview.kpi.minutes', 'phút')}
+                                                </Text>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 4 }}>
                                     <Text
                                         style={{
-                                            fontSize: 14,
-                                            fontWeight: 600,
-                                            color: cardThemes.downtime.text,
+                                            fontSize: 11,
+                                            color: cardThemes.actualOperating.text,
+                                            fontWeight: 500,
                                         }}
                                     >
-                                        {t('productionOverview.kpi.minutes', 'phút')}
+                                        <ClockCircleOutlined style={{ marginRight: 4 }} />
+                                        {t(
+                                            'productionOverview.kpi.runtimeDesc',
+                                            'Thời gian máy chạy tích lũy'
+                                        )}
                                     </Text>
-                                </>
-                            )}
-                        </div>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                </Row>
 
-                        <div style={{ marginTop: 12 }}>
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    color: cardThemes.downtime.text,
-                                    fontWeight: 600,
-                                }}
-                            >
-                                {renderDowntimeOverTarget(data.downtimeMinutes.overTargetMinutes)}
-                            </Text>
-                        </div>
-                    </div>
-                </Card>
-            </Col>
-
-            <Col xs={24} sm={12} lg={6}>
-                <Card
-                    variant="borderless"
-                    hoverable
-                    style={{
-                        height: '100%',
-                        borderRadius: 12,
-                        borderColor: cardThemes.yieldRate.border,
-                        border: `1px solid ${cardThemes.yieldRate.border}`,
-                        backgroundColor: cardThemes.yieldRate.bg,
-                        boxShadow: token.boxShadowSecondary,
-                        position: 'relative',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            width: 80,
-                            height: 80,
-                            background: `${cardThemes.yieldRate.main}15`,
-                            borderBottomLeftRadius: '100%',
-                        }}
-                    />
-
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div
+                {/* Hàng dưới: SẢN LƯỢNG THỰC TẾ | TỶ LỆ SẢN LƯỢNG */}
+                <Row gutter={[16, 16]} style={{ flex: 1 }} align="stretch">
+                    {/* Thẻ 4: SẢN LƯỢNG THỰC TẾ */}
+                    <Col xs={24} sm={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Card
+                            variant="borderless"
+                            hoverable
                             style={{
+                                flex: 1,
+                                height: '100%',
+                                minHeight: 120,
+                                borderRadius: 12,
+                                borderColor: cardThemes.actualProduction.border,
+                                border: `1px solid ${cardThemes.actualProduction.border}`,
+                                backgroundColor: cardThemes.actualProduction.bg,
+                                boxShadow: token.boxShadowSecondary,
+                                position: 'relative',
+                                overflow: 'hidden',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 justifyContent: 'space-between',
-                                alignItems: 'center',
                             }}
                         >
-                            <Text
+                            <div
                                 style={{
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    color: cardThemes.yieldRate.text,
-                                    letterSpacing: '0.5px',
-                                }}
-                            >
-                                {t('productionOverview.kpi.yieldRate')}
-                            </Text>
-                            <InboxOutlined
-                                style={{ fontSize: 18, color: cardThemes.yieldRate.icon }}
-                            />
-                        </div>
-
-                        <div
-                            style={{
-                                margin: '16px 0 8px 0',
-                                display: 'flex',
-                                alignItems: 'baseline',
-                                gap: 6,
-                            }}
-                        >
-                            <Title
-                                level={2}
-                                style={{
-                                    margin: 0,
-                                    fontWeight: 800,
-                                    color: cardThemes.yieldRate.main,
-                                }}
-                            >
-                                {data.yieldRate.current} %
-                            </Title>
-                        </div>
-
-                        <div style={{ marginTop: 12 }}>
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    color: cardThemes.yieldRate.text,
-                                    fontWeight: 600,
-                                }}
-                            >
-                                <RiseOutlined
-                                    style={{ color: cardThemes.yieldRate.main, marginRight: 4 }}
-                                />
-                                {t('productionOverview.kpi.vsPlan')}
-                            </Text>
-                        </div>
-                    </div>
-                </Card>
-            </Col>
-
-            <Col xs={24} sm={12} lg={6}>
-                <Card
-                    variant="borderless"
-                    hoverable
-                    style={{
-                        height: '100%',
-                        borderRadius: 12,
-                        borderColor: cardThemes.actualProduction.border,
-                        border: `1px solid ${cardThemes.actualProduction.border}`,
-                        backgroundColor: cardThemes.actualProduction.bg,
-                        boxShadow: token.boxShadowSecondary,
-                        position: 'relative',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            width: 80,
-                            height: 80,
-                            background: `${cardThemes.actualProduction.main}15`,
-                            borderBottomLeftRadius: '100%',
-                        }}
-                    />
-
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    color: cardThemes.actualProduction.text,
-                                    letterSpacing: '0.5px',
-                                }}
-                            >
-                                {t('productionOverview.kpi.actualProduction')}
-                            </Text>
-                            <BarChartOutlined
-                                style={{
-                                    fontSize: 18,
-                                    color: cardThemes.actualProduction.icon,
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.actualProduction.main}15`,
+                                    borderBottomLeftRadius: '100%',
                                 }}
                             />
-                        </div>
 
-                        <div
+                            <div
+                                style={{
+                                    position: 'relative',
+                                    zIndex: 1,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                }}
+                            >
+                                <div>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase',
+                                                color: cardThemes.actualProduction.text,
+                                                letterSpacing: '0.5px',
+                                            }}
+                                        >
+                                            {t('productionOverview.kpi.actualProduction')}
+                                        </Text>
+                                        <BarChartOutlined
+                                            style={{
+                                                fontSize: 16,
+                                                color: cardThemes.actualProduction.icon,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            margin: '8px 0 2px 0',
+                                            display: 'flex',
+                                            alignItems: 'baseline',
+                                            gap: 6,
+                                        }}
+                                    >
+                                        <Title
+                                            level={2}
+                                            style={{
+                                                margin: 0,
+                                                fontWeight: 800,
+                                                color: cardThemes.actualProduction.main,
+                                            }}
+                                        >
+                                            {data.actualProduction.current.toLocaleString()}
+                                        </Title>
+                                        <Text
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: cardThemes.actualProduction.text,
+                                            }}
+                                        >
+                                            {data.actualProduction.unit}
+                                        </Text>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 4 }}>
+                                    <Text
+                                        style={{
+                                            fontSize: 11,
+                                            color: cardThemes.actualProduction.text,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        {t('productionOverview.kpi.planShort')}:{' '}
+                                        <span
+                                            style={{
+                                                fontWeight: 700,
+                                                color: cardThemes.actualProduction.main,
+                                            }}
+                                        >
+                                            {data.actualProduction.target.toLocaleString()}
+                                        </span>{' '}
+                                        {data.actualProduction.unit}
+                                    </Text>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+
+                    {/* Thẻ 5: TỶ LỆ SẢN LƯỢNG */}
+                    <Col xs={24} sm={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Card
+                            variant="borderless"
+                            hoverable
                             style={{
-                                margin: '16px 0 8px 0',
+                                flex: 1,
+                                height: '100%',
+                                minHeight: 120,
+                                borderRadius: 12,
+                                borderColor: cardThemes.yieldRate.border,
+                                border: `1px solid ${cardThemes.yieldRate.border}`,
+                                backgroundColor: cardThemes.yieldRate.bg,
+                                boxShadow: token.boxShadowSecondary,
+                                position: 'relative',
+                                overflow: 'hidden',
                                 display: 'flex',
-                                alignItems: 'baseline',
-                                gap: 6,
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
-                            <Title
-                                level={2}
+                            <div
                                 style={{
-                                    margin: 0,
-                                    fontWeight: 800,
-                                    color: cardThemes.actualProduction.main,
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: 60,
+                                    height: 60,
+                                    background: `${cardThemes.yieldRate.main}15`,
+                                    borderBottomLeftRadius: '100%',
                                 }}
-                            >
-                                {data.actualProduction.current.toLocaleString()}
-                            </Title>
-                            <Text
-                                style={{
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    color: cardThemes.actualProduction.text,
-                                }}
-                            >
-                                {data.actualProduction.unit}
-                            </Text>
-                        </div>
+                            />
 
-                        <div style={{ marginTop: 12 }}>
-                            <Text
+                            <div
                                 style={{
-                                    fontSize: 12,
-                                    color: cardThemes.actualProduction.text,
-                                    fontWeight: 600,
+                                    position: 'relative',
+                                    zIndex: 1,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
                                 }}
                             >
-                                {t('productionOverview.kpi.planShort')}:{' '}
-                                <span
-                                    style={{
-                                        fontWeight: 700,
-                                        color: cardThemes.actualProduction.main,
-                                    }}
-                                >
-                                    {data.actualProduction.target.toLocaleString()}
-                                </span>{' '}
-                                {data.actualProduction.unit}
-                            </Text>
-                        </div>
-                    </div>
-                </Card>
+                                <div>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase',
+                                                color: cardThemes.yieldRate.text,
+                                                letterSpacing: '0.5px',
+                                            }}
+                                        >
+                                            {t('productionOverview.kpi.yieldRate')}
+                                        </Text>
+                                        <InboxOutlined
+                                            style={{
+                                                fontSize: 16,
+                                                color: cardThemes.yieldRate.icon,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            margin: '8px 0 2px 0',
+                                            display: 'flex',
+                                            alignItems: 'baseline',
+                                            gap: 6,
+                                        }}
+                                    >
+                                        <Title
+                                            level={2}
+                                            style={{
+                                                margin: 0,
+                                                fontWeight: 800,
+                                                color: cardThemes.yieldRate.main,
+                                            }}
+                                        >
+                                            {data.yieldRate.current} %
+                                        </Title>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 4 }}>
+                                    <Text
+                                        style={{
+                                            fontSize: 11,
+                                            color: cardThemes.yieldRate.text,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        <RiseOutlined
+                                            style={{
+                                                color: cardThemes.yieldRate.main,
+                                                marginRight: 4,
+                                            }}
+                                        />
+                                        {t('productionOverview.kpi.vsPlan')}
+                                    </Text>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                </Row>
             </Col>
         </Row>
     );
