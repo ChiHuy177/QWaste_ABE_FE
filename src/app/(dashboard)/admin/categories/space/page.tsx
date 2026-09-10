@@ -51,9 +51,7 @@ const spaceLevelQueryKeys = {
     lists: ['space-levels', 'list'] as const,
 };
 
-const sanitizeSpaceTree = (
-    nodes: SpaceWithChildrenResponse[]
-): SpaceWithChildrenResponse[] => {
+const sanitizeSpaceTree = (nodes: SpaceWithChildrenResponse[]): SpaceWithChildrenResponse[] => {
     return nodes.map((node) => ({
         ...node,
         children:
@@ -634,8 +632,8 @@ const SpaceListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.createdAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.createdAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -644,8 +642,8 @@ const SpaceListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.updatedAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.updatedAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>
@@ -677,19 +675,20 @@ const SpaceListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                styles={{ body: {
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                } }}
+                styles={{
+                    body: {
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
+                }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<SpaceWithChildrenResponse>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredData}
                         loading={loading}
@@ -766,12 +765,12 @@ const SpaceListPage = () => {
                 description={{
                     create: modalState.data?.parentSpaceId
                         ? t('spaceManagement.form.createDescription', {
-                            parentName: modalState.data.parentName,
-                            spaceLevelName: modalState.data.spaceLevelName,
-                        })
+                              parentName: modalState.data.parentName,
+                              spaceLevelName: modalState.data.spaceLevelName,
+                          })
                         : t('spaceManagement.form.createRootDescription', {
-                            spaceLevelName: modalState.data?.spaceLevelName,
-                        }),
+                              spaceLevelName: modalState.data?.spaceLevelName,
+                          }),
                     edit: t('spaceManagement.form.editDescription'),
                 }}
                 buttonLabels={{

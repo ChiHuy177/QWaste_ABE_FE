@@ -1990,6 +1990,9 @@
             "createdBy": "Created By",
             "updatedAt": "Updated At",
             "updatedBy": "Updated By"
+        },
+        "viewModal": {
+            "groupInfo": "Group Information"
         }
     },
     "staffManagement": {
@@ -2201,6 +2204,9 @@
                 "badRequest": "Invalid request. Please check your input and try again.",
                 "unauthorized": "You are not authorized to perform this action."
             }
+        },
+        "viewModal": {
+            "staffInfo": "Staff Information"
         }
     },
     "zoneManagement": {

@@ -29,7 +29,10 @@ import { MachineService } from '@/services/MachineService';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
-import { getMachineListFormFields, toOperationTypeOptions } from './_components/machineListFormConfig';
+import {
+    getMachineListFormFields,
+    toOperationTypeOptions,
+} from './_components/machineListFormConfig';
 import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -129,7 +132,9 @@ const MachineListPageContent = () => {
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
-    const activeFilterCount = [machineNameFilter, machineCodeFilter, mqttTopicFilter].filter(Boolean).length;
+    const activeFilterCount = [machineNameFilter, machineCodeFilter, mqttTopicFilter].filter(
+        Boolean
+    ).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -175,16 +180,17 @@ const MachineListPageContent = () => {
             machineCodeFilter,
             mqttTopicFilter
         ),
-        queryFn: async () => MachineService.getMachinesPaginated({
-            page,
-            size: pageSize,
-            sort,
-            search: debouncedSearch,
-            spaceId: selectedSpaceId,
-            machineName: machineNameFilter,
-            machineCode: machineCodeFilter,
-            topic: mqttTopicFilter,
-        }),
+        queryFn: async () =>
+            MachineService.getMachinesPaginated({
+                page,
+                size: pageSize,
+                sort,
+                search: debouncedSearch,
+                spaceId: selectedSpaceId,
+                machineName: machineNameFilter,
+                machineCode: machineCodeFilter,
+                topic: mqttTopicFilter,
+            }),
         enabled: selectedSpaceId !== undefined,
     });
     const machineData = useMemo(() => {
@@ -196,7 +202,7 @@ const MachineListPageContent = () => {
         const rawData = machinesQuery.data;
         return Array.isArray(rawData) ? rawData.length : (rawData?.totalElements ?? 0);
     }, [machinesQuery.data]);
-    const loading = machinesQuery.isLoading || machinesQuery.isFetching;
+    const loading = machinesQuery.isLoading;
 
     usePageTitle(t('pageTitle.machineList'));
 
@@ -300,10 +306,7 @@ const MachineListPageContent = () => {
 
     const spacesTree = spacesTreeQuery.data ?? [];
 
-    const spaceTreeSelectData = useMemo(
-        () => mapSpaceTreeToTreeSelect(spacesTree),
-        [spacesTree]
-    );
+    const spaceTreeSelectData = useMemo(() => mapSpaceTreeToTreeSelect(spacesTree), [spacesTree]);
 
     const operationTypesQuery = useQuery({
         queryKey: operationTypeQueryKeys.lists,
@@ -736,9 +739,7 @@ const MachineListPageContent = () => {
                             >
                                 <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
                                     <Descriptions.Item
-                                        label={t(
-                                            'machineListManagement.table.headers.machineCode'
-                                        )}
+                                        label={t('machineListManagement.table.headers.machineCode')}
                                     >
                                         {viewModalState.data.machineCode || '-'}
                                     </Descriptions.Item>
@@ -759,7 +760,8 @@ const MachineListPageContent = () => {
                                             'machineListManagement.table.headers.operationType'
                                         )}
                                     >
-                                        {viewModalState.data.operationType?.operationTypeName ?? '-'}
+                                        {viewModalState.data.operationType?.operationTypeName ??
+                                            '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item
                                         label={t('machineListManagement.table.headers.status')}
@@ -799,9 +801,9 @@ const MachineListPageContent = () => {
                                             >
                                                 {viewModalState.data.auditMetaData.createdAt
                                                     ? dayjs(
-                                                        viewModalState.data.auditMetaData
-                                                            .createdAt
-                                                    ).format('DD/MM/YYYY HH:mm:ss')
+                                                          viewModalState.data.auditMetaData
+                                                              .createdAt
+                                                      ).format('DD/MM/YYYY HH:mm:ss')
                                                     : '-'}
                                             </Descriptions.Item>
                                             <Descriptions.Item
@@ -814,9 +816,9 @@ const MachineListPageContent = () => {
                                             >
                                                 {viewModalState.data.auditMetaData.updatedAt
                                                     ? dayjs(
-                                                        viewModalState.data.auditMetaData
-                                                            .updatedAt
-                                                    ).format('DD/MM/YYYY HH:mm:ss')
+                                                          viewModalState.data.auditMetaData
+                                                              .updatedAt
+                                                      ).format('DD/MM/YYYY HH:mm:ss')
                                                     : '-'}
                                             </Descriptions.Item>
                                             <Descriptions.Item
@@ -859,17 +861,37 @@ const MachineListPageContent = () => {
                         {t('common.activeFilters')}:
                     </Typography.Text>
                     {machineNameFilter && (
-                        <Tag closable onClose={() => { setMachineNameFilter(undefined); setPage(0); }}>
-                            {t('machineListManagement.table.headers.machineName')}: {machineNameFilter}
+                        <Tag
+                            closable
+                            onClose={() => {
+                                setMachineNameFilter(undefined);
+                                setPage(0);
+                            }}
+                        >
+                            {t('machineListManagement.table.headers.machineName')}:{' '}
+                            {machineNameFilter}
                         </Tag>
                     )}
                     {machineCodeFilter && (
-                        <Tag closable onClose={() => { setMachineCodeFilter(undefined); setPage(0); }}>
-                            {t('machineListManagement.table.headers.machineCode')}: {machineCodeFilter}
+                        <Tag
+                            closable
+                            onClose={() => {
+                                setMachineCodeFilter(undefined);
+                                setPage(0);
+                            }}
+                        >
+                            {t('machineListManagement.table.headers.machineCode')}:{' '}
+                            {machineCodeFilter}
                         </Tag>
                     )}
                     {mqttTopicFilter && (
-                        <Tag closable onClose={() => { setMqttTopicFilter(undefined); setPage(0); }}>
+                        <Tag
+                            closable
+                            onClose={() => {
+                                setMqttTopicFilter(undefined);
+                                setPage(0);
+                            }}
+                        >
                             {t('machineListManagement.form.fields.topic')}: {mqttTopicFilter}
                         </Tag>
                     )}
@@ -892,7 +914,7 @@ const MachineListPageContent = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         paddingBottom: 0,
-                    }
+                    },
                 }}
             >
                 <div
@@ -904,6 +926,7 @@ const MachineListPageContent = () => {
                     }}
                 >
                     <Table<Machine>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredMachineData}
                         loading={loading}

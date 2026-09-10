@@ -19,6 +19,8 @@ export interface PermissionConfig {
     alternativeAction?: Action;
     /** Sidebar item shown regardless of ability (e.g. settings). */
     alwaysShowInMenu?: boolean;
+    /** Temporarily hide this entry from the sidebar while keeping routes/permissions intact (direct URL access still works). */
+    hideFromMenu?: boolean;
 }
 
 /**
@@ -535,6 +537,9 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
     },
 
     // Step
+    // TEMP: hideFromMenu removes "Step" from the sidebar only; routes/ability
+    // are untouched so direct URL access (/admin/categories/step) still works.
+    // Remove hideFromMenu to re-enable the sidebar entry.
     {
         slug: 'step:view',
         subject: 'step',
@@ -545,6 +550,7 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         i18nKey: 'stepManagement.title',
         group: 'categories',
         subGroup: 'staff_others',
+        hideFromMenu: true,
     },
     {
         slug: 'step:create',

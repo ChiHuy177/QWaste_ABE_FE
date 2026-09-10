@@ -75,7 +75,7 @@ function createMenuItem(
 
 export const getMenuItems = (t: TFunction, ability: AppAbility): MenuItem[] => {
     const visible = PERMISSION_REGISTRY.filter(
-        (p) => p.i18nKey && p.routes.length > 0 && canShow(ability, p)
+        (p) => p.i18nKey && p.routes.length > 0 && !p.hideFromMenu && canShow(ability, p)
     );
     const byMenuKey = new Map(visible.map((p) => [p.menuKey, p]));
 

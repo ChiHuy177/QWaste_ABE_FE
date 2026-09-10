@@ -338,7 +338,8 @@ const StepListPage = () => {
                             </Descriptions.Item>
                             <Descriptions.Item label={t('stepManagement.table.headers.requiresQc')}>
                                 <Tag
-                                    color={viewModalState.data.requiresQc ? 'blue' : 'default'} variant="filled"
+                                    color={viewModalState.data.requiresQc ? 'blue' : 'default'}
+                                    variant="filled"
                                     style={{ minWidth: 60, textAlign: 'center' }}
                                 >
                                     {(viewModalState.data.requiresQc
@@ -404,19 +405,20 @@ const StepListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                styles={{ body: {
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                } }}
+                styles={{
+                    body: {
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
+                }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<StepDTO>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredData}
                         loading={loading}
