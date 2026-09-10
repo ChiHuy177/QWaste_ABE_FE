@@ -99,12 +99,38 @@ const ProductionOverviewPage: React.FC = () => {
                 const filters = await IndustryFilterService.getIndustryFiltersForPicking();
                 setIndustryFilters(filters);
                 if (filters.length > 0 && selectedTimePeriod === null) {
-                    const defaultPeriod = filters.find(
-                        (f) => f.category === 'PERIOD' && f.periodCode === 'THIS_WEEK'
-                    );
-                    setSelectedTimePeriod(
-                        defaultPeriod ? defaultPeriod.filterId : filters[0].filterId
-                    );
+                    const isShiftActive = (filter: IndustryFilter): boolean => {
+                        if (filter.category !== 'SHIFT') return false;
+                        const currentTime = dayjs().format('HH:mm:ss');
+                        if (!filter.crossesMidnight) {
+                            return currentTime >= filter.startTime && currentTime < filter.endTime;
+                        }
+                        return currentTime >= filter.startTime || currentTime < filter.endTime;
+                    };
+
+                    const dayShiftFilter =
+                        filters.find(
+                            (f) =>
+                                f.category === 'SHIFT' &&
+                                (f.displayNameVi?.toLowerCase().includes('ngày') ||
+                                    f.displayNameEn?.toLowerCase().includes('day') ||
+                                    f.shiftNumber === 1 ||
+                                    f.displayNameVi?.toLowerCase().includes('ca 1') ||
+                                    f.displayNameEn?.toLowerCase().includes('shift 1'))
+                        ) ||
+                        filters.find((f) => f.category === 'SHIFT' && isShiftActive(f)) ||
+                        filters.find((f) => f.category === 'SHIFT');
+
+                    if (dayShiftFilter) {
+                        setSelectedTimePeriod(dayShiftFilter.filterId);
+                        setSelectedShiftFilterId(null);
+                    } else {
+                        const defaultPeriod =
+                            filters.find(
+                                (f) => f.category === 'PERIOD' && f.periodCode === 'TODAY'
+                            ) || filters[0];
+                        setSelectedTimePeriod(defaultPeriod.filterId);
+                    }
                 }
             } catch (err) {
                 console.error('Failed to load industry filters:', err);

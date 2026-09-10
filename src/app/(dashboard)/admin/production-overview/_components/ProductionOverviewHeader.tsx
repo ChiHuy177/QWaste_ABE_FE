@@ -169,7 +169,7 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
 
         if (!primaryLabel) {
             // Fallback default
-            return i18n.language === 'vi' ? 'Tuần này' : 'This week';
+            return i18n.language === 'vi' ? 'Ca ngày' : 'Day shift';
         }
 
         if (primaryFilter?.category === 'PERIOD' && selectedShiftFilterId != null) {
@@ -221,16 +221,24 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
     };
 
     const handleReset = () => {
-        const activeShift = industryFilters.find(
-            (filter) => filter.category === 'SHIFT' && isShiftActive(filter)
-        );
-        const defaultPeriod = industryFilters.find(
-            (filter) => filter.category === 'PERIOD' && filter.periodCode === 'THIS_WEEK'
-        );
+        const dayShift =
+            industryFilters.find(
+                (filter) =>
+                    filter.category === 'SHIFT' &&
+                    (filter.displayNameVi?.toLowerCase().includes('ngày') ||
+                        filter.displayNameEn?.toLowerCase().includes('day') ||
+                        filter.shiftNumber === 1 ||
+                        filter.displayNameVi?.toLowerCase().includes('ca 1') ||
+                        filter.displayNameEn?.toLowerCase().includes('shift 1'))
+            ) ||
+            industryFilters.find(
+                (filter) => filter.category === 'SHIFT' && isShiftActive(filter)
+            ) ||
+            industryFilters.find((filter) => filter.category === 'SHIFT');
 
         setDraftTimeFilterMode('PRESET');
-        setDraftPeriodId(defaultPeriod ? defaultPeriod.filterId : null);
-        setDraftShiftId(activeShift?.filterId ?? null);
+        setDraftPeriodId(null);
+        setDraftShiftId(dayShift?.filterId ?? null);
         setDraftDateRange([dayjs(), dayjs()]);
     };
 
