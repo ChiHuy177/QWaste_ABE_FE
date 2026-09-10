@@ -80,14 +80,19 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
         [token]
     );
 
-    const maxCapacityValue = data.maxCapacity?.current ?? 180;
+    const maxCapacityValue = data.maxCapacity?.current ?? 0;
     const maxCapacityUnit = data.maxCapacity?.unit ?? 'sp/h';
     const actualCapacityValue =
-        data.actualCapacity?.current ?? Math.round((data.actualProduction.current || 1000) / 8);
+        data.actualCapacity?.current ??
+        (data.runtimeHours?.current && data.runtimeHours.current > 0
+            ? Math.round(data.actualProduction.current / data.runtimeHours.current)
+            : 0);
     const actualCapacityUnit = data.actualCapacity?.unit ?? 'sp/h';
     const actualRateVsMax =
         data.actualCapacity?.rateVsMax ??
-        Math.min(100, Math.round((actualCapacityValue / maxCapacityValue) * 100));
+        (maxCapacityValue > 0
+            ? Math.min(100, Math.round((actualCapacityValue / maxCapacityValue) * 100))
+            : 0);
 
     const totalDowntimeMinutes = data.downtimeMinutes?.current ?? 0;
     const downtimeHours = Math.floor(totalDowntimeMinutes / 60);
@@ -706,7 +711,10 @@ export const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
                                             letterSpacing: '0.5px',
                                         }}
                                     >
-                                        {t('productionOverview.kpi.actualCapacity')}
+                                        {t(
+                                            'productionOverview.kpi.actualCapacity',
+                                            'Công suất thực tế'
+                                        )}
                                     </Text>
                                     <ThunderboltOutlined
                                         style={{

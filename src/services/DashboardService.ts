@@ -8,6 +8,20 @@ import {
     DashboardMachineEfficiencyResponse,
     DashboardMachineProductionResponse,
     DashboardItemProductionResponse,
+    DashboardMachineProductionSeriesResponse,
+    DashboardMachineProductionSeriesFilterParams,
+    DashboardMachineProductionSeriesDateRangeParams,
+    SingleMachinePerformanceResponse,
+    SingleMachinePerformanceFilterParams,
+    SingleMachinePerformanceDateRangeParams,
+    DashboardMachineEfficiencySummaryResponse,
+    DashboardMachineCapacitySummaryResponse,
+    DashboardMachineDowntimeSummaryResponse,
+    DashboardMachineProductionSummaryResponse,
+    DashboardMachineRuntimeSummaryResponse,
+    SingleMachineKpiSummaryState,
+    SingleMachineKpiFilterQueryParams,
+    SingleMachineKpiDateRangeQueryParams,
 } from '@/types/Dashboard';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
@@ -473,6 +487,429 @@ export class DashboardService {
                     : null,
             itemProduction:
                 itemProdRes.status === 'fulfilled' && itemProdPromise ? itemProdRes.value : null,
+        };
+    }
+
+    /**
+     * Machine Production Series: By Filter
+     */
+    static async getMachineProductionSeriesByFilter(
+        params: DashboardMachineProductionSeriesFilterParams
+    ): Promise<DashboardMachineProductionSeriesResponse> {
+        const queryParams: Record<string, any> = {
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId != null) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineProductionSeriesResponse>(
+            {
+                method: 'GET',
+                url: ENDPOINTS.DASHBOARD.PRODUCTION_BY_MACHINE_SERIES_BY_FILTER(params.machineId),
+                data: queryParams,
+            }
+        );
+        return response.result as DashboardMachineProductionSeriesResponse;
+    }
+
+    /**
+     * Machine Production Series: By Date Range
+     */
+    static async getMachineProductionSeriesByDateRange(
+        params: DashboardMachineProductionSeriesDateRangeParams
+    ): Promise<DashboardMachineProductionSeriesResponse> {
+        const queryParams: Record<string, any> = {
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId != null) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineProductionSeriesResponse>(
+            {
+                method: 'GET',
+                url: ENDPOINTS.DASHBOARD.PRODUCTION_BY_MACHINE_SERIES_BY_DATE_RANGE(
+                    params.machineId
+                ),
+                data: queryParams,
+            }
+        );
+        return response.result as DashboardMachineProductionSeriesResponse;
+    }
+
+    /**
+     * Single Machine Performance Report: By Filter (§7)
+     */
+    static async getSingleMachinePerformanceByFilter(
+        params: SingleMachinePerformanceFilterParams
+    ): Promise<SingleMachinePerformanceResponse> {
+        const queryParams: Record<string, any> = {
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId != null) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<SingleMachinePerformanceResponse>({
+            method: 'GET',
+            url: ENDPOINTS.SPACES.MONITORING.PERFORMANCE_REPORT_BY_MACHINE_BY_FILTER(
+                params.machineId
+            ),
+            data: queryParams,
+        });
+        return response.result as SingleMachinePerformanceResponse;
+    }
+
+    /**
+     * Single Machine Performance Report: By Date Range (§7)
+     */
+    static async getSingleMachinePerformanceByDateRange(
+        params: SingleMachinePerformanceDateRangeParams
+    ): Promise<SingleMachinePerformanceResponse> {
+        const queryParams: Record<string, any> = {
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId != null) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<SingleMachinePerformanceResponse>({
+            method: 'GET',
+            url: ENDPOINTS.SPACES.MONITORING.PERFORMANCE_REPORT_BY_MACHINE_BY_DATE_RANGE(
+                params.machineId
+            ),
+            data: queryParams,
+        });
+        return response.result as SingleMachinePerformanceResponse;
+    }
+
+    // =========================================================================
+    // Single Machine KPI Summary Widgets (DASHBOARD_KPI_WIDGETS_SINGLE_MACHINE.md)
+    // =========================================================================
+
+    /**
+     * Single Machine Widget 1: Efficiency by Filter
+     */
+    static async getSingleMachineEfficiencyByFilter(
+        params: SingleMachineKpiFilterQueryParams
+    ): Promise<DashboardMachineEfficiencySummaryResponse> {
+        const queryParams: Record<string, any> = {
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId != null) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response =
+            await NetworkService.requestJson<DashboardMachineEfficiencySummaryResponse>({
+                method: 'GET',
+                url: ENDPOINTS.DASHBOARD.EFFICIENCY_FOR_MACHINE_BY_FILTER(params.machineId),
+                data: queryParams,
+            });
+        return response.result as DashboardMachineEfficiencySummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 1: Efficiency by Date Range
+     */
+    static async getSingleMachineEfficiencyByDateRange(
+        params: SingleMachineKpiDateRangeQueryParams
+    ): Promise<DashboardMachineEfficiencySummaryResponse> {
+        const queryParams: Record<string, any> = {
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId != null) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response =
+            await NetworkService.requestJson<DashboardMachineEfficiencySummaryResponse>({
+                method: 'GET',
+                url: ENDPOINTS.DASHBOARD.EFFICIENCY_FOR_MACHINE_BY_DATE_RANGE(params.machineId),
+                data: queryParams,
+            });
+        return response.result as DashboardMachineEfficiencySummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 2: Capacity by Filter
+     */
+    static async getSingleMachineCapacityByFilter(
+        params: SingleMachineKpiFilterQueryParams
+    ): Promise<DashboardMachineCapacitySummaryResponse> {
+        const queryParams: Record<string, any> = {
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId != null) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineCapacitySummaryResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.CAPACITY_FOR_MACHINE_BY_FILTER(params.machineId),
+            data: queryParams,
+        });
+        return response.result as DashboardMachineCapacitySummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 2: Capacity by Date Range
+     */
+    static async getSingleMachineCapacityByDateRange(
+        params: SingleMachineKpiDateRangeQueryParams
+    ): Promise<DashboardMachineCapacitySummaryResponse> {
+        const queryParams: Record<string, any> = {
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId != null) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineCapacitySummaryResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.CAPACITY_FOR_MACHINE_BY_DATE_RANGE(params.machineId),
+            data: queryParams,
+        });
+        return response.result as DashboardMachineCapacitySummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 3: Downtime by Filter
+     */
+    static async getSingleMachineDowntimeByFilter(
+        params: SingleMachineKpiFilterQueryParams
+    ): Promise<DashboardMachineDowntimeSummaryResponse> {
+        const queryParams: Record<string, any> = {
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId != null) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineDowntimeSummaryResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.DOWNTIME_FOR_MACHINE_BY_FILTER(params.machineId),
+            data: queryParams,
+        });
+        return response.result as DashboardMachineDowntimeSummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 3: Downtime by Date Range
+     */
+    static async getSingleMachineDowntimeByDateRange(
+        params: SingleMachineKpiDateRangeQueryParams
+    ): Promise<DashboardMachineDowntimeSummaryResponse> {
+        const queryParams: Record<string, any> = {
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId != null) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineDowntimeSummaryResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.DOWNTIME_FOR_MACHINE_BY_DATE_RANGE(params.machineId),
+            data: queryParams,
+        });
+        return response.result as DashboardMachineDowntimeSummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 4+5: Production by Filter (Rejects shift filters)
+     */
+    static async getSingleMachineProductionByFilter(params: {
+        machineId: string;
+        filterId: number;
+    }): Promise<DashboardMachineProductionSummaryResponse> {
+        const response =
+            await NetworkService.requestJson<DashboardMachineProductionSummaryResponse>({
+                method: 'GET',
+                url: ENDPOINTS.DASHBOARD.PRODUCTION_FOR_MACHINE_BY_FILTER(params.machineId),
+                data: {
+                    filterId: params.filterId,
+                },
+            });
+        return response.result as DashboardMachineProductionSummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 4+5: Production by Date Range (Does not accept filterId)
+     */
+    static async getSingleMachineProductionByDateRange(params: {
+        machineId: string;
+        startDate: string;
+        endDate: string;
+    }): Promise<DashboardMachineProductionSummaryResponse> {
+        const response =
+            await NetworkService.requestJson<DashboardMachineProductionSummaryResponse>({
+                method: 'GET',
+                url: ENDPOINTS.DASHBOARD.PRODUCTION_FOR_MACHINE_BY_DATE_RANGE(params.machineId),
+                data: {
+                    startDate: params.startDate,
+                    endDate: params.endDate,
+                },
+            });
+        return response.result as DashboardMachineProductionSummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 6: Runtime by Filter
+     */
+    static async getSingleMachineRuntimeByFilter(
+        params: SingleMachineKpiFilterQueryParams
+    ): Promise<DashboardMachineRuntimeSummaryResponse> {
+        const queryParams: Record<string, any> = {
+            filterId: params.filterId,
+        };
+        if (params.shiftFilterId != null) {
+            queryParams.shiftFilterId = params.shiftFilterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineRuntimeSummaryResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.RUNTIME_FOR_MACHINE_BY_FILTER(params.machineId),
+            data: queryParams,
+        });
+        return response.result as DashboardMachineRuntimeSummaryResponse;
+    }
+
+    /**
+     * Single Machine Widget 6: Runtime by Date Range
+     */
+    static async getSingleMachineRuntimeByDateRange(
+        params: SingleMachineKpiDateRangeQueryParams
+    ): Promise<DashboardMachineRuntimeSummaryResponse> {
+        const queryParams: Record<string, any> = {
+            startDate: params.startDate,
+            endDate: params.endDate,
+        };
+        if (params.filterId != null) {
+            queryParams.filterId = params.filterId;
+        }
+
+        const response = await NetworkService.requestJson<DashboardMachineRuntimeSummaryResponse>({
+            method: 'GET',
+            url: ENDPOINTS.DASHBOARD.RUNTIME_FOR_MACHINE_BY_DATE_RANGE(params.machineId),
+            data: queryParams,
+        });
+        return response.result as DashboardMachineRuntimeSummaryResponse;
+    }
+
+    /**
+     * Single Machine Overview KPI Coordinator: Fetches all 5 single-machine KPI widgets in parallel
+     */
+    static async getSingleMachineOverviewKpis(params: {
+        machineId: string;
+        mode: 'PRESET' | 'CUSTOM_RANGE';
+        filterId?: number | null;
+        shiftFilterId?: number | null;
+        isShiftFilter?: boolean;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<SingleMachineKpiSummaryState> {
+        const { machineId, mode, filterId, shiftFilterId, isShiftFilter, startDate, endDate } =
+            params;
+
+        let efficiencyPromise: Promise<DashboardMachineEfficiencySummaryResponse>;
+        let capacityPromise: Promise<DashboardMachineCapacitySummaryResponse>;
+        let downtimePromise: Promise<DashboardMachineDowntimeSummaryResponse>;
+        let runtimePromise: Promise<DashboardMachineRuntimeSummaryResponse>;
+        let productionPromise: Promise<DashboardMachineProductionSummaryResponse> | null = null;
+
+        if (mode === 'CUSTOM_RANGE' && startDate && endDate) {
+            const shiftFilter = isShiftFilter
+                ? (filterId ?? undefined)
+                : (shiftFilterId ?? undefined);
+
+            efficiencyPromise = this.getSingleMachineEfficiencyByDateRange({
+                machineId,
+                startDate,
+                endDate,
+                filterId: shiftFilter,
+            });
+            capacityPromise = this.getSingleMachineCapacityByDateRange({
+                machineId,
+                startDate,
+                endDate,
+                filterId: shiftFilter,
+            });
+            downtimePromise = this.getSingleMachineDowntimeByDateRange({
+                machineId,
+                startDate,
+                endDate,
+                filterId: shiftFilter,
+            });
+            runtimePromise = this.getSingleMachineRuntimeByDateRange({
+                machineId,
+                startDate,
+                endDate,
+                filterId: shiftFilter,
+            });
+            // Production byDateRange does NOT accept any filterId
+            productionPromise = this.getSingleMachineProductionByDateRange({
+                machineId,
+                startDate,
+                endDate,
+            });
+        } else if (filterId) {
+            efficiencyPromise = this.getSingleMachineEfficiencyByFilter({
+                machineId,
+                filterId,
+                shiftFilterId,
+            });
+            capacityPromise = this.getSingleMachineCapacityByFilter({
+                machineId,
+                filterId,
+                shiftFilterId,
+            });
+            downtimePromise = this.getSingleMachineDowntimeByFilter({
+                machineId,
+                filterId,
+                shiftFilterId,
+            });
+            runtimePromise = this.getSingleMachineRuntimeByFilter({
+                machineId,
+                filterId,
+                shiftFilterId,
+            });
+            // Production byFilter does NOT accept shift filters (returns error 912)
+            if (!isShiftFilter && !shiftFilterId) {
+                productionPromise = this.getSingleMachineProductionByFilter({
+                    machineId,
+                    filterId,
+                });
+            }
+        } else {
+            return {
+                efficiency: null,
+                capacity: null,
+                downtime: null,
+                production: null,
+                runtime: null,
+            };
+        }
+
+        const [effRes, capRes, downRes, runRes, prodRes] = await Promise.allSettled([
+            efficiencyPromise,
+            capacityPromise,
+            downtimePromise,
+            runtimePromise,
+            productionPromise ?? Promise.resolve(null as any),
+        ]);
+
+        return {
+            efficiency: effRes.status === 'fulfilled' ? effRes.value : null,
+            capacity: capRes.status === 'fulfilled' ? capRes.value : null,
+            downtime: downRes.status === 'fulfilled' ? downRes.value : null,
+            runtime: runRes.status === 'fulfilled' ? runRes.value : null,
+            production: prodRes.status === 'fulfilled' ? prodRes.value : null,
         };
     }
 }

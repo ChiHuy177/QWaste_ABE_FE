@@ -3,7 +3,16 @@
 import React, { useMemo, useState } from 'react';
 import { Card, Typography, theme, Empty, Select, Space, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+    BarChart,
+    Bar,
+    Cell,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
 import { DashboardMachineProductionResponse } from '@/types/Dashboard';
 import { MachineOutputData } from '@/configs/mockData/productionOverviewMockData';
 
@@ -25,11 +34,13 @@ export type PlanVsActualFilterType =
 interface MachinePlanVsActualChartCardProps {
     data: (DashboardMachineProductionResponse | MachineOutputData)[];
     subtitle?: string;
+    onSelectMachine?: (machineCode: string, machineId?: string) => void;
 }
 
 export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCardProps> = ({
     data,
     subtitle,
+    onSelectMachine,
 }) => {
     const { t } = useTranslation();
     const { token } = theme.useToken();
@@ -441,7 +452,27 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                                     fill={token.colorSuccess}
                                     radius={[3, 3, 0, 0]}
                                     maxBarSize={20}
-                                />
+                                >
+                                    {chartData.map((entry, index) => (
+                                        <Cell
+                                            key={`actual-cell-${index}`}
+                                            fill={
+                                                entry.actual >= entry.planned
+                                                    ? token.colorSuccess
+                                                    : token.colorWarning
+                                            }
+                                            style={{
+                                                cursor: onSelectMachine ? 'pointer' : 'default',
+                                            }}
+                                            onClick={() =>
+                                                onSelectMachine?.(
+                                                    entry.machineCode,
+                                                    entry.machineId
+                                                )
+                                            }
+                                        />
+                                    ))}
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

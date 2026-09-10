@@ -32,7 +32,7 @@ export type OeeFilterType = 'top10_high' | 'top10_low' | 'target_met' | 'needs_i
 interface MachineOeeChartCardProps {
     data: (DashboardMachineEfficiencyResponse | MachineOeeData)[];
     subtitle?: string;
-    onSelectMachine?: (machineCode: string) => void;
+    onSelectMachine?: (machineCode: string, machineId?: string) => void;
 }
 
 export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = ({
@@ -463,7 +463,12 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = ({
                                             style={{
                                                 cursor: onSelectMachine ? 'pointer' : 'default',
                                             }}
-                                            onClick={() => onSelectMachine?.(entry.machineCode)}
+                                            onClick={() =>
+                                                onSelectMachine?.(
+                                                    entry.machineCode,
+                                                    entry.machineId
+                                                )
+                                            }
                                         />
                                     ))}
                                 </Bar>

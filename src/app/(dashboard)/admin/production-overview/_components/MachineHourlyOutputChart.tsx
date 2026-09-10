@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Card, Typography, theme } from 'antd';
+import React, { useMemo } from 'react';
+import { Card, Typography, theme, Tag, Space, Spin, Empty } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { ClockCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import {
     ComposedChart,
     Bar,
@@ -13,85 +14,154 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    Cell,
 } from 'recharts';
+import dayjs from 'dayjs';
 import {
-    OutputTimelinePoint,
-    TimelineGranularity,
-} from '@/configs/mockData/productionOverviewMockData';
+    DashboardMachineProductionSeriesResponse,
+    MachineProductionBucketGranularity,
+} from '@/types/Dashboard';
 
 const { Text } = Typography;
 
 interface MachineHourlyOutputChartProps {
     machineCode: string;
-    data: OutputTimelinePoint[];
-    granularity?: TimelineGranularity;
-    hasPlanLine?: boolean;
+    seriesData?: DashboardMachineProductionSeriesResponse | null;
+    isLoading?: boolean;
+    subtitle?: string;
 }
 
 export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> = ({
     machineCode,
-    data,
-    granularity = 'DAY',
-    hasPlanLine = true,
+    seriesData,
+    isLoading = false,
+    subtitle: customSubtitle,
 }) => {
     const { t } = useTranslation();
     const { token } = theme.useToken();
 
-    // Determine whether to display the ratio line (only when granularity is NOT HOUR)
-    const showRatioLine = hasPlanLine && granularity !== 'HOUR';
+    // Determine effective granularity
+    const effectiveGranularity: MachineProductionBucketGranularity = useMemo(() => {
+        return seriesData?.bucketGranularity ?? 'DAY';
+    }, [seriesData?.bucketGranularity]);
 
-    // Calculate ratio = (actual / planned) * 100
-    const chartData = React.useMemo(() => {
-        return data.map((item) => {
-            const actual = item.actual ?? 0;
-            const planned = item.planned ?? 0;
-            const ratio = planned > 0 ? Number(((actual / planned) * 100).toFixed(1)) : null;
+    // Format bucket label according to granularity
+    const formatBucketLabel = useMemo(() => {
+        return (start: string, end: string, gran: MachineProductionBucketGranularity): string => {
+            const s = dayjs(start);
+            switch (gran) {
+                case 'HOUR':
+                    return s.format('HH:mm');
+                case 'DAY':
+                    return s.format('DD/MM');
+                case 'WEEK':
+                    return `${s.format('DD/MM')} - ${dayjs(end).format('DD/MM')}`;
+                case 'MONTH':
+                    return s.format('MM/YYYY');
+                default:
+                    return s.format('DD/MM');
+            }
+        };
+    }, []);
 
-            return {
-                ...item,
-                actual,
-                planned,
-                ratio,
-            };
-        });
-    }, [data]);
+    // Check if series has any planned quantities (can be null in degrade mode or HOURLY)
+    const hasPlannedData = useMemo(() => {
+        if (seriesData?.buckets) {
+            return seriesData.buckets.some(
+                (b) => b.plannedQuantity !== null && b.plannedQuantity > 0
+            );
+        }
+        return false;
+    }, [seriesData]);
 
-    // Stoppage note marker if present
-    const stoppagePoint = data.find((p) => p.stoppageNote);
+    interface MachineOutputChartItem {
+        label: string;
+        bucketStart?: string | null;
+        bucketEnd?: string | null;
+        planned: number | null;
+        actual: number;
+        ratio: number | null;
+        stoppageNote?: string;
+    }
+
+    // Transform chart data (API buckets only, no mock fallback)
+    const chartData = useMemo<MachineOutputChartItem[]>(() => {
+        if (seriesData?.buckets && seriesData.buckets.length > 0) {
+            return seriesData.buckets.map((b) => {
+                const label = formatBucketLabel(b.bucketStart, b.bucketEnd, effectiveGranularity);
+                return {
+                    label,
+                    bucketStart: b.bucketStart,
+                    bucketEnd: b.bucketEnd,
+                    planned: b.plannedQuantity,
+                    actual: b.actualQuantity,
+                    ratio: b.productionRatioPercentage,
+                };
+            });
+        }
+        return [];
+    }, [seriesData, effectiveGranularity, formatBucketLabel]);
+
+    // Check if ratio line should be visible
+    const showRatioLine = useMemo(() => {
+        if (!hasPlannedData) return false;
+        return chartData.some((d) => d.ratio !== null);
+    }, [hasPlannedData, chartData]);
 
     // Title, Subtitle and Unit Label based on granularity
-    const { title, subtitle, unitLabel } = React.useMemo(() => {
-        switch (granularity) {
-            case 'MONTH':
-                return {
-                    title: t('productionOverview.machineDetail.monthlyOutput'),
-                    subtitle: `${machineCode} – ${t('productionOverview.machineDetail.monthlyOutputDesc')} (${t('productionOverview.machineDetail.pcsPerMonth')})`,
-                    unitLabel: t('productionOverview.machineDetail.pcsPerMonth'),
-                };
-            case 'WEEK':
-                return {
-                    title: t('productionOverview.machineDetail.weeklyOutput'),
-                    subtitle: `${machineCode} – ${t('productionOverview.machineDetail.weeklyOutputDesc')} (${t('productionOverview.machineDetail.pcsPerWeek')})`,
-                    unitLabel: t('productionOverview.machineDetail.pcsPerWeek'),
-                };
-            case 'DAY':
-                return {
-                    title: t('productionOverview.machineDetail.dailyOutput'),
-                    subtitle: `${machineCode} – ${t('productionOverview.machineDetail.dailyOutputDesc')} (${t('productionOverview.machineDetail.pcsPerDay')})`,
-                    unitLabel: t('productionOverview.machineDetail.pcsPerDay'),
-                };
-            case 'HOUR':
-            default:
-                return {
-                    title: t('productionOverview.machineDetail.hourlyOutput'),
-                    subtitle: `${machineCode} – ${t('productionOverview.filters.dayShift')} 17/08/2026 – ${t('productionOverview.machineDetail.actualOutput')} (${t('productionOverview.machineDetail.pcsPerHour')})`,
-                    unitLabel: t('productionOverview.machineDetail.pcsPerHour'),
-                };
-        }
-    }, [granularity, machineCode, t]);
+    const { title, subtitle, unitLabel, granTagLabel } = useMemo(() => {
+        let tagText = t('productionOverview.performanceReport.granularityDay', 'Theo ngày');
+        let titleText = t('productionOverview.machineDetail.dailyOutput', 'Sản lượng theo ngày');
+        let subText = `${machineCode} – ${t('productionOverview.machineDetail.dailyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo ngày')} (${t('productionOverview.machineDetail.pcsPerDay', 'sp/ngày')})`;
+        let unit = t('productionOverview.machineDetail.pcsPerDay', 'sp/ngày');
 
-    // Custom Percentage badge label on Ratio Line chart points
+        switch (effectiveGranularity) {
+            case 'MONTH':
+                tagText = t('productionOverview.performanceReport.granularityMonth', 'Theo tháng');
+                titleText = t(
+                    'productionOverview.machineDetail.monthlyOutput',
+                    'Sản lượng theo tháng'
+                );
+                subText = `${machineCode} – ${t('productionOverview.machineDetail.monthlyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo tháng')} (${t('productionOverview.machineDetail.pcsPerMonth', 'sp/tháng')})`;
+                unit = t('productionOverview.machineDetail.pcsPerMonth', 'sp/tháng');
+                break;
+            case 'WEEK':
+                tagText = t('productionOverview.performanceReport.granularityWeek', 'Theo tuần');
+                titleText = t(
+                    'productionOverview.machineDetail.weeklyOutput',
+                    'Sản lượng theo tuần'
+                );
+                subText = `${machineCode} – ${t('productionOverview.machineDetail.weeklyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo tuần')} (${t('productionOverview.machineDetail.pcsPerWeek', 'sp/tuần')})`;
+                unit = t('productionOverview.machineDetail.pcsPerWeek', 'sp/tuần');
+                break;
+            case 'HOUR':
+                tagText = t('productionOverview.performanceReport.granularityHour', 'Theo giờ');
+                titleText = t(
+                    'productionOverview.machineDetail.hourlyOutput',
+                    'Sản lượng theo giờ'
+                );
+                subText = `${machineCode} – ${t('productionOverview.machineDetail.actualOutput', 'Sản lượng thực tế')} (${t('productionOverview.machineDetail.pcsPerHour', 'sp/giờ')})`;
+                unit = t('productionOverview.machineDetail.pcsPerHour', 'sp/giờ');
+                break;
+            case 'DAY':
+            default:
+                break;
+        }
+
+        return {
+            title: titleText,
+            subtitle: customSubtitle || subText,
+            unitLabel: unit,
+            granTagLabel: tagText,
+        };
+    }, [effectiveGranularity, machineCode, customSubtitle, t]);
+
+    // Minimum width for horizontal scrolling if many buckets
+    const minChartWidth = useMemo(() => {
+        if (chartData.length <= 12) return undefined;
+        return Math.max(600, chartData.length * 48);
+    }, [chartData.length]);
+
+    // Custom Percentage badge label on Ratio Line
     const renderPercentageLabel = (props: any) => {
         const { x, y, value } = props;
         if (value == null) return null;
@@ -121,219 +191,315 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
         );
     };
 
+    // Custom Tooltip for Recharts
+    const renderCustomTooltip = ({ active, payload, label }: any) => {
+        if (!active || !payload || payload.length === 0) return null;
+        const item = payload[0]?.payload;
+        if (!item) return null;
+
+        const hasItemPlanned = item.planned !== null && item.planned !== undefined;
+        const ratio = item.ratio;
+
+        let ratioColor = token.colorTextDescription;
+        if (ratio !== null) {
+            if (ratio >= 85) ratioColor = token.colorSuccess;
+            else if (ratio >= 70) ratioColor = token.colorWarning;
+            else ratioColor = token.colorError;
+        }
+
+        return (
+            <div
+                style={{
+                    backgroundColor: token.colorBgElevated,
+                    padding: '10px 14px',
+                    borderRadius: token.borderRadiusLG,
+                    boxShadow: token.boxShadowSecondary,
+                    border: `1px solid ${token.colorBorderSecondary}`,
+                    fontSize: 12,
+                    lineHeight: 1.6,
+                }}
+            >
+                <div style={{ fontWeight: 700, color: token.colorText, marginBottom: 4 }}>
+                    {label}{' '}
+                    {item.bucketStart && item.bucketEnd && (
+                        <span style={{ fontWeight: 400, color: token.colorTextSecondary }}>
+                            ({dayjs(item.bucketStart).format('DD/MM HH:mm')} -{' '}
+                            {dayjs(item.bucketEnd).format('DD/MM HH:mm')})
+                        </span>
+                    )}
+                </div>
+
+                {hasItemPlanned && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                        <span style={{ color: token.colorTextSecondary }}>
+                            {t('productionOverview.machineDetail.plannedOutput', 'Kế hoạch')}:
+                        </span>
+                        <strong style={{ color: token.colorPrimary }}>
+                            {item.planned.toLocaleString()}{' '}
+                            {t('productionOverview.machineDetail.pcs', 'sp')}
+                        </strong>
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                    <span style={{ color: token.colorTextSecondary }}>
+                        {t('productionOverview.machineDetail.actualOutput', 'Thực tế')}:
+                    </span>
+                    <strong style={{ color: token.colorSuccess }}>
+                        {(item.actual ?? 0).toLocaleString()}{' '}
+                        {t('productionOverview.machineDetail.pcs', 'sp')}
+                    </strong>
+                </div>
+
+                {ratio !== null && (
+                    <div
+                        style={{
+                            marginTop: 6,
+                            paddingTop: 6,
+                            borderTop: `1px dashed ${token.colorBorderSecondary}`,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: 16,
+                        }}
+                    >
+                        <span style={{ fontWeight: 600, color: token.colorText }}>
+                            {t(
+                                'productionOverview.machineDetail.productionRatio',
+                                'Tỷ lệ sản lượng'
+                            )}
+                            :
+                        </span>
+                        <strong style={{ color: ratioColor, fontSize: 13 }}>{ratio}%</strong>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <Card
             size="small"
             style={{
                 height: '100%',
+                width: '100%',
                 borderRadius: token.borderRadiusLG,
                 borderColor: token.colorBorderSecondary,
                 backgroundColor: token.colorBgContainer,
                 boxShadow: token.boxShadowTertiary,
             }}
         >
-            {/* Header */}
-            <div style={{ marginBottom: 12 }}>
-                <Text style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
-                    {title}
-                </Text>
-                <div style={{ fontSize: 12, color: token.colorTextDescription }}>{subtitle}</div>
-            </div>
-
-            {/* Recharts Container */}
-            <div style={{ width: '100%', height: 260 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart
-                        data={chartData}
-                        margin={{
-                            top: 15,
-                            right: showRatioLine ? 15 : 15,
-                            left: -10,
-                            bottom: 0,
-                        }}
-                    >
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke={token.colorBorderSecondary}
-                            opacity={0.5}
-                        />
-                        <XAxis
-                            dataKey="label"
-                            tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
-                            axisLine={{ stroke: token.colorBorderSecondary }}
-                        />
-
-                        {/* Left Y-Axis: Output Quantity */}
-                        <YAxis
-                            yAxisId="left"
-                            tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
-                            axisLine={{ stroke: token.colorBorderSecondary }}
-                            tickFormatter={(val) =>
-                                val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val
-                            }
-                        />
-
-                        {/* Right Y-Axis: Ratio % (Only rendered when not HOURLY) */}
-                        {showRatioLine && (
-                            <YAxis
-                                yAxisId="right"
-                                orientation="right"
-                                domain={[
-                                    0,
-                                    (dataMax: number) =>
-                                        Math.max(120, Math.ceil((dataMax * 1.2) / 20) * 20),
-                                ]}
-                                tick={{ fill: token.colorTextSecondary, fontSize: 10 }}
-                                axisLine={{ stroke: token.colorBorderSecondary }}
-                                tickFormatter={(val) => `${val}%`}
-                            />
-                        )}
-
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: token.colorBgElevated,
-                                borderColor: token.colorBorderSecondary,
-                                borderRadius: token.borderRadius,
-                                color: token.colorText,
-                                fontSize: 12,
+            {/* Header Toolbar */}
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                    flexWrap: 'wrap',
+                    gap: 8,
+                }}
+            >
+                <div>
+                    <Space align="center" size={8} wrap>
+                        <Text style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
+                            {title}
+                        </Text>
+                        <Tag
+                            color="processing"
+                            style={{
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 600,
                             }}
-                            formatter={(value: any, name: any) => {
-                                if (
-                                    name === 'ratio' ||
-                                    name ===
-                                        t(
-                                            'productionOverview.machineDetail.productionRatio',
-                                            'Tỷ lệ sản lượng'
-                                        )
-                                ) {
-                                    return [
-                                        value != null ? `${value}%` : 'N/A',
-                                        t(
-                                            'productionOverview.machineDetail.productionRatio',
-                                            'Tỷ lệ sản lượng'
-                                        ),
-                                    ];
-                                }
-                                if (
-                                    name === 'planned' ||
-                                    name ===
-                                        t(
-                                            'productionOverview.machineDetail.plannedOutput',
-                                            'Kế hoạch'
-                                        )
-                                ) {
-                                    return [
-                                        `${(value ?? 0).toLocaleString()} ${unitLabel}`,
-                                        t(
-                                            'productionOverview.machineDetail.plannedOutput',
-                                            'Kế hoạch'
-                                        ),
-                                    ];
-                                }
-                                return [
-                                    `${(value ?? 0).toLocaleString()} ${unitLabel}`,
-                                    t('productionOverview.machineDetail.actualOutput', 'Thực tế'),
-                                ];
-                            }}
-                        />
-
-                        <Legend
-                            wrapperStyle={{ paddingTop: 6, fontSize: 11 }}
-                            formatter={(value: string) => {
-                                if (value === 'planned') {
-                                    return t(
-                                        'productionOverview.machineDetail.plannedOutput',
-                                        'Kế hoạch'
-                                    );
-                                }
-                                if (value === 'actual') {
-                                    return t(
-                                        'productionOverview.machineDetail.actualOutput',
-                                        'Thực tế'
-                                    );
-                                }
-                                if (value === 'ratio') {
-                                    return t(
-                                        'productionOverview.machineDetail.productionRatio',
-                                        'Tỷ lệ sản lượng'
-                                    );
-                                }
-                                return value;
-                            }}
-                        />
-
-                        {/* Planned Bar: Rendered when hasPlanLine is true */}
-                        {hasPlanLine && (
-                            <Bar
-                                yAxisId="left"
-                                dataKey="planned"
-                                name="planned"
-                                fill={token.colorTextQuaternary}
-                                radius={[4, 4, 0, 0]}
-                                maxBarSize={24}
-                            />
-                        )}
-
-                        {/* Actual Bar: Always rendered */}
-                        <Bar
-                            yAxisId="left"
-                            dataKey="actual"
-                            name="actual"
-                            fill={token.colorSuccess}
-                            radius={[4, 4, 0, 0]}
-                            maxBarSize={hasPlanLine ? 24 : 36}
                         >
-                            {chartData.map((entry, index) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={
-                                        entry.stoppageNote ? token.colorError : token.colorSuccess
-                                    }
-                                />
-                            ))}
-                        </Bar>
-
-                        {/* Ratio Line: Rendered from DAY and above (not for HOUR) */}
-                        {showRatioLine && (
-                            <Line
-                                yAxisId="right"
-                                type="linear"
-                                dataKey="ratio"
-                                name="ratio"
-                                stroke={token.colorError}
-                                strokeWidth={2.5}
-                                dot={{
-                                    r: 3.5,
-                                    fill: token.colorError,
-                                    stroke: token.colorBgContainer,
-                                    strokeWidth: 1.5,
+                            <ClockCircleOutlined style={{ marginRight: 4 }} />
+                            {granTagLabel}
+                        </Tag>
+                        {!hasPlannedData && (
+                            <Tag
+                                color="default"
+                                style={{
+                                    borderRadius: 6,
+                                    fontSize: 11,
+                                    color: token.colorTextDescription,
                                 }}
-                                activeDot={{ r: 5.5 }}
-                                label={renderPercentageLabel}
-                            />
+                            >
+                                <InfoCircleOutlined style={{ marginRight: 4 }} />
+                                {t(
+                                    'productionOverview.machineDetail.actualOnlyNotice',
+                                    'Chỉ có sản lượng thực tế'
+                                )}
+                            </Tag>
                         )}
-                    </ComposedChart>
-                </ResponsiveContainer>
+                    </Space>
+                    <div style={{ fontSize: 12, color: token.colorTextDescription, marginTop: 2 }}>
+                        {subtitle}
+                    </div>
+                </div>
             </div>
 
-            {/* Stoppage Alert Banner if present */}
-            {stoppagePoint?.stoppageNote && (
+            {/* Content Area */}
+            {isLoading ? (
                 <div
                     style={{
-                        marginTop: 8,
-                        padding: '6px 12px',
-                        borderRadius: token.borderRadius,
-                        backgroundColor: token.colorErrorBg,
-                        border: `1px solid ${token.colorErrorBorder}`,
-                        fontSize: 12,
-                        color: token.colorErrorText,
+                        height: 280,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 6,
+                        justifyContent: 'center',
                     }}
                 >
-                    <span style={{ fontSize: 14 }}>●</span>
-                    <span>{stoppagePoint.stoppageNote}</span>
+                    <Spin />
+                </div>
+            ) : chartData.length === 0 ? (
+                <div
+                    style={{
+                        height: 280,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                            <span style={{ color: token.colorTextDescription, fontSize: 13 }}>
+                                {t(
+                                    'productionOverview.charts.noData',
+                                    'Không có dữ liệu sản lượng'
+                                )}
+                            </span>
+                        }
+                    />
+                </div>
+            ) : (
+                <div
+                    style={{
+                        width: '100%',
+                        overflowX: minChartWidth ? 'auto' : 'hidden',
+                        paddingBottom: minChartWidth ? 6 : 0,
+                    }}
+                >
+                    <div style={{ width: '100%', minWidth: minChartWidth, height: 280 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart
+                                data={chartData}
+                                margin={{
+                                    top: 18,
+                                    right: 15,
+                                    left: -10,
+                                    bottom: 0,
+                                }}
+                            >
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke={token.colorBorderSecondary}
+                                    opacity={0.5}
+                                />
+                                <XAxis
+                                    dataKey="label"
+                                    tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
+                                    axisLine={{ stroke: token.colorBorderSecondary }}
+                                />
+
+                                {/* Left Y-Axis: Output Quantity */}
+                                <YAxis
+                                    yAxisId="left"
+                                    tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
+                                    axisLine={{ stroke: token.colorBorderSecondary }}
+                                    tickFormatter={(val) =>
+                                        val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val
+                                    }
+                                />
+
+                                {/* Right Y-Axis: Ratio % (Only rendered when ratio data exists) */}
+                                {showRatioLine && (
+                                    <YAxis
+                                        yAxisId="right"
+                                        orientation="right"
+                                        domain={[
+                                            0,
+                                            (dataMax: number) =>
+                                                Math.max(120, Math.ceil((dataMax * 1.2) / 20) * 20),
+                                        ]}
+                                        tick={{ fill: token.colorTextSecondary, fontSize: 10 }}
+                                        axisLine={{ stroke: token.colorBorderSecondary }}
+                                        tickFormatter={(val) => `${val}%`}
+                                    />
+                                )}
+
+                                <Tooltip content={renderCustomTooltip} />
+
+                                <Legend
+                                    verticalAlign="bottom"
+                                    align="center"
+                                    wrapperStyle={{ paddingTop: 8, fontSize: 11 }}
+                                    formatter={(value: string) => {
+                                        if (value === 'planned') {
+                                            return t(
+                                                'productionOverview.machineDetail.plannedOutput',
+                                                'Kế hoạch'
+                                            );
+                                        }
+                                        if (value === 'actual') {
+                                            return t(
+                                                'productionOverview.machineDetail.actualOutput',
+                                                'Thực tế'
+                                            );
+                                        }
+                                        if (value === 'ratio') {
+                                            return t(
+                                                'productionOverview.machineDetail.productionRatio',
+                                                'Tỷ lệ sản lượng'
+                                            );
+                                        }
+                                        return value;
+                                    }}
+                                />
+
+                                {/* Planned Bar: Rendered when hasPlannedData is true */}
+                                {hasPlannedData && (
+                                    <Bar
+                                        yAxisId="left"
+                                        dataKey="planned"
+                                        name="planned"
+                                        fill={token.colorPrimary}
+                                        radius={[4, 4, 0, 0]}
+                                        maxBarSize={28}
+                                    />
+                                )}
+
+                                {/* Actual Bar: Always rendered */}
+                                <Bar
+                                    yAxisId="left"
+                                    dataKey="actual"
+                                    name="actual"
+                                    fill={token.colorSuccess}
+                                    radius={[4, 4, 0, 0]}
+                                    maxBarSize={hasPlannedData ? 28 : 40}
+                                />
+
+                                {/* Ratio Line: Rendered when ratio data exists */}
+                                {showRatioLine && (
+                                    <Line
+                                        yAxisId="right"
+                                        type="linear"
+                                        dataKey="ratio"
+                                        name="ratio"
+                                        stroke={token.colorError}
+                                        strokeWidth={2.5}
+                                        dot={{
+                                            r: 3.5,
+                                            fill: token.colorError,
+                                            stroke: token.colorBgContainer,
+                                            strokeWidth: 1.5,
+                                        }}
+                                        activeDot={{ r: 5.5 }}
+                                        label={renderPercentageLabel}
+                                    />
+                                )}
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
             )}
         </Card>

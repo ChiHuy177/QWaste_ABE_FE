@@ -19,20 +19,18 @@ import {
     DashboardMachineEfficiencyResponse,
     DashboardMachineProductionResponse,
     DashboardItemProductionResponse,
+    DashboardMachineProductionSeriesResponse,
+    SingleMachinePerformanceResponse,
+    SingleMachineKpiSummaryState,
 } from '@/types/Dashboard';
-import {
-    getProductionOverviewData,
-    getMachineDetail,
-    FilterContextParams,
-    KpiSummaryData,
-} from '@/configs/mockData/productionOverviewMockData';
+import { KpiSummaryData } from '@/configs/mockData/productionOverviewMockData';
 
 import { ProductionOverviewHeader, TimeFilterMode } from './_components/ProductionOverviewHeader';
 import { KpiCardsSection } from './_components/KpiCardsSection';
 import { MachineOeeChartCard } from './_components/MachineOeeChartCard';
 import { MachinePlanVsActualChartCard } from './_components/MachinePlanVsActualChartCard';
 import { ProductPlanVsActualChartCard } from './_components/ProductPlanVsActualChartCard';
-import { MachineDetailView } from './_components/MachineDetailView';
+import { MachineDetailView, MachineListItem } from './_components/MachineDetailView';
 
 const ProductionOverviewPage: React.FC = () => {
     const { t } = useTranslation();
@@ -68,6 +66,18 @@ const ProductionOverviewPage: React.FC = () => {
 
     // Selected machine state for drilldown
     const [selectedMachineCode, setSelectedMachineCode] = useState<string | null>(null);
+    const [selectedMachineId, setSelectedMachineId] = useState<string | null>(null);
+    const [machineProductionSeries, setMachineProductionSeries] =
+        useState<DashboardMachineProductionSeriesResponse | null>(null);
+    const [isLoadingMachineSeries, setIsLoadingMachineSeries] = useState<boolean>(false);
+    const [singleMachinePerformance, setSingleMachinePerformance] =
+        useState<SingleMachinePerformanceResponse | null>(null);
+    const [isLoadingMachinePerformance, setIsLoadingMachinePerformance] = useState<boolean>(false);
+    const [singleMachineKpis, setSingleMachineKpis] = useState<SingleMachineKpiSummaryState | null>(
+        null
+    );
+    const [isLoadingMachineKpis, setIsLoadingMachineKpis] = useState<boolean>(false);
+    const [machineRefreshTrigger, setMachineRefreshTrigger] = useState<number>(0);
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
     // Fetch spaces on mount
@@ -109,29 +119,6 @@ const ProductionOverviewPage: React.FC = () => {
         return industryFilters.find((f) => f.filterId === selectedTimePeriod);
     }, [timeFilterMode, industryFilters, selectedTimePeriod]);
 
-    // Filter context params object
-    const filterContext = useMemo<FilterContextParams>(
-        () => ({
-            mode: timeFilterMode,
-            periodId: selectedTimePeriod,
-            periodCode: activeFilterObj?.periodCode ?? null,
-            displayNameVi: activeFilterObj?.displayNameVi ?? null,
-            displayNameEn: activeFilterObj?.displayNameEn ?? null,
-            category: activeFilterObj?.category ?? null,
-            shiftId: selectedShiftFilterId,
-            startDate,
-            endDate,
-        }),
-        [
-            timeFilterMode,
-            selectedTimePeriod,
-            activeFilterObj,
-            selectedShiftFilterId,
-            startDate,
-            endDate,
-        ]
-    );
-
     // Subtitle label for current filter
     const activeFilterLabel = useMemo(() => {
         if (timeFilterMode === 'CUSTOM_RANGE') {
@@ -163,7 +150,8 @@ const ProductionOverviewPage: React.FC = () => {
             setIsLoadingData(true);
             try {
                 const isShift = activeFilterObj?.category === 'SHIFT';
-                const [kpiResult, chartsResult] = await Promise.all([
+
+                const [kpiResult, chartsResult] = await Promise.allSettled([
                     DashboardService.getOverviewKpis({
                         spaceId: selectedFactoryId,
                         mode: timeFilterMode,
@@ -184,24 +172,22 @@ const ProductionOverviewPage: React.FC = () => {
                     }),
                 ]);
 
+                const kpis = kpiResult.status === 'fulfilled' ? kpiResult.value : null;
+                const charts = chartsResult.status === 'fulfilled' ? chartsResult.value : null;
+
                 // Map KPI API response to KpiSummaryData dynamically
-                if (
-                    kpiResult.efficiency ||
-                    kpiResult.downtime ||
-                    kpiResult.runtime ||
-                    kpiResult.production
-                ) {
-                    const totalEff = kpiResult.efficiency?.totalEfficiencyPercentage ?? null;
-                    const effDelta = kpiResult.efficiency?.efficiencyDeltaPercentage ?? null;
-                    const totalDowntimeSec = kpiResult.downtime?.totalDowntimeSeconds ?? 0;
+                if (kpis && (kpis.efficiency || kpis.downtime || kpis.runtime || kpis.production)) {
+                    const totalEff = kpis.efficiency?.totalEfficiencyPercentage ?? null;
+                    const effDelta = kpis.efficiency?.efficiencyDeltaPercentage ?? null;
+                    const totalDowntimeSec = kpis.downtime?.totalDowntimeSeconds ?? 0;
                     const downtimeHoursVal = Number((totalDowntimeSec / 3600).toFixed(1));
                     const downtimeMins = Math.round(totalDowntimeSec / 60);
-                    const totalRuntimeSec = kpiResult.runtime?.totalRuntimeSeconds ?? 0;
+                    const totalRuntimeSec = kpis.runtime?.totalRuntimeSeconds ?? 0;
                     const runtimeHoursVal = Number((totalRuntimeSec / 3600).toFixed(1));
                     const runtimeMins = Math.round(totalRuntimeSec / 60);
-                    const actualQty = kpiResult.production?.actualQuantity ?? 0;
-                    const plannedQty = kpiResult.production?.plannedQuantity ?? 0;
-                    const prodRatio = kpiResult.production?.productionRatioPercentage ?? null;
+                    const actualQty = kpis.production?.actualQuantity ?? 0;
+                    const plannedQty = kpis.production?.plannedQuantity ?? 0;
+                    const prodRatio = kpis.production?.productionRatioPercentage ?? null;
 
                     const oeeVal = totalEff != null ? Number(totalEff.toFixed(1)) : 0;
                     const yieldVal = prodRatio != null ? Number(prodRatio.toFixed(1)) : 0;
@@ -213,12 +199,19 @@ const ProductionOverviewPage: React.FC = () => {
                               ? t('productionOverview.kpi.improveArea', 'Vùng cải thiện (70–84%)')
                               : t('productionOverview.kpi.needImprove', 'Cần cải thiện (<70%)');
 
+                    const actualCap =
+                        runtimeHoursVal > 0 ? Math.round(actualQty / runtimeHoursVal) : 0;
+
                     setLiveKpiData({
                         oee: {
                             current: oeeVal,
                             target: 85.0,
                             yesterdayDiff: effDelta != null ? Number(effDelta.toFixed(1)) : 0,
                             statusTag,
+                        },
+                        maxCapacity: {
+                            current: 0,
+                            unit: 'sp/h',
                         },
                         downtimeMinutes: {
                             current: downtimeMins,
@@ -236,7 +229,7 @@ const ProductionOverviewPage: React.FC = () => {
                             current: runtimeHoursVal,
                         },
                         actualCapacity: {
-                            current: 0,
+                            current: actualCap,
                             unit: 'sp/h',
                             rateVsMax: 0,
                         },
@@ -256,14 +249,13 @@ const ProductionOverviewPage: React.FC = () => {
 
                 // Map Charts API responses
                 if (
-                    chartsResult.machineEfficiency ||
-                    chartsResult.machineProduction ||
-                    chartsResult.itemProduction
+                    charts &&
+                    (charts.machineEfficiency || charts.machineProduction || charts.itemProduction)
                 ) {
                     setLiveChartsData({
-                        machineEfficiency: chartsResult.machineEfficiency,
-                        machineProduction: chartsResult.machineProduction,
-                        itemProduction: chartsResult.itemProduction,
+                        machineEfficiency: charts.machineEfficiency,
+                        machineProduction: charts.machineProduction,
+                        itemProduction: charts.itemProduction,
                     });
                 } else {
                     setLiveChartsData({
@@ -295,15 +287,22 @@ const ProductionOverviewPage: React.FC = () => {
         ]
     );
 
-    // Fetch dashboard KPIs and charts on filter change
+    // Fetch dashboard KPIs and charts on filter change (only when on Plant Overview screen)
     useEffect(() => {
-        if (selectedFactoryId && (selectedTimePeriod || timeFilterMode === 'CUSTOM_RANGE')) {
+        if (
+            !selectedMachineCode &&
+            selectedFactoryId &&
+            (selectedTimePeriod || timeFilterMode === 'CUSTOM_RANGE')
+        ) {
             fetchDashboardData();
         }
-    }, [fetchDashboardData, selectedFactoryId, selectedTimePeriod, timeFilterMode]);
-
-    // Dynamic Overview Data based on active filter (mock fallback)
-    const overviewData = useMemo(() => getProductionOverviewData(filterContext), [filterContext]);
+    }, [
+        fetchDashboardData,
+        selectedMachineCode,
+        selectedFactoryId,
+        selectedTimePeriod,
+        timeFilterMode,
+    ]);
 
     // Direct live KPI data or clean zero state (no fake mock fallback)
     const currentKpiData = useMemo<KpiSummaryData>(() => {
@@ -329,6 +328,10 @@ const ProductionOverviewPage: React.FC = () => {
             },
             runtimeHours: {
                 current: 0,
+            },
+            maxCapacity: {
+                current: 0,
+                unit: 'sp/h',
             },
             actualCapacity: {
                 current: 0,
@@ -360,17 +363,208 @@ const ProductionOverviewPage: React.FC = () => {
         return liveChartsData.itemProduction ?? [];
     }, [liveChartsData.itemProduction]);
 
-    // Dynamic Active Machine Detail Data based on active filter
-    const activeMachineDetail = useMemo(() => {
+    // Available machines list for fast switcher from live data
+    const availableMachineList = useMemo<MachineListItem[]>(() => {
+        const map = new Map<string, MachineListItem>();
+        if (liveChartsData.machineEfficiency) {
+            liveChartsData.machineEfficiency.forEach((m) => {
+                const code = m.machineCode || m.machineName;
+                if (code) {
+                    map.set(code, {
+                        machineId: m.machineId,
+                        machineCode: code,
+                        machineName: m.machineName,
+                    });
+                }
+            });
+        }
+        if (liveChartsData.machineProduction) {
+            liveChartsData.machineProduction.forEach((m) => {
+                const code = m.machineCode || m.machineName;
+                if (code && !map.has(code)) {
+                    map.set(code, {
+                        machineId: m.machineId,
+                        machineCode: code,
+                        machineName: m.machineName,
+                    });
+                }
+            });
+        }
+        return Array.from(map.values());
+    }, [liveChartsData]);
+
+    // Handler when user selects a machine from any chart/table/switcher
+    const handleSelectMachine = useCallback((machineCode: string, machineId?: string) => {
+        setSelectedMachineCode(machineCode);
+        if (machineId) {
+            setSelectedMachineId(machineId);
+        } else {
+            setSelectedMachineId(null);
+        }
+    }, []);
+
+    // Resolve machineId from live datasets or selectedMachineId
+    const resolvedMachineId = useMemo(() => {
+        if (selectedMachineId) return selectedMachineId;
         if (!selectedMachineCode) return null;
-        return getMachineDetail(selectedMachineCode, filterContext);
-    }, [selectedMachineCode, filterContext]);
+
+        const inEff = liveChartsData.machineEfficiency?.find(
+            (m) =>
+                m.machineCode === selectedMachineCode ||
+                m.machineName === selectedMachineCode ||
+                m.machineId === selectedMachineCode
+        );
+        if (inEff?.machineId) return inEff.machineId;
+
+        const inProd = liveChartsData.machineProduction?.find(
+            (m) =>
+                m.machineCode === selectedMachineCode ||
+                m.machineName === selectedMachineCode ||
+                m.machineId === selectedMachineCode
+        );
+        if (inProd?.machineId) return inProd.machineId;
+
+        if (/^[0-9a-fA-F-]{36}$/.test(selectedMachineCode)) {
+            return selectedMachineCode;
+        }
+
+        return null;
+    }, [selectedMachineId, selectedMachineCode, liveChartsData]);
+
+    // Fetch Machine Production Series and Single Machine Performance Report for selected machine
+    useEffect(() => {
+        if (!resolvedMachineId) {
+            setMachineProductionSeries(null);
+            setSingleMachinePerformance(null);
+            setSingleMachineKpis(null);
+            return;
+        }
+
+        let isMounted = true;
+        const fetchMachineDetailData = async () => {
+            setIsLoadingMachineSeries(true);
+            setIsLoadingMachinePerformance(true);
+            setIsLoadingMachineKpis(true);
+            try {
+                const isShift = activeFilterObj?.category === 'SHIFT';
+                let prodPromise: Promise<DashboardMachineProductionSeriesResponse>;
+                let perfPromise: Promise<SingleMachinePerformanceResponse>;
+
+                if (timeFilterMode === 'CUSTOM_RANGE' && startDate && endDate) {
+                    const shiftFilter = isShift
+                        ? (selectedTimePeriod ?? undefined)
+                        : (selectedShiftFilterId ?? undefined);
+
+                    prodPromise = DashboardService.getMachineProductionSeriesByDateRange({
+                        machineId: resolvedMachineId,
+                        startDate,
+                        endDate,
+                        filterId: shiftFilter,
+                    });
+                    perfPromise = DashboardService.getSingleMachinePerformanceByDateRange({
+                        machineId: resolvedMachineId,
+                        startDate,
+                        endDate,
+                        filterId: shiftFilter,
+                    });
+                } else if (selectedTimePeriod) {
+                    prodPromise = DashboardService.getMachineProductionSeriesByFilter({
+                        machineId: resolvedMachineId,
+                        filterId: selectedTimePeriod,
+                        shiftFilterId: selectedShiftFilterId,
+                    });
+                    perfPromise = DashboardService.getSingleMachinePerformanceByFilter({
+                        machineId: resolvedMachineId,
+                        filterId: selectedTimePeriod,
+                        shiftFilterId: selectedShiftFilterId,
+                    });
+                } else {
+                    return;
+                }
+
+                // Fetch Single Machine KPI Widgets (DASHBOARD_KPI_WIDGETS_SINGLE_MACHINE.md)
+                const kpiPromise = DashboardService.getSingleMachineOverviewKpis({
+                    machineId: resolvedMachineId,
+                    mode: timeFilterMode,
+                    filterId: selectedTimePeriod,
+                    shiftFilterId: selectedShiftFilterId,
+                    isShiftFilter: isShift,
+                    startDate,
+                    endDate,
+                });
+
+                const [prodRes, perfRes, kpiRes] = await Promise.allSettled([
+                    prodPromise,
+                    perfPromise,
+                    kpiPromise,
+                ]);
+
+                if (isMounted) {
+                    if (prodRes.status === 'fulfilled') {
+                        setMachineProductionSeries(prodRes.value);
+                    } else {
+                        console.error('Failed to fetch machine production series:', prodRes.reason);
+                        setMachineProductionSeries(null);
+                    }
+
+                    if (perfRes.status === 'fulfilled') {
+                        setSingleMachinePerformance(perfRes.value);
+                    } else {
+                        console.error(
+                            'Failed to fetch single machine performance:',
+                            perfRes.reason
+                        );
+                        setSingleMachinePerformance(null);
+                    }
+
+                    if (kpiRes.status === 'fulfilled') {
+                        setSingleMachineKpis(kpiRes.value);
+                    } else {
+                        console.error('Failed to fetch single machine KPIs:', kpiRes.reason);
+                        setSingleMachineKpis(null);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch machine detail data:', error);
+                if (isMounted) {
+                    setMachineProductionSeries(null);
+                    setSingleMachinePerformance(null);
+                    setSingleMachineKpis(null);
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingMachineSeries(false);
+                    setIsLoadingMachinePerformance(false);
+                    setIsLoadingMachineKpis(false);
+                }
+            }
+        };
+
+        fetchMachineDetailData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [
+        resolvedMachineId,
+        timeFilterMode,
+        selectedTimePeriod,
+        selectedShiftFilterId,
+        startDate,
+        endDate,
+        activeFilterObj,
+        machineRefreshTrigger,
+    ]);
 
     // Refresh action
     const handleRefresh = useCallback(() => {
-        fetchDashboardData(true);
+        if (selectedMachineCode) {
+            setMachineRefreshTrigger((prev) => prev + 1);
+        } else {
+            fetchDashboardData(true);
+        }
         toast.success(t('productionOverview.actions.refreshSuccess'));
-    }, [fetchDashboardData, t]);
+    }, [selectedMachineCode, fetchDashboardData, t]);
 
     const handleApplyTimeFilter = (params: {
         mode: TimeFilterMode;
@@ -441,22 +635,39 @@ const ProductionOverviewPage: React.FC = () => {
     return (
         <div style={{ padding: '0 4px 24px 4px' }}>
             <ResponsivePageHeader
-                title={
-                    selectedMachineCode
-                        ? `${t('permissionSubjects.production_overview')} — ${selectedMachineCode}`
-                        : t('permissionSubjects.production_overview')
-                }
+                title={t('permissionSubjects.production_overview')}
                 rightContent={headerActions}
             />
 
             <Spin spinning={isLoadingData}>
-                {selectedMachineCode && activeMachineDetail ? (
+                {selectedMachineCode ? (
                     /* Machine Detail View */
                     <MachineDetailView
-                        machineDetail={activeMachineDetail}
-                        machineList={overviewData.machineOeeList}
-                        onSelectMachine={(machineCode) => setSelectedMachineCode(machineCode)}
-                        onBack={() => setSelectedMachineCode(null)}
+                        machineCode={selectedMachineCode}
+                        machineId={resolvedMachineId}
+                        machineName={
+                            singleMachinePerformance?.machineName ||
+                            machineProductionSeries?.machineName ||
+                            singleMachineKpis?.efficiency?.machineName ||
+                            singleMachineKpis?.capacity?.machineName ||
+                            selectedMachineCode
+                        }
+                        machineList={availableMachineList}
+                        productionSeries={machineProductionSeries}
+                        performanceSeries={singleMachinePerformance}
+                        singleMachineKpis={singleMachineKpis}
+                        isLoadingSeries={isLoadingMachineSeries}
+                        isLoadingPerformance={isLoadingMachinePerformance}
+                        isLoadingKpis={isLoadingMachineKpis}
+                        subtitle={activeFilterLabel}
+                        onSelectMachine={handleSelectMachine}
+                        onBack={() => {
+                            setSelectedMachineCode(null);
+                            setSelectedMachineId(null);
+                            setMachineProductionSeries(null);
+                            setSingleMachinePerformance(null);
+                            setSingleMachineKpis(null);
+                        }}
                         onDowntimeClick={() => setIsErrorModalOpen(true)}
                     />
                 ) : (
@@ -474,15 +685,14 @@ const ProductionOverviewPage: React.FC = () => {
                                 <MachineOeeChartCard
                                     data={currentMachineEfficiency}
                                     subtitle={activeFilterLabel}
-                                    onSelectMachine={(machineCode) =>
-                                        setSelectedMachineCode(machineCode)
-                                    }
+                                    onSelectMachine={handleSelectMachine}
                                 />
                             </Col>
                             <Col xs={24} lg={12}>
                                 <MachinePlanVsActualChartCard
                                     data={currentMachineProduction}
                                     subtitle={activeFilterLabel}
+                                    onSelectMachine={handleSelectMachine}
                                 />
                             </Col>
                         </Row>

@@ -74,6 +74,15 @@ export const ENDPOINTS = {
             MACHINE_STATUS_SUMMARY_BY_DATE_RANGE: `${BASE_PATHS.SPACES_MONITORING}/machineStatusSummary/byDateRange`,
             MACHINE_STATUS_LOG_CHART_BY_FILTER: `${BASE_PATHS.SPACES_MONITORING}/machineStatusLogChart/byFilter`,
             MACHINE_STATUS_LOG_CHART_BY_DATE_RANGE: `${BASE_PATHS.SPACES_MONITORING}/machineStatusLogChart/byDateRange`,
+            PERFORMANCE_REPORT_BY_FILTER: `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byFilter`,
+            PERFORMANCE_REPORT_BY_DATE_RANGE: `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byDateRange`,
+            PERFORMANCE_REPORT_BY_MACHINE_BY_FILTER: (machineId: PathParam) =>
+                WITH_PARAM(`${BASE_PATHS.SPACES_MONITORING}/performanceReport/byFilter`, machineId),
+            PERFORMANCE_REPORT_BY_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+                WITH_PARAM(
+                    `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byDateRange`,
+                    machineId
+                ),
         },
     },
     SPACE_LEVELS: {
@@ -213,8 +222,33 @@ export const ENDPOINTS = {
         EFFICIENCY_BY_MACHINE_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/efficiency/byMachine/byDateRange`,
         PRODUCTION_BY_MACHINE_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byMachine/byFilter`,
         PRODUCTION_BY_MACHINE_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byMachine/byDateRange`,
+        PRODUCTION_BY_MACHINE_SERIES_BY_FILTER: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/production/byMachine/byFilter`, machineId),
+        PRODUCTION_BY_MACHINE_SERIES_BY_DATE_RANGE: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/production/byMachine/byDateRange`, machineId),
         PRODUCTION_BY_ITEM_BY_FILTER: `${BASE_PATHS.DASHBOARD}/production/byItem/byFilter`,
         PRODUCTION_BY_ITEM_BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/production/byItem/byDateRange`,
+        // Single machine KPI endpoints (DASHBOARD_KPI_WIDGETS_SINGLE_MACHINE.md)
+        EFFICIENCY_FOR_MACHINE_BY_FILTER: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/efficiency/byFilter`, machineId),
+        EFFICIENCY_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/efficiency/byDateRange`, machineId),
+        CAPACITY_FOR_MACHINE_BY_FILTER: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/capacity/byFilter`, machineId),
+        CAPACITY_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/capacity/byDateRange`, machineId),
+        DOWNTIME_FOR_MACHINE_BY_FILTER: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/downtime/byFilter`, machineId),
+        DOWNTIME_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/downtime/byDateRange`, machineId),
+        PRODUCTION_FOR_MACHINE_BY_FILTER: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/production/byFilter`, machineId),
+        PRODUCTION_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/production/byDateRange`, machineId),
+        RUNTIME_FOR_MACHINE_BY_FILTER: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/runtime/byFilter`, machineId),
+        RUNTIME_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+            WITH_PARAM(`${BASE_PATHS.DASHBOARD}/runtime/byDateRange`, machineId),
     },
 } as const;
 
