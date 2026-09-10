@@ -72,8 +72,7 @@ const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.memo(
         const [loadingErrorDetails, setLoadingErrorDetails] = useState(false);
 
         const reduxState = useAppSelector((state) => state.factoryOverview) as
-            | IFactoryOverviewStoreState
-            | undefined;
+            IFactoryOverviewStoreState | undefined;
 
         // Use Redux spaceData or fallback to custom mock data if not loaded in store
         const spaceData = useMemo(() => {

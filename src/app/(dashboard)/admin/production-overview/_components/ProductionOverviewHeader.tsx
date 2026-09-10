@@ -57,139 +57,140 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
         isExporting = false,
     }) => {
         const { t } = useTranslation();
-    const screens = useBreakpoint();
-    const isMobile = !screens.md;
+        const screens = useBreakpoint();
+        const isMobile = !screens.md;
 
-    const isCustomRangeMode = currentMode !== 'PRESET';
-    const isExportDisabled =
-        !selectedFactoryId ||
-        (!isCustomRangeMode && currentPeriodId === null && currentShiftId === null);
+        const isCustomRangeMode = currentMode !== 'PRESET';
+        const isExportDisabled =
+            !selectedFactoryId ||
+            (!isCustomRangeMode && currentPeriodId === null && currentShiftId === null);
 
-    return isMobile ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-            {selectedFactoryId !== null &&
-                (isLoadingSpaces ? (
-                    <Skeleton.Input active block style={{ height: 32 }} />
-                ) : (
-                    <Select
-                        value={selectedFactoryId}
-                        onChange={onFactoryChange}
-                        options={spaces.map((f) => ({
-                            label: `${f.spaceCode} — ${f.spaceName}`,
-                            value: f.spaceId,
-                        }))}
-                        style={{ width: '100%' }}
-                        showSearch={{
-                            filterOption: (input, option) =>
-                                ((option?.label as string) ?? '')
-                                    .toLowerCase()
-                                    .includes(input.toLowerCase()),
-                        }}
-                    />
-                ))}
+        return isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+                {selectedFactoryId !== null &&
+                    (isLoadingSpaces ? (
+                        <Skeleton.Input active block style={{ height: 32 }} />
+                    ) : (
+                        <Select
+                            value={selectedFactoryId}
+                            onChange={onFactoryChange}
+                            options={spaces.map((f) => ({
+                                label: `${f.spaceCode} — ${f.spaceName}`,
+                                value: f.spaceId,
+                            }))}
+                            style={{ width: '100%' }}
+                            showSearch={{
+                                filterOption: (input, option) =>
+                                    ((option?.label as string) ?? '')
+                                        .toLowerCase()
+                                        .includes(input.toLowerCase()),
+                            }}
+                        />
+                    ))}
 
-            <TimeFilterPopover
-                currentMode={currentMode}
-                currentPeriodId={currentPeriodId}
-                currentShiftId={currentShiftId}
-                currentStartDate={startDate}
-                currentEndDate={endDate}
-                groupedOptions={groupedOptions}
-                industryFilters={industryFilters}
-                isShiftActive={isShiftActive}
-                onApply={onApplyTimeFilter}
-                placement="bottomLeft"
-            />
+                <TimeFilterPopover
+                    currentMode={currentMode}
+                    currentPeriodId={currentPeriodId}
+                    currentShiftId={currentShiftId}
+                    currentStartDate={startDate}
+                    currentEndDate={endDate}
+                    groupedOptions={groupedOptions}
+                    industryFilters={industryFilters}
+                    isShiftActive={isShiftActive}
+                    onApply={onApplyTimeFilter}
+                    placement="bottomLeft"
+                />
 
-            <Button
-                block
-                type="primary"
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                loading={isLoadingData}
-                style={{ borderRadius: 8 }}
-            >
-                {t('spaceMonitoring.timeFilter.refreshData', 'Làm mới dữ liệu')}
-            </Button>
-
-            <Button
-                block
-                type="primary"
-                icon={<FileExcelOutlined />}
-                onClick={onExportExcel}
-                loading={isExporting}
-                disabled={isExportDisabled}
-                style={{ borderRadius: 8 }}
-            >
-                {t('common.exportExcel', 'Xuất Excel')}
-            </Button>
-        </div>
-    ) : (
-        <div
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                flexWrap: 'wrap',
-            }}
-        >
-            {selectedFactoryId !== null &&
-                (isLoadingSpaces ? (
-                    <Skeleton.Input active style={{ width: 220, height: 32 }} />
-                ) : (
-                    <Select
-                        value={selectedFactoryId}
-                        onChange={onFactoryChange}
-                        options={spaces.map((f) => ({
-                            label: `${f.spaceCode} — ${f.spaceName}`,
-                            value: f.spaceId,
-                        }))}
-                        style={{ width: 220 }}
-                        showSearch={{
-                            filterOption: (input, option) =>
-                                ((option?.label as string) ?? '')
-                                    .toLowerCase()
-                                    .includes(input.toLowerCase()),
-                        }}
-                    />
-                ))}
-
-            <TimeFilterPopover
-                currentMode={currentMode}
-                currentPeriodId={currentPeriodId}
-                currentShiftId={currentShiftId}
-                currentStartDate={startDate}
-                currentEndDate={endDate}
-                groupedOptions={groupedOptions}
-                industryFilters={industryFilters}
-                isShiftActive={isShiftActive}
-                onApply={onApplyTimeFilter}
-                placement="bottomRight"
-            />
-
-            <Tooltip title={t('spaceMonitoring.timeFilter.refreshData', 'Làm mới dữ liệu')}>
                 <Button
+                    block
+                    type="primary"
                     icon={<ReloadOutlined />}
                     onClick={onRefresh}
                     loading={isLoadingData}
                     style={{ borderRadius: 8 }}
-                    type="primary"
-                />
-            </Tooltip>
+                >
+                    {t('spaceMonitoring.timeFilter.refreshData', 'Làm mới dữ liệu')}
+                </Button>
 
-            <Button
-                type="primary"
-                icon={<FileExcelOutlined />}
-                onClick={onExportExcel}
-                loading={isExporting}
-                disabled={isExportDisabled}
-                style={{ borderRadius: 8 }}
+                <Button
+                    block
+                    type="primary"
+                    icon={<FileExcelOutlined />}
+                    onClick={onExportExcel}
+                    loading={isExporting}
+                    disabled={isExportDisabled}
+                    style={{ borderRadius: 8 }}
+                >
+                    {t('common.exportExcel', 'Xuất Excel')}
+                </Button>
+            </div>
+        ) : (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                }}
             >
-                {t('common.exportExcel', 'Xuất Excel')}
-            </Button>
-        </div>
-    );
-});
+                {selectedFactoryId !== null &&
+                    (isLoadingSpaces ? (
+                        <Skeleton.Input active style={{ width: 220, height: 32 }} />
+                    ) : (
+                        <Select
+                            value={selectedFactoryId}
+                            onChange={onFactoryChange}
+                            options={spaces.map((f) => ({
+                                label: `${f.spaceCode} — ${f.spaceName}`,
+                                value: f.spaceId,
+                            }))}
+                            style={{ width: 220 }}
+                            showSearch={{
+                                filterOption: (input, option) =>
+                                    ((option?.label as string) ?? '')
+                                        .toLowerCase()
+                                        .includes(input.toLowerCase()),
+                            }}
+                        />
+                    ))}
+
+                <TimeFilterPopover
+                    currentMode={currentMode}
+                    currentPeriodId={currentPeriodId}
+                    currentShiftId={currentShiftId}
+                    currentStartDate={startDate}
+                    currentEndDate={endDate}
+                    groupedOptions={groupedOptions}
+                    industryFilters={industryFilters}
+                    isShiftActive={isShiftActive}
+                    onApply={onApplyTimeFilter}
+                    placement="bottomRight"
+                />
+
+                <Tooltip title={t('spaceMonitoring.timeFilter.refreshData', 'Làm mới dữ liệu')}>
+                    <Button
+                        icon={<ReloadOutlined />}
+                        onClick={onRefresh}
+                        loading={isLoadingData}
+                        style={{ borderRadius: 8 }}
+                        type="primary"
+                    />
+                </Tooltip>
+
+                <Button
+                    type="primary"
+                    icon={<FileExcelOutlined />}
+                    onClick={onExportExcel}
+                    loading={isExporting}
+                    disabled={isExportDisabled}
+                    style={{ borderRadius: 8 }}
+                >
+                    {t('common.exportExcel', 'Xuất Excel')}
+                </Button>
+            </div>
+        );
+    }
+);
 
 ProductionOverviewHeader.displayName = 'ProductionOverviewHeader';
 
