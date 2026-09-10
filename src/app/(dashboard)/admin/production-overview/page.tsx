@@ -24,16 +24,30 @@ import {
     SingleMachineKpiSummaryState,
 } from '@/types/Dashboard';
 import { KpiSummaryData } from '@/configs/mockData/productionOverviewMockData';
+import { ExcelExportService } from '@/services/ExcelExportService';
 
-import { ProductionOverviewHeader, TimeFilterMode } from './_components/ProductionOverviewHeader';
+import { ProductionOverviewHeader } from './_components/ProductionOverviewHeader';
+import {
+    PeriodFilterMode,
+    TimeFilterApplyPayload,
+} from '@/app/(dashboard)/admin/space-monitoring/_components/TimeFilterPopover';
 import { KpiCardsSection } from './_components/KpiCardsSection';
 import { MachineOeeChartCard } from './_components/MachineOeeChartCard';
 import { MachinePlanVsActualChartCard } from './_components/MachinePlanVsActualChartCard';
 import { ProductPlanVsActualChartCard } from './_components/ProductPlanVsActualChartCard';
 import { MachineDetailView, MachineListItem } from './_components/MachineDetailView';
 
+const isShiftActiveHelper = (filter: IndustryFilter): boolean => {
+    if (filter.category !== 'SHIFT') return false;
+    const currentTime = dayjs().format('HH:mm:ss');
+    if (!filter.crossesMidnight) {
+        return currentTime >= filter.startTime && currentTime < filter.endTime;
+    }
+    return currentTime >= filter.startTime || currentTime < filter.endTime;
+};
+
 const ProductionOverviewPage: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const dispatch = useAppDispatch();
     usePageTitle(t('permissionSubjects.production_overview'));
 
@@ -44,8 +58,8 @@ const ProductionOverviewPage: React.FC = () => {
     const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null);
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
 
-    // Time filter states
-    const [timeFilterMode, setTimeFilterMode] = useState<TimeFilterMode>('PRESET');
+    // Time filter states (synced with space-monitoring PeriodFilterMode)
+    const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode>('PRESET');
     const [selectedTimePeriod, setSelectedTimePeriod] = useState<number | null>(null);
     const [selectedShiftFilterId, setSelectedShiftFilterId] = useState<number | null>(null);
     const [startDate, setStartDate] = useState<string>(dayjs().format('YYYY-MM-DD'));
@@ -99,15 +113,6 @@ const ProductionOverviewPage: React.FC = () => {
                 const filters = await IndustryFilterService.getIndustryFiltersForPicking();
                 setIndustryFilters(filters);
                 if (filters.length > 0 && selectedTimePeriod === null) {
-                    const isShiftActive = (filter: IndustryFilter): boolean => {
-                        if (filter.category !== 'SHIFT') return false;
-                        const currentTime = dayjs().format('HH:mm:ss');
-                        if (!filter.crossesMidnight) {
-                            return currentTime >= filter.startTime && currentTime < filter.endTime;
-                        }
-                        return currentTime >= filter.startTime || currentTime < filter.endTime;
-                    };
-
                     const dayShiftFilter =
                         filters.find(
                             (f) =>
@@ -118,7 +123,7 @@ const ProductionOverviewPage: React.FC = () => {
                                     f.displayNameVi?.toLowerCase().includes('ca 1') ||
                                     f.displayNameEn?.toLowerCase().includes('shift 1'))
                         ) ||
-                        filters.find((f) => f.category === 'SHIFT' && isShiftActive(f)) ||
+                        filters.find((f) => f.category === 'SHIFT' && isShiftActiveHelper(f)) ||
                         filters.find((f) => f.category === 'SHIFT');
 
                     if (dayShiftFilter) {
@@ -137,26 +142,121 @@ const ProductionOverviewPage: React.FC = () => {
             }
         };
         fetchFilters();
+    }, [selectedTimePeriod]);
+
+    const isCustomRangeMode = timeFilterMode !== 'PRESET';
+
+    const isShiftActive = useCallback((filter: IndustryFilter): boolean => {
+        return isShiftActiveHelper(filter);
     }, []);
+
+    const timePeriodOptions = useMemo(() => {
+        const currentLang = i18n.language;
+        return industryFilters.map((filter: IndustryFilter) => ({
+            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+            value: filter.filterId,
+            category: filter.category,
+        }));
+    }, [industryFilters, i18n.language]);
+
+    const groupedTimePeriodOptions = useMemo(
+        () => ({
+            SHIFT: timePeriodOptions.filter((option) => option.category === 'SHIFT'),
+            PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
+        }),
+        [timePeriodOptions]
+    );
+
+    const currentPeriodId = useMemo(() => {
+        if (timeFilterMode !== 'PRESET') return null;
+        const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+        return primary?.category === 'PERIOD' ? selectedTimePeriod : null;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+
+    const currentShiftId = useMemo(() => {
+        if (timeFilterMode === 'PRESET') {
+            const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+            return primary?.category === 'PERIOD' ? selectedShiftFilterId : selectedTimePeriod;
+        }
+        return selectedTimePeriod;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod, selectedShiftFilterId]);
 
     // Active period filter object lookup
     const activeFilterObj = useMemo(() => {
-        if (timeFilterMode === 'CUSTOM_RANGE') return null;
+        if (timeFilterMode !== 'PRESET') return null;
         return industryFilters.find((f) => f.filterId === selectedTimePeriod);
     }, [timeFilterMode, industryFilters, selectedTimePeriod]);
 
-    // Subtitle label for current filter
+    // Subtitle label for current filter (synced with space-monitoring)
     const activeFilterLabel = useMemo(() => {
-        if (timeFilterMode === 'CUSTOM_RANGE') {
-            return `${dayjs(startDate).format('DD/MM/YYYY')} – ${dayjs(endDate).format('DD/MM/YYYY')}`;
+        const currentLang = i18n.language;
+        const shiftFilter =
+            currentShiftId != null
+                ? industryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
+        const shiftLabel = shiftFilter
+            ? currentLang === 'vi'
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
+            : null;
+
+        if (timeFilterMode === 'WEEK') {
+            const startStr = dayjs(startDate).format('DD/MM');
+            const endStr = dayjs(endDate).format('DD/MM');
+            const weekNum = dayjs(startDate).isoWeek();
+            const yearStr = dayjs(startDate).format('YYYY');
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', { week: weekNum, year: yearStr })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
         }
-        return (
-            activeFilterObj?.displayNameVi ||
-            activeFilterObj?.displayNameEn ||
-            activeFilterObj?.periodCode ||
-            ''
-        );
-    }, [timeFilterMode, startDate, endDate, activeFilterObj]);
+
+        if (timeFilterMode === 'MONTH') {
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: dayjs(startDate).format('MM'),
+                year: dayjs(startDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'QUARTER') {
+            const quarterNum = dayjs(startDate).quarter();
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: dayjs(startDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'YEAR') {
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: dayjs(startDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'CUSTOM_RANGE') {
+            const dateLabel = `${dayjs(startDate).format('DD/MM')} → ${dayjs(endDate).format('DD/MM')}`;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
+        }
+
+        const period = industryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
+            ? currentLang === 'vi'
+                ? period.displayNameVi
+                : period.displayNameEn
+            : null;
+
+        if (!periodLabel) return shiftLabel ?? '';
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
+    }, [
+        currentPeriodId,
+        currentShiftId,
+        industryFilters,
+        timeFilterMode,
+        startDate,
+        endDate,
+        i18n.language,
+        t,
+    ]);
 
     // Request Key guard to prevent duplicate API calls
     const lastFetchedParamsRef = useRef<string>('');
@@ -176,23 +276,31 @@ const ProductionOverviewPage: React.FC = () => {
             setIsLoadingData(true);
             try {
                 const isShift = activeFilterObj?.category === 'SHIFT';
+                const apiMode: 'PRESET' | 'CUSTOM_RANGE' = isCustomRangeMode
+                    ? 'CUSTOM_RANGE'
+                    : 'PRESET';
+                const effectiveFilterId = isCustomRangeMode
+                    ? (currentShiftId ?? null)
+                    : selectedTimePeriod;
+                const effectiveShiftFilterId = isCustomRangeMode ? null : selectedShiftFilterId;
+                const effectiveIsShift = isCustomRangeMode ? !!currentShiftId : isShift;
 
                 const [kpiResult, chartsResult] = await Promise.allSettled([
                     DashboardService.getOverviewKpis({
                         spaceId: selectedFactoryId,
-                        mode: timeFilterMode,
-                        filterId: selectedTimePeriod,
-                        shiftFilterId: selectedShiftFilterId,
-                        isShiftFilter: isShift,
+                        mode: apiMode,
+                        filterId: effectiveFilterId,
+                        shiftFilterId: effectiveShiftFilterId,
+                        isShiftFilter: effectiveIsShift,
                         startDate,
                         endDate,
                     }),
                     DashboardService.getDashboardCharts({
                         spaceId: selectedFactoryId,
-                        mode: timeFilterMode,
-                        filterId: selectedTimePeriod,
-                        shiftFilterId: selectedShiftFilterId,
-                        isShiftFilter: isShift,
+                        mode: apiMode,
+                        filterId: effectiveFilterId,
+                        shiftFilterId: effectiveShiftFilterId,
+                        isShiftFilter: effectiveIsShift,
                         startDate,
                         endDate,
                     }),
@@ -475,11 +583,12 @@ const ProductionOverviewPage: React.FC = () => {
                 const isShift = activeFilterObj?.category === 'SHIFT';
                 let prodPromise: Promise<DashboardMachineProductionSeriesResponse>;
                 let perfPromise: Promise<SingleMachinePerformanceResponse>;
+                const apiMode: 'PRESET' | 'CUSTOM_RANGE' = isCustomRangeMode
+                    ? 'CUSTOM_RANGE'
+                    : 'PRESET';
 
-                if (timeFilterMode === 'CUSTOM_RANGE' && startDate && endDate) {
-                    const shiftFilter = isShift
-                        ? (selectedTimePeriod ?? undefined)
-                        : (selectedShiftFilterId ?? undefined);
+                if (isCustomRangeMode && startDate && endDate) {
+                    const shiftFilter = currentShiftId ?? undefined;
 
                     prodPromise = DashboardService.getMachineProductionSeriesByDateRange({
                         machineId: resolvedMachineId,
@@ -509,12 +618,18 @@ const ProductionOverviewPage: React.FC = () => {
                 }
 
                 // Fetch Single Machine KPI Widgets (DASHBOARD_KPI_WIDGETS_SINGLE_MACHINE.md)
+                const effectiveFilterId = isCustomRangeMode
+                    ? (currentShiftId ?? null)
+                    : selectedTimePeriod;
+                const effectiveShiftFilterId = isCustomRangeMode ? null : selectedShiftFilterId;
+                const effectiveIsShift = isCustomRangeMode ? !!currentShiftId : isShift;
+
                 const kpiPromise = DashboardService.getSingleMachineOverviewKpis({
                     machineId: resolvedMachineId,
-                    mode: timeFilterMode,
-                    filterId: selectedTimePeriod,
-                    shiftFilterId: selectedShiftFilterId,
-                    isShiftFilter: isShift,
+                    mode: apiMode,
+                    filterId: effectiveFilterId,
+                    shiftFilterId: effectiveShiftFilterId,
+                    isShiftFilter: effectiveIsShift,
                     startDate,
                     endDate,
                 });
@@ -574,6 +689,7 @@ const ProductionOverviewPage: React.FC = () => {
     }, [
         resolvedMachineId,
         timeFilterMode,
+        isCustomRangeMode,
         selectedTimePeriod,
         selectedShiftFilterId,
         startDate,
@@ -592,34 +708,66 @@ const ProductionOverviewPage: React.FC = () => {
         toast.success(t('productionOverview.actions.refreshSuccess'));
     }, [selectedMachineCode, fetchDashboardData, t]);
 
-    const handleApplyTimeFilter = (params: {
-        mode: TimeFilterMode;
-        periodId: number | null;
-        shiftId: number | null;
-        dateRange: [Dayjs, Dayjs] | null;
-    }) => {
-        setTimeFilterMode(params.mode);
-        setSelectedTimePeriod(params.periodId);
-        setSelectedShiftFilterId(params.shiftId);
-        if (params.dateRange) {
-            setStartDate(params.dateRange[0].format('YYYY-MM-DD'));
-            setEndDate(params.dateRange[1].format('YYYY-MM-DD'));
-        }
-    };
+    const handleApplyTimeFilter = useCallback((payload: TimeFilterApplyPayload) => {
+        const {
+            mode,
+            primaryFilterId,
+            secondaryShiftId,
+            startDate: sDate,
+            endDate: eDate,
+        } = payload;
+        setTimeFilterMode(mode);
+        setSelectedTimePeriod(primaryFilterId);
+        setSelectedShiftFilterId(secondaryShiftId);
+        setStartDate(sDate);
+        setEndDate(eDate);
+    }, []);
 
-    const handleExportExcel = async () => {
+    const handleExportExcel = useCallback(async () => {
+        if (!selectedFactoryId) return;
+
         setIsExporting(true);
         try {
-            toast.info(t('productionOverview.actions.preparingReport'));
-            setTimeout(() => {
-                setIsExporting(false);
-                toast.success(t('productionOverview.actions.exportSuccess'));
-            }, 800);
-        } catch (_error) {
+            const { blob, fileName } = isCustomRangeMode
+                ? await ExcelExportService.getMachineStatusLogReportByDateRange(
+                      selectedFactoryId,
+                      startDate,
+                      endDate,
+                      currentShiftId ?? undefined
+                  )
+                : await ExcelExportService.getMachineStatusLogReportByFilter(
+                      selectedFactoryId,
+                      (currentPeriodId ?? currentShiftId)!,
+                      currentPeriodId !== null ? currentShiftId : null
+                  );
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download =
+                fileName ??
+                `machine_status_log_report_${selectedFactoryId}_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success(
+                t('productionOverview.actions.exportSuccess', 'Xuất báo cáo thành công!')
+            );
+        } catch (error) {
+            console.error('[Production Overview] Excel export failed:', error);
+            toast.error(t('common.error', 'Lỗi khi tải báo cáo'));
+        } finally {
             setIsExporting(false);
-            toast.error(t('productionOverview.actions.exportError'));
         }
-    };
+    }, [
+        selectedFactoryId,
+        isCustomRangeMode,
+        startDate,
+        endDate,
+        currentPeriodId,
+        currentShiftId,
+        t,
+    ]);
 
     const headerActions = useMemo(
         () => (
@@ -630,15 +778,18 @@ const ProductionOverviewPage: React.FC = () => {
                     setSelectedFactoryId(id);
                 }}
                 industryFilters={industryFilters}
-                selectedTimePeriod={selectedTimePeriod}
-                selectedShiftFilterId={selectedShiftFilterId}
-                timeFilterMode={timeFilterMode}
+                currentMode={timeFilterMode}
+                currentPeriodId={currentPeriodId}
+                currentShiftId={currentShiftId}
                 startDate={startDate}
                 endDate={endDate}
+                groupedOptions={groupedTimePeriodOptions}
+                isShiftActive={isShiftActive}
                 onApplyTimeFilter={handleApplyTimeFilter}
                 onRefresh={handleRefresh}
                 onExportExcel={handleExportExcel}
-                isLoading={isLoadingSpaces || isLoadingData}
+                isLoadingSpaces={isLoadingSpaces}
+                isLoadingData={isLoadingData}
                 isExporting={isExporting}
             />
         ),
@@ -646,15 +797,19 @@ const ProductionOverviewPage: React.FC = () => {
             spaces,
             selectedFactoryId,
             industryFilters,
-            selectedTimePeriod,
-            selectedShiftFilterId,
             timeFilterMode,
+            currentPeriodId,
+            currentShiftId,
             startDate,
             endDate,
+            groupedTimePeriodOptions,
+            isShiftActive,
+            handleApplyTimeFilter,
+            handleRefresh,
+            handleExportExcel,
             isLoadingSpaces,
             isLoadingData,
             isExporting,
-            handleRefresh,
         ]
     );
 
@@ -742,7 +897,7 @@ const ProductionOverviewPage: React.FC = () => {
                 filterId={selectedTimePeriod}
                 startDate={startDate}
                 endDate={endDate}
-                isDateRange={timeFilterMode === 'CUSTOM_RANGE'}
+                isDateRange={isCustomRangeMode}
                 restrictToMachineIds={selectedMachineCode ? [selectedMachineCode] : undefined}
             />
         </div>
