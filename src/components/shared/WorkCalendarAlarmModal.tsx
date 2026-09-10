@@ -56,8 +56,8 @@ export const WorkCalendarAlarmModal: React.FC = () => {
         return null;
     }
 
-    const targetYear = alarmData.targetYear || alarmData.year || new Date().getFullYear();
-    const targetMonth = alarmData.targetMonth || alarmData.month || new Date().getMonth() + 1;
+    const targetYear = alarmData.targetYear;
+    const targetMonth = alarmData.targetMonth;
 
     const handleConfigureNow = () => {
         sessionStorage.setItem('has_seen_calendar_popup', 'true');

@@ -13,7 +13,6 @@ export interface WorkCalendarSummaryResponse {
     totalWorkingDays: number;
     totalOffDays: number;
     totalPlannedHours: number;
-    isConfirmed?: boolean;
 }
 
 export interface WorkCalendarMonthResponse {
@@ -34,9 +33,6 @@ export interface WorkCalendarAlarmResponse {
     shouldShowAlarm: boolean;
     targetYear?: number;
     targetMonth?: number;
-    year?: number;
-    month?: number;
-    message?: string;
 }
 
 export interface WorkCalendarConfirmRequest {
