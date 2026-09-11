@@ -1,4 +1,6 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
+import { MachineOperatorHistoryModalData } from '@/types/MachineOperatorHistory';
 
 const VALIDATION_CONFIG = Object.freeze({
     ZONE_ID: { required: true },
@@ -8,7 +10,10 @@ const VALIDATION_CONFIG = Object.freeze({
     NOTES: { required: false },
 });
 
-export const getMachineStaffingFormFields = (t: any, modalData: any): FormFieldConfig[] => {
+export const getMachineStaffingFormFields = (
+    t: TFunction,
+    modalData: MachineOperatorHistoryModalData | null
+): FormFieldConfig[] => {
     return [
         // ZoneId (hidden)
         {

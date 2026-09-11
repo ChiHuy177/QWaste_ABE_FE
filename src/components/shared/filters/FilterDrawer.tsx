@@ -1,6 +1,7 @@
 'use client';
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { Button, Col, Drawer, Grid, Input, Popover, Row, theme } from 'antd';
+import type { InputRef } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { FilterField } from './AdvancedFilterPanel';
 
@@ -33,7 +34,7 @@ const FilterDrawer = ({
     const { token } = theme.useToken();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
-    const firstInputRef = useRef<any>(null);
+    const firstInputRef = useRef<InputRef>(null);
 
     const [localValues, setLocalValues] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};

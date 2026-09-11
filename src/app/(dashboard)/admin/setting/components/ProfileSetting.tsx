@@ -170,7 +170,7 @@ export function ProfileSetting({
         setFormData((prev) => ({ ...prev, [field]: value }));
 
         if (errors[field]) {
-            setErrors((prev: any) => ({ ...prev, [field]: '' }));
+            setErrors((prev: ValidationErrors) => ({ ...prev, [field]: '' }));
         }
     };
 

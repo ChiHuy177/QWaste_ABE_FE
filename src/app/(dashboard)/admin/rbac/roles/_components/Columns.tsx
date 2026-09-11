@@ -2,18 +2,21 @@ import { ColumnsType } from 'antd/es/table';
 import { Role } from '@/types/Role';
 import { Button, Space, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { TFunction } from 'i18next';
 
 export type RoleTableColumnProps = {
     onEdit?: (role: Role) => void;
     onDelete?: (role: Role) => void;
-    t: (key: string, options?: any) => string;
+    t: TFunction;
     isMobileResponsive?: boolean;
 };
+
+type SimpleTranslate = (key: string, options?: Record<string, unknown>) => string;
 
 export const getRoleTableColumns = (
     props?: RoleTableColumnProps
 ): ColumnsType<Role> => {
-    const t = props?.t || ((key: string) => key);
+    const t: SimpleTranslate = props?.t || ((key: string) => key);
 
     const columns: ColumnsType<Role> = [
         {
@@ -35,7 +38,7 @@ export const getRoleTableColumns = (
             title: t('roleManagement.columns.permissions'),
             key: 'permissions',
             width: '15%',
-            render: (_: any, record: Role) => (
+            render: (_: unknown, record: Role) => (
                 <Tag color="blue">
                     {t('roleManagement.columns.permissionsCount', { count: record.permissions?.length || 0 })}
                 </Tag>
@@ -46,7 +49,7 @@ export const getRoleTableColumns = (
             key: 'actions',
             fixed: props?.isMobileResponsive ? undefined : 'right',
             width: props?.isMobileResponsive ? 100 : '15%',
-            render: (_: any, record: Role) => (
+            render: (_: unknown, record: Role) => (
                 <Space size="small">
                     <Button
                         type="link"

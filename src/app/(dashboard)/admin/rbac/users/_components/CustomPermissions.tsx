@@ -278,7 +278,7 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
             title: t('userManagement.customPermissions.columns.source'),
             key: 'source',
             width: '15%',
-            render: (_: any, record: Permission) => {
+            render: (_: unknown, record: Permission) => {
                 if (!record.permissionId) return null;
                 // Find which roles contain this permission
                 const rolesWithPermission = selectedRoles
@@ -301,7 +301,7 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
             title: t('userManagement.customPermissions.columns.status'),
             key: 'status',
             width: '10%',
-            render: (_: any, record: Permission) => {
+            render: (_: unknown, record: Permission) => {
                 const custom = getCustomPermission(record.permissionId!);
 
                 // Only show DENIED if user explicitly denied this role permission
@@ -316,7 +316,7 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
             title: t('userManagement.customPermissions.columns.actions'),
             key: 'actions',
             width: '18%',
-            render: (_: any, record: Permission) => {
+            render: (_: unknown, record: Permission) => {
                 if (!record.permissionId) return null;
                 const custom = getCustomPermission(record.permissionId);
 
@@ -375,7 +375,7 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
             title: t('userManagement.customPermissions.columns.status'),
             key: 'status',
             width: '10%',
-            render: (_: any, record: Permission) => {
+            render: (_: unknown, record: Permission) => {
                 const custom = getCustomPermission(record.permissionId!);
 
                 // Only show GRANTED if user explicitly granted this available permission
@@ -390,7 +390,7 @@ export const CustomPermissions: React.FC<CustomPermissionsProps> = ({
             title: t('userManagement.customPermissions.columns.actions'),
             key: 'actions',
             width: '33%',
-            render: (_: any, record: Permission) => {
+            render: (_: unknown, record: Permission) => {
                 if (!record.permissionId) return null;
                 const custom = getCustomPermission(record.permissionId);
 

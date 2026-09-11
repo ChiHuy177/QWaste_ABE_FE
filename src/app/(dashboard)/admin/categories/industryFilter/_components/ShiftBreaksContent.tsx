@@ -20,12 +20,21 @@ import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 
 import { toast } from 'sonner';
 import { ColumnsType } from 'antd/es/table';
+import { TFunction } from 'i18next';
 
 import { ShiftBreakPeriodService } from '@/services/ShiftBreakPeriodService';
 import { ShiftBreakPeriod } from '@/types/ShiftBreakPeriod';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import i18n from '../../../../../../../i18n';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+
+interface ShiftBreakFormValues {
+    breakNameEn?: string;
+    breakNameVi?: string;
+    sortOrder: number;
+    breakStartTime?: Dayjs;
+    breakEndTime?: Dayjs;
+}
 
 const VALIDATION_CONFIG = Object.freeze({
     BREAK_NAME_EN: { min: 2, max: 100, required: true },
@@ -38,7 +47,7 @@ const { Text } = Typography;
 
 type Props = {
     filter: IndustryFilter;
-    t: any;
+    t: TFunction;
     readOnly?: boolean;
 };
 
@@ -110,14 +119,16 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
         }
     };
 
-    const handleSubmit = async (values: any) => {
+    const handleSubmit = async (values: ShiftBreakFormValues) => {
         try {
             setLoading(true);
 
+            // Required fields per VALIDATION_CONFIG.BREAK_TIME — form validation guarantees
+            // these are set by the time onFinish/handleSubmit fires.
             const payload = {
                 ...values,
-                breakStartTime: values.breakStartTime?.format('HH:mm'),
-                breakEndTime: values.breakEndTime?.format('HH:mm'),
+                breakStartTime: values.breakStartTime!.format('HH:mm'),
+                breakEndTime: values.breakEndTime!.format('HH:mm'),
             };
 
             const shiftStart = dayjs(filter.startTime, 'HH:mm');
@@ -169,7 +180,7 @@ const ShiftBreaksContent = ({ filter, t, readOnly = false }: Props) => {
 
             setFormOpen(false);
             fetchItems();
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast.error(t('common.error'));
         } finally {
             setLoading(false);

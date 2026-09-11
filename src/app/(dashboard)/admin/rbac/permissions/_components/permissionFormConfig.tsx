@@ -1,9 +1,11 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { getAllSubjects } from '@/configs/permissions/permissionRegistry';
+import { ACTIONS } from '@/configs/permissions/caslAbility';
 
-export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFieldConfig[] => {
+export const getPermissionFormFields = (t: TFunction, mode: 'create' | 'edit'): FormFieldConfig[] => {
     const subjects = getAllSubjects();
-    const actions = ['create', 'view', 'update', 'delete'];
+    const actions = ACTIONS;
 
     return [
         // Permission Name
@@ -37,7 +39,10 @@ export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFi
             type: 'select',
             placeholder: t('permissionManagement.form.subject.placeholder'),
             required: true,
-            options: subjects.map((s) => ({ value: s, label: t(`permissionSubjects.${s}`, { defaultValue: s }) })),
+            options: subjects.map((s) => ({
+                value: s,
+                label: t(`permissionSubjects.${s}`, { defaultValue: s }),
+            })),
             rules: [
                 {
                     required: true,
@@ -61,7 +66,7 @@ export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFi
             })),
             rules: [
                 {
-                    validator: (_: any, _value: string | string[], _callback: any) => {
+                    validator: (_: unknown, _value: string | string[], _callback: unknown) => {
                         // Will be validated together with customAction in form level
                         return Promise.resolve();
                     },
@@ -69,7 +74,8 @@ export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFi
             ],
             span: { xs: 24, sm: 12 },
             dependencies: ['customAction'],
-            disabledWhen: (values: Record<string, any>) => !!values.customAction?.trim(),
+            disabledWhen: (values: Record<string, unknown>) =>
+                typeof values.customAction === 'string' && !!values.customAction.trim(),
         },
 
         // Custom Action (text input)
@@ -82,7 +88,7 @@ export const getPermissionFormFields = (t: any, mode: 'create' | 'edit'): FormFi
             extra: t('permissionManagement.form.customAction.extra'),
             span: { xs: 24, sm: 12 },
             dependencies: ['action'],
-            disabledWhen: (values: Record<string, any>) =>
+            disabledWhen: (values: Record<string, unknown>) =>
                 mode === 'create' && Array.isArray(values.action) && values.action.length > 0,
         },
 

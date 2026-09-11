@@ -35,15 +35,20 @@ export const WorkCalendarAlarmModal: React.FC = () => {
     useEffect(() => {
         // ONLY users with PLANNER role receive/see the work calendar alarm popup
         if (!isPlanner || isWorkCalendarPage) return;
-        if (sessionStorage.getItem('has_seen_calendar_popup') === 'true') return;
 
         const runCheck = async () => {
             try {
                 const res = await WorkCalendarService.checkAlarm();
-                if (res?.shouldShowAlarm) {
-                    setAlarmData(res);
-                    setOpen(true);
-                }
+                if (!res?.shouldShowAlarm) return;
+
+                // Dismissal is scoped to the specific target month: the reminder can point
+                // at a different month later in the same tab session (e.g. crossing the
+                // day-25 rollover), so a stale dismissal must not suppress a new one.
+                const dismissKey = `has_seen_calendar_popup_${res.targetYear}-${res.targetMonth}`;
+                if (sessionStorage.getItem(dismissKey) === 'true') return;
+
+                setAlarmData(res);
+                setOpen(true);
             } catch (err) {
                 // Silently ignore alarm fetch errors on dashboard load
             }
@@ -56,17 +61,18 @@ export const WorkCalendarAlarmModal: React.FC = () => {
         return null;
     }
 
-    const targetYear = alarmData.targetYear || alarmData.year || new Date().getFullYear();
-    const targetMonth = alarmData.targetMonth || alarmData.month || new Date().getMonth() + 1;
+    const targetYear = alarmData.targetYear;
+    const targetMonth = alarmData.targetMonth;
+    const dismissKey = `has_seen_calendar_popup_${targetYear}-${targetMonth}`;
 
     const handleConfigureNow = () => {
-        sessionStorage.setItem('has_seen_calendar_popup', 'true');
+        sessionStorage.setItem(dismissKey, 'true');
         setOpen(false);
         router.push(`/admin/work-calendar?year=${targetYear}&month=${targetMonth}`);
     };
 
     const handleCloseLater = () => {
-        sessionStorage.setItem('has_seen_calendar_popup', 'true');
+        sessionStorage.setItem(dismissKey, 'true');
         setOpen(false);
     };
 

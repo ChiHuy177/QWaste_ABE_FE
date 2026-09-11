@@ -10,11 +10,13 @@ import {
     SolutionOutlined,
 } from '@ant-design/icons';
 import { Tabs, Card, Button, Skeleton, Alert, Space, theme } from 'antd';
+import type { GlobalToken } from 'antd/es/theme/interface';
 import { useTheme } from '@/hooks/useTheme';
 import { SecuritySettings } from './SecuritySettings';
 import { PreferenceSettings } from './PreferenceSettings';
 import { UserProfile, UserSettings } from '@/types/User';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 import { ProfileSetting } from './ProfileSetting';
 
 const DEFAULT_TAB = 'profile';
@@ -72,8 +74,8 @@ interface ErrorStateProps {
     onRetryLoad?: () => void;
     retryLoadSettings: () => void;
     isRefreshing: boolean;
-    token: any;
-    t: any;
+    token: GlobalToken;
+    t: TFunction;
 }
 
 const ErrorState = ({

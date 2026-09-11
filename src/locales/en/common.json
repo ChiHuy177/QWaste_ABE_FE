@@ -1990,6 +1990,9 @@
             "createdBy": "Created By",
             "updatedAt": "Updated At",
             "updatedBy": "Updated By"
+        },
+        "viewModal": {
+            "groupInfo": "Group Information"
         }
     },
     "staffManagement": {
@@ -2201,6 +2204,9 @@
                 "badRequest": "Invalid request. Please check your input and try again.",
                 "unauthorized": "You are not authorized to perform this action."
             }
+        },
+        "viewModal": {
+            "staffInfo": "Staff Information"
         }
     },
     "zoneManagement": {
@@ -4781,5 +4787,33 @@
         "all": "All",
         "other": "Other"
     },
-    "stepTemplates": "Step templates"
+    "stepTemplates": "Step templates",
+    "spaceMonitoring": {
+        "timeFilter": {
+            "title": "Time Filter",
+            "time": "Time",
+            "shifts": "Shifts",
+            "allShifts": "All",
+            "active": "Active",
+            "periodType": "Period Selection Mode",
+            "quickSelect": "Quick Select",
+            "presetOptions": "Preset Options",
+            "week": "By Week",
+            "month": "By Month",
+            "quarter": "By Quarter",
+            "year": "By Year",
+            "customRange": "Custom Date Range",
+            "selectWeek": "Select week",
+            "selectMonth": "Select month",
+            "selectQuarter": "Select quarter",
+            "selectYear": "Select year",
+            "selectDateRange": "Select date range",
+            "weekLabel": "Week {{week}}, {{year}}",
+            "monthLabel": "Month {{month}}/{{year}}",
+            "quarterLabel": "Q{{quarter}} {{year}}",
+            "yearLabel": "Year {{year}}",
+            "refreshData": "Refresh data",
+            "apply": "Apply"
+        }
+    }
 }

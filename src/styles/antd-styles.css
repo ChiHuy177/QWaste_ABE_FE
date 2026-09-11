@@ -1,3 +1,43 @@
+/* Makes an antd Table's scroll body fill its flex parent via pure CSS instead of
+   a JS-measured pixel height (see useAntdTableScroll). A JS-measured height is
+   always wrong for one frame on hard refresh: SSR paints the hook's fallback
+   value before hydration can correct it, which visibly shifts the pagination
+   bar. CSS resolves this identically on the very first paint, SSR or not.
+   Apply by adding this class to the <Table> itself — it merges onto the root
+   .ant-table-wrapper. Requires the Table to sit inside a bounded-height flex
+   column ancestor (the existing tableContainerRef div pattern). */
+.qw-table-scroll-fill {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.qw-table-scroll-fill .ant-spin,
+.qw-table-scroll-fill .ant-spin-container,
+.qw-table-scroll-fill .ant-table,
+.qw-table-scroll-fill .ant-table-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.qw-table-scroll-fill .ant-table-header {
+    flex: 0 0 auto;
+}
+
+.qw-table-scroll-fill .ant-table-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto !important;
+}
+
+.qw-table-scroll-fill .ant-table-pagination {
+    flex: 0 0 auto;
+}
+
 /* Light Mode Menu Styles */
 .ant-menu-item-selected {
     background-color: var(--color-primary) !important;
@@ -17,11 +57,11 @@
 /* Dark Mode Menu Styles */
 .dark .ant-menu-submenu-selected > .ant-menu-submenu-title {
     background-color: #1f1f1f !important;
-    color: #4899FA !important;
+    color: #4899fa !important;
 }
 
 .dark .ant-menu-item-selected {
-    background-color: #4899FA !important;
+    background-color: #4899fa !important;
     color: white !important;
 }
 
@@ -33,10 +73,6 @@
 .dark .ant-table-thead > tr > th {
     background-color: #1f1f1f !important;
     color: rgba(255, 255, 255, 0.85) !important;
-}
-
-.dark .ant-table-tbody > tr > td {
-    border-color: #424242 !important;
 }
 
 .dark .ant-table-tbody > tr:hover > td {
@@ -61,7 +97,7 @@
 }
 
 .dark .ant-tooltip-inner {
-    color: #4899FA !important;
+    color: #4899fa !important;
 }
 
 .dark .ant-modal-header {
@@ -104,16 +140,16 @@
 
 .dark .ant-pagination-item:hover {
     background-color: #262626 !important;
-    border-color: #4899FA !important;
+    border-color: #4899fa !important;
 }
 
 .dark .ant-pagination-item:hover a {
-    color: #4899FA !important;
+    color: #4899fa !important;
 }
 
 .dark .ant-pagination-item-active {
-    background-color: #4899FA !important;
-    border-color: #4899FA !important;
+    background-color: #4899fa !important;
+    border-color: #4899fa !important;
 }
 
 .dark .ant-pagination-item-active a {
@@ -130,8 +166,8 @@
 .dark .ant-pagination-prev:hover button,
 .dark .ant-pagination-next:hover button {
     background-color: #262626 !important;
-    border-color: #4899FA !important;
-    color: #4899FA !important;
+    border-color: #4899fa !important;
+    color: #4899fa !important;
 }
 
 .dark .ant-pagination-disabled button {
@@ -159,4 +195,3 @@
     border-color: #424242 !important;
     color: rgba(255, 255, 255, 0.85) !important;
 }
-

@@ -11,6 +11,12 @@ interface Error403Details {
     source?: 'client' | 'server';
 }
 
+declare global {
+    interface Window {
+        __handle403Error?: (error: Error403Details) => void;
+    }
+}
+
 interface ErrorContextType {
     error403: Error403Details | null;
     setError403: (error: Error403Details) => void;
@@ -51,11 +57,11 @@ export const ErrorProvider = ({ children }: ErrorProviderProps) => {
     // Register global error handler for apiClient
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            (window as any).__handle403Error = setError403;
+            window.__handle403Error = setError403;
             console.log('[ERROR CONTEXT] Registered global 403 error handler');
 
             return () => {
-                delete (window as any).__handle403Error;
+                delete window.__handle403Error;
             };
         }
     }, []);

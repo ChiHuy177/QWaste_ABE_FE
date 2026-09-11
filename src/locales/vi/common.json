@@ -1948,6 +1948,9 @@
             "createdBy": "Người tạo",
             "updatedAt": "Ngày cập nhật",
             "updatedBy": "Người cập nhật"
+        },
+        "viewModal": {
+            "groupInfo": "Thông tin nhóm"
         }
     },
     "staffManagement": {
@@ -2158,6 +2161,9 @@
                 "badRequest": "Yêu cầu không hợp lệ. Vui lòng kiểm tra đầu vào",
                 "unauthorized": "Bạn không được ủy quyền thực hiện hành động này"
             }
+        },
+        "viewModal": {
+            "staffInfo": "Thông tin nhân viên"
         }
     },
     "zoneManagement": {
@@ -4825,5 +4831,33 @@
         "floor_map": "Sơ đồ mặt bằng",
         "all": "Tất cả"
     },
-    "stepTemplates": "Các bước làm"
+    "stepTemplates": "Các bước làm",
+    "spaceMonitoring": {
+        "timeFilter": {
+            "title": "Thời gian",
+            "time": "Thời gian",
+            "shifts": "Ca làm việc",
+            "allShifts": "Tất cả",
+            "active": "Đang hoạt động",
+            "periodType": "Chế độ chọn thời gian",
+            "quickSelect": "Chọn nhanh",
+            "presetOptions": "Tùy chọn có sẵn",
+            "week": "Theo tuần",
+            "month": "Theo tháng",
+            "quarter": "Theo quý",
+            "year": "Theo năm",
+            "customRange": "Khoảng ngày",
+            "selectWeek": "Chọn tuần",
+            "selectMonth": "Chọn tháng",
+            "selectQuarter": "Chọn quý",
+            "selectYear": "Chọn năm",
+            "selectDateRange": "Chọn khoảng ngày",
+            "weekLabel": "Tuần {{week}}, {{year}}",
+            "monthLabel": "Tháng {{month}}/{{year}}",
+            "quarterLabel": "Quý {{quarter}}/{{year}}",
+            "yearLabel": "Năm {{year}}",
+            "refreshData": "Làm mới dữ liệu",
+            "apply": "Áp dụng"
+        }
+    }
 }

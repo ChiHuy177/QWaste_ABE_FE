@@ -535,8 +535,8 @@ const SpaceLevelListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.createdAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.createdAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -545,8 +545,8 @@ const SpaceLevelListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.updatedAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.updatedAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>
@@ -578,7 +578,10 @@ const SpaceLevelListPage = () => {
                     {spaceLevelFilter !== undefined && (
                         <Tag
                             closable
-                            onClose={() => { setSpaceLevelFilter(undefined); setPage(0); }}
+                            onClose={() => {
+                                setSpaceLevelFilter(undefined);
+                                setPage(0);
+                            }}
                         >
                             {t('spaceLevelManagement.table.headers.spaceLevel')}: {spaceLevelFilter}
                         </Tag>
@@ -586,9 +589,13 @@ const SpaceLevelListPage = () => {
                     {spaceLevelNameFilter && (
                         <Tag
                             closable
-                            onClose={() => { setSpaceLevelNameFilter(undefined); setPage(0); }}
+                            onClose={() => {
+                                setSpaceLevelNameFilter(undefined);
+                                setPage(0);
+                            }}
                         >
-                            {t('spaceLevelManagement.table.headers.spaceLevelName')}: {spaceLevelNameFilter}
+                            {t('spaceLevelManagement.table.headers.spaceLevelName')}:{' '}
+                            {spaceLevelNameFilter}
                         </Tag>
                     )}
                 </Flex>
@@ -609,14 +616,13 @@ const SpaceLevelListPage = () => {
                         overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                    }
+                        paddingBottom: 0,
+                    },
                 }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<SpaceLevelDTO>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredData}
                         loading={loading}

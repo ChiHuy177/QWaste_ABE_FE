@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { DurationPicker } from '@/components/shared/DurationPicker';
 
@@ -8,7 +9,7 @@ const VALIDATION_CONFIG = Object.freeze({
     COMPLETION_TIME: { required: true, min: 0 },
 });
 
-export const getStepFormFields = (t: any): FormFieldConfig[] => {
+export const getStepFormFields = (t: TFunction): FormFieldConfig[] => {
     return [
         {
             name: 'stepName',

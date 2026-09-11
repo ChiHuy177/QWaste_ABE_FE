@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 
 const VALIDATION = Object.freeze({
@@ -7,7 +8,7 @@ const VALIDATION = Object.freeze({
 });
 
 export const getOperationTypeFormFields = (
-    t: (key: string, options?: any) => string,
+    t: TFunction,
     mode: 'create' | 'edit'
 ): FormFieldConfig[] => [
     {

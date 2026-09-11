@@ -7,11 +7,11 @@ export class ElectricService {
         date: TimePeriod,
         zoneId = ''
     ): Promise<EnergyConsumption[]> {
-        const response = await NetworkService.requestJson({
+        const response = await NetworkService.requestJson<EnergyConsumption[]>({
             method: 'GET',
             url: `${ENDPOINTS.ENERGY.OVERVIEW_BY_FILTER}?datePeriod=${date}&spaceId=36`,
         });
-        return response.result;
+        return response.result!;
     }
 
     static async getElectricByDateRange(
@@ -19,10 +19,10 @@ export class ElectricService {
         endDate: string,
         zoneId = ''
     ): Promise<EnergyConsumption[]> {
-        const response = await NetworkService.requestJson({
+        const response = await NetworkService.requestJson<EnergyConsumption[]>({
             method: 'GET',
             url: `${ENDPOINTS.ENERGY.OVERVIEW_BY_DATE_RANGE}?startDate=${startDate}&endDate=${endDate}&zoneId=${zoneId}`,
         });
-        return response.result;
+        return response.result!;
     }
 }

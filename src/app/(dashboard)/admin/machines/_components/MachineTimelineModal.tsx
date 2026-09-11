@@ -159,7 +159,7 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
             if (machine.runtimeByStatus instanceof Map) {
                 return machine.runtimeByStatus.get(status) || 0;
             }
-            return (machine.runtimeByStatus as any)[status] || 0;
+            return (machine.runtimeByStatus as Record<string, number | undefined>)[status] || 0;
         };
 
         const totalRuntime = getRuntimeValue('RUNTIME');

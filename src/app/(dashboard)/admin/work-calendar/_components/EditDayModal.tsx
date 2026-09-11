@@ -52,7 +52,7 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
 
     if (!open || selectedDates.length === 0) return null;
 
-    const handleValuesChange = (changedValues: any) => {
+    const handleValuesChange = (changedValues: Partial<{ isWorkingDay: boolean; dayType: DayType }>) => {
         if ('isWorkingDay' in changedValues) {
             const isWorking = changedValues.isWorkingDay;
             if (!isWorking && form.getFieldValue('dayType') === 'WORKING') {

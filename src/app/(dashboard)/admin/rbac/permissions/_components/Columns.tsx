@@ -1,7 +1,22 @@
 import { ColumnsType } from 'antd/es/table';
 import { Permission } from '@/types/Permission';
+import { AuditMetaData } from '@/types/Metadata';
 import { Button, Space, Popconfirm, Tag, Badge, theme } from 'antd';
 import { EditOutlined, DeleteOutlined, FolderOpenOutlined } from '@ant-design/icons';
+
+/**
+ * Row shape for the grouped permission table: either a real `Permission` leaf,
+ * or a synthetic subject-group row (`permissionId: "group-<subject>"`, no
+ * `auditMetaData`) whose `children` are the real permissions in that group.
+ */
+export interface PermissionTableRow {
+    permissionId?: number | string;
+    slug: string;
+    permissionName: string;
+    description?: string;
+    auditMetaData?: AuditMetaData;
+    children?: Permission[];
+}
 
 const FolderCell = ({
     text,
@@ -94,10 +109,12 @@ const getActionColor = (action: string): string => {
     }
 };
 
-export const getPermissionTableColumns = (props?: PermissionTableColumnProps): ColumnsType<any> => {
+export const getPermissionTableColumns = (
+    props?: PermissionTableColumnProps
+): ColumnsType<PermissionTableRow> => {
     const t = props?.t || ((key: string) => key);
 
-    const columns: ColumnsType<any> = [
+    const columns: ColumnsType<PermissionTableRow> = [
         {
             title: t('permissionManagement.columns.name'),
             dataIndex: 'permissionName',
@@ -105,7 +122,7 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
             sorter: (a, b) => a.permissionName.localeCompare(b.permissionName),
             width: props?.isMobileResponsive ? '60%' : '25%',
             ellipsis: true,
-            render: (text: string, record: any) => {
+            render: (text: string, record: PermissionTableRow) => {
                 if (record.children) {
                     return (
                         <FolderCell
@@ -124,7 +141,7 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
             dataIndex: 'slug',
             key: 'slug',
             width: '27%',
-            render: (slug: string, record: any) => {
+            render: (slug: string, record: PermissionTableRow) => {
                 if (record.children) return null;
                 const [_, action] = slug.split(':');
                 return (
@@ -159,14 +176,16 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
             key: 'actions',
             fixed: props?.isMobileResponsive ? undefined : 'right',
             width: props?.isMobileResponsive ? 100 : '13%',
-            render: (_: any, record: any) => {
+            render: (_: unknown, record: PermissionTableRow) => {
                 if (record.children) return null;
+                // Group rows (with `children`) already returned above, so this is a real leaf Permission.
+                const permission = record as Permission;
                 return (
                     <Space size="small">
                         <Button
                             variant="link"
                             icon={<EditOutlined />}
-                            onClick={() => props?.onEdit?.(record)}
+                            onClick={() => props?.onEdit?.(permission)}
                             style={{ padding: props?.isMobileResponsive ? '4px' : '4px 8px' }}
                         >
                             {!props?.isMobileResponsive && t('permissionManagement.actions.edit')}
@@ -174,7 +193,7 @@ export const getPermissionTableColumns = (props?: PermissionTableColumnProps): C
                         <Popconfirm
                             title={t('permissionManagement.actions.confirmDeleteTitle')}
                             description={t('permissionManagement.actions.confirmDeleteMessage')}
-                            onConfirm={() => props?.onDelete?.(record)}
+                            onConfirm={() => props?.onDelete?.(permission)}
                             okText={t('permissionManagement.actions.confirmYes')}
                             cancelText={t('permissionManagement.actions.confirmNo')}
                             okButtonProps={{ color: 'danger', variant: 'solid' }}

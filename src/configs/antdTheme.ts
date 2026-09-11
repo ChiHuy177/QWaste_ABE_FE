@@ -1,4 +1,9 @@
-import type { ThemeConfig } from 'antd';
+import { theme, type ThemeConfig } from 'antd';
+
+// Table borders intentionally keep antd's stock colors instead of the app's
+// customized colorBorderSecondary, so they're derived here rather than hardcoded.
+const antdDefaultLightToken = theme.getDesignToken({ algorithm: theme.defaultAlgorithm });
+const antdDefaultDarkToken = theme.getDesignToken({ algorithm: theme.darkAlgorithm });
 
 //This is the main theme of our app, please ask Huy if you want to modify it, thanks! - Huy
 export const statusColors = {
@@ -149,6 +154,7 @@ export const lightTheme: ThemeConfig = {
             headerBg: '#fafafa',
             headerColor: 'rgba(0, 0, 0, 0.88)',
             rowHoverBg: '#f5f5f5',
+            borderColor: antdDefaultLightToken.colorBorderSecondary,
         },
         Card: {
             colorBgContainer: '#ffffff',
@@ -302,6 +308,7 @@ export const darkTheme: ThemeConfig = {
             headerBg: '#1f1f1f',
             headerColor: 'rgba(255, 255, 255, 0.85)',
             rowHoverBg: '#262626',
+            borderColor: antdDefaultDarkToken.colorBorderSecondary,
         },
         Card: {
             colorBgContainer: '#282828',
@@ -479,7 +486,7 @@ export const chartColors = [
 export const spaceLevelColors: Record<number, string> = new Proxy(_spaceLevelBaseColors, {
     get: (target, prop) => {
         const level = Number(prop);
-        if (isNaN(level) || level <= 0) return target[prop as any];
+        if (isNaN(level) || level <= 0) return Reflect.get(target, prop);
         const wrappedLevel = ((level - 1) % 8) + 1;
         return target[wrappedLevel];
     },
@@ -499,7 +506,7 @@ const _spaceLevelTextColors: Record<number, string> = {
 export const spaceLevelTextColors: Record<number, string> = new Proxy(_spaceLevelTextColors, {
     get: (target, prop) => {
         const level = Number(prop);
-        if (isNaN(level) || level <= 0) return target[prop as any];
+        if (isNaN(level) || level <= 0) return Reflect.get(target, prop);
         const wrappedLevel = ((level - 1) % 8) + 1;
         return target[wrappedLevel];
     },

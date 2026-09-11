@@ -110,7 +110,7 @@ const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
                   )
                 : currentLevel.options;
 
-            const handleLevelSelect = (value: any) => {
+            const handleLevelSelect = (value: string | number) => {
                 currentLevel.onChange(value);
 
                 // Auto-advance to next level if not the last one

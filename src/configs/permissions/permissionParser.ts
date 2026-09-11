@@ -1,4 +1,4 @@
-import { Action, Subject } from './caslAbility';
+import { ACTIONS, Action, Subject } from './caslAbility';
 import { PermissionRule } from '@/types/User';
 
 export function parsePermissionString(permission: string): PermissionRule | null {
@@ -15,21 +15,7 @@ export function parsePermissionString(permission: string): PermissionRule | null
     const [subject, action] = parts;
     if (!subject || !action) return null;
 
-    // Validate action
-    const validActions: Action[] = [
-        'view',
-        'create',
-        'update',
-        'delete',
-        'manage',
-        'restore',
-        'overview_view',
-        'store',
-        'update_sensitive',
-        'confirm',
-        'decline',
-    ];
-    if (!validActions.includes(action as Action)) return null;
+    if (!ACTIONS.includes(action as Action)) return null;
 
     return {
         subject: subject as Subject,

@@ -1,4 +1,5 @@
 import { ColumnsType } from 'antd/es/table';
+import { TFunction } from 'i18next';
 import { UserWithRBAC } from '@/types/User';
 import { Button, Space, Tag } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
@@ -6,7 +7,7 @@ import { EditOutlined } from '@ant-design/icons';
 export type UserTableColumnProps = {
     onEdit?: (user: UserWithRBAC) => void;
     // onDelete?: (user: UserWithRBAC) => void;
-    t: (key: string, options?: any) => string;
+    t: TFunction;
     isMobileResponsive?: boolean;
 };
 
@@ -27,7 +28,7 @@ export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<U
             key: 'fullName',
             width: props?.isMobileResponsive ? '40%' : '20%',
             ellipsis: true,
-            render: (_: any, record: UserWithRBAC) =>
+            render: (_: unknown, record: UserWithRBAC) =>
                 `${record.firstName || ''} ${record.lastName || ''}`.trim() || '-',
         },
         {
@@ -41,7 +42,7 @@ export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<U
             title: t('userManagement.columns.roles'),
             key: 'roles',
             width: '20%',
-            render: (_: any, record: UserWithRBAC) => {
+            render: (_: unknown, record: UserWithRBAC) => {
                 if (!record.roles || record.roles.length === 0) {
                     return <Tag>{t('userManagement.columns.noRoles')}</Tag>;
                 }
@@ -61,7 +62,7 @@ export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<U
             title: t('userManagement.columns.accessibleFactories'),
             key: 'accessibleFactories',
             width: '15%',
-            render: (_: any, record: UserWithRBAC) => {
+            render: (_: unknown, record: UserWithRBAC) => {
                 if (!record.accessibleFactories || record.accessibleFactories.length === 0) {
                     return '-';
                 }
@@ -82,7 +83,7 @@ export const getUserTableColumns = (props?: UserTableColumnProps): ColumnsType<U
             key: 'actions',
             fixed: props?.isMobileResponsive ? undefined : 'right',
             width: props?.isMobileResponsive ? 100 : '13%',
-            render: (_: any, record: UserWithRBAC) => (
+            render: (_: unknown, record: UserWithRBAC) => (
                 <Space size="small">
                     <Button
                         type="link"

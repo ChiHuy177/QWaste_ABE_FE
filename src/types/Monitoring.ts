@@ -6,7 +6,7 @@ export interface MachineErrorDetailItem {
     startTime?: string;
     endTime?: string;
     durationHours?: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface MachineErrorDetailResponse {

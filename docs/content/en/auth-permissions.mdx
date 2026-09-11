@@ -1,89 +1,124 @@
-# Auth & permissions
-
-Qwaste v2 uses httpOnly cookies through the BFF for authentication and CASL for route/screen authorization.
-
-## Login
-
-Login flow:
-
-```txt
-LoginForm
-  -> AuthContext.login
-  -> AuthService.login
-  -> POST /api/bff/api/authentication/v1/login
-  -> BFF receives tokens from backend
-  -> BFF sets bff_access_token httpOnly cookie
-  -> UserService.getMe
-  -> hydrate user settings + permissions
-```
-
-The client does not read the access token directly. The BFF attaches the token to the `Authorization` header when forwarding requests.
-
-## Session initialization
-
-`AuthContext` checks the current route:
-
-| Route | Behavior |
-| --- | --- |
-| `/`, `/login`, `/register` | Skip `getMe` |
-| Dashboard route | Call `/api/users/v1/me` to verify the user |
-
-When the session expires, `apiClient` dispatches `sessionExpired`; the global error handler redirects to login.
-
-## Ability
-
-`src/configs/permissions/defineAbility.ts` builds ability in this order:
-
-1. Use backend custom permissions if present.
-2. Grant full access when permission includes `manage all`.
-3. Fall back to role-based permissions when no custom permissions are returned.
-4. Always grant operator dashboard/review access when role is `operator` or `op`.
-
-Example permission rule:
-
-```ts
+# Auth & permissions
+
+Qwaste v2 uses httpOnly cookies through the BFF for authentication and CASL for route/screen authorization.
+
+## Login
+
+Login flow:
+
+```txt
+LoginForm
+  -> AuthContext.login
+  -> AuthService.login
+  -> POST /api/bff/api/authentication/v1/login
+  -> BFF receives tokens from backend
+  -> BFF sets bff_access_token httpOnly cookie
+  -> UserService.getMe
+  -> hydrate user settings + permissions
+```
+
+The client does not read the access token directly. The BFF attaches the token to the `Authorization` header when forwarding requests.
+
+## Session initialization
+
+`AuthContext` checks the current route:
+
+| Route | Behavior |
+| --- | --- |
+| `/`, `/login`, `/register` | Skip `getMe` |
+| Dashboard route | Call `/api/users/v1/me` to verify the user |
+
+When the session expires, `apiClient` dispatches `sessionExpired`; the global error handler redirects to login.
+
+## Single source of truth: `PERMISSION_REGISTRY`
+
+`src/configs/permissions/permissionRegistry.ts` is the **only** place that maps a
+`(subject, action)` pair to its routes and sidebar presentation. Everything else
+(route guarding, sidebar rendering, the RBAC "create permission" form) reads
+from it — there is no second route table or menu table to keep in sync.
+
+```ts
+{
+  slug: 'space_monitoring:view',
+  subject: 'space_monitoring',
+  action: 'view',
+  routes: ['/admin/space-monitoring'],
+  menuKey: 'space-monitoring',
+  i18nKey: 'permissionSubjects.space_monitoring',
+}
+```
+
+- `routes` drives `ROUTE_ACCESS` in `routeAccess.ts` (built at module load with
+  `Object.fromEntries(PERMISSION_REGISTRY.flatMap(...))`).
+- `i18nKey` (plus `group`/`subGroup`/`alwaysShowInMenu`/`alternativeAction`/
+  `alsoRequiresAction`) drives the sidebar in
+  `src/configs/navigation/menuItems.tsx`. A permission only appears in the
+  sidebar if `i18nKey` is set; entries without it are route/RBAC-only.
+- `alternativeAction` encodes an OR condition — e.g. `machine_overview:view`
+  also shows/unlocks the "Machines" page for a user who only has
+  `machine_overview:update`. Both the sidebar check and the route guard read
+  the same `alternativeAction`, so a menu item can never be visible while its
+  route redirects the user away (and vice versa).
+- `getAllSubjects()` from this file feeds the subject dropdown in the RBAC
+  "create permission" form.
+
+When adding a new route that needs a permission check, add **one** entry here
+— do not add a matching entry to `routeAccess.ts` or hand-write an `if
+(ability.can(...))` block in `menuItems.tsx`.
+
+## Ability
+
+`src/configs/permissions/defineAbility.ts` builds the ability in this order:
+
+1. Use backend custom permissions if present (`user.allTypePermissions.finalPermissions` or `user.permissions`).
+2. Grant full access when a permission is `manage all`.
+3. Otherwise, fall back to `getDefaultPermissionsForRoles()` from
+   `src/configs/permissions/rolePermissions.ts` — the single table of
+   role-default permissions, used both as the real fallback and as the
+   dev/mock data source (there is no separate mock permission table anymore).
+
+Backend permissions are the source of truth: when the backend returns
+permissions, the FE does **not** patch or layer anything on top of them (a
+previous version of this function fell through to the role-default fallback
+even when explicit permissions were present, silently widening access beyond
+what the backend granted — that fallthrough was removed).
+
+Example permission rule:
+
+```ts
 {
   action: 'view',
   subject: 'space_monitoring'
-}
-```
-
-## Route access
-
-`src/configs/permissions/routeAccess.ts` maps routes to `subject` and `action`.
-
-```ts
-'/admin/space-monitoring': {
-  subject: 'space_monitoring',
-  action: 'view'
-}
-```
-
-The app checks:
-
-```ts
-ability.can(action, subject)
-```
-
-If a route has no config and is not public, access is denied by default.
-
-## Sidebar
-
-The sidebar in `src/configs/navigation/menuItems.tsx` renders items only when ability allows them.
-
-```ts
-if (ability.can('view', 'space_monitoring')) {
-  items.push(createMenuItem('/admin/space-monitoring', t('permissionSubjects.space_monitoring')))
-}
-```
-
-When adding a new route, update both `ROUTE_ACCESS` and the menu if users should see it.
-
-## New permission checklist
-
-1. Add the CASL subject/action type if needed.
-2. Make sure the backend returns the new permission.
-3. Update `defineAbility.ts` if role fallback is needed.
-4. Update `routeAccess.ts`.
-5. Update the menu or component guard.
-6. Test with a user who has access and a user who does not.
+}
+```
+
+## Route access
+
+`src/configs/permissions/routeAccess.ts` derives `ROUTE_ACCESS` from
+`PERMISSION_REGISTRY.routes` — it is generated, not hand-maintained.
+
+The app checks:
+
+```ts
+ability.can(action, subject)
+```
+
+If a route has no config and is not public, access is denied by default.
+
+## Sidebar
+
+The sidebar in `src/configs/navigation/menuItems.tsx` is built by iterating
+`PERMISSION_REGISTRY` entries that have an `i18nKey`, grouping by
+`group`/`subGroup` (including the `production_plan` group), and checking
+`ability.can(action, subject)` for each. Icon and display-order tables in that
+file are the only presentation-only data that still lives outside the
+registry (the registry stays plain data so it can be imported from non-UI
+code too).
+
+## New permission checklist
+
+1. Add the CASL subject/action to `caslAbility.ts` if needed (add new actions to the `ACTIONS` array — `Action` is derived from it).
+2. Add one entry to `PERMISSION_REGISTRY` with its `routes`, and `i18nKey`/`group`/`subGroup` if it should appear on the sidebar.
+3. Make sure the backend returns the new permission.
+4. Update `rolePermissions.ts` only if a role-based fallback is genuinely needed.
+5. Test with a user who has access and a user who does not.

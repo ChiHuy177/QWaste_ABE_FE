@@ -4,8 +4,18 @@ import { SpaceService } from '@/services/SpaceService';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-export interface SpaceTreeSelectProps extends Omit<TreeSelectProps<any>, 'treeData'> {
-    treeData?: any[];
+export interface SpaceTreeSelectOption {
+    value: number;
+    title: React.ReactNode;
+    label: string;
+    displayLabel: React.ReactNode;
+    children?: SpaceTreeSelectOption[];
+}
+
+type TreeSelectChangeExtra = Parameters<NonNullable<TreeSelectProps['onChange']>>[2];
+
+export interface SpaceTreeSelectProps extends Omit<TreeSelectProps<number>, 'treeData'> {
+    treeData?: SpaceTreeSelectOption[];
     autoSelectFirst?: boolean;
     autoSelectFirstChild?: boolean;
 }
@@ -19,7 +29,7 @@ export interface SpaceTreeNode {
 export const mapSpaceTreeToTreeSelect = (
     nodes: SpaceTreeNode[],
     parentPathName: string = ''
-): any[] => {
+): SpaceTreeSelectOption[] => {
     return nodes.map((node) => {
         const currentPathName = parentPathName
             ? `${parentPathName} / ${node.spaceName}`
@@ -55,13 +65,13 @@ export const mapSpaceTreeToTreeSelect = (
     });
 };
 
-let cachedTreeData: any[] | null = null;
-let fetchPromise: Promise<any[]> | null = null;
+let cachedTreeData: SpaceTreeSelectOption[] | null = null;
+let fetchPromise: Promise<SpaceTreeSelectOption[]> | null = null;
 
 const findFirstTreeValue = (
-    nodes: any[],
+    nodes: SpaceTreeSelectOption[],
     preferFirstChild = false
-): number | string | undefined => {
+): number | undefined => {
     const firstNode = nodes[0];
     if (!firstNode) return undefined;
 
@@ -86,7 +96,9 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
     ...props
 }) => {
     const { t } = useTranslation();
-    const [internalTreeData, setInternalTreeData] = useState<any[]>(cachedTreeData || []);
+    const [internalTreeData, setInternalTreeData] = useState<SpaceTreeSelectOption[]>(
+        cachedTreeData || []
+    );
     const [loading, setLoading] = useState<boolean>(
         !cachedTreeData && externalTreeData === undefined
     );
@@ -156,7 +168,7 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
         if (firstValue === undefined) return;
 
         hasAutoSelectedRef.current = true;
-        onChange?.(firstValue, [], {} as any);
+        onChange?.(firstValue, [], {} as TreeSelectChangeExtra);
     }, [
         autoSelectFirst,
         autoSelectFirstChild,

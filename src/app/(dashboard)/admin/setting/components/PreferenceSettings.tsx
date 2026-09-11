@@ -80,11 +80,13 @@ export function PreferenceSettings({ settings, onUpdate }: PreferenceSettingsPro
                 } else {
                     throw new Error(result.error || 'Update failed');
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 setTheme(originalTheme);
                 setFormData((prev) => ({ ...prev, theme: originalTheme }));
                 toast.error(
-                    error?.message || t('preferenceSettings.errors.updateFailed') || 'Update failed'
+                    (error instanceof Error ? error.message : undefined) ||
+                        t('preferenceSettings.errors.updateFailed') ||
+                        'Update failed'
                 );
             } finally {
                 setFieldUpdating('theme', false);
@@ -114,10 +116,12 @@ export function PreferenceSettings({ settings, onUpdate }: PreferenceSettingsPro
             } else {
                 throw new Error(result.error || 'Update failed');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             setFormData((prev) => ({ ...prev, language: originalLanguage }));
             toast.error(
-                error?.message || t('preferenceSettings.errors.updateFailed') || 'Update failed'
+                (error instanceof Error ? error.message : undefined) ||
+                    t('preferenceSettings.errors.updateFailed') ||
+                    'Update failed'
             );
         } finally {
             setFieldUpdating('language', false);

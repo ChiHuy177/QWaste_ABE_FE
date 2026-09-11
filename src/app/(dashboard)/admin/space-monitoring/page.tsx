@@ -1,28 +1,13 @@
-﻿'use client';
+'use client';
 
 // TEMP DISABLED: factory list grid — performance issue (parallel API calls per factory)
 // To re-enable: remove the redirect block and restore the commented JSX below
 // Related: enhance/fe-space-monitoring branch
 
 import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
-import {
-    Button,
-    DatePicker,
-    Divider,
-    Grid,
-    Popover,
-    Radio,
-    Select,
-    Skeleton,
-    Space,
-    Spin,
-    Tag,
-    Tooltip,
-    Typography,
-    message,
-} from 'antd';
+import { Button, Grid, Select, Skeleton, Spin, Tooltip, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -44,8 +29,15 @@ import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
 import { MachineWithStatusLogsSummary } from '@/types/Machine';
+import TimeFilterPopover, {
+    PeriodFilterMode,
+    TimeFilterApplyPayload,
+} from './_components/TimeFilterPopover';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
-type TimeFilterMode = 'PRESET' | 'CUSTOM_RANGE';
+dayjs.extend(isoWeek);
+dayjs.extend(quarterOfYear);
 function collectDescendantIds(space: SpaceOverview): number[] {
     const ids: number[] = [];
     space.children.forEach((child) => {
@@ -85,13 +77,10 @@ const SpaceMonitoringPage: React.FC = () => {
     const screens = Grid.useBreakpoint();
     const isMobile = !screens.md;
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
-    const [timeFilterMode, setTimeFilterMode] = useState<TimeFilterMode>('PRESET');
+    const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode>('PRESET');
     const [expandedSpaces, setExpandedSpaces] = useState<Set<number>>(new Set());
     const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
-    // const [factoryCardsData, setFactoryCardsData] = useState<Record<number, SpaceOverview | null>>(
-    //     {}
-    // );
     const router = useRouter();
     const searchParams = useSearchParams();
     const dispatch = useAppDispatch();
@@ -110,14 +99,6 @@ const SpaceMonitoringPage: React.FC = () => {
     } = useAppSelector((state) => state.factoryOverview) as IFactoryOverviewStoreState;
 
     const [isExporting, setIsExporting] = useState(false);
-    const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
-    const [draftTimeFilterMode, setDraftTimeFilterMode] = useState<TimeFilterMode>(timeFilterMode);
-    const [draftPeriodId, setDraftPeriodId] = useState<number | null>(null);
-    const [draftShiftId, setDraftShiftId] = useState<number | null>(null);
-    const [draftDateRange, setDraftDateRange] = useState<[Dayjs, Dayjs]>([
-        dayjs(selectedStartDate),
-        dayjs(selectedEndDate),
-    ]);
 
     type MachinePathEntry = { path: number[]; machineIndex: number };
     const machinePathMapRef = useRef<Map<string, MachinePathEntry>>(new Map());
@@ -207,7 +188,7 @@ const SpaceMonitoringPage: React.FC = () => {
         dispatch(factoryOverviewActions.setSelectedShiftFilterId(null));
     }, [industryFilters, selectedTimePeriod, timeFilterMode, isShiftActive, dispatch]);
 
-    const isCustomRangeMode = timeFilterMode === 'CUSTOM_RANGE';
+    const isCustomRangeMode = timeFilterMode !== 'PRESET';
     const isDateRange = isCustomRangeMode;
 
     const activeFactoryId = selectedFactoryId ?? selectedSpaceId;
@@ -328,7 +309,6 @@ const SpaceMonitoringPage: React.FC = () => {
     //     router.push('/admin/space-monitoring');
     // }, [router]);
 
-
     // Subscribe to machines only in expanded spaces (incremental)
     useEffect(() => {
         if (!wsConnected || !spaceData) {
@@ -376,20 +356,20 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
+                                | 'RUNTIME'
+                                | 'IDLE'
+                                | 'ERROR'
+                                | 'COMPLETE'
+                                | 'OFFLINE'
+                                | 'UNKNOWN';
+                        };
+                        newStatus:
                             | 'RUNTIME'
                             | 'IDLE'
                             | 'ERROR'
                             | 'COMPLETE'
                             | 'OFFLINE'
                             | 'UNKNOWN';
-                        };
-                        newStatus:
-                        | 'RUNTIME'
-                        | 'IDLE'
-                        | 'ERROR'
-                        | 'COMPLETE'
-                        | 'OFFLINE'
-                        | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
@@ -484,42 +464,8 @@ const SpaceMonitoringPage: React.FC = () => {
         [timePeriodOptions]
     );
 
-
     // Data fetching is triggered only by the Search button (handleSearch).
     // No auto-fire on mount, factory change, or filter change.
-
-
-    const syncDraftTimeFilter = useCallback(() => {
-        setDraftTimeFilterMode(timeFilterMode);
-        setDraftDateRange([dayjs(selectedStartDate), dayjs(selectedEndDate)]);
-
-        if (timeFilterMode === 'PRESET') {
-            const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-            if (primaryFilter?.category === 'PERIOD') {
-                setDraftPeriodId(selectedTimePeriod);
-                setDraftShiftId(selectedShiftFilterId);
-            } else {
-                // SHIFT là primary (auto-select hoặc chỉ chọn Ca)
-                setDraftPeriodId(null);
-                setDraftShiftId(selectedTimePeriod);
-            }
-        } else {
-            // CUSTOM_RANGE: shift lưu trong selectedTimePeriod (backward compat)
-            setDraftPeriodId(null);
-            setDraftShiftId(selectedTimePeriod);
-        }
-    }, [selectedEndDate, selectedStartDate, selectedTimePeriod, selectedShiftFilterId, timeFilterMode, industryFilters]);
-
-    const handleTimeFilterOpenChange = useCallback(
-        (open: boolean) => {
-            if (open) {
-                syncDraftTimeFilter();
-            }
-            setIsTimeFilterOpen(open);
-        },
-        [syncDraftTimeFilter]
-    );
-
     const handleExportExcel = useCallback(async () => {
         if (!activeFactoryId) return;
 
@@ -527,16 +473,16 @@ const SpaceMonitoringPage: React.FC = () => {
         try {
             const { blob, fileName } = isCustomRangeMode
                 ? await ExcelExportService.getMachineStatusLogReportByDateRange(
-                    activeFactoryId,
-                    selectedStartDate,
-                    selectedEndDate,
-                    selectedTimePeriod
-                )
+                      activeFactoryId,
+                      selectedStartDate,
+                      selectedEndDate,
+                      selectedTimePeriod
+                  )
                 : await ExcelExportService.getMachineStatusLogReportByFilter(
-                    activeFactoryId,
-                    selectedTimePeriod!,
-                    selectedShiftFilterId
-                );
+                      activeFactoryId,
+                      selectedTimePeriod!,
+                      selectedShiftFilterId
+                  );
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -563,80 +509,48 @@ const SpaceMonitoringPage: React.FC = () => {
         t,
     ]);
 
-    const handleResetTimeFilter = useCallback(() => {
-        const activeShift = industryFilters.find(
-            (filter) => filter.category === 'SHIFT' && isShiftActive(filter)
-        );
+    const handleApplyTimeFilter = useCallback(
+        (payload: TimeFilterApplyPayload) => {
+            const { mode, primaryFilterId, secondaryShiftId, startDate, endDate } = payload;
 
-        setDraftTimeFilterMode('PRESET');
-        setDraftPeriodId(null);
-        setDraftShiftId(activeShift?.filterId ?? industryFilters[0]?.filterId ?? null);
-        setDraftDateRange([dayjs(), dayjs()]);
-    }, [industryFilters, isShiftActive]);
+            setTimeFilterMode(mode);
+            dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
+            dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
+            dispatch(
+                factoryOverviewActions.setSelectedDateRange({
+                    startDate,
+                    endDate,
+                })
+            );
 
-    const handleApplyTimeFilter = useCallback(() => {
-        let primaryFilterId: number | null;
-        let secondaryShiftId: number | null;
+            if (!activeFactoryId) return;
+            setHasSearched(true);
 
-        if (draftTimeFilterMode === 'PRESET') {
-            if (draftPeriodId !== null) {
-                // Period selected → period là primary, Ca là secondary
-                primaryFilterId = draftPeriodId;
-                secondaryShiftId = draftShiftId;
-            } else if (draftShiftId !== null) {
-                // Chỉ Ca selected → Ca làm primary, không có secondary
-                primaryFilterId = draftShiftId;
-                secondaryShiftId = null;
+            if (mode === 'PRESET' && primaryFilterId !== null) {
+                dispatch(
+                    factoryOverviewActions.fetchSpaceOverview(
+                        activeFactoryId,
+                        primaryFilterId,
+                        secondaryShiftId ?? undefined
+                    )
+                );
             } else {
-                return; // Không có gì được chọn
+                dispatch(
+                    factoryOverviewActions.fetchSpaceOverviewByDateRange(
+                        activeFactoryId,
+                        startDate,
+                        endDate,
+                        primaryFilterId ?? undefined
+                    )
+                );
             }
-        } else {
-            // CUSTOM_RANGE: draftShiftId là Ca dropdown (backward compat với selectedTimePeriod)
-            primaryFilterId = draftShiftId;
-            secondaryShiftId = null;
-        }
-
-        setTimeFilterMode(draftTimeFilterMode);
-        dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
-        dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
-        dispatch(
-            factoryOverviewActions.setSelectedDateRange({
-                startDate: draftDateRange[0].format('YYYY-MM-DD'),
-                endDate: draftDateRange[1].format('YYYY-MM-DD'),
-            })
-        );
-        setIsTimeFilterOpen(false);
-
-        if (!activeFactoryId) return;
-        setHasSearched(true);
-
-        if (draftTimeFilterMode === 'PRESET' && primaryFilterId !== null) {
-            dispatch(
-                factoryOverviewActions.fetchSpaceOverview(
-                    activeFactoryId,
-                    primaryFilterId,
-                    secondaryShiftId ?? undefined
-                )
-            );
-        } else if (draftTimeFilterMode === 'CUSTOM_RANGE') {
-            dispatch(
-                factoryOverviewActions.fetchSpaceOverviewByDateRange(
-                    activeFactoryId,
-                    draftDateRange[0].format('YYYY-MM-DD'),
-                    draftDateRange[1].format('YYYY-MM-DD'),
-                    draftShiftId ?? undefined
-                )
-            );
-        }
-    }, [dispatch, draftDateRange, draftTimeFilterMode, draftPeriodId, draftShiftId, activeFactoryId]);
-
+        },
+        [dispatch, activeFactoryId]
+    );
 
     useEffect(() => {
         if (!activeFactoryId || hasSearched) return;
         if (!isDateRange && !selectedTimePeriod) return;
-        // When the URL carries a factoryId, wait until the param effect has
-        // applied it — otherwise activeFactoryId still falls back to the stale
-        // selectedSpaceId from the store and we'd fetch the wrong factory.
         const paramValue = searchParams.get('factoryId');
         if (paramValue && Number(paramValue) !== selectedFactoryId) return;
         setHasSearched(true);
@@ -658,7 +572,18 @@ const SpaceMonitoringPage: React.FC = () => {
                 )
             );
         }
-    }, [activeFactoryId, selectedFactoryId, searchParams, selectedTimePeriod, selectedShiftFilterId, hasSearched, isDateRange, selectedStartDate, selectedEndDate, dispatch]);
+    }, [
+        activeFactoryId,
+        selectedFactoryId,
+        searchParams,
+        selectedTimePeriod,
+        selectedShiftFilterId,
+        hasSearched,
+        isDateRange,
+        selectedStartDate,
+        selectedEndDate,
+        dispatch,
+    ]);
 
     const handleSearch = useCallback(() => {
         if (!activeFactoryId) return;
@@ -694,236 +619,88 @@ const SpaceMonitoringPage: React.FC = () => {
         selectedEndDate,
     ]);
 
+    const currentPeriodId = useMemo(() => {
+        if (timeFilterMode !== 'PRESET') return null;
+        const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+        return primary?.category === 'PERIOD' ? selectedTimePeriod : null;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+
+    const currentShiftId = useMemo(() => {
+        if (timeFilterMode === 'PRESET') {
+            const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+            return primary?.category === 'PERIOD' ? selectedShiftFilterId : selectedTimePeriod;
+        }
+        return selectedTimePeriod;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod, selectedShiftFilterId]);
+
+    // Only feeds the SpaceOverviewGrid caption now — the popover's own trigger button
+    // computes this label internally from the same currentMode/currentPeriodId/
+    // currentShiftId props (see TimeFilterPopover.tsx).
     const activeTimePeriodLabel = useMemo(() => {
         const currentLang = i18n.language;
-
-        if (isCustomRangeMode) {
-            const dateLabel = `${dayjs(selectedStartDate).format('DD/MM')} → ${dayjs(selectedEndDate).format('DD/MM')}`;
-            if (selectedTimePeriod != null) {
-                const shiftFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-                const shiftLabel = shiftFilter
-                    ? currentLang === 'vi'
-                        ? shiftFilter.displayNameVi
-                        : shiftFilter.displayNameEn
-                    : null;
-                if (shiftLabel) return `${dateLabel} • ${shiftLabel}`;
-            }
-            return dateLabel;
-        }
-
-        const primaryFilter = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-        const primaryLabel = primaryFilter
+        const shiftFilter =
+            currentShiftId != null ? industryFilters.find((f) => f.filterId === currentShiftId) : null;
+        const shiftLabel = shiftFilter
             ? currentLang === 'vi'
-                ? primaryFilter.displayNameVi
-                : primaryFilter.displayNameEn
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
             : null;
 
-        if (!primaryLabel) return null;
-
-        if (primaryFilter?.category === 'PERIOD' && selectedShiftFilterId != null) {
-            const shiftFilter = industryFilters.find((f) => f.filterId === selectedShiftFilterId);
-            const shiftLabel = shiftFilter
-                ? currentLang === 'vi'
-                    ? shiftFilter.displayNameVi
-                    : shiftFilter.displayNameEn
-                : null;
-            return shiftLabel ? `${primaryLabel} • ${shiftLabel}` : primaryLabel;
+        if (timeFilterMode === 'WEEK') {
+            const startStr = dayjs(selectedStartDate).format('DD/MM');
+            const endStr = dayjs(selectedEndDate).format('DD/MM');
+            const weekNum = dayjs(selectedStartDate).isoWeek();
+            const yearStr = dayjs(selectedStartDate).format('YYYY');
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', { week: weekNum, year: yearStr })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
         }
 
-        return primaryLabel;
-    }, [industryFilters, selectedTimePeriod, selectedShiftFilterId, isCustomRangeMode, selectedStartDate, selectedEndDate, i18n.language]);
+        if (timeFilterMode === 'MONTH') {
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: dayjs(selectedStartDate).format('MM'),
+                year: dayjs(selectedStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
 
-    // TEMP DISABLED: factory list grid — do not fetch all-factory cards on load
-    // Re-enable by restoring the loadFactoryCards useEffect when the factory cards grid is re-enabled
+        if (timeFilterMode === 'QUARTER') {
+            const quarterNum = dayjs(selectedStartDate).quarter();
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: dayjs(selectedStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
 
-    const timeFilterPopoverContent = useMemo(() => {
-        const isPreset = draftTimeFilterMode === 'PRESET';
+        if (timeFilterMode === 'YEAR') {
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: dayjs(selectedStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
 
-        return (
-            <div style={{ width: isMobile ? 'calc(100vw - 48px)' : 360, maxWidth: 360 }}>
-                <Typography.Text strong>
-                    {i18n.language === 'vi' ? 'Thời gian' : 'Time Filter'}
-                </Typography.Text>
+        if (timeFilterMode === 'CUSTOM_RANGE') {
+            const dateLabel = `${dayjs(selectedStartDate).format('DD/MM')} → ${dayjs(selectedEndDate).format('DD/MM')}`;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
+        }
 
-                <Divider style={{ margin: '12px 0' }} />
+        const period = industryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
+            ? currentLang === 'vi'
+                ? period.displayNameVi
+                : period.displayNameEn
+            : null;
 
-                {/* Ca làm việc — independent selection, works in both modes */}
-                {groupedTimePeriodOptions.SHIFT.length > 0 && (
-                    <>
-                        <Typography.Text
-                            type="secondary"
-                            style={{
-                                display: 'block',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                marginBottom: 8,
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {i18n.language === 'vi' ? 'Ca làm việc' : 'Shifts'}
-                        </Typography.Text>
-                        <Radio.Group
-                            value={draftShiftId}
-                            onChange={(e) => setDraftShiftId(e.target.value as number | null)}
-                            style={{ width: '100%' }}
-                        >
-                            <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                                <Radio value={null}>
-                                    {i18n.language === 'vi' ? 'Tất cả' : 'All'}
-                                </Radio>
-                                {groupedTimePeriodOptions.SHIFT.map((option) => {
-                                    const filter = industryFilters.find(
-                                        (f) => f.filterId === option.value
-                                    );
-                                    const isActive = filter && isShiftActive(filter);
-
-                                    return (
-                                        <Radio key={option.value} value={option.value}>
-                                            <Space size={4}>
-                                                <Typography.Text
-                                                    ellipsis
-                                                    style={{
-                                                        maxWidth: isMobile
-                                                            ? 'calc(100vw - 150px)'
-                                                            : 220,
-                                                        verticalAlign: 'middle',
-                                                    }}
-                                                >
-                                                    {option.label}
-                                                </Typography.Text>
-                                                {isActive && (
-                                                    <Tag
-                                                        color="green"
-                                                        style={{
-                                                            margin: 0,
-                                                            fontSize: 11,
-                                                            lineHeight: '18px',
-                                                            padding: '0 6px',
-                                                        }}
-                                                    >
-                                                        {i18n.language === 'vi'
-                                                            ? 'Đang hoạt động'
-                                                            : 'Active'}
-                                                    </Tag>
-                                                )}
-                                            </Space>
-                                        </Radio>
-                                    );
-                                })}
-                            </Space>
-                        </Radio.Group>
-
-                        <Divider style={{ margin: '12px 0' }} />
-                    </>
-                )}
-
-                {/* Khoảng thời gian (Periods) + Khoảng ngày toggle */}
-                <Space orientation="vertical" size={8} style={{ width: '100%' }}>
-                    {groupedTimePeriodOptions.PERIOD.length > 0 && (
-                        <>
-                            <Typography.Text type="secondary">
-                                {i18n.language === 'vi' ? 'Chọn nhanh' : 'Quick Select'}
-                            </Typography.Text>
-                            <Radio.Group
-                                value={isPreset ? draftPeriodId : null}
-                                onChange={(e) => {
-                                    setDraftPeriodId(e.target.value as number | null);
-                                    setDraftTimeFilterMode('PRESET');
-                                }}
-                                style={{ width: '100%' }}
-                            >
-                                <Space orientation="vertical" size={8} style={{ width: '100%' }}>
-                                    {groupedTimePeriodOptions.PERIOD.map((option) => (
-                                        <Radio key={option.value} value={option.value}>
-                                            <Typography.Text
-                                                ellipsis
-                                                style={{
-                                                    maxWidth: isMobile
-                                                        ? 'calc(100vw - 120px)'
-                                                        : 280,
-                                                    verticalAlign: 'middle',
-                                                }}
-                                            >
-                                                {option.label}
-                                            </Typography.Text>
-                                        </Radio>
-                                    ))}
-                                </Space>
-                            </Radio.Group>
-                        </>
-                    )}
-
-                    <Divider style={{ margin: '4px 0' }} />
-
-                    <Radio
-                        checked={draftTimeFilterMode === 'CUSTOM_RANGE'}
-                        onChange={() => {
-                            setDraftTimeFilterMode('CUSTOM_RANGE');
-                            setDraftPeriodId(null);
-                        }}
-                    >
-                        {i18n.language === 'vi' ? 'Khoảng ngày' : 'Custom Date Range'}
-                    </Radio>
-                </Space>
-
-                <Space orientation="vertical" size={8} style={{ width: '100%', marginTop: 12 }}>
-                    <DatePicker.RangePicker
-                        value={draftDateRange}
-                        onChange={(dates) => {
-                            if (dates?.[0] && dates?.[1]) {
-                                setDraftDateRange([dates[0], dates[1]]);
-                                setDraftTimeFilterMode('CUSTOM_RANGE');
-                                setDraftPeriodId(null);
-                            }
-                        }}
-                        format="DD/MM/YYYY"
-                        style={{ width: '100%', borderRadius: 8 }}
-                        disabledDate={(current) => current && current > dayjs().endOf('day')}
-                        disabled={draftTimeFilterMode !== 'CUSTOM_RANGE'}
-                    />
-                </Space>
-
-                <Divider style={{ margin: '12px 0' }} />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <Button onClick={handleResetTimeFilter}>{t('common.reset')}</Button>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        <Button
-                            onClick={() => {
-                                syncDraftTimeFilter();
-                                setIsTimeFilterOpen(false);
-                            }}
-                        >
-                            {t('common.cancel')}
-                        </Button>
-                        <Button
-                            type="primary"
-                            onClick={handleApplyTimeFilter}
-                            disabled={
-                                draftTimeFilterMode === 'PRESET' &&
-                                draftPeriodId === null &&
-                                draftShiftId === null
-                            }
-                        >
-                            {i18n.language === 'vi' ? 'Áp dụng' : 'Apply'}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        );
+        if (!periodLabel) return shiftLabel;
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
     }, [
-        draftDateRange,
-        draftTimeFilterMode,
-        draftPeriodId,
-        draftShiftId,
-        handleApplyTimeFilter,
-        handleResetTimeFilter,
-        groupedTimePeriodOptions,
-        i18n.language,
+        currentPeriodId,
+        currentShiftId,
         industryFilters,
-        isMobile,
-        isShiftActive,
-        syncDraftTimeFilter,
+        timeFilterMode,
+        selectedStartDate,
+        selectedEndDate,
+        i18n.language,
         t,
     ]);
 
@@ -945,57 +722,42 @@ const SpaceMonitoringPage: React.FC = () => {
                                     value: f.spaceId,
                                 }))}
                                 style={{ width: '100%' }}
-                                showSearch={{ filterOption: (input, option) => ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase()) }}
+                                showSearch={{
+                                    filterOption: (input, option) =>
+                                        ((option?.label as string) ?? '')
+                                            .toLowerCase()
+                                            .includes(input.toLowerCase()),
+                                }}
                             />
                         ))}
 
-                    <Popover
-                        open={isTimeFilterOpen}
-                        onOpenChange={handleTimeFilterOpenChange}
-                        trigger="click"
+                    <TimeFilterPopover
+                        currentMode={timeFilterMode}
+                        currentPeriodId={currentPeriodId}
+                        currentShiftId={currentShiftId}
+                        currentStartDate={selectedStartDate}
+                        currentEndDate={selectedEndDate}
+                        groupedOptions={groupedTimePeriodOptions}
+                        industryFilters={industryFilters}
+                        isShiftActive={isShiftActive}
+                        onApply={handleApplyTimeFilter}
                         placement="bottomLeft"
-                        content={timeFilterPopoverContent}
-                    >
-                        <Button
-                            block
-                            style={{
-                                borderRadius: 8,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'flex-start',
-                                gap: 4,
-                            }}
-                        >
-                            <span style={{ flexShrink: 0 }}>
-                                {i18n.language === 'vi' ? 'Thời gian' : 'Time'}:
-                            </span>
-                            <Typography.Text
-                                ellipsis
-                                style={{
-                                    maxWidth: 'calc(100% - 76px)',
-                                    color: 'inherit',
-                                    lineHeight: 'inherit',
-                                }}
-                            >
-                                {activeTimePeriodLabel ?? t('common.filter')}
-                            </Typography.Text>
-                        </Button>
-                    </Popover>
+                    />
 
                     <Button
                         block
-                        type='primary'
+                        type="primary"
                         icon={<ReloadOutlined />}
                         onClick={handleSearch}
                         loading={isLoading}
                         style={{ borderRadius: 8 }}
                     >
-                        {i18n.language === 'vi' ? 'Làm mới dữ liệu' : 'Refresh data'}
+                        {t('spaceMonitoring.timeFilter.refreshData')}
                     </Button>
 
                     <Button
                         block
-                        type='primary'
+                        type="primary"
                         icon={<FileExcelOutlined />}
                         onClick={handleExportExcel}
                         loading={isExporting}
@@ -1016,8 +778,8 @@ const SpaceMonitoringPage: React.FC = () => {
                         flexWrap: 'wrap',
                     }}
                 >
-                    {selectedFactoryId !== null && (
-                        isLoadingSpaces ? (
+                    {selectedFactoryId !== null &&
+                        (isLoadingSpaces ? (
                             <Skeleton.Input active style={{ width: 220, height: 32 }} />
                         ) : (
                             <Select
@@ -1030,49 +792,29 @@ const SpaceMonitoringPage: React.FC = () => {
                                     value: f.spaceId,
                                 }))}
                                 style={{ width: 220 }}
-                                showSearch={{ filterOption: (input, option) => ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase()) }}
-                            />
-                        )
-                    )}
-
-                    <Popover
-                        open={isTimeFilterOpen}
-                        onOpenChange={handleTimeFilterOpenChange}
-                        trigger="click"
-                        placement="bottomRight"
-                        content={timeFilterPopoverContent}
-                    >
-                        <Tooltip title={activeTimePeriodLabel}>
-                            <Button
-                                style={{
-                                    borderRadius: 8,
-                                    width: 220,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    gap: 4,
+                                showSearch={{
+                                    filterOption: (input, option) =>
+                                        ((option?.label as string) ?? '')
+                                            .toLowerCase()
+                                            .includes(input.toLowerCase()),
                                 }}
-                            >
-                                <span style={{ flexShrink: 0 }}>
-                                    {i18n.language === 'vi' ? 'Thời gian' : 'Time'}:
-                                </span>
-                                <Typography.Text
-                                    ellipsis
-                                    style={{
-                                        maxWidth: 135,
-                                        color: 'inherit',
-                                        lineHeight: 'inherit',
-                                    }}
-                                >
-                                    {activeTimePeriodLabel ?? t('common.filter')}
-                                </Typography.Text>
-                            </Button>
-                        </Tooltip>
-                    </Popover>
+                            />
+                        ))}
 
-                    <Tooltip
-                        title={i18n.language === 'vi' ? 'Làm mới dữ liệu' : 'Refresh data'}
-                    >
+                    <TimeFilterPopover
+                        currentMode={timeFilterMode}
+                        currentPeriodId={currentPeriodId}
+                        currentShiftId={currentShiftId}
+                        currentStartDate={selectedStartDate}
+                        currentEndDate={selectedEndDate}
+                        groupedOptions={groupedTimePeriodOptions}
+                        industryFilters={industryFilters}
+                        isShiftActive={isShiftActive}
+                        onApply={handleApplyTimeFilter}
+                        placement="bottomRight"
+                    />
+
+                    <Tooltip title={t('spaceMonitoring.timeFilter.refreshData')}>
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={handleSearch}
@@ -1080,12 +822,12 @@ const SpaceMonitoringPage: React.FC = () => {
                             style={{
                                 borderRadius: 8,
                             }}
-                            type='primary'
+                            type="primary"
                         />
                     </Tooltip>
 
                     <Button
-                        type='primary'
+                        type="primary"
                         icon={<FileExcelOutlined />}
                         onClick={handleExportExcel}
                         loading={isExporting}
@@ -1111,39 +853,28 @@ const SpaceMonitoringPage: React.FC = () => {
             selectedTimePeriod,
             router,
             t,
-            timeFilterPopoverContent,
-            isTimeFilterOpen,
-            handleTimeFilterOpenChange,
-            activeTimePeriodLabel,
+            timeFilterMode,
+            currentPeriodId,
+            currentShiftId,
+            selectedStartDate,
+            selectedEndDate,
+            groupedTimePeriodOptions,
+            industryFilters,
+            isShiftActive,
+            handleApplyTimeFilter,
             isMobile,
             i18n.language,
         ]
     );
 
-    // const selectedFactoryName = useMemo(() => {
-    //     if (!selectedFactoryId) return null;
-    //     return spaces.find((space) => space.spaceId === selectedFactoryId)?.spaceName ?? null;
-    // }, [selectedFactoryId, spaces]);
-
-    // const breadcrumbItems = useMemo(() => {
-    //     const base = [
-    //         { title: <Link href="/">{t('common.home', 'Home')}</Link> },
-    //         {
-    //             title: (
-    //                 <Link href="/admin/space-monitoring">
-    //                     {t('permissionSubjects.space_monitoring')}
-    //                 </Link>
-    //             ),
-    //         },
-    //     ];
-    //     if (!selectedFactoryName) return base;
-    //     return [
-    //         ...base,
-    //         {
-    //             title: <span>{selectedFactoryName}</span>,
-    //         },
-    //     ];
-    // }, [selectedFactoryId, selectedFactoryName, t]);
+    const gridFilterInfo = useMemo(
+        () => ({
+            factoryName: spaces.find((s) => s.spaceId === activeFactoryId)?.spaceName,
+            timePeriod: activeTimePeriodLabel ?? undefined,
+            timePeriodValue: selectedTimePeriod?.toString() ?? undefined,
+        }),
+        [spaces, activeFactoryId, activeTimePeriodLabel, selectedTimePeriod]
+    );
 
     const factoryStats = useMemo(() => {
         if (!spaceData) {
@@ -1165,28 +896,9 @@ const SpaceMonitoringPage: React.FC = () => {
         };
     }, [spaceData]);
 
-    // const factoryGridStats = useMemo(() => {
-    //     const allOverviews = Object.values(factoryCardsData).filter(Boolean) as SpaceOverview[];
-    //     if (allOverviews.length === 0) {
-    //         return { energyConsumption: 0, totalRunTime: 0, totalStopTime: 0, totalErrorTime: 0 };
-    //     }
-    //     const allMachines = allOverviews.flatMap(collectAllMachines);
-    //     const stats = computeStatsFromMachines(allMachines);
-    //     return {
-    //         energyConsumption: stats.energyKwh,
-    //         totalRunTime: stats.runtimeSeconds / 3600,
-    //         totalStopTime: stats.idleSeconds / 3600,
-    //         totalErrorTime: stats.errorSeconds / 3600,
-    //     };
-    // }, [factoryCardsData]);
-
     const showFactoryCards = selectedFactoryId === null;
     const isZoneViewLoading = !showFactoryCards && hasSearched && isLoading;
 
-    // PART 1: redirect to first factory when spaces are loaded and no factory is selected.
-    // Skip when the URL already carries a factoryId (e.g. arriving from floor-map) —
-    // selectedFactoryId is still null on first render and the param effect hasn't
-    // applied it yet, so replacing here would clobber the requested factory.
     useEffect(() => {
         if (!showFactoryCards || isLoadingSpaces || spaces.length === 0) return;
         if (searchParams.get('factoryId')) return;
@@ -1200,13 +912,7 @@ const SpaceMonitoringPage: React.FC = () => {
                 rightContent={headerActions}
             />
 
-            {/* <Breadcrumb
-                items={breadcrumbItems}
-                style={{ marginBottom: 16, color: 'inherit' }}
-            /> */}
-
             {showFactoryCards ? (
-                // PART 1: factory list disabled — show spinner while fetching, then redirect fires
                 isLoadingSpaces ? (
                     <div style={{ padding: '80px 0', textAlign: 'center' }}>
                         <Spin size="large" />
@@ -1215,9 +921,8 @@ const SpaceMonitoringPage: React.FC = () => {
                     <div style={{ padding: '80px 0', textAlign: 'center', color: '#999' }}>
                         No factories found.
                     </div>
-                ) : null /* redirect is in flight */
+                ) : null
             ) : !hasSearched ? (
-                // PART 2a: factory selected but Search not yet clicked — show placeholder
                 <div style={{ padding: '80px 0', textAlign: 'center', color: '#999' }}>
                     <Typography.Text type="secondary">
                         {t(
@@ -1234,7 +939,6 @@ const SpaceMonitoringPage: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                // PART 2b: factory detail view — data loaded after Search click
                 <>
                     <FactoryStatsCards
                         energyConsumption={factoryStats.energyConsumption}
@@ -1247,84 +951,12 @@ const SpaceMonitoringPage: React.FC = () => {
                         spaceData={spaceData}
                         expandedSpaces={expandedSpaces}
                         onToggle={handleToggleSpace}
-                        filterInfo={{
-                            factoryName: spaces.find((s) => s.spaceId === activeFactoryId)
-                                ?.spaceName,
-                            timePeriod: activeTimePeriodLabel ?? undefined,
-                            timePeriodValue: selectedTimePeriod?.toString() ?? undefined,
-                        }}
+                        filterInfo={gridFilterInfo}
                     />
                 </>
             )}
-
         </>
     );
 };
-
-/*
- * TEMP DISABLED — original factory list return preserved below for restore.
- * To re-enable: remove the redirect useEffect above and swap this back in.
- *
- * return (
- *     <>
- *         <ResponsivePageHeader title={t('permissionSubjects.space_monitoring')} rightContent={headerActions} />
- *         <Breadcrumb items={breadcrumbItems} style={{ marginBottom: 16, color: 'inherit' }} />
- *
- *         {showFactoryCards ? (
- *             isLoadingSpaces ? (
- *                 <div style={{ padding: '80px 0', textAlign: 'center' }}>
- *                     <Spin size="large" description={t('common.loading')} />
- *                 </div>
- *             ) : (
- *                 <>
- *                     <FactoryStatsCards
- *                         energyConsumption={factoryGridStats.energyConsumption}
- *                         totalRunTime={factoryGridStats.totalRunTime}
- *                         totalStopTime={factoryGridStats.totalStopTime}
- *                         totalErrorTime={factoryGridStats.totalErrorTime}
- *                     />
- *                     <FactoryCardsGrid
- *                         factories={spaces}
- *                         overviewMap={factoryCardsData}
- *                         loading={isFactoryCardsLoading}
- *                         onSelect={handleFactorySelect}
- *                     />
- *                 </>
- *             )
- *         ) : isZoneViewLoading ? (
- *             <div style={{ padding: '80px 0', textAlign: 'center' }}>
- *                 <Spin size="large" description={t('common.loading')} />
- *             </div>
- *         ) : (
- *             <>
- *                 <Button
- *                     type="link"
- *                     icon={<LeftOutlined />}
- *                     onClick={handleBackToFactories}
- *                     style={{ padding: 0, marginBottom: 16 }}
- *                 >
- *                     {t('factoryOverview.allFactories', 'All factories')}
- *                 </Button>
- *                 <FactoryStatsCards
- *                     energyConsumption={factoryStats.energyConsumption}
- *                     totalRunTime={factoryStats.totalRunTime}
- *                     totalStopTime={factoryStats.totalStopTime}
- *                     totalErrorTime={factoryStats.totalErrorTime}
- *                 />
- *                 <SpaceOverviewGrid
- *                     spaceData={spaceData}
- *                     expandedSpaces={expandedSpaces}
- *                     onToggle={handleToggleSpace}
- *                     filterInfo={{
- *                         factoryName: spaces.find((s) => s.spaceId === activeFactoryId)?.spaceName,
- *                         timePeriod: timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)?.label,
- *                         timePeriodValue: selectedTimePeriod?.toString() ?? undefined,
- *                     }}
- *                 />
- *             </>
- *         )}
- *     </>
- * );
- */
 
 export default SpaceMonitoringPage;

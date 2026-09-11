@@ -13,21 +13,18 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import MachineCard from './MachineCard';
+import { LineInFactoryOverview } from '@/types/Line';
+import { MachineInFactoryOverview } from '@/types/Zone';
 
 const { Text } = Typography;
 
 interface LineSectionProps {
-    line: {
-        lineId: number;
-        lineName: string;
-        lineDisplayOrder: number;
-        machines: any[];
-    };
+    line: LineInFactoryOverview;
     lineIndex: number;
     totalLines: number;
     isExpanded: boolean;
     onToggle: () => void;
-    onMachineClick: (machine: any, e: React.MouseEvent) => void;
+    onMachineClick: (machine: MachineInFactoryOverview, e: React.MouseEvent) => void;
     onLineClick: (lineId: number) => void;
 }
 
@@ -43,13 +40,12 @@ const LineSection: React.FC<LineSectionProps> = ({
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
-    const calculateRuntimeByStatus = (runtimeByStatus: any, status: string): number => {
+    const calculateRuntimeByStatus = (
+        runtimeByStatus: MachineInFactoryOverview['runtimeByStatus'],
+        status: string
+    ): number => {
         if (!runtimeByStatus) return 0;
-
-        if (runtimeByStatus instanceof Map) {
-            return runtimeByStatus.get(status) || 0;
-        }
-        return runtimeByStatus[status] || 0;
+        return runtimeByStatus.get(status) || 0;
     };
 
     const formatTime = (seconds: number): string => {
@@ -58,7 +54,7 @@ const LineSection: React.FC<LineSectionProps> = ({
         return minutes > 0 ? `${hours}h${minutes}m` : `${hours}h`;
     };
 
-    const calculateLineStats = (machines: any[]) => {
+    const calculateLineStats = (machines: MachineInFactoryOverview[]) => {
         let totalCalculatedEnergy = 0;
         let totalMeasuredEnergy = 0;
         let totalRuntime = 0;

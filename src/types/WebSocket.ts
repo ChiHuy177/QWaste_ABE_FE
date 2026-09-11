@@ -79,7 +79,7 @@ export interface WebSocketErrorMessage {
     title?: string;
     content?: string;
     metadata?: {
-        [key: string]: any;
+        [key: string]: unknown;
     };
     timestamp: number;
 }
@@ -107,7 +107,7 @@ export interface WebSocketMessage {
     content?: string;
     contentKey?: string;
     contentArgs?: unknown[];
-    payload?: Record<string, any>;
-    metadata?: Record<string, any> | null;
+    payload?: Record<string, unknown>;
+    metadata?: Record<string, unknown> | null;
     timestamp: string; // ISO-8601 e.g. "2026-05-15T10:30:00"
 }

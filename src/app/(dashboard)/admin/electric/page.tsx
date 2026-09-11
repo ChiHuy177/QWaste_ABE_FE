@@ -105,7 +105,7 @@ const ElectricOverviewPage = () => {
             const transformedData = TRANSFORM_ENERGY_DATA(response);
             setEnergyConsumption(transformedData);
             setInitialData(response);
-        } catch (err: any) {
+        } catch (err: unknown) {
             toast.error('Failed to load electric data');
         } finally {
             setLoading(false);
@@ -150,7 +150,7 @@ const ElectricOverviewPage = () => {
                 const transformedData = TRANSFORM_ENERGY_DATA(todayData);
                 setEnergyConsumption(transformedData);
                 setInitialData(todayData);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (isSubscribed) {
                     toast.error('Failed to load initial data');
                 }

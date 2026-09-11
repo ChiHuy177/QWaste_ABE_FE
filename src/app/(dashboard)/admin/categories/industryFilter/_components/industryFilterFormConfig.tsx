@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 
 const VALIDATION_CONFIG = Object.freeze({
@@ -9,7 +10,7 @@ const VALIDATION_CONFIG = Object.freeze({
 });
 
 export const getIndustryFilterFormFields = (
-    t: any,
+    t: TFunction,
     mode: 'create' | 'edit'
 ): FormFieldConfig[] => {
     return [

@@ -314,7 +314,10 @@ const MoldListPage = () => {
     // map lại để EntityFormModal.setFieldsValue điền đúng Select khi edit.
     const moldFormInitialData = useMemo(() => {
         if (!modalState.data) return null;
-        return { ...modalState.data, operationTypeId: modalState.data.operationType.operationTypeId };
+        return {
+            ...modalState.data,
+            operationTypeId: modalState.data.operationType.operationTypeId,
+        };
     }, [modalState.data]);
 
     const filterFields: FilterField[] = useMemo(
@@ -352,7 +355,9 @@ const MoldListPage = () => {
                 title={t('moldManagement.title')}
                 loading={isLoading}
                 rightContent={
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div
+                        style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}
+                    >
                         <SearchInput
                             placeholder={t('moldManagement.searchPlaceholder')}
                             value={searchTerm}
@@ -382,7 +387,9 @@ const MoldListPage = () => {
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 block={isMobile}
-                                onClick={() => setModalState({ open: true, mode: 'create', data: null })}
+                                onClick={() =>
+                                    setModalState({ open: true, mode: 'create', data: null })
+                                }
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
                                 {t('moldManagement.addMold')}
@@ -401,7 +408,10 @@ const MoldListPage = () => {
                     {moldCodeFilter && (
                         <Tag
                             closable
-                            onClose={() => { setMoldCodeFilter(undefined); setPage(0); }}
+                            onClose={() => {
+                                setMoldCodeFilter(undefined);
+                                setPage(0);
+                            }}
                         >
                             {t('moldManagement.table.headers.moldCode')}: {moldCodeFilter}
                         </Tag>
@@ -409,7 +419,10 @@ const MoldListPage = () => {
                     {moldNameFilter && (
                         <Tag
                             closable
-                            onClose={() => { setMoldNameFilter(undefined); setPage(0); }}
+                            onClose={() => {
+                                setMoldNameFilter(undefined);
+                                setPage(0);
+                            }}
                         >
                             {t('moldManagement.table.headers.moldName')}: {moldNameFilter}
                         </Tag>
@@ -437,10 +450,14 @@ const MoldListPage = () => {
                             <Descriptions.Item label={t('moldManagement.table.headers.moldName')}>
                                 {viewModalState.data.moldName}
                             </Descriptions.Item>
-                            <Descriptions.Item label={t('moldManagement.table.headers.outputPerShot')}>
+                            <Descriptions.Item
+                                label={t('moldManagement.table.headers.outputPerShot')}
+                            >
                                 {viewModalState.data.outputPerShot}
                             </Descriptions.Item>
-                            <Descriptions.Item label={t('moldManagement.table.headers.operationType')}>
+                            <Descriptions.Item
+                                label={t('moldManagement.table.headers.operationType')}
+                            >
                                 <Tag color="blue">
                                     {viewModalState.data.operationType.operationTypeName}
                                 </Tag>
@@ -461,9 +478,9 @@ const MoldListPage = () => {
                                 <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
-                                            ? dayjs(viewModalState.data.auditMetaData.createdAt).format(
-                                                'DD/MM/YYYY HH:mm:ss'
-                                            )
+                                            ? dayjs(
+                                                  viewModalState.data.auditMetaData.createdAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -471,9 +488,9 @@ const MoldListPage = () => {
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
-                                            ? dayjs(viewModalState.data.auditMetaData.updatedAt).format(
-                                                'DD/MM/YYYY HH:mm:ss'
-                                            )
+                                            ? dayjs(
+                                                  viewModalState.data.auditMetaData.updatedAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>
@@ -516,11 +533,9 @@ const MoldListPage = () => {
                     },
                 }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<Mold>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={moldData}
                         loading={isLoading}
@@ -538,6 +553,7 @@ const MoldListPage = () => {
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 'max-content',

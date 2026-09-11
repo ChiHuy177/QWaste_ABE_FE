@@ -53,7 +53,9 @@ describe('SpaceOverviewGrid Component', () => {
         render(<SpaceOverviewGrid spaceData={{ children: [] } as any} {...defaultGridProps} />);
 
         // Should render the empty InboxOutlined
-        expect(screen.getByText('machineManagement.emptyStates.noResults.title')).toBeInTheDocument();
+        expect(
+            screen.getByText('machineManagement.emptyStates.noResults.title')
+        ).toBeInTheDocument();
     });
 
     it('renders a SpaceNode for each child in spaceData', () => {

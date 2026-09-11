@@ -1,5 +1,6 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { SelectOption } from '@/types/Common';
+import { TFunction } from 'i18next';
 
 interface StaffFormFieldsOptions {
     factoryOptions?: SelectOption[];
@@ -19,7 +20,7 @@ const VALIDATION_CONFIG = Object.freeze({
 });
 
 export const getStaffFormFields = (
-    t: (key: string, options?: Record<string, any>) => string,
+    t: TFunction,
     mode: 'create' | 'edit',
     options?: StaffFormFieldsOptions
 ): FormFieldConfig[] => {

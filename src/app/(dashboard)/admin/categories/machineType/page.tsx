@@ -104,7 +104,7 @@ const MachineTypeListPage = () => {
             try {
                 const detailData = await MachineTypeService.getMachineTypeById(step.machineTypeId);
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching machine type details:', error);
                 handleError(error, { fallbackKey: 'machineTypeManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
@@ -274,14 +274,14 @@ const MachineTypeListPage = () => {
                 mobileMenuItems={
                     checkPermissionSilent('create', 'machine_type')
                         ? [
-                            {
-                                key: 'add',
-                                label: t('machineTypeManagement.addMachineType'),
-                                icon: <PlusOutlined />,
-                                onClick: () =>
-                                    setModalState({ open: true, mode: 'create', data: null }),
-                            },
-                        ]
+                              {
+                                  key: 'add',
+                                  label: t('machineTypeManagement.addMachineType'),
+                                  icon: <PlusOutlined />,
+                                  onClick: () =>
+                                      setModalState({ open: true, mode: 'create', data: null }),
+                              },
+                          ]
                         : []
                 }
                 rightContentMobile={
@@ -330,8 +330,8 @@ const MachineTypeListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.createdAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.createdAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -340,8 +340,8 @@ const MachineTypeListPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.updatedAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.updatedAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>
@@ -373,20 +373,20 @@ const MachineTypeListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                styles={{ body: {
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingBottom: 0,
-                } }}
+                styles={{
+                    body: {
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
+                }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<MachineType>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredMachineTypeData}
                         rowSelection={rowSelection}

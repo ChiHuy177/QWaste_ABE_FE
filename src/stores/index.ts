@@ -1,3 +1,4 @@
+import { ReducersMapObject } from '@reduxjs/toolkit';
 import * as machineStore from './MachineStore';
 import * as userSettingsStore from './UserSettingsStore';
 import * as notificationStore from './NotificationStore';
@@ -14,7 +15,7 @@ export interface AppState {
     productionPlanMonitor: productionPlanMonitorStore.IProductionPlanMonitorStoreState;
 }
 
-export const reducers: any = {
+export const reducers: ReducersMapObject<AppState> = {
     machine: machineStore.reducer,
     userSettings: userSettingsStore.reducer,
     notification: notificationStore.reducer,

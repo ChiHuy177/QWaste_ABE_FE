@@ -3,11 +3,16 @@
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { EnergyConsumption } from '@/types';
 import {
+    EnergyUpdateMessage,
     MachinesCurrentPowerMessage,
     MachinesFullOverviewMessage,
     ZonesCurrentPowerMessage,
     ZonesFullOverviewMessage,
 } from '@/types/WebSocket';
+
+interface EnergyWebSocketFrame {
+    payload?: EnergyUpdateMessage;
+}
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -33,7 +38,7 @@ export function useEnergyWebSocket(
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const subscriptionRef = useRef<(() => void) | null>(null);
 
-    const handleEnergyUpdate = useCallback((message: any) => {
+    const handleEnergyUpdate = useCallback((message: EnergyWebSocketFrame) => {
         if (isDev) console.log('[useEnergyWebSocket] Message type:', message.payload?.type);
 
         switch (message.payload?.type) {
@@ -102,7 +107,7 @@ export function useEnergyWebSocket(
 
         if (isDev) console.log('[useEnergyWebSocket] Subscribing to:', topic);
 
-        subscriptionRef.current = wsService.subscribe<any>(topic, handleEnergyUpdate);
+        subscriptionRef.current = wsService.subscribe<EnergyWebSocketFrame>(topic, handleEnergyUpdate);
 
         return () => {
             if (subscriptionRef.current) {

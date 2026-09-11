@@ -1,7 +1,8 @@
+import { TFunction } from 'i18next';
 import { FormFieldConfig } from '../../../../../../components/shared/FormModal/types';
 
 export const getMachineTypeFormFields = (
-    t: any,
+    t: TFunction,
     mode: 'create' | 'edit'
 ): FormFieldConfig[] => {
     return [

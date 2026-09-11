@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction, Dispatch } from '@reduxjs/toolkit';
 import { UserProfile, UserSettings } from '@/types/User';
 import { UserService, UserSettingService } from '@/services';
+import { UpdateUserPreferencesRequest } from '@/services/UserSettingService';
+import type { RootState } from './configureStore';
 
 /**
  * User Settings Store State Interface
@@ -120,7 +122,7 @@ export const userSettingsActions = {
     /**
      * Update avatar
      */
-    updateAvatar: (avatarUrl: string) => async (dispatch: Dispatch, getState: any) => {
+    updateAvatar: (avatarUrl: string) => async (dispatch: Dispatch, getState: () => RootState) => {
         const previousProfile = getState().userSettings.profile;
 
         if (!previousProfile) {
@@ -130,7 +132,7 @@ export const userSettingsActions = {
         // Optimistic update
         dispatch(slice.actions.updateAvatarOptimistic(avatarUrl));
 
-        const avatarPayload: any = {
+        const avatarPayload: UpdateUserPreferencesRequest = {
             preferences: {
                 avatarUrl: avatarUrl,
             },
@@ -155,7 +157,8 @@ export const userSettingsActions = {
      * Update settings
      */
     updateSettings:
-        (updates: Partial<UserSettings>) => async (dispatch: Dispatch, getState: any) => {
+        (updates: Partial<UserSettings>) =>
+        async (dispatch: Dispatch, getState: () => RootState) => {
             const previousSettings = getState().userSettings.settings;
 
             if (!previousSettings) {
@@ -165,7 +168,7 @@ export const userSettingsActions = {
             // Optimistic update
             dispatch(slice.actions.updateSettingsOptimistic(updates));
 
-            const payload: any = { preferences: {} };
+            const payload: UpdateUserPreferencesRequest = { preferences: {} };
             if (updates.theme) payload.preferences.theme = updates.theme;
             if (updates.language) payload.preferences.language = updates.language;
 
