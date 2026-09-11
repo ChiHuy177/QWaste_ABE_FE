@@ -34,8 +34,12 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { MoldService } from '@/services/MoldService';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { Mold, MoldFormData } from '@/types/Mold';
-import { getMoldTableColumns, MoldTableColumnProps } from './_components/Columns';
-import { getMoldFormFields, toOperationTypeOptions } from './_components/moldFormConfig';
+import {
+    getMoldTableColumns,
+    type MoldTableColumnProps,
+    getMoldFormFields,
+    toOperationTypeOptions,
+} from '@/features/dashboard/categories/mold';
 
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;

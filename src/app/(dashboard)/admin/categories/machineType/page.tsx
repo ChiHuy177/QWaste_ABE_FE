@@ -7,10 +7,13 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { ToolOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { MachineType } from '@/types/MachineType';
-import { MachineTypeTableColumnProps, getMachineTypeTableColumns } from './_components/Column';
+import {
+    type MachineTypeTableColumnProps,
+    getMachineTypeTableColumns,
+    getMachineTypeFormFields,
+} from '@/features/dashboard/categories/machineType';
 import { MachineTypeService } from '@/services/MachineTypeService';
-import { EntityFormModal } from '../../../../../components/shared/FormModal';
-import { getMachineTypeFormFields } from './_components/machineTypeFormConfig';
+import { EntityFormModal } from '@/components/shared/FormModal';
 import { MachineTypeFormData } from '@/types/MachineType';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';

@@ -26,9 +26,12 @@ import {
     SpaceLevelCreationRequest,
     SpaceLevelUpdationRequest,
 } from '@/types/SpaceLevel';
-import { getSpaceLevelTableColumns, SpaceLevelTableColumnProps } from './_components/Columns';
+import {
+    getSpaceLevelTableColumns,
+    type SpaceLevelTableColumnProps,
+    getSpaceLevelFormFields,
+} from '@/features/dashboard/categories/spaceLevel';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getSpaceLevelFormFields } from './_components/spaceLevelFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';

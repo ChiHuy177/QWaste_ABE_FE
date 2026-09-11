@@ -12,12 +12,12 @@ import {
     MachineOperatorHistoryModalData,
 } from '@/types/MachineOperatorHistory';
 import {
-    machineOperatorHistoryTableColumnProps,
+    type machineOperatorHistoryTableColumnProps,
     getMachineListTableColumns,
-} from './_components/Column';
+    getMachineStaffingFormFields,
+} from '@/features/dashboard/categories/machineStaffing';
 import { MachineOperatorHistoryService } from '@/services/MachineOperatorHistoryService';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getMachineStaffingFormFields } from './_components/machineStaffingFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { FactoryPickingResponse } from '@/types/Factory';
 import { ZonePickingResponse } from '@/types/Zone';

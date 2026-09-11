@@ -9,11 +9,11 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { Permission, PermissionFormData } from '@/types/Permission';
 import {
     getPermissionTableColumns,
-    PermissionTableColumnProps,
-    PermissionTableRow,
-} from './_components/Columns';
+    type PermissionTableColumnProps,
+    type PermissionTableRow,
+    getPermissionFormFields,
+} from '@/features/dashboard/rbac/permissions';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getPermissionFormFields } from './_components/permissionFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { PermissionService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';

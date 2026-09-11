@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { UserGroup, GroupFormData } from '@/types/UserGroup';
 import { GroupService } from '@/services/GroupService';
 import { toast } from 'sonner';
-import { getGroupTableColumns, GroupTableColumnProps } from './_components/Columns';
+import {
+    getGroupTableColumns,
+    type GroupTableColumnProps,
+    getGroupFormFields,
+} from '@/features/dashboard/categories/group';
+import { CategoryViewModal } from '@/features/dashboard/categories';
 import { Button, Card, Table, TableProps } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -15,11 +20,9 @@ import {
     FileTextOutlined,
 } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
-import { EntityFormModal } from '../../../../../components/shared/FormModal';
-import { getGroupFormFields } from './_components/groupFormConfig';
+import { EntityFormModal } from '@/components/shared/FormModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
-import { CategoryViewModal } from '../_components/CategoryViewModal';
 
 const GroupListPage = () => {
     const [modalState, setModalState] = useState<{
