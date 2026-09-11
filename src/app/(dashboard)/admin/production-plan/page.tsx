@@ -34,24 +34,26 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { useAppSelector } from '@/stores/hook';
-import DailyTable from './_components/DailyTable';
-import ImportModal from './_components/ImportModal';
-import WeeklyTable from './_components/WeeklyTable';
-import MachineMatrixTable from './_components/MachineMatrixTable';
-import PlanFormModal from './_components/PlanFormModal';
-import TransferGridModal from './_components/TransferGridModal';
-import { formatDailyLabel, formatWeeklyLabel, WEEK_DAY_KEYS } from './_utils/dateUtils';
-import { useMachineOptions } from './_hooks/useMachineOptions';
-import { useMoldOptions } from './_hooks/useMoldOptions';
 import {
+    DailyTable,
+    ImportModal,
+    WeeklyTable,
+    MachineMatrixTable,
+    PlanFormModal,
+    TransferGridModal,
+    formatDailyLabel,
+    formatWeeklyLabel,
+    WEEK_DAY_KEYS,
+    useMachineOptions,
+    useMoldOptions,
     useNavConfirm,
     useProductionPlanActions,
     useProductionPlanData,
     useReorderPlan,
     useTransferPlan,
-} from './hooks';
-import type { PlanFormValues } from './_components/types';
-import styles from './_components/ProductionPlanTable.module.css';
+    type PlanFormValues,
+} from '@/features/dashboard/production-plan';
+import styles from '@/features/dashboard/production-plan/components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;

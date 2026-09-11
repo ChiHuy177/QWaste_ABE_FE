@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MachineService } from '@/services/MachineService';
 import type { Machine } from '@/types/Machine';
-import { buildMachineInfoMap, type MachineInfoMap } from '../_utils/planMappers';
-import type { SelectOptionVM } from '../_components/types';
+import { buildMachineInfoMap, type MachineInfoMap } from '../utils/planMappers';
+import type { SelectOptionVM } from '../components/types';
 import { machineQueryKeys } from './queryKeys';
 
 const STALE_TIME = 5 * 60_000; // 5 minutes

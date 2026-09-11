@@ -7,9 +7,12 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { LoadingOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Role, RoleFormData } from '@/types/Role';
-import { getRoleTableColumns, RoleTableColumnProps } from './_components/Columns';
+import {
+    getRoleTableColumns,
+    type RoleTableColumnProps,
+    getRoleFormFields,
+} from '@/features/dashboard/rbac/roles';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getRoleFormFields } from './_components/roleFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { RoleService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';

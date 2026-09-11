@@ -5,12 +5,12 @@ import { AimOutlined, CloseOutlined, HolderOutlined, SearchOutlined } from '@ant
 import { type CSSProperties, type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FloorMapMachineDisplayResponse } from '@/types/FloorMap';
-import { getMachineStatusFill } from '../_utils/floorMapColors';
+import { getMachineStatusFill } from '../utils/floorMapColors';
 import {
     FLOOR_MAP_MACHINE_DRAG_DATA_TYPE,
     createFloorMapMachineDragPayload,
-} from '../_utils/floorMapDrag';
-import { isMachinePlaced } from '../_utils/floorMapRatio';
+} from '../utils/floorMapDrag';
+import { isMachinePlaced } from '../utils/floorMapRatio';
 
 type FilterKey = 'all' | 'placed' | 'unplaced';
 

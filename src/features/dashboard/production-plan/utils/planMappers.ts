@@ -6,7 +6,7 @@ import type {
     ProductionPlanWeeklyMachineGroup,
     Schedule,
 } from '@/types/ProductionPlan';
-import type { MachineGroupVM, PlanRowVM } from '../_components/types';
+import type { MachineGroupVM, PlanRowVM } from '../components/types';
 
 export type RawPlanData =
     | { kind: 'daily'; content: ProductionPlanDailyMachineGroup[] }

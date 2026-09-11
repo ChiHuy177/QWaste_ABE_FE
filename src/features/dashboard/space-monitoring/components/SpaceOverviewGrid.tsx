@@ -6,7 +6,7 @@ import { Empty, Typography } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import SpaceNode from './SpaceNode';
 import MachineCardGrid from './MachineCardGrid';
-import MachineTimelineModal from '../../machines/_components/MachineTimelineModal';
+import { MachineTimelineModal } from '@/features/dashboard/machines';
 import { SpaceOverview } from '@/types/Space';
 import { MachineWithStatusLogsSummary } from '@/types/Machine';
 import { MachineOverview } from '@/types/Machine';

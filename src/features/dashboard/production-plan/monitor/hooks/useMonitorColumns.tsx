@@ -6,10 +6,10 @@ import type { CollapseProps, GlobalToken } from 'antd';
 import type { ColumnType, ColumnsType } from 'antd/es/table';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../_utils/planMappers';
-import styles from '../../_components/ProductionPlanTable.module.css';
-import type { MonitorRowVM } from '../../_components/types';
-import { isIncidentConfirmed, isReadyToComplete } from '../_utils/incidentStatus';
+import { MONITOR_GROUP_ORDER, monitorGroupColor, type MonitorGroupKey } from '../../utils/planMappers';
+import styles from '../../components/ProductionPlanTable.module.css';
+import type { MonitorRowVM } from '../../components/types';
+import { isIncidentConfirmed, isReadyToComplete } from '../utils/incidentStatus';
 import type { MonitorFlatRow, MonitorStatConfig } from './useMonitorGroups';
 
 const { Text } = Typography;

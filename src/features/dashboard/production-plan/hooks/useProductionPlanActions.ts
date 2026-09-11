@@ -12,13 +12,13 @@ import type {
     ProductionPlanFormData,
     ProductionPlanUpdateFormData,
 } from '@/types/ProductionPlan';
-import { productionPlanQueryKeys } from '../_hooks/queryKeys';
+import { productionPlanQueryKeys } from './queryKeys';
 import type {
     MachineGroupVM,
     PlanFormValues,
     PlanModalState,
     PlanRowTarget,
-} from '../_components/types';
+} from '../components/types';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 

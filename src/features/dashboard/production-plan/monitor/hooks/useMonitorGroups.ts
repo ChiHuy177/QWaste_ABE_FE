@@ -16,8 +16,8 @@ import {
     MONITOR_GROUP_ORDER,
     monitorGroupColor,
     type MonitorGroupKey,
-} from '../../_utils/planMappers';
-import type { MonitorRowVM } from '../../_components/types';
+} from '../../utils/planMappers';
+import type { MonitorRowVM } from '../../components/types';
 
 export type MonitorGroupHeader = {
     type: 'group-header';

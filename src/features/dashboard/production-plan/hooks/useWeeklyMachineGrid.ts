@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import type { Dayjs } from 'dayjs';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { Machine } from '@/types/Machine';
-import { mapWeeklyGroups, type MachineInfoMap, type RawPlanData } from '../_utils/planMappers';
+import { mapWeeklyGroups, type MachineInfoMap, type RawPlanData } from '../utils/planMappers';
 import { productionPlanQueryKeys } from './queryKeys';
-import type { MachineGroupVM } from '../_components/types';
+import type { MachineGroupVM } from '../components/types';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 // BE phân trang theo máy (size mặc định 20) — lấy dư để render toàn bộ lưới tuần (G9).

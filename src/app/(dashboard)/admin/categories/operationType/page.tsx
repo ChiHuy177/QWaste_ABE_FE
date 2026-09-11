@@ -18,8 +18,11 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { OperationType, OperationTypeFormData } from '@/types/OperationType';
-import { getOperationTypeTableColumns, OperationTypeTableColumnProps } from './_components/Columns';
-import { getOperationTypeFormFields } from './_components/operationTypeFormConfig';
+import {
+    getOperationTypeTableColumns,
+    type OperationTypeTableColumnProps,
+    getOperationTypeFormFields,
+} from '@/features/dashboard/categories/operationType';
 
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;

@@ -2,11 +2,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getStaffFormFields } from './_components/staffFormConfig';
+import {
+    getStaffFormFields,
+    getStaffTableColumns,
+    type StaffTableColumnProps,
+} from '@/features/dashboard/categories/staffList';
 import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
 import { toast } from 'sonner';
-import { getStaffTableColumns, StaffTableColumnProps } from './_components/Columns';
 import { Card, Table, Grid, Button } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -27,7 +30,7 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { SelectOption } from '@/types/Common';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
-import { CategoryViewModal } from '../_components/CategoryViewModal';
+import { CategoryViewModal } from '@/features/dashboard/categories';
 
 const { useBreakpoint } = Grid;
 

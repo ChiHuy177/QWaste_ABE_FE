@@ -7,13 +7,13 @@ import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { productionPlanActions } from '@/stores/ProductionPlanStore';
 import type { ProductionPlanActiveView } from '@/stores/ProductionPlanStore';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
-import { getTodayScheduleIndex, getWeekStart } from '../_utils/dateUtils';
-import { mapDailyGroups, mapWeeklyGroups, type RawPlanData } from '../_utils/planMappers';
-import { useMachineOptions } from '../_hooks/useMachineOptions';
-import { productionPlanQueryKeys } from '../_hooks/queryKeys';
-import type { MachineGroupVM } from '../_components/types';
+import { getTodayScheduleIndex, getWeekStart } from '../utils/dateUtils';
+import { mapDailyGroups, mapWeeklyGroups, type RawPlanData } from '../utils/planMappers';
+import { useMachineOptions } from './useMachineOptions';
+import { productionPlanQueryKeys } from './queryKeys';
+import type { MachineGroupVM } from '../components/types';
 
-export type { RawPlanData } from '../_utils/planMappers';
+export type { RawPlanData } from '../utils/planMappers';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 // BE phân trang theo máy (size mặc định 20) — lấy dư để render toàn bộ (G9).

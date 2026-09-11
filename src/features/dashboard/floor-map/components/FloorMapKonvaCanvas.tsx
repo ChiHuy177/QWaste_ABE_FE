@@ -24,11 +24,11 @@ import {
     FloorMapMachineDisplayResponse,
     MachineFloorPositionRequest,
 } from '@/types/FloorMap';
-import { getMachineStatusFill, getMachineStatusStroke } from '../_utils/floorMapColors';
+import { getMachineStatusFill, getMachineStatusStroke } from '../utils/floorMapColors';
 import {
     FLOOR_MAP_MACHINE_DRAG_DATA_TYPE,
     parseFloorMapMachineDragPayload,
-} from '../_utils/floorMapDrag';
+} from '../utils/floorMapDrag';
 import {
     DEFAULT_MACHINE_POSITION,
     PixelRect,
@@ -36,7 +36,7 @@ import {
     isMachinePlaced,
     pixelRectToRatio,
     ratioToPixelRect,
-} from '../_utils/floorMapRatio';
+} from '../utils/floorMapRatio';
 
 interface FloorMapKonvaCanvasProps {
     floorMap: FloorMapDisplayResponse;

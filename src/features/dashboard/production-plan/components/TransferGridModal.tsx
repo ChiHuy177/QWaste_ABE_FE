@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { Dayjs } from 'dayjs';
 import type { IncidentReason } from '@/types/ProductionPlan';
 import type { MachineGroupVM, PlanRowTarget } from './types';
-import { getIncidentReasonOptions, isIncidentNoteRequired } from '../_utils/incidentOptions';
+import { getIncidentReasonOptions, isIncidentNoteRequired } from '../utils/incidentOptions';
 import MachineDayGridPicker from './MachineDayGridPicker';
 
 export interface TransferPayload {

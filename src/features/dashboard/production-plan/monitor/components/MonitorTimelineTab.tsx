@@ -4,10 +4,10 @@ import type { CSSProperties, ReactNode } from 'react';
 import { Button, Flex, Tooltip, Typography, theme } from 'antd';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type { MonitorRowVM } from '../../_components/types';
-import { getElapsedMinutes, isIncidentConfirmed, isReadyToComplete } from '../_utils/incidentStatus';
+import type { MonitorRowVM } from '../../components/types';
+import { getElapsedMinutes, isIncidentConfirmed, isReadyToComplete } from '../utils/incidentStatus';
 import type { MonitorMachineGroup } from '../hooks/useMonitorMachineGroups';
-import styles from '../../_components/ProductionPlanTable.module.css';
+import styles from '../../components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
 

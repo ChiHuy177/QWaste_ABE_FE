@@ -25,7 +25,7 @@ import { TFunction } from 'i18next';
 import { ShiftBreakPeriodService } from '@/services/ShiftBreakPeriodService';
 import { ShiftBreakPeriod } from '@/types/ShiftBreakPeriod';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import i18n from '../../../../../../../i18n';
+import i18n from '../../../../../../i18n';
 import dayjs, { Dayjs } from 'dayjs';
 
 interface ShiftBreakFormValues {

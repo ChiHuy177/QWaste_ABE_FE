@@ -1,17 +1,20 @@
 'use client';
 
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
-import { ElectricStatsCards, ElectricStats } from './_components/ElectricStatsCards';
+import {
+    ElectricStatsCards,
+    type ElectricStats,
+    ElectricFilters,
+    ZoneConsumptionCards,
+    ElectricalChart,
+    TopZoneConsumption,
+} from '@/features/dashboard/electric';
 import { EnergyConsumption, TimePeriod, Zone } from '@/types';
 import { useEffect, useMemo, useState } from 'react';
-import ElectricFilters from './_components/ElectricFilter';
 import { toast } from 'sonner';
 import { ElectricService } from '@/services';
-import ZoneConsumptionCards from './_components/ZoneConsumptionCard';
 import { Row, Col, Skeleton, Card, Flex, Typography, theme } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
-import ElectricalChart from './_components/ElectricalChart';
-import TopZoneConsumption from './_components/TopZoneConsumption';
 import { calculateElectricityBill } from '@/utils';
 import { useEnergyWebSocket } from '@/hooks/useWebSocket';
 import { t } from 'i18next';

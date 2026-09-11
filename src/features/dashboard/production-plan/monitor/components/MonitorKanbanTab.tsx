@@ -4,15 +4,15 @@ import { memo } from 'react';
 import { Button, Flex, Tag, Typography, theme } from 'antd';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../../_utils/planMappers';
-import type { MonitorRowVM } from '../../_components/types';
+import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../../utils/planMappers';
+import type { MonitorRowVM } from '../../components/types';
 import {
     getElapsedMinutes,
     isIncidentConfirmed,
     isReadyToComplete,
-} from '../_utils/incidentStatus';
+} from '../utils/incidentStatus';
 import type { MonitorStatConfig } from '../hooks/useMonitorGroups';
-import styles from '../../_components/ProductionPlanTable.module.css';
+import styles from '../../components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
 

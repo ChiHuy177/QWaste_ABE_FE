@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MoldService } from '@/services/MoldService';
 import { isMoldSchedulable, type Mold } from '@/types/Mold';
-import type { SelectOptionVM } from '../_components/types';
+import type { SelectOptionVM } from '../components/types';
 import { moldQueryKeys } from './queryKeys';
 
 const STALE_TIME = 5 * 60_000; // 5 minutes

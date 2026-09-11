@@ -17,7 +17,7 @@ import type {
     ProductionPlanStatus,
     ProductionPlanStatusLog,
 } from '@/types/ProductionPlan';
-import { MONITOR_GROUP_BY_STATUS, MonitorGroupKey, monitorGroupColor } from '../_utils/planMappers';
+import { MONITOR_GROUP_BY_STATUS, MonitorGroupKey, monitorGroupColor } from '../utils/planMappers';
 import type { MonitorRowVM } from './types';
 
 const { Text } = Typography;

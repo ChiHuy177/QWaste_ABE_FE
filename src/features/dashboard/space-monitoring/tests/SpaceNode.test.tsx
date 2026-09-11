@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import SpaceNode from '../_components/SpaceNode';
+import SpaceNode from '../components/SpaceNode';
 import { SpaceOverview } from '@/types/Space';
 
 jest.mock('react-i18next', () => ({
@@ -17,10 +17,10 @@ jest.mock('@/hooks/useTheme', () => ({
 }));
 
 // Mock the child components to keep the test focused on SpaceNode
-jest.mock('../_components/SpaceStatsBar', () => () => (
+jest.mock('../components/SpaceStatsBar', () => () => (
     <div data-testid="space-stats-bar">Stats Bar</div>
 ));
-jest.mock('../_components/MachineCardGrid', () => () => (
+jest.mock('../components/MachineCardGrid', () => () => (
     <div data-testid="machine-card-grid">Machine Grid</div>
 ));
 

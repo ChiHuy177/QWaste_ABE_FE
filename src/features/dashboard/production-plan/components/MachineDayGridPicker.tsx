@@ -6,7 +6,7 @@ import { CheckOutlined, LeftOutlined, LockOutlined, PlusOutlined, RightOutlined 
 import { useTranslation } from 'react-i18next';
 import type { Dayjs } from 'dayjs';
 import type { MachineGroupVM } from './types';
-import { getWeekDayColumns, WEEK_DAY_KEYS } from '../_utils/dateUtils';
+import { getWeekDayColumns, WEEK_DAY_KEYS } from '../utils/dateUtils';
 
 const { Text } = Typography;
 

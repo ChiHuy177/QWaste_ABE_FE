@@ -5,7 +5,7 @@ import type { FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Mold } from '@/types/Mold';
 import type { SelectOptionVM } from './types';
-import { useCompatibleMachines } from '../_hooks/useCompatibleMachines';
+import { useCompatibleMachines } from '../hooks/useCompatibleMachines';
 
 interface ProductFormProps {
     form: FormInstance;

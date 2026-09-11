@@ -11,8 +11,13 @@ import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import FactoryStatsCards from './_components/FactoryStatsCards';
-import SpaceOverviewGrid from './_components/SpaceOverviewGrid';
+import {
+    FactoryStatsCards,
+    SpaceOverviewGrid,
+    TimeFilterPopover,
+    type PeriodFilterMode,
+    type TimeFilterApplyPayload,
+} from '@/features/dashboard/space-monitoring';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { factoryOverviewActions } from '@/stores';
@@ -29,10 +34,6 @@ import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
 import { MachineWithStatusLogsSummary } from '@/types/Machine';
-import TimeFilterPopover, {
-    PeriodFilterMode,
-    TimeFilterApplyPayload,
-} from './_components/TimeFilterPopover';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 

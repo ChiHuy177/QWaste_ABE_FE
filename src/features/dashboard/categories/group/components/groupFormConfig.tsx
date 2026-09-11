@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next';
-import { FormFieldConfig } from '../../../../../../components/shared/FormModal/types';
+import { FormFieldConfig } from '@/components/shared/FormModal/types';
 
 export const getGroupFormFields = (t: TFunction, mode: 'create' | 'edit'): FormFieldConfig[] => {
     return [

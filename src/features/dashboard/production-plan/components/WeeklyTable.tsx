@@ -6,7 +6,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { MachineGroupVM, PlanRowVM } from './types';
 import styles from './ProductionPlanTable.module.css';
-import { WEEK_DAY_KEYS } from '../_utils/dateUtils';
+import { WEEK_DAY_KEYS } from '../utils/dateUtils';
 
 type GroupHeaderRow = {
     type: 'group-header';

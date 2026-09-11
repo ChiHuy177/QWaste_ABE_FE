@@ -4,7 +4,7 @@ import type {
     PlanModalState,
     PlanRowTarget,
     TransferState,
-} from '@/app/(dashboard)/admin/production-plan/_components/types';
+} from '@/features/dashboard/production-plan';
 
 export type ProductionPlanActiveView = 'daily' | 'weekly' | 'matrix';
 

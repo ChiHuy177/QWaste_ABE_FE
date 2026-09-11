@@ -26,15 +26,16 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { FilterOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Machine } from '@/types/Machine';
-import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
+import {
+    type MachineTableColumnProps,
+    getMachineListTableColumns,
+    getMachineListFormFields,
+    toOperationTypeOptions,
+} from '@/features/dashboard/categories/machineList';
 import { MachineService } from '@/services/MachineService';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
-import {
-    getMachineListFormFields,
-    toOperationTypeOptions,
-} from './_components/machineListFormConfig';
 import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -48,7 +49,7 @@ import {
 } from '@/components/shared/filters/SpaceTreeSelect';
 import { SpaceService } from '@/services';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import MachineFilterInfo from '@/app/(dashboard)/admin/machines/_components/MachineFilterInfo';
+import { MachineFilterInfo } from '@/features/dashboard/machines';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import FilterDrawer from '@/components/shared/filters/FilterDrawer';

@@ -28,10 +28,13 @@ import {
     SpaceFormData,
     SpaceModalData,
 } from '@/types/Space';
-import { getSpaceTableColumns, SpaceTableColumnProps } from './_components/Columns';
+import {
+    getSpaceTableColumns,
+    type SpaceTableColumnProps,
+    getSpaceFormFields,
+} from '@/features/dashboard/categories/space';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
-import { getSpaceFormFields } from './_components/spaceFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';

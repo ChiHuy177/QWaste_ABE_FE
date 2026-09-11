@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { MonitorRowVM } from '../../_components/types';
+import type { MonitorRowVM } from '../../components/types';
 
 export interface MonitorMachineGroup {
     machineId: string;

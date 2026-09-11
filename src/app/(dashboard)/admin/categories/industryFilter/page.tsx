@@ -10,10 +10,11 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import { IndustryFilter, IndustryFilterFormData } from '@/types/IndustryFilter';
 import {
     getIndustryFilterTableColumns,
-    IndustryFilterTableColumnProps,
-} from './_components/Columns';
+    type IndustryFilterTableColumnProps,
+    getIndustryFilterFormFields,
+    ShiftBreaksContent,
+} from '@/features/dashboard/categories/industryFilter';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getIndustryFilterFormFields } from './_components/industryFilterFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
@@ -21,7 +22,6 @@ import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
-import ShiftBreaksContent from './_components/ShiftBreaksContent';
 
 const { useBreakpoint } = Grid;
 

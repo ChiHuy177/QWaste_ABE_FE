@@ -8,9 +8,12 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { StepDTO, CreateStepRequest, UpdateStepRequest } from '@/types/Step';
-import { getStepTableColumns, StepTableColumnProps } from './_components/Columns';
+import {
+    getStepTableColumns,
+    type StepTableColumnProps,
+    getStepFormFields,
+} from '@/features/dashboard/categories/step';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getStepFormFields } from './_components/stepFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';

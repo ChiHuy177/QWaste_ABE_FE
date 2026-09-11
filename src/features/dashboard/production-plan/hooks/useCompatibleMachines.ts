@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MachineService } from '@/services/MachineService';
 import type { Machine } from '@/types/Machine';
-import type { SelectOptionVM } from '../_components/types';
+import type { SelectOptionVM } from '../components/types';
 
 const machineOptionLabel = (machine: Machine) => {
     const code = machine.machineCode || machine.machineName;

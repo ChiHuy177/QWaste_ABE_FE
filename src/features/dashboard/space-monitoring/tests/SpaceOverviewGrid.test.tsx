@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import SpaceOverviewGrid from '../_components/SpaceOverviewGrid';
+import SpaceOverviewGrid from '../components/SpaceOverviewGrid';
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({
@@ -10,7 +10,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 // Mock SpaceNode component since we already have full test coverage for it
-jest.mock('../_components/SpaceNode', () => {
+jest.mock('../components/SpaceNode', () => {
     return function MockSpaceNode({ space, onToggle }: any) {
         return (
             <div data-testid={`space-node-${space.spaceId}`}>
@@ -27,12 +27,12 @@ jest.mock('../_components/SpaceNode', () => {
 });
 
 // Mock Modal Component
-jest.mock('../../machines/_components/MachineTimelineModal', () => {
-    return function MockMachineTimelineModal({ open, machine }: any) {
+jest.mock('@/features/dashboard/machines', () => ({
+    MachineTimelineModal: function MockMachineTimelineModal({ open, machine }: any) {
         if (!open) return null;
         return <div data-testid="machine-modal">Modal for {machine?.machineName}</div>;
-    };
-});
+    },
+}));
 
 describe('SpaceOverviewGrid Component', () => {
     const defaultGridProps = {

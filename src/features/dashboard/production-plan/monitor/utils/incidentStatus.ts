@@ -1,4 +1,4 @@
-import type { MonitorRowVM } from '../../_components/types';
+import type { MonitorRowVM } from '../../components/types';
 
 /**
  * PAUSE do MQTT (máy tự báo lỗi/mất kết nối) có trigger MQTT_* và incidentReason null.

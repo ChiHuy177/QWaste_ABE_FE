@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import ZoneCard from './ZoneCard';
-import MachineTimelineModal from '../../machines/_components/MachineTimelineModal';
+import { MachineTimelineModal } from '@/features/dashboard/machines';
 import { FactoryOverviewResponse } from '@/types/Factory';
 import { MachineOverview } from '@/types/Machine';
 import { MachineInFactoryOverview } from '@/types/Zone';
