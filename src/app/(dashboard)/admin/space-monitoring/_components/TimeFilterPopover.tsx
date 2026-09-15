@@ -139,7 +139,7 @@ const ShiftSection = React.memo<ShiftSectionProps>(
                     onChange={(e) => onChange(e.target.value as number | null)}
                     style={{ width: '100%' }}
                 >
-                    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={6} style={{ width: '100%' }}>
                         <Radio value={null}>{allShiftsLabel}</Radio>
                         {groupedShifts.map((option) => {
                             const filter = industryFilters.find((f) => f.filterId === option.value);
@@ -584,7 +584,9 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     const activeLabel = useMemo(() => {
         const currentLang = i18n.language;
         const shiftFilter =
-            currentShiftId != null ? industryFilters.find((f) => f.filterId === currentShiftId) : null;
+            currentShiftId != null
+                ? industryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
         const shiftLabel = shiftFilter
             ? currentLang === 'vi'
                 ? shiftFilter.displayNameVi
@@ -638,7 +640,16 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
 
         if (!periodLabel) return shiftLabel;
         return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
-    }, [currentMode, currentPeriodId, currentShiftId, currentStartDate, currentEndDate, industryFilters, i18n.language, t]);
+    }, [
+        currentMode,
+        currentPeriodId,
+        currentShiftId,
+        currentStartDate,
+        currentEndDate,
+        industryFilters,
+        i18n.language,
+        t,
+    ]);
 
     const content = (
         <div style={{ width: isMobile ? 'calc(100vw - 48px)' : 340, maxWidth: 340 }}>
@@ -782,7 +793,10 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                         placeholder={t('spaceMonitoring.timeFilter.selectQuarter')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {renderDatePreview(draftQuarter.startOf('quarter'), draftQuarter.endOf('quarter'))}
+                    {renderDatePreview(
+                        draftQuarter.startOf('quarter'),
+                        draftQuarter.endOf('quarter')
+                    )}
                 </div>
             )}
 
@@ -886,7 +900,11 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                     <span style={{ flexShrink: 0 }}>{t('spaceMonitoring.timeFilter.time')}:</span>
                     <Typography.Text
                         ellipsis
-                        style={{ maxWidth: 'calc(100% - 76px)', color: 'inherit', lineHeight: 'inherit' }}
+                        style={{
+                            maxWidth: 'calc(100% - 76px)',
+                            color: 'inherit',
+                            lineHeight: 'inherit',
+                        }}
                     >
                         {activeLabel ?? t('common.filter')}
                     </Typography.Text>
@@ -903,7 +921,9 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                             gap: 4,
                         }}
                     >
-                        <span style={{ flexShrink: 0 }}>{t('spaceMonitoring.timeFilter.time')}:</span>
+                        <span style={{ flexShrink: 0 }}>
+                            {t('spaceMonitoring.timeFilter.time')}:
+                        </span>
                         <Typography.Text
                             ellipsis
                             style={{ maxWidth: 135, color: 'inherit', lineHeight: 'inherit' }}

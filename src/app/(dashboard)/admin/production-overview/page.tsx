@@ -261,11 +261,39 @@ const ProductionOverviewPage: React.FC = () => {
 
     // Fetch live Dashboard KPI Widgets & Charts data
     const fetchDashboardData = useCallback(
-        async (force = false) => {
-            if (!selectedFactoryId) return;
-            if (timeFilterMode === 'PRESET' && !selectedTimePeriod) return;
+        async (
+            force = false,
+            overrideParams?: {
+                factoryId?: number | null;
+                mode?: PeriodFilterMode;
+                periodId?: number | null;
+                shiftId?: number | null;
+                startDate?: string;
+                endDate?: string;
+            }
+        ) => {
+            const effectiveFactoryId =
+                overrideParams?.factoryId !== undefined
+                    ? overrideParams.factoryId
+                    : selectedFactoryId;
+            const effectiveMode = overrideParams?.mode ?? timeFilterMode;
+            const effectivePeriodId =
+                overrideParams?.periodId !== undefined
+                    ? overrideParams.periodId
+                    : selectedTimePeriod;
+            const effectiveShiftId =
+                overrideParams?.shiftId !== undefined
+                    ? overrideParams.shiftId
+                    : selectedShiftFilterId;
+            const effectiveStartDate = overrideParams?.startDate ?? startDate;
+            const effectiveEndDate = overrideParams?.endDate ?? endDate;
 
-            const requestKey = `${selectedFactoryId}_${timeFilterMode}_${selectedTimePeriod}_${selectedShiftFilterId}_${startDate}_${endDate}`;
+            const isCustom = effectiveMode !== 'PRESET';
+
+            if (!effectiveFactoryId) return;
+            if (!isCustom && !effectivePeriodId) return;
+
+            const requestKey = `${effectiveFactoryId}_${effectiveMode}_${effectivePeriodId}_${effectiveShiftId}_${effectiveStartDate}_${effectiveEndDate}`;
             if (!force && lastFetchedParamsRef.current === requestKey) {
                 return;
             }
@@ -273,34 +301,42 @@ const ProductionOverviewPage: React.FC = () => {
 
             setIsLoadingData(true);
             try {
-                const isShift = activeFilterObj?.category === 'SHIFT';
-                const apiMode: 'PRESET' | 'CUSTOM_RANGE' = isCustomRangeMode
-                    ? 'CUSTOM_RANGE'
-                    : 'PRESET';
-                const effectiveFilterId = isCustomRangeMode
-                    ? (currentShiftId ?? null)
-                    : selectedTimePeriod;
-                const effectiveShiftFilterId = isCustomRangeMode ? null : selectedShiftFilterId;
-                const effectiveIsShift = isCustomRangeMode ? !!currentShiftId : isShift;
+                let effectiveFilterId: number | null = null;
+                let effectiveShiftFilterId: number | null = null;
+                let effectiveIsShift = false;
+
+                if (isCustom) {
+                    effectiveFilterId = effectivePeriodId ?? null;
+                    effectiveShiftFilterId = null;
+                    effectiveIsShift = !!effectivePeriodId;
+                } else {
+                    const filterObj = industryFilters.find((f) => f.filterId === effectivePeriodId);
+                    const isShift = filterObj?.category === 'SHIFT';
+                    effectiveFilterId = effectivePeriodId;
+                    effectiveShiftFilterId = isShift ? null : effectiveShiftId;
+                    effectiveIsShift = isShift;
+                }
+
+                const apiMode: 'PRESET' | 'CUSTOM_RANGE' = isCustom ? 'CUSTOM_RANGE' : 'PRESET';
 
                 const [kpiResult, chartsResult] = await Promise.allSettled([
                     DashboardService.getOverviewKpis({
-                        spaceId: selectedFactoryId,
+                        spaceId: effectiveFactoryId,
                         mode: apiMode,
                         filterId: effectiveFilterId,
                         shiftFilterId: effectiveShiftFilterId,
                         isShiftFilter: effectiveIsShift,
-                        startDate,
-                        endDate,
+                        startDate: effectiveStartDate,
+                        endDate: effectiveEndDate,
                     }),
                     DashboardService.getDashboardCharts({
-                        spaceId: selectedFactoryId,
+                        spaceId: effectiveFactoryId,
                         mode: apiMode,
                         filterId: effectiveFilterId,
                         shiftFilterId: effectiveShiftFilterId,
                         isShiftFilter: effectiveIsShift,
-                        startDate,
-                        endDate,
+                        startDate: effectiveStartDate,
+                        endDate: effectiveEndDate,
                     }),
                 ]);
 
@@ -414,7 +450,7 @@ const ProductionOverviewPage: React.FC = () => {
             timeFilterMode,
             selectedTimePeriod,
             selectedShiftFilterId,
-            activeFilterObj,
+            industryFilters,
             startDate,
             endDate,
             t,
@@ -426,7 +462,7 @@ const ProductionOverviewPage: React.FC = () => {
         if (
             !selectedMachineCode &&
             selectedFactoryId &&
-            (selectedTimePeriod || timeFilterMode === 'CUSTOM_RANGE')
+            (selectedTimePeriod || isCustomRangeMode)
         ) {
             fetchDashboardData();
         }
@@ -435,7 +471,10 @@ const ProductionOverviewPage: React.FC = () => {
         selectedMachineCode,
         selectedFactoryId,
         selectedTimePeriod,
-        timeFilterMode,
+        isCustomRangeMode,
+        selectedShiftFilterId,
+        startDate,
+        endDate,
     ]);
 
     // Direct live KPI data or clean zero state (no fake mock fallback)
@@ -539,9 +578,13 @@ const ProductionOverviewPage: React.FC = () => {
         }
     }, []);
 
-    const handleFactoryChange = useCallback((id: number) => {
-        setSelectedFactoryId(id);
-    }, []);
+    const handleFactoryChange = useCallback(
+        (id: number) => {
+            setSelectedFactoryId(id);
+            fetchDashboardData(true, { factoryId: id });
+        },
+        [fetchDashboardData]
+    );
 
     const handleBackToOverview = useCallback(() => {
         setSelectedMachineCode(null);
@@ -730,20 +773,36 @@ const ProductionOverviewPage: React.FC = () => {
         toast.success(t('productionOverview.actions.refreshSuccess'));
     }, [selectedMachineCode, fetchDashboardData, t]);
 
-    const handleApplyTimeFilter = useCallback((payload: TimeFilterApplyPayload) => {
-        const {
-            mode,
-            primaryFilterId,
-            secondaryShiftId,
-            startDate: sDate,
-            endDate: eDate,
-        } = payload;
-        setTimeFilterMode(mode);
-        setSelectedTimePeriod(primaryFilterId);
-        setSelectedShiftFilterId(secondaryShiftId);
-        setStartDate(sDate);
-        setEndDate(eDate);
-    }, []);
+    const handleApplyTimeFilter = useCallback(
+        (payload: TimeFilterApplyPayload) => {
+            const {
+                mode,
+                primaryFilterId,
+                secondaryShiftId,
+                startDate: sDate,
+                endDate: eDate,
+            } = payload;
+            setTimeFilterMode(mode);
+            setSelectedTimePeriod(primaryFilterId);
+            setSelectedShiftFilterId(secondaryShiftId);
+            setStartDate(sDate);
+            setEndDate(eDate);
+
+            if (selectedMachineCode) {
+                setMachineRefreshTrigger((prev) => prev + 1);
+            } else if (selectedFactoryId) {
+                fetchDashboardData(true, {
+                    factoryId: selectedFactoryId,
+                    mode,
+                    periodId: primaryFilterId,
+                    shiftId: secondaryShiftId,
+                    startDate: sDate,
+                    endDate: eDate,
+                });
+            }
+        },
+        [selectedMachineCode, selectedFactoryId, fetchDashboardData]
+    );
 
     const handleExportExcel = useCallback(async () => {
         if (!selectedFactoryId) return;
