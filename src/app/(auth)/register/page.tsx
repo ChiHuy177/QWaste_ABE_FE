@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import RegisterLayout from './components/RegisterLayout';
+import { RegisterLayout } from '@/features/auth/register';
 import { useEffect, useState } from 'react';
 import { AuthStore } from '@/stores/AuthStore';
 import { usePageTitle } from '@/hooks/usePageTitle';

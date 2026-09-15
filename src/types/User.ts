@@ -29,7 +29,7 @@ export interface StaffFormData {
 export interface PermissionRule {
     action: Action;
     subject: Subject;
-    conditions?: Record<string, any>;
+    conditions?: Record<string, unknown>;
 }
 
 export interface AllTypePermissions {

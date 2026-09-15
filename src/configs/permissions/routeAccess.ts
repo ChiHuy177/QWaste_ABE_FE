@@ -1,138 +1,33 @@
 import { Action, Subject, AppAbility } from './caslAbility';
+import { PERMISSION_REGISTRY } from './permissionRegistry';
 
 export interface RouteConfig {
     subject: Subject;
     action: Action;
+    /** OR-condition: route is also accessible if ability grants this action on the same subject. */
+    alternativeAction?: Action;
 }
 
 // Routes accessible to all authenticated users without permission check
 export const PUBLIC_ROUTES: string[] = [];
 
-export const ROUTE_ACCESS: Record<string, RouteConfig> = {
-    // Categories
-    '/admin/categories/machineList': {
-        subject: 'machine',
-        action: 'view',
-    },
-    '/admin/categories/machineStaffing': {
-        subject: 'staffing',
-        action: 'view',
-    },
-    '/admin/categories/factory': {
-        subject: 'factory',
-        action: 'view',
-    },
-    '/admin/categories/zone': {
-        subject: 'zone',
-        action: 'view',
-    },
-    '/admin/categories/line': {
-        subject: 'line',
-        action: 'view',
-    },
-    '/admin/categories/staffList': {
-        subject: 'staff',
-        action: 'view',
-    },
-    '/admin/categories/space': {
-        subject: 'space',
-        action: 'view',
-    },
-    '/admin/categories/spaceLevel': {
-        subject: 'space_level',
-        action: 'view',
-    },
-    '/admin/categories/mold': {
-        subject: 'mold',
-        action: 'view',
-    },
-    '/admin/categories/operationType': {
-        subject: 'operation_type',
-        action: 'view',
-    },
-    '/admin/categories/step': {
-        subject: 'step',
-        action: 'view',
-    },
-    '/admin/setting': {
-        subject: 'profile',
-        action: 'view',
-    },
-
-    // Space monitoring
-    '/admin/space-monitoring': {
-        subject: 'space_monitoring',
-        action: 'view',
-    },
-
-    '/admin/work-calendar': {
-        subject: 'work_calendar',
-        action: 'view',
-    },
-
-    '/admin/floor-map': {
-        subject: 'floor_map',
-        action: 'update',
-    },
-
-    // Machines
-    '/admin/machines': {
-        subject: 'machine_overview',
-        action: 'view',
-    },
-
-    // RBAC Management
-    '/admin/rbac/users': {
-        subject: 'user',
-        action: 'view',
-    },
-    '/admin/rbac/roles': {
-        subject: 'role',
-        action: 'view',
-    },
-    '/admin/rbac/permissions': {
-        subject: 'permission',
-        action: 'view',
-    },
-
-    // Manager
-    '/manager/review-dashboard': {
-        subject: 'manager_reviews',
-        action: 'view',
-    },
-
-    // QC
-    '/qc': {
-        subject: 'qc_dashboard',
-        action: 'view',
-    },
-
-    // Process Management
-    '/admin/process': {
-        subject: 'process',
-        action: 'view',
-    },
-
-    // Tasks Management
-    '/admin/tasks': {
-        subject: 'tasks',
-        action: 'view',
-    },
-    '/admin/production-plan': {
-        subject: 'production_plan',
-        action: 'view',
-    },
-    '/admin/production-plan/monitor': {
-        subject: 'production_monitor',
-        action: 'view',
-    },
-
-    // Error & Incident Management
-    '/admin/error-management': {
-        subject: 'error_management',
-        action: 'view',
-    },
-};
+/**
+ * Route -> required (subject, action) map, derived from PERMISSION_REGISTRY.
+ * PERMISSION_REGISTRY.routes is the single source of truth for route ownership;
+ * do not hand-maintain a separate route table here.
+ */
+export const ROUTE_ACCESS: Record<string, RouteConfig> = Object.fromEntries(
+    PERMISSION_REGISTRY.flatMap((permission) =>
+        permission.routes.map((route) => [
+            route,
+            {
+                subject: permission.subject,
+                action: permission.action,
+                alternativeAction: permission.alternativeAction,
+            },
+        ])
+    )
+);
 
 const DEFAULT_ROUTE_PRIORITY: string[] = [
     '/admin/space-monitoring',
@@ -165,7 +60,7 @@ export function hasRouteAccessWithAbility(route: string, ability: AppAbility): b
 
     const exactMatch = ROUTE_ACCESS[route];
     if (exactMatch) {
-        return ability.can(exactMatch.action, exactMatch.subject);
+        return canAccessWithConfig(ability, exactMatch);
     }
 
     const sortedRoutes = Object.entries(ROUTE_ACCESS).sort(([a], [b]) => b.length - a.length);
@@ -176,7 +71,15 @@ export function hasRouteAccessWithAbility(route: string, ability: AppAbility): b
     }
 
     const [, config] = routeConfig;
-    return ability.can(config.action, config.subject);
+    return canAccessWithConfig(ability, config);
+}
+
+function canAccessWithConfig(ability: AppAbility, config: RouteConfig): boolean {
+    if (ability.can(config.action, config.subject)) return true;
+    if (config.alternativeAction && ability.can(config.alternativeAction, config.subject)) {
+        return true;
+    }
+    return false;
 }
 
 export function getRouteConfig(route: string): RouteConfig | undefined {

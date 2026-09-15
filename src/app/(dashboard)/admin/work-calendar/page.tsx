@@ -14,10 +14,13 @@ import {
 } from '@/types/WorkCalendar';
 import { WorkCalendarService } from '@/services/WorkCalendarService';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { WorkCalendarHeader } from './_components/WorkCalendarHeader';
-import { WorkCalendarSummary } from './_components/WorkCalendarSummary';
-import { WorkCalendarGrid } from './_components/WorkCalendarGrid';
-import { EditDayModal } from './_components/EditDayModal';
+import { getApiErrorMessage } from '@/utils/apiError';
+import {
+    WorkCalendarHeader,
+    WorkCalendarSummary,
+    WorkCalendarGrid,
+    EditDayModal,
+} from '@/features/dashboard/work-calendar';
 
 const { useBreakpoint } = Grid;
 
@@ -28,13 +31,6 @@ const createDaysMap = (days: WorkCalendarDayResponse[]): Map<string, WorkCalenda
     const map = new Map<string, WorkCalendarDayResponse>();
     days.forEach((day) => map.set(day.date, { ...day }));
     return map;
-};
-
-/**
- * Helper to extract clean error message
- */
-const getErrorMessage = (err: any, fallbackMessage: string): string => {
-    return err?.response?.data?.message || err?.message || fallbackMessage;
 };
 
 export default function WorkCalendarPage() {
@@ -76,8 +72,8 @@ export default function WorkCalendarPage() {
                 const data = await WorkCalendarService.getMonthCalendar(targetYear, targetMonth);
                 setMonthData(data);
                 setDraftDaysMap(createDaysMap(data.days));
-            } catch (err: any) {
-                toast.error(getErrorMessage(err, t('workCalendar.notifications.fetchError')));
+            } catch (err: unknown) {
+                toast.error(getApiErrorMessage(err, t('workCalendar.notifications.fetchError')));
             } finally {
                 setLoading(false);
             }
@@ -111,25 +107,7 @@ export default function WorkCalendarPage() {
     }, [isEditMode, monthData, draftDaysMap]);
 
     // Check confirmation status from API response
-    const isConfirmed = useMemo(() => {
-        if (!monthData) return false;
-        const res = monthData as any;
-        const sum = monthData.summary as any;
-        return Boolean(
-            res.isConfirmed ||
-            res.confirmed ||
-            res.isLocked ||
-            res.locked ||
-            res.status === 'CONFIRMED' ||
-            res.status === 'LOCKED' ||
-            sum?.isConfirmed ||
-            sum?.confirmed ||
-            sum?.isLocked ||
-            sum?.locked ||
-            sum?.status === 'CONFIRMED' ||
-            sum?.status === 'LOCKED'
-        );
-    }, [monthData]);
+    const isConfirmed = useMemo(() => Boolean(monthData?.isConfirmed), [monthData]);
 
     // Handlers
     const handleMonthChange = useCallback((newYear: number, newMonth: number) => {
@@ -208,8 +186,8 @@ export default function WorkCalendarPage() {
             setIsEditMode(false);
             setSelectedDates([]);
             toast.success(t('workCalendar.notifications.saveSuccess'));
-        } catch (err: any) {
-            toast.error(getErrorMessage(err, t('workCalendar.notifications.saveError')));
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.saveError')));
         } finally {
             setIsSaving(false);
         }
@@ -225,8 +203,8 @@ export default function WorkCalendarPage() {
             setIsEditMode(false);
             setSelectedDates([]);
             toast.success(t('workCalendar.notifications.resetSuccess'));
-        } catch (err: any) {
-            toast.error(getErrorMessage(err, t('workCalendar.notifications.resetError')));
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.resetError')));
         } finally {
             setIsResetting(false);
         }
@@ -236,23 +214,10 @@ export default function WorkCalendarPage() {
         setIsConfirming(true);
         try {
             const confirmedData = await WorkCalendarService.confirmMonth(year, month);
-            if (confirmedData && confirmedData.days && confirmedData.days.length > 0) {
-                setMonthData(confirmedData);
-            } else {
-                setMonthData((prev) =>
-                    prev
-                        ? {
-                              ...prev,
-                              isConfirmed: true,
-                              confirmed: true,
-                              summary: { ...prev.summary, isConfirmed: true, confirmed: true },
-                          }
-                        : confirmedData
-                );
-            }
+            setMonthData(confirmedData);
             toast.success(t('workCalendar.notifications.confirmMonthSuccess', { month, year }));
-        } catch (err: any) {
-            toast.error(getErrorMessage(err, t('workCalendar.notifications.confirmMonthError')));
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.confirmMonthError')));
         } finally {
             setIsConfirming(false);
         }

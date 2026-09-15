@@ -9,14 +9,15 @@ import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeade
 import {
     MachineOperatorHistory,
     MachineOperatorHistoryFormData,
+    MachineOperatorHistoryModalData,
 } from '@/types/MachineOperatorHistory';
 import {
-    machineOperatorHistoryTableColumnProps,
+    type machineOperatorHistoryTableColumnProps,
     getMachineListTableColumns,
-} from './_components/Column';
+    getMachineStaffingFormFields,
+} from '@/features/dashboard/categories/machineStaffing';
 import { MachineOperatorHistoryService } from '@/services/MachineOperatorHistoryService';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getMachineStaffingFormFields } from './_components/machineStaffingFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { FactoryPickingResponse } from '@/types/Factory';
 import { ZonePickingResponse } from '@/types/Zone';
@@ -33,7 +34,7 @@ const MachineStaffingPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: MachineOperatorHistoryModalData | null;
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
@@ -106,7 +107,7 @@ const MachineStaffingPage = () => {
                         step.machineId
                     );
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching machine staffing details:', error);
                 handleError(error, { fallbackKey: 'machineStaffingManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
@@ -354,8 +355,8 @@ const MachineStaffingPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.createdAt')}>
                                         {viewModalState.data.auditMetaData.createdAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.createdAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.createdAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.createdBy')}>
@@ -364,8 +365,8 @@ const MachineStaffingPage = () => {
                                     <Descriptions.Item label={t('common.auditInfo.updatedAt')}>
                                         {viewModalState.data.auditMetaData.updatedAt
                                             ? dayjs(
-                                                viewModalState.data.auditMetaData.updatedAt
-                                            ).format('DD/MM/YYYY HH:mm:ss')
+                                                  viewModalState.data.auditMetaData.updatedAt
+                                              ).format('DD/MM/YYYY HH:mm:ss')
                                             : '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label={t('common.auditInfo.updatedBy')}>
@@ -397,20 +398,20 @@ const MachineStaffingPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                styles={{ body: {
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingBottom: 0,
-                } }}
+                styles={{
+                    body: {
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
+                }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<MachineOperatorHistory>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredHistoryData}
                         loading={loading}

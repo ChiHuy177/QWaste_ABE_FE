@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const toMessage = (value: unknown): string => {
     if (typeof value === 'string' && value.trim()) {
         return value;
@@ -32,24 +34,36 @@ const toMessages = (value: unknown): string => {
         .join('\n');
 };
 
+interface ApiErrorLike {
+    response?: {
+        data?: unknown;
+        status?: number;
+    };
+    message?: string;
+}
+
 export const getApiErrorMessage = (error: unknown, fallback = ''): string => {
-    const errorObject = error as any;
-    const errorData = errorObject?.response?.data;
+    const errorObject = error as ApiErrorLike;
+    const errorData = errorObject?.response?.data as Record<string, unknown> | undefined;
 
     const apiMessage =
         toMessage(errorData?.message) ||
         toMessages(errorData?.errors) ||
         toMessage(errorData?.error) ||
-        toMessage(errorData?.result?.message) ||
-        toMessages(errorData?.result?.errors);
+        toMessage((errorData?.result as Record<string, unknown> | undefined)?.message) ||
+        toMessages((errorData?.result as Record<string, unknown> | undefined)?.errors);
 
     return apiMessage || fallback || toMessage(errorObject?.message);
 };
 
 export const getErrorStatus = (error: unknown): number | undefined => {
-    return (error as any)?.response?.status;
+    return (error as ApiErrorLike)?.response?.status;
 };
 
 export const shouldUseServerMessage = (status?: number): boolean => {
     return status === 409;
+};
+
+export const isRequestCancelled = (error: unknown): boolean => {
+    return axios.isCancel(error);
 };

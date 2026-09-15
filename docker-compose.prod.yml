@@ -1,0 +1,14 @@
+# Mẫu compose để deploy trên máy khách/server: chỉ pull image có sẵn từ Docker Hub,
+# không build từ source. Copy file này (đổi tên thành docker-compose.yml) cùng một
+# file .env (UPLOADTHING_TOKEN, BFF_COOKIE_SECURE) vào một thư mục riêng trên server,
+# không cần source code hay Dockerfile đi kèm.
+services:
+  qwaste-abe:
+    image: chihuy177/qwaste-abe:latest
+    container_name: qwaste-abe
+    ports:
+      - '3000:3000'
+    environment:
+      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
+      BFF_COOKIE_SECURE: ${BFF_COOKIE_SECURE:-false}
+    restart: unless-stopped

@@ -1949,6 +1949,9 @@
             "createdBy": "Người tạo",
             "updatedAt": "Ngày cập nhật",
             "updatedBy": "Người cập nhật"
+        },
+        "viewModal": {
+            "groupInfo": "Thông tin nhóm"
         }
     },
     "staffManagement": {
@@ -2159,6 +2162,9 @@
                 "badRequest": "Yêu cầu không hợp lệ. Vui lòng kiểm tra đầu vào",
                 "unauthorized": "Bạn không được ủy quyền thực hiện hành động này"
             }
+        },
+        "viewModal": {
+            "staffInfo": "Thông tin nhân viên"
         }
     },
     "zoneManagement": {

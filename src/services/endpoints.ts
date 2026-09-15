@@ -80,7 +80,7 @@ export const ENDPOINTS = {
     SPACE_LEVELS: {
         BASE: BASE_PATHS.SPACE_LEVELS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SPACE_LEVELS, id),
-        PAGINATION: `${BASE_PATHS.SPACE_LEVELS}/all`,
+        PAGINATION: BASE_PATHS.SPACE_LEVELS,
     },
     STANDARD_STEPS: {
         BASE: BASE_PATHS.STANDARD_STEPS,
@@ -99,7 +99,7 @@ export const ENDPOINTS = {
             `${BASE_PATHS.MACHINES_MONITORING}/overview/byCurrentShift/${machineId}`,
         RESTORE: (id: PathParam) => `${BASE_PATHS.MACHINES}/${id}/restoring`,
         MACHINE_LIST: `${BASE_PATHS.MACHINES_V2}/machineList`,
-        PAGINATION: `${BASE_PATHS.MACHINES}/all`,
+        PAGINATION: BASE_PATHS.MACHINES,
         PICKING_BY_OPERATION_TYPE: `${BASE_PATHS.MACHINES}/pickingByOperationType`,
         MACHINE_OPERATOR_HISTORY: {
             BASE: BASE_PATHS.MACHINES_OP_HISTORY,

@@ -1,89 +1,123 @@
-# Xác thực & phân quyền
-
-Qwaste v2 dùng cookie httpOnly qua BFF cho xác thực và CASL để kiểm soát quyền truy cập route/màn hình.
-
-## Login
-
-Luồng đăng nhập:
-
-```txt
-LoginForm
-  -> AuthContext.login
-  -> AuthService.login
-  -> POST /api/bff/api/authentication/v1/login
-  -> BFF nhận token từ backend
-  -> BFF set bff_access_token httpOnly cookie
-  -> UserService.getMe
-  -> hydrate user settings + permissions
-```
-
-Client không đọc access token trực tiếp. Token được BFF gắn vào `Authorization` header khi forward request.
-
-## Khởi tạo phiên
-
-`AuthContext` kiểm tra route hiện tại:
-
-| Route | Hành vi |
-| --- | --- |
-| `/`, `/login`, `/register` | Không gọi `getMe` |
-| Dashboard route | Gọi `/api/users/v1/me` để xác thực user |
-
-Nếu session hết hạn, `apiClient` dispatch event `sessionExpired`; error handler toàn cục xử lý redirect về login.
-
-## Ability
-
-`src/configs/permissions/defineAbility.ts` tạo ability theo thứ tự ưu tiên:
-
-1. Nếu backend trả custom permissions, dùng permissions đó.
-2. Nếu có `manage all`, user có toàn quyền.
-3. Nếu không có custom permissions, fallback theo role.
-4. Operator luôn được cấp view cho dashboard/review operator khi role là `operator` hoặc `op`.
-
-Ví dụ permission rule:
-
-```ts
+# Xác thực & phân quyền
+
+Qwaste v2 dùng cookie httpOnly qua BFF cho xác thực và CASL để kiểm soát quyền truy cập route/màn hình.
+
+## Login
+
+Luồng đăng nhập:
+
+```txt
+LoginForm
+  -> AuthContext.login
+  -> AuthService.login
+  -> POST /api/bff/api/authentication/v1/login
+  -> BFF nhận token từ backend
+  -> BFF set bff_access_token httpOnly cookie
+  -> UserService.getMe
+  -> hydrate user settings + permissions
+```
+
+Client không đọc access token trực tiếp. Token được BFF gắn vào `Authorization` header khi forward request.
+
+## Khởi tạo phiên
+
+`AuthContext` kiểm tra route hiện tại:
+
+| Route | Hành vi |
+| --- | --- |
+| `/`, `/login`, `/register` | Không gọi `getMe` |
+| Dashboard route | Gọi `/api/users/v1/me` để xác thực user |
+
+Nếu session hết hạn, `apiClient` dispatch event `sessionExpired`; error handler toàn cục xử lý redirect về login.
+
+## Single source of truth: `PERMISSION_REGISTRY`
+
+`src/configs/permissions/permissionRegistry.ts` là nơi **duy nhất** map một
+cặp `(subject, action)` sang route và cách hiển thị trên sidebar. Mọi thứ khác
+(route guard, render sidebar, form "tạo permission" ở trang RBAC) đều đọc từ
+đây — không còn bảng route hay bảng menu thứ hai nào cần giữ đồng bộ tay.
+
+```ts
+{
+  slug: 'space_monitoring:view',
+  subject: 'space_monitoring',
+  action: 'view',
+  routes: ['/admin/space-monitoring'],
+  menuKey: 'space-monitoring',
+  i18nKey: 'permissionSubjects.space_monitoring',
+}
+```
+
+- `routes` sinh ra `ROUTE_ACCESS` trong `routeAccess.ts` (build lúc module
+  load bằng `Object.fromEntries(PERMISSION_REGISTRY.flatMap(...))`).
+- `i18nKey` (cùng `group`/`subGroup`/`alwaysShowInMenu`/`alternativeAction`/
+  `alsoRequiresAction`) quyết định hiển thị trên sidebar trong
+  `src/configs/navigation/menuItems.tsx`. Một permission chỉ xuất hiện trên
+  sidebar nếu có `i18nKey`; entry không có field này chỉ dùng cho route/RBAC.
+- `alternativeAction` mã hoá điều kiện OR — ví dụ `machine_overview:view`
+  cũng hiện/mở khoá trang "Machines" cho user chỉ có
+  `machine_overview:update`. Cả check trên sidebar lẫn route guard đều đọc
+  chung `alternativeAction` này, nên không thể có chuyện menu hiện mà route
+  lại đá user ra (và ngược lại).
+- `getAllSubjects()` trong file này cấp dữ liệu cho dropdown subject ở form
+  "tạo permission" trang RBAC.
+
+Khi thêm route mới cần kiểm tra quyền, chỉ cần thêm **một** entry ở đây —
+không tạo thêm entry tương ứng trong `routeAccess.ts`, và không viết tay
+`if (ability.can(...))` trong `menuItems.tsx`.
+
+## Ability
+
+`src/configs/permissions/defineAbility.ts` tạo ability theo thứ tự ưu tiên:
+
+1. Dùng custom permissions từ backend nếu có (`user.allTypePermissions.finalPermissions` hoặc `user.permissions`).
+2. Cấp toàn quyền nếu có permission `manage all`.
+3. Ngược lại, fallback về `getDefaultPermissionsForRoles()` từ
+   `src/configs/permissions/rolePermissions.ts` — bảng role→permission mặc
+   định duy nhất, dùng chung cho cả nhánh fallback thật lẫn nhánh dev/mock
+   (không còn bảng mock permission riêng nữa).
+
+Backend là nguồn sự thật: khi backend đã trả permissions, FE **không** vá
+hay chồng thêm gì lên trên (một phiên bản trước của hàm này bị rớt xuống
+nhánh fallback theo role ngay cả khi đã có permissions rõ ràng từ BE, âm
+thầm mở rộng quyền vượt quá những gì backend cấp — phần rớt xuống đó đã được
+gỡ bỏ).
+
+Ví dụ permission rule:
+
+```ts
 {
   action: 'view',
   subject: 'space_monitoring'
-}
-```
-
-## Route access
-
-`src/configs/permissions/routeAccess.ts` map route sang `subject` và `action`.
-
-```ts
-'/admin/space-monitoring': {
-  subject: 'space_monitoring',
-  action: 'view'
-}
-```
-
-Khi user truy cập route, app kiểm tra:
-
-```ts
-ability.can(action, subject)
-```
-
-Nếu route không có config và không nằm trong public routes, mặc định bị chặn.
-
-## Sidebar
-
-Sidebar ở `src/configs/navigation/menuItems.tsx` chỉ render item khi ability phù hợp.
-
-```ts
-if (ability.can('view', 'space_monitoring')) {
-  items.push(createMenuItem('/admin/space-monitoring', t('permissionSubjects.space_monitoring')))
-}
-```
-
-Vì vậy khi thêm route mới, phải cập nhật cả `ROUTE_ACCESS` và menu nếu muốn user nhìn thấy màn hình.
-
-## Checklist khi thêm quyền mới
-
-1. Thêm subject/action vào type CASL nếu cần.
-2. Backend trả permission mới cho user/role.
-3. Cập nhật `defineAbility.ts` nếu cần fallback theo role.
-4. Cập nhật `routeAccess.ts`.
-5. Cập nhật menu hoặc component guard.
-6. Test bằng user có quyền và user không có quyền.
+}
+```
+
+## Route access
+
+`src/configs/permissions/routeAccess.ts` sinh `ROUTE_ACCESS` từ
+`PERMISSION_REGISTRY.routes` — đây là bảng được generate, không phải viết tay.
+
+Khi user truy cập route, app kiểm tra:
+
+```ts
+ability.can(action, subject)
+```
+
+Nếu route không có config và không nằm trong public routes, mặc định bị chặn.
+
+## Sidebar
+
+Sidebar ở `src/configs/navigation/menuItems.tsx` được build bằng cách duyệt
+các entry trong `PERMISSION_REGISTRY` có `i18nKey`, nhóm theo `group`/
+`subGroup` (kể cả group `production_plan`), và kiểm tra
+`ability.can(action, subject)` cho từng entry. Bảng icon và thứ tự hiển thị
+trong file này là phần dữ liệu thuần trình bày duy nhất còn nằm ngoài
+registry (registry giữ là data thuần để còn import được từ chỗ không phải UI).
+
+## Checklist khi thêm quyền mới
+
+1. Thêm subject/action vào `caslAbility.ts` nếu cần (thêm action mới vào mảng `ACTIONS` — `Action` được suy ra từ đó).
+2. Thêm một entry vào `PERMISSION_REGISTRY` với `routes`, và `i18nKey`/`group`/`subGroup` nếu cần hiện trên sidebar.
+3. Backend trả permission mới cho user/role.
+4. Chỉ cập nhật `rolePermissions.ts` nếu thực sự cần fallback theo role.
+5. Test bằng user có quyền và user không có quyền.

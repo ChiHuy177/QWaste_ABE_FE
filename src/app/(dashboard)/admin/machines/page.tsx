@@ -3,19 +3,27 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Input, Select, Empty, Spin, Button, Flex, Segmented, Row, Col } from 'antd';
 import { AppstoreOutlined, TableOutlined, AimOutlined } from '@ant-design/icons';
-import MachineStatsCards from './_components/MachineStatsCards';
-import MachineCard from './_components/MachineCard';
-import MachineFilterInfo from './_components/MachineFilterInfo';
-import MachineFocusView from './_components/MachineFocusView';
+import {
+    MachineStatsCards,
+    MachineCard,
+    MachineFilterInfo,
+    MachineFocusView,
+    MachineTimelineModal,
+    MachineDashboardSummary,
+    MachineDurationSummaryTable,
+} from '@/features/dashboard/machines';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { useTranslation } from 'react-i18next';
 import { SearchOutlined, InboxOutlined } from '@ant-design/icons';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import MachineTimelineModal from './_components/MachineTimelineModal';
-import MachineDashboardSummary from './_components/MachineDashboardSummary';
-import MachineDurationSummaryTable from './_components/MachineDurationSummaryTable';
 import { MachineOverview } from '@/types/Machine';
+
+interface ZoneEnergyWsFrame {
+    payload?:
+        | { type: 'MACHINES_CURRENT_POWER'; machines: Record<string, number> }
+        | { type: 'MACHINES_FULL_POWER'; data: MachineOverview[] };
+}
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { machineActions } from '@/stores';
 import { SpaceWithChildrenResponse } from '@/types/Space';
@@ -160,7 +168,7 @@ const MachinesPage: React.FC = () => {
         const topic = `/topic/energy/zone/${selectedSpaceId}`;
         if (isDev) console.log('[Machine Page] Subscribing to:', topic);
 
-        const unsubscribe = wsService.subscribe<any>(topic, (message) => {
+        const unsubscribe = wsService.subscribe<ZoneEnergyWsFrame>(topic, (message) => {
             if (message.payload?.type === 'MACHINES_CURRENT_POWER') {
                 dispatch(machineActions.updateMachinesPower(message.payload.machines));
             }

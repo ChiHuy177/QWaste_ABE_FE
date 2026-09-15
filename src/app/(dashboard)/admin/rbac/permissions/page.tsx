@@ -7,9 +7,13 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { LoadingOutlined, PlusOutlined, SafetyOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Permission, PermissionFormData } from '@/types/Permission';
-import { getPermissionTableColumns, PermissionTableColumnProps } from './_components/Columns';
+import {
+    getPermissionTableColumns,
+    type PermissionTableColumnProps,
+    type PermissionTableRow,
+    getPermissionFormFields,
+} from '@/features/dashboard/rbac/permissions';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getPermissionFormFields } from './_components/permissionFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { PermissionService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
@@ -132,7 +136,7 @@ const PermissionManagementPage = () => {
         });
     }, [permissionData, searchTerm]);
 
-    const groupedPermissionData = useMemo(() => {
+    const groupedPermissionData = useMemo((): PermissionTableRow[] => {
         if (!filteredPermissionData) return [];
 
         const groups: Record<string, Permission[]> = {};
@@ -208,8 +212,9 @@ const PermissionManagementPage = () => {
                             description: data.description,
                         });
                         results.push(newPermission);
-                    } catch (error: any) {
-                        const errorData = error?.response?.data;
+                    } catch (error: unknown) {
+                        const errorData = (error as { response?: { data?: unknown } })?.response
+                            ?.data as { code?: number } | undefined;
                         if (errorData?.code === 2001) {
                             errors.push(getApiErrorMessage(error, slug));
                         } else {
@@ -248,11 +253,13 @@ const PermissionManagementPage = () => {
                 );
                 toast.success(t('permissionManagement.messages.updateSuccess'));
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error submitting permission:', error);
 
             // Handle duplicate permission error (code 2001)
-            const errorData = (error as any)?.response?.data;
+            const errorData = (error as { response?: { data?: unknown } })?.response?.data as
+                | { code?: number; result?: { conflictValue?: string } }
+                | undefined;
             if (errorData?.code === 2001) {
                 const conflictValue = errorData?.result?.conflictValue || '';
                 handleError(error, {
@@ -392,7 +399,7 @@ const PermissionManagementPage = () => {
                         <Spin size="large" indicator={<LoadingOutlined spin />} />
                     </div>
                 ) : (
-                    <Table<any>
+                    <Table<PermissionTableRow>
                         columns={columns}
                         dataSource={groupedPermissionData}
                         loading={loading}

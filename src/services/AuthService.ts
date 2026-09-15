@@ -1,9 +1,9 @@
 import { LoginResponse } from '@/types/ApiResponse';
 import { NetworkService } from './NetworkService';
 import { AuthStore } from '@/stores/AuthStore';
-import { AxiosError } from 'axios';
 import { ENDPOINTS } from './endpoints';
 import { RegisterRequest } from '@/types/Register';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 export class AuthService {
     private static storeAuthTokens(result: LoginResponse): void {
@@ -28,7 +28,7 @@ export class AuthService {
             this.storeAuthTokens(response.result);
 
             return response.result as LoginResponse;
-        } catch (error: AxiosError | any) {
+        } catch (error: unknown) {
             console.log(error);
             throw error;
         }
@@ -45,8 +45,8 @@ export class AuthService {
                 throw new Error(response.message || 'Refresh failed');
             }
             // BFF: Proxy cập nhật httpOnly cookie, client không cần token
-        } catch (error: any) {
-            console.error('[AUTH SERVICE] Refresh failed:', error.message);
+        } catch (error: unknown) {
+            console.error('[AUTH SERVICE] Refresh failed:', getApiErrorMessage(error));
             throw error;
         }
     }
@@ -57,8 +57,8 @@ export class AuthService {
                 method: 'POST',
                 url: ENDPOINTS.AUTH.LOGOUT,
             });
-        } catch (error: any) {
-            console.error('[AUTH SERVICE] Logout failed:', error.message);
+        } catch (error: unknown) {
+            console.error('[AUTH SERVICE] Logout failed:', getApiErrorMessage(error));
         } finally {
             AuthStore.clear();
         }
@@ -82,14 +82,12 @@ export class AuthService {
             }
 
             return { success: true };
-        } catch (error: AxiosError | any) {
-            console.error(
-                '[AUTH SERVICE] Registration failed:',
-                error.response?.data?.message || error.message
-            );
+        } catch (error: unknown) {
+            const errorMessage = getApiErrorMessage(error, 'Registration failed');
+            console.error('[AUTH SERVICE] Registration failed:', errorMessage);
             return {
                 success: false,
-                error: error.response?.data?.message || 'Registration failed',
+                error: errorMessage,
             };
         }
     }
@@ -115,11 +113,8 @@ export class AuthService {
             this.storeAuthTokens(response.result);
 
             return response.result as LoginResponse;
-        } catch (error: AxiosError | any) {
-            console.error(
-                '[AUTH SERVICE] Verification failed:',
-                error.response?.data?.message || error.message
-            );
+        } catch (error: unknown) {
+            console.error('[AUTH SERVICE] Verification failed:', getApiErrorMessage(error));
             throw error;
         }
     }

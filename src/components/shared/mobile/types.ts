@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 
-export interface FilterOption {
+export interface FilterOption<T = string | number> {
     label: string;
-    value: any;
+    value: T;
 }
 
 export interface BaseFilterConfig {
@@ -13,7 +13,7 @@ export interface BaseFilterConfig {
 
 export interface TimeRadioFilterConfig extends BaseFilterConfig {
     type: 'time-radio';
-    options: FilterOption[];
+    options: FilterOption<string>[];
     value: string;
     onChange: (value: string) => void;
     gridColumns?: number; 
@@ -26,8 +26,8 @@ export interface HierarchicalSelectFilterConfig extends BaseFilterConfig {
         id: string;
         label: string;
         options: FilterOption[];
-        value?: any;
-        onChange: (value: any) => void;
+        value?: string | number;
+        onChange: (value: string | number) => void;
         placeholder?: string;
         showIcon?: boolean; // Show arrow icon when selected
         enableSearch?: boolean; // Enable search functionality for this level
@@ -55,8 +55,8 @@ export interface DateRangeFilterConfig extends BaseFilterConfig {
 export interface SelectFilterConfig extends BaseFilterConfig {
     type: 'select';
     options: FilterOption[];
-    value: any;
-    onChange: (value: any) => void;
+    value: string | number;
+    onChange: (value: string | number) => void;
     placeholder?: string;
     allowClear?: boolean;
 }

@@ -10,11 +10,11 @@ export function useWebSocketNotification() {
     useEffect(() => {
         if (!isConnected) return;
 
-        dispatch(notificationActions.connectWebSocket() as any);
-        dispatch(notificationActions.fetchUnreadCount() as any);
+        dispatch(notificationActions.connectWebSocket());
+        dispatch(notificationActions.fetchUnreadCount());
 
         return () => {
-            dispatch(notificationActions.disconnectWebSocket() as any);
+            dispatch(notificationActions.disconnectWebSocket());
             dispatch(notificationActions.resetNotificationState());
         };
     }, [isConnected, dispatch]);

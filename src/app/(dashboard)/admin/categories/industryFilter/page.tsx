@@ -3,27 +3,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { toast } from 'sonner';
-import {
-    Button,
-    Card,
-    Table,
-    Grid,
-    Spin,
-    Descriptions,
-    Modal,
-    Typography,
-    Tabs,
-} from 'antd';
+import { Button, Card, Table, Grid, Spin, Descriptions, Modal, Typography, Tabs } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { IndustryFilter, IndustryFilterFormData } from '@/types/IndustryFilter';
 import {
     getIndustryFilterTableColumns,
-    IndustryFilterTableColumnProps,
-} from './_components/Columns';
+    type IndustryFilterTableColumnProps,
+    getIndustryFilterFormFields,
+    ShiftBreaksContent,
+} from '@/features/dashboard/categories/industryFilter';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getIndustryFilterFormFields } from './_components/industryFilterFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
@@ -31,7 +22,6 @@ import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
-import ShiftBreaksContent from './_components/ShiftBreaksContent';
 
 const { useBreakpoint } = Grid;
 
@@ -39,7 +29,7 @@ const IndustryFilterListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: IndustryFilter | null;
     }>({ open: false, mode: 'create', data: null });
 
     const { t } = useTranslation();
@@ -108,7 +98,7 @@ const IndustryFilterListPage = () => {
                     mode: 'edit',
                     data: detailData,
                 });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching industry filter details:', error);
                 handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
             } finally {
@@ -150,7 +140,7 @@ const IndustryFilterListPage = () => {
             try {
                 const detailData = await IndustryFilterService.getIndustryFilterById(step.filterId);
                 setViewModalState({ open: true, loading: false, data: detailData });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching industry filter details:', error);
                 handleError(error, { fallbackKey: 'industryFilterManagement.fetchError' });
                 setViewModalState({ open: false, loading: false, data: null });
@@ -221,7 +211,7 @@ const IndustryFilterListPage = () => {
                         ...data,
                         filterId: modalState.data.filterId,
                     };
-                    await IndustryFilterService.updateIndustryFilter(submitData as any);
+                    await IndustryFilterService.updateIndustryFilter(submitData);
                     toast.success(t('industryFilterManagement.updateSuccess'));
                 }
             }
@@ -354,8 +344,8 @@ const IndustryFilterListPage = () => {
                                         viewModalState.data?.category === 'SHIFT'
                                             ? t('industryFilterManagement.categories.shift')
                                             : viewModalState.data?.category === 'PERIOD'
-                                                ? t('industryFilterManagement.categories.period')
-                                                : viewModalState.data?.category,
+                                              ? t('industryFilterManagement.categories.period')
+                                              : viewModalState.data?.category,
                                     children: (
                                         <>
                                             <Descriptions
@@ -444,9 +434,9 @@ const IndustryFilterListPage = () => {
                                                             {viewModalState.data.auditMetaData
                                                                 .createdAt
                                                                 ? dayjs(
-                                                                    viewModalState.data
-                                                                        .auditMetaData.createdAt
-                                                                ).format('DD/MM/YYYY HH:mm:ss')
+                                                                      viewModalState.data
+                                                                          .auditMetaData.createdAt
+                                                                  ).format('DD/MM/YYYY HH:mm:ss')
                                                                 : '-'}
                                                         </Descriptions.Item>
                                                         <Descriptions.Item
@@ -461,9 +451,9 @@ const IndustryFilterListPage = () => {
                                                             {viewModalState.data.auditMetaData
                                                                 .updatedAt
                                                                 ? dayjs(
-                                                                    viewModalState.data
-                                                                        .auditMetaData.updatedAt
-                                                                ).format('DD/MM/YYYY HH:mm:ss')
+                                                                      viewModalState.data
+                                                                          .auditMetaData.updatedAt
+                                                                  ).format('DD/MM/YYYY HH:mm:ss')
                                                                 : '-'}
                                                         </Descriptions.Item>
                                                         <Descriptions.Item
@@ -481,20 +471,20 @@ const IndustryFilterListPage = () => {
 
                                 ...(hasShiftBreak
                                     ? [
-                                        {
-                                            key: 'shiftBreaks',
-                                            label: t(
-                                                'industryFilterManagement.shiftBreaks.title'
-                                            ),
-                                            children: (
-                                                <ShiftBreaksContent
-                                                    filter={viewModalState.data}
-                                                    t={t}
-                                                    readOnly
-                                                />
-                                            ),
-                                        },
-                                    ]
+                                          {
+                                              key: 'shiftBreaks',
+                                              label: t(
+                                                  'industryFilterManagement.shiftBreaks.title'
+                                              ),
+                                              children: (
+                                                  <ShiftBreaksContent
+                                                      filter={viewModalState.data}
+                                                      t={t}
+                                                      readOnly
+                                                  />
+                                              ),
+                                          },
+                                      ]
                                     : []),
                             ]}
                         />
@@ -533,11 +523,9 @@ const IndustryFilterListPage = () => {
                     },
                 }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<IndustryFilter>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredIndustryFilterData}
                         loading={loading}
@@ -551,7 +539,7 @@ const IndustryFilterListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 'max-content',

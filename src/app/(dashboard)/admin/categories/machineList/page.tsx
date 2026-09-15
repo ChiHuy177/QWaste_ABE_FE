@@ -19,17 +19,23 @@ import {
     Typography,
     Tag,
 } from 'antd';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { FilterOutlined, PlusOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { Machine } from '@/types/Machine';
-import { MachineTableColumnProps, getMachineListTableColumns } from './_components/Column';
+import {
+    type MachineTableColumnProps,
+    getMachineListTableColumns,
+    getMachineListFormFields,
+    toOperationTypeOptions,
+} from '@/features/dashboard/categories/machineList';
 import { MachineService } from '@/services/MachineService';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { compressImage } from '@/components/shared/FormModal/fieldRenderers';
-import { getMachineListFormFields, toOperationTypeOptions } from './_components/machineListFormConfig';
 import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -43,7 +49,7 @@ import {
 } from '@/components/shared/filters/SpaceTreeSelect';
 import { SpaceService } from '@/services';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import MachineFilterInfo from '@/app/(dashboard)/admin/machines/_components/MachineFilterInfo';
+import { MachineFilterInfo } from '@/features/dashboard/machines';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import FilterDrawer from '@/components/shared/filters/FilterDrawer';
@@ -86,7 +92,7 @@ const MachineListPageContent = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
-        data: any | null;
+        data: (Partial<Machine> & { spaceId?: number }) | null;
     }>({ open: false, mode: 'create', data: null });
     const { t } = useTranslation();
     const searchParams = useSearchParams();
@@ -129,7 +135,9 @@ const MachineListPageContent = () => {
     const [mqttTopicFilter, setMqttTopicFilter] = useState<string | undefined>(undefined);
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
-    const activeFilterCount = [machineNameFilter, machineCodeFilter, mqttTopicFilter].filter(Boolean).length;
+    const activeFilterCount = [machineNameFilter, machineCodeFilter, mqttTopicFilter].filter(
+        Boolean
+    ).length;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -139,10 +147,14 @@ const MachineListPageContent = () => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    const handleTableChange = (
+        pagination: TablePaginationConfig,
+        _filters: Record<string, FilterValue | null>,
+        sorter: SorterResult<Machine> | SorterResult<Machine>[]
+    ) => {
         if (pagination) {
-            setPage(pagination.current - 1);
-            setPageSize(pagination.pageSize);
+            setPage((pagination.current ?? 1) - 1);
+            setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
         }
 
         if (sorter) {
@@ -150,7 +162,9 @@ const MachineListPageContent = () => {
             const validSorters = sorters
                 .filter((s) => s.field && s.order)
                 .map((s) => {
-                    const field = Array.isArray(s.field) ? s.field.join('.') : s.field;
+                    const field = Array.isArray(s.field)
+                        ? s.field.map(String).join('.')
+                        : String(s.field);
                     const order = s.order === 'ascend' ? 'ASC' : 'DESC';
                     return `${field},${order}`;
                 });
@@ -175,16 +189,17 @@ const MachineListPageContent = () => {
             machineCodeFilter,
             mqttTopicFilter
         ),
-        queryFn: async () => MachineService.getMachinesPaginated({
-            page,
-            size: pageSize,
-            sort,
-            search: debouncedSearch,
-            spaceId: selectedSpaceId,
-            machineName: machineNameFilter,
-            machineCode: machineCodeFilter,
-            topic: mqttTopicFilter,
-        }),
+        queryFn: async () =>
+            MachineService.getMachinesPaginated({
+                page,
+                size: pageSize,
+                sort,
+                search: debouncedSearch,
+                spaceId: selectedSpaceId,
+                machineName: machineNameFilter,
+                machineCode: machineCodeFilter,
+                topic: mqttTopicFilter,
+            }),
         enabled: selectedSpaceId !== undefined,
     });
     const machineData = useMemo(() => {
@@ -196,7 +211,7 @@ const MachineListPageContent = () => {
         const rawData = machinesQuery.data;
         return Array.isArray(rawData) ? rawData.length : (rawData?.totalElements ?? 0);
     }, [machinesQuery.data]);
-    const loading = machinesQuery.isLoading || machinesQuery.isFetching;
+    const loading = machinesQuery.isLoading;
 
     usePageTitle(t('pageTitle.machineList'));
 
@@ -232,7 +247,7 @@ const MachineListPageContent = () => {
                         spaceId: detailData.space?.spaceId ?? undefined,
                     },
                 });
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching machine details:', error);
                 handleError(error, { fallbackKey: 'machineListManagement.fetchError' });
                 setModalState({ open: false, mode: 'create', data: null });
@@ -300,10 +315,7 @@ const MachineListPageContent = () => {
 
     const spacesTree = spacesTreeQuery.data ?? [];
 
-    const spaceTreeSelectData = useMemo(
-        () => mapSpaceTreeToTreeSelect(spacesTree),
-        [spacesTree]
-    );
+    const spaceTreeSelectData = useMemo(() => mapSpaceTreeToTreeSelect(spacesTree), [spacesTree]);
 
     const operationTypesQuery = useQuery({
         queryKey: operationTypeQueryKeys.lists,
@@ -479,11 +491,11 @@ const MachineListPageContent = () => {
 
     const executeSubmit = async (data: MachineFormData, mode: 'create' | 'edit') => {
         try {
-            const machineImage = await uploadMachineImageIfNeeded((data as any).machineImage);
+            const machineImage = await uploadMachineImageIfNeeded(data.machineImage);
             const submitValues = { ...data, machineImage };
 
             if (mode === 'create') {
-                await createMachine(submitValues as MachineFormData);
+                await createMachine(submitValues);
                 try {
                     const spaceDetail = await SpaceService.getSpaceById(submitValues.spaceId);
                     toast.success(
@@ -505,7 +517,7 @@ const MachineListPageContent = () => {
                         ...submitValues,
                         machineId: modalState.data.machineId,
                     };
-                    await updateMachine(submitData as MachineUpdateFormData);
+                    await updateMachine(submitData);
                     toast.success(t('machineListManagement.updateSuccess'));
 
                     if (selectedSpaceId !== submitValues.spaceId) {
@@ -514,7 +526,7 @@ const MachineListPageContent = () => {
                     }
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error submitting machine:', error);
             handleError(error, {
                 fallbackKey:
@@ -736,9 +748,7 @@ const MachineListPageContent = () => {
                             >
                                 <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
                                     <Descriptions.Item
-                                        label={t(
-                                            'machineListManagement.table.headers.machineCode'
-                                        )}
+                                        label={t('machineListManagement.table.headers.machineCode')}
                                     >
                                         {viewModalState.data.machineCode || '-'}
                                     </Descriptions.Item>
@@ -759,7 +769,8 @@ const MachineListPageContent = () => {
                                             'machineListManagement.table.headers.operationType'
                                         )}
                                     >
-                                        {viewModalState.data.operationType?.operationTypeName ?? '-'}
+                                        {viewModalState.data.operationType?.operationTypeName ??
+                                            '-'}
                                     </Descriptions.Item>
                                     <Descriptions.Item
                                         label={t('machineListManagement.table.headers.status')}
@@ -799,9 +810,9 @@ const MachineListPageContent = () => {
                                             >
                                                 {viewModalState.data.auditMetaData.createdAt
                                                     ? dayjs(
-                                                        viewModalState.data.auditMetaData
-                                                            .createdAt
-                                                    ).format('DD/MM/YYYY HH:mm:ss')
+                                                          viewModalState.data.auditMetaData
+                                                              .createdAt
+                                                      ).format('DD/MM/YYYY HH:mm:ss')
                                                     : '-'}
                                             </Descriptions.Item>
                                             <Descriptions.Item
@@ -814,9 +825,9 @@ const MachineListPageContent = () => {
                                             >
                                                 {viewModalState.data.auditMetaData.updatedAt
                                                     ? dayjs(
-                                                        viewModalState.data.auditMetaData
-                                                            .updatedAt
-                                                    ).format('DD/MM/YYYY HH:mm:ss')
+                                                          viewModalState.data.auditMetaData
+                                                              .updatedAt
+                                                      ).format('DD/MM/YYYY HH:mm:ss')
                                                     : '-'}
                                             </Descriptions.Item>
                                             <Descriptions.Item
@@ -859,17 +870,37 @@ const MachineListPageContent = () => {
                         {t('common.activeFilters')}:
                     </Typography.Text>
                     {machineNameFilter && (
-                        <Tag closable onClose={() => { setMachineNameFilter(undefined); setPage(0); }}>
-                            {t('machineListManagement.table.headers.machineName')}: {machineNameFilter}
+                        <Tag
+                            closable
+                            onClose={() => {
+                                setMachineNameFilter(undefined);
+                                setPage(0);
+                            }}
+                        >
+                            {t('machineListManagement.table.headers.machineName')}:{' '}
+                            {machineNameFilter}
                         </Tag>
                     )}
                     {machineCodeFilter && (
-                        <Tag closable onClose={() => { setMachineCodeFilter(undefined); setPage(0); }}>
-                            {t('machineListManagement.table.headers.machineCode')}: {machineCodeFilter}
+                        <Tag
+                            closable
+                            onClose={() => {
+                                setMachineCodeFilter(undefined);
+                                setPage(0);
+                            }}
+                        >
+                            {t('machineListManagement.table.headers.machineCode')}:{' '}
+                            {machineCodeFilter}
                         </Tag>
                     )}
                     {mqttTopicFilter && (
-                        <Tag closable onClose={() => { setMqttTopicFilter(undefined); setPage(0); }}>
+                        <Tag
+                            closable
+                            onClose={() => {
+                                setMqttTopicFilter(undefined);
+                                setPage(0);
+                            }}
+                        >
                             {t('machineListManagement.form.fields.topic')}: {mqttTopicFilter}
                         </Tag>
                     )}
@@ -892,7 +923,7 @@ const MachineListPageContent = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         paddingBottom: 0,
-                    }
+                    },
                 }}
             >
                 <div
@@ -904,6 +935,7 @@ const MachineListPageContent = () => {
                     }}
                 >
                     <Table<Machine>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredMachineData}
                         loading={loading}

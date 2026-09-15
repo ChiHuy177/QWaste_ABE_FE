@@ -7,15 +7,19 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { UserOutlined, LoadingOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { UserWithRBAC, UserProfile } from '@/types/User';
-import { getUserTableColumns, UserTableColumnProps } from './_components/Columns';
+import {
+    getUserTableColumns,
+    type UserTableColumnProps,
+    RoleAssignment,
+    CustomPermissions,
+    UserBasicInfo,
+} from '@/features/dashboard/rbac/users';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { RoleAssignment } from './_components/RoleAssignment';
-import { CustomPermissions } from './_components/CustomPermissions';
-import { UserBasicInfo } from './_components/UserBasicInfo';
 import { UserService, RoleService } from '@/services';
 import { UserPermission } from '@/types/User';
 import { Role } from '@/types/Role';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import { isRequestCancelled } from '@/utils/apiError';
 
 const UserManagementPage = () => {
     const [modalState, setModalState] = useState<{
@@ -118,9 +122,9 @@ const UserManagementPage = () => {
                     }
 
                     console.log('Roles & Permissions Summary:', rolesPermissionsSummary);
-                } catch (error: any) {
+                } catch (error: unknown) {
                     if (cancelled) return;
-                    if (error?.code === 'ERR_CANCELED' || error?.name === 'AbortError') {
+                    if (isRequestCancelled(error)) {
                         return;
                     }
                     console.error('Error fetching user details:', error);

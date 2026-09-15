@@ -1,9 +1,11 @@
 'use client';
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { getApiErrorMessage, getErrorStatus } from '@/utils/apiError';
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
+    skipAuthHandling?: boolean;
 }
 
 export const REFRESH_TOKEN_URL = '/api/authentication/v1/refresh';
@@ -18,10 +20,10 @@ const apiClient: AxiosInstance = axios.create({
 let isRefreshing = false;
 let failedQueue: {
     resolve: () => void;
-    reject: (error?: any) => void;
+    reject: (error?: unknown) => void;
 }[] = [];
 
-const processQueue = (error: any) => {
+const processQueue = (error: unknown) => {
     failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve()));
     failedQueue = [];
 };
@@ -40,15 +42,19 @@ apiClient.interceptors.response.use(
         const is403 = error.response.status === 403;
         const isRefreshCall = (originalRequest?.url as string)?.includes(REFRESH_TOKEN_URL);
         const isMeCall = (originalRequest?.url as string)?.includes('/api/users/v1/me');
+        // Request tự khai báo bỏ qua auto-refresh/sessionExpired (vd. logout() gọi
+        // khi phiên đã chết — nếu không loại trừ, 401 của chính nó sẽ dispatch
+        // 'sessionExpired' thêm lần nữa, tạo vòng lặp toast bất tận).
+        const isSkipAuthHandling = originalRequest.skipAuthHandling === true;
 
-        if (is401 && !isRefreshCall && !originalRequest._retry) {
+        if (is401 && !isRefreshCall && !isSkipAuthHandling && !originalRequest._retry) {
             originalRequest._retry = true;
 
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({
                         resolve: () => resolve(apiClient(originalRequest)),
-                        reject: (err: any) => reject(err),
+                        reject: (err: unknown) => reject(err),
                     });
                 });
             }
@@ -60,20 +66,34 @@ apiClient.interceptors.response.use(
                 // Proxy đã cập nhật httpOnly cookie — chỉ cần retry
                 processQueue(null);
                 return apiClient(originalRequest);
-            } catch (refreshErr: any) {
-                const status = refreshErr.response?.status;
-                const errorMessage = refreshErr.response?.data?.message || refreshErr.message;
+            } catch (refreshErr: unknown) {
+                const status = getErrorStatus(refreshErr);
+                const errorMessage = getApiErrorMessage(refreshErr);
+
+                // Chỉ 401/417 là backend thật sự từ chối refresh token (hết phiên).
+                // Không có response (network) hoặc 5xx (vd. 502 'Không kết nối được tới
+                // backend server' từ BFF proxy) là lỗi hạ tầng tạm thời — không được
+                // logout, kẻo user đang có phiên hợp lệ bị đá ra ngoài chỉ vì backend
+                // đang down.
+                const isAuthRejection = status === 401 || status === 417;
 
                 if (status === 417) {
                     console.error('[AUTH] Refresh token invalid (417):', errorMessage);
-                } else {
+                } else if (isAuthRejection) {
                     console.error('[AUTH] Refresh failed (status=' + status + '):', errorMessage);
+                } else {
+                    console.error(
+                        '[AUTH] Refresh failed - backend unreachable (status=' + status + '):',
+                        errorMessage
+                    );
                 }
 
                 processQueue(refreshErr);
 
                 if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('sessionExpired'));
+                    window.dispatchEvent(
+                        new CustomEvent(isAuthRejection ? 'sessionExpired' : 'backendUnreachable')
+                    );
                 }
 
                 return Promise.reject(refreshErr);

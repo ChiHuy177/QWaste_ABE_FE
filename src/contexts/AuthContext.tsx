@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { setLanguageToCookie } from '@/lib/cookies';
 import { useAppDispatch } from '@/stores/hook';
 import { userSettingsActions } from '@/stores';
+import { getApiErrorMessage, getErrorStatus } from '@/utils/apiError';
 
 interface AuthContextType {
     user: UserProfile | null;
@@ -102,9 +103,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     setUser(null);
                     dispatch(userSettingsActions.resetUserSettings());
                 }
-            } catch (err: any) {
-                if (err.response?.status === 401 || err.code === 401 || err.response?.status === 403) {
-                    console.log('[AUTH] No valid session - apiClient will handle sessionExpired event');
+            } catch (err: unknown) {
+                const status = getErrorStatus(err);
+                const errCode = (err as { code?: unknown })?.code;
+                if (status === 401 || errCode === 401 || status === 403) {
+                    console.log(
+                        '[AUTH] No valid session - apiClient will handle sessionExpired event'
+                    );
                     // Không gọi logout() - apiClient đã dispatch 'sessionExpired' event
                     // GlobalErrorHandler sẽ xử lý redirect
                     setUser(null);
@@ -138,8 +143,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 syncPreferences(user);
             }
             console.log('[AUTH CONTEXT] User state updated');
-        } catch (err: any) {
-            const errorMsg = err.message || 'Login failed';
+        } catch (err: unknown) {
+            const errorMsg = getApiErrorMessage(err, 'Login failed');
             console.error('[AUTH CONTEXT] Login error:', errorMsg);
             setError(errorMsg);
             setUser(null);
@@ -156,8 +161,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             await AuthService.logout();
             setUser(null);
             dispatch(userSettingsActions.resetUserSettings());
-        } catch (err: any) {
-            console.error('[AUTH CONTEXT] Logout failed:', err.message);
+        } catch (err: unknown) {
+            console.error('[AUTH CONTEXT] Logout failed:', getApiErrorMessage(err));
         } finally {
             console.log('[AUTH CONTEXT] Logout completed');
             setIsLoading(false);
@@ -178,8 +183,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             } else {
                 dispatch(userSettingsActions.resetUserSettings());
             }
-        } catch (err: any) {
-            const errorMsg = err.message || 'Failed to sync user';
+        } catch (err: unknown) {
+            const errorMsg = getApiErrorMessage(err, 'Failed to sync user');
             setError(errorMsg);
             setUser(null);
             dispatch(userSettingsActions.resetUserSettings());

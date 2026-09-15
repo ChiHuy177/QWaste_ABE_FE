@@ -1,6 +1,6 @@
 'use client';
 
-import { SettingsPage } from '@/app/(dashboard)/admin/setting/components/SettingPage';
+import { SettingsPage } from '@/features/dashboard/setting';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { UserService } from '@/services/UserService';

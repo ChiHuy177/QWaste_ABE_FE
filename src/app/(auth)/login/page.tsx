@@ -1,6 +1,6 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import LoginLayout from './components/LoginLayout';
+import { LoginLayout } from '@/features/auth/login';
 import { useEffect, useState } from 'react';
 import { AuthStore } from '@/stores/AuthStore';
 import { usePageTitle } from '@/hooks/usePageTitle';

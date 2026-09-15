@@ -46,9 +46,10 @@ export interface MachineFormData {
     machineName: string;
     description: string;
     topic: string;
-    machineImage: string;
+    // Form gives a locally-picked File; executeSubmit resolves it to an uploaded URL before submit.
+    machineImage: string | File;
     spaceId: number;
-    machineCode: string;
+    machineCode?: string | null;
     power?: number;
     operationTypeId: number;
 }
@@ -60,7 +61,7 @@ export interface MachineUpdateFormData {
     topic: string;
     machineImage: string;
     spaceId: number;
-    machineCode: string;
+    machineCode?: string | null;
     power?: number;
     operationTypeId: number;
 }
@@ -85,16 +86,19 @@ export interface MachineOverview {
     productionCounter?: number;
     totalProductions?: number;
     lastStatusUpdate?: Date | string;
-    runtimeByStatus?: {
-        RUNTIME: number;
-        IDLE: number;
-        ERROR: number;
-        OFFLINE: number;
-        COMPLETE?: number;
-        TEMPORARY_STOP?: number;
-        OPEN_DOOR?: number;
-        WARNING?: number;
-    };
+    // Zone/line overview endpoints send a Map; other overview endpoints send a plain object.
+    runtimeByStatus?:
+        | {
+              RUNTIME: number;
+              IDLE: number;
+              ERROR: number;
+              OFFLINE: number;
+              COMPLETE?: number;
+              TEMPORARY_STOP?: number;
+              OPEN_DOOR?: number;
+              WARNING?: number;
+          }
+        | Map<string, number>;
     topic?: string;
 }
 

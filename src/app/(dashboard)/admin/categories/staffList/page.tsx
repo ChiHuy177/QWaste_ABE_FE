@@ -2,14 +2,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getStaffFormFields } from './_components/staffFormConfig';
+import {
+    getStaffFormFields,
+    getStaffTableColumns,
+    type StaffTableColumnProps,
+} from '@/features/dashboard/categories/staffList';
 import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
 import { toast } from 'sonner';
-import { getStaffTableColumns, StaffTableColumnProps } from './_components/Columns';
 import { Card, Table, Grid, Button } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { PlusOutlined, UserOutlined } from '@ant-design/icons';
+import {
+    PlusOutlined,
+    UserOutlined,
+    IdcardOutlined,
+    MailOutlined,
+    SafetyCertificateOutlined,
+    BankOutlined,
+    PhoneOutlined,
+    CheckCircleOutlined,
+} from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
@@ -18,7 +30,7 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { SelectOption } from '@/types/Common';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
-import { CategoryViewModal } from '../_components/CategoryViewModal';
+import { CategoryViewModal } from '@/features/dashboard/categories';
 
 const { useBreakpoint } = Grid;
 
@@ -76,7 +88,7 @@ const StaffListPage = () => {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
-                    gender: (fullStaffData as any).gender || '',
+                    gender: fullStaffData.gender || '',
                     accessibleFactoryIds:
                         fullStaffData.accessibleFactories?.map((f) => f.factoryId) || [],
                 };
@@ -149,7 +161,15 @@ const StaffListPage = () => {
             t,
             ability,
         }),
-        [handleEditStaff, handleViewStaff, handleDeleteStaff, handleRestoreStaff, isMobile, t, ability]
+        [
+            handleEditStaff,
+            handleViewStaff,
+            handleDeleteStaff,
+            handleRestoreStaff,
+            isMobile,
+            t,
+            ability,
+        ]
     );
 
     const columns = useMemo(() => getStaffTableColumns(columnProps), [columnProps]);
@@ -218,16 +238,16 @@ const StaffListPage = () => {
                 mode === 'edit' && modalState.data?.roles
                     ? (modalState.data.roles as string[])
                     : Array.isArray(data.roles)
-                        ? data.roles
-                        : [data.roles];
+                      ? data.roles
+                      : [data.roles];
 
             const { accessibleFactoryIds, ...restData } = data;
             const submitData: Partial<StaffFormData> & { roles: string[]; factoryIds?: number[] } =
-            {
-                ...restData,
-                roles,
-                factoryIds: accessibleFactoryIds,
-            };
+                {
+                    ...restData,
+                    roles,
+                    factoryIds: accessibleFactoryIds,
+                };
 
             if (mode === 'edit' && (!submitData.password || submitData.password.trim() === '')) {
                 delete submitData.password;
@@ -363,20 +383,20 @@ const StaffListPage = () => {
                     display: 'flex',
                     flexDirection: 'column',
                 }}
-                styles={{ body: {
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingBottom: 0,
-                } }}
+                styles={{
+                    body: {
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingBottom: 0,
+                    },
+                }}
             >
-                <div
-                    ref={tableContainerRef}
-                    style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-                >
+                <div ref={tableContainerRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <Table<UserProfile>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={filteredStaffData}
                         loading={loading}
@@ -390,7 +410,7 @@ const StaffListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 'max-content',
@@ -435,25 +455,30 @@ const StaffListPage = () => {
                 title={viewModalState.data?.fullname || t('common.view')}
                 onClose={() => setViewModalState({ open: false, data: null })}
                 t={t}
+                sectionLabel={t('staffManagement.viewModal.staffInfo')}
                 auditMetaData={viewModalState.data?.auditMetaData}
                 items={[
                     {
                         key: 'userCode',
+                        icon: <IdcardOutlined />,
                         label: t('staffManagement.table.headers.userCode'),
                         children: viewModalState.data?.userCode || '-',
                     },
                     {
                         key: 'fullname',
+                        icon: <UserOutlined />,
                         label: t('staffManagement.table.headers.name'),
                         children: viewModalState.data?.fullname || '-',
                     },
                     {
                         key: 'email',
+                        icon: <MailOutlined />,
                         label: t('staffManagement.table.headers.email'),
                         children: viewModalState.data?.email || '-',
                     },
                     {
                         key: 'roles',
+                        icon: <SafetyCertificateOutlined />,
                         label: t('staffManagement.table.headers.role'),
                         children: viewModalState.data?.roles?.length
                             ? viewModalState.data.roles.join(', ')
@@ -461,6 +486,7 @@ const StaffListPage = () => {
                     },
                     {
                         key: 'accessibleFactories',
+                        icon: <BankOutlined />,
                         label: t('staffManagement.table.headers.accessibleFactories'),
                         children: viewModalState.data?.accessibleFactories?.length
                             ? viewModalState.data.accessibleFactories
@@ -470,16 +496,15 @@ const StaffListPage = () => {
                     },
                     {
                         key: 'phoneNumber',
+                        icon: <PhoneOutlined />,
                         label: t('staffManagement.table.headers.phone'),
                         children: viewModalState.data?.phoneNumber || '-',
                     },
                     {
                         key: 'status',
+                        icon: <CheckCircleOutlined />,
                         label: t('staffManagement.table.headers.status'),
-                        children: (
-                            viewModalState.data?.softDeleteMetaData?.isDeleted ||
-                            (viewModalState.data?.softDeleteMetaData as any)?.deleted
-                        )
+                        children: viewModalState.data?.softDeleteMetaData?.isDeleted
                             ? t('staffManagement.status.notWorking')
                             : t('staffManagement.status.working'),
                     },

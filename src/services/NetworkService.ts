@@ -1,11 +1,18 @@
+import type { AxiosRequestConfig } from 'axios';
 import { ApiResponse } from '@/types/ApiResponse';
 import apiClient from './apiClient';
+
+/** apiClient's response interceptor doesn't currently read this flag off the
+ * request config (see apiClient.ts) — kept as-is, not part of this cleanup. */
+interface RequestConfig extends AxiosRequestConfig {
+    skipAuthHandling?: boolean;
+}
 
 interface RequestOptions {
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     url: string;
-    data?: any;
-    headers?: any;
+    data?: unknown;
+    headers?: AxiosRequestConfig['headers'];
     cancelToken?: string;
     skipAuthHandling?: boolean;
 }
@@ -42,7 +49,7 @@ const parseFileNameFromContentDisposition = (contentDisposition?: string): strin
 };
 
 export class NetworkService {
-    static async requestJson<T = any>(opts: RequestOptions): Promise<ApiResponse<T>> {
+    static async requestJson<T = unknown>(opts: RequestOptions): Promise<ApiResponse<T>> {
         const { method, url, data, headers, cancelToken, skipAuthHandling } = opts;
 
         let abortSignal;
@@ -56,7 +63,7 @@ export class NetworkService {
             abortSignal = controller.signal;
         }
 
-        const config: any = {
+        const config: RequestConfig = {
             method,
             url,
             headers: {
@@ -84,7 +91,7 @@ export class NetworkService {
         }
     }
 
-    static async requestFormData<T = any>(opts: FormDataRequestOptions): Promise<ApiResponse<T>> {
+    static async requestFormData<T = unknown>(opts: FormDataRequestOptions): Promise<ApiResponse<T>> {
         const { method, url, data, cancelToken, skipAuthHandling } = opts;
 
         let abortSignal;
@@ -98,7 +105,7 @@ export class NetworkService {
             abortSignal = controller.signal;
         }
 
-        const config: any = {
+        const config: RequestConfig = {
             method,
             url,
             // Không set Content-Type — axios tự gắn multipart/form-data + boundary
@@ -137,7 +144,7 @@ export class NetworkService {
             abortSignal = controller.signal;
         }
 
-        const config: any = {
+        const config: RequestConfig = {
             method,
             url,
             headers: {

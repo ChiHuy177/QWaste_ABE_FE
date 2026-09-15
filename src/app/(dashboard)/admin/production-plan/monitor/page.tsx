@@ -22,20 +22,23 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { productionPlanMonitorActions } from '@/stores/ProductionPlanMonitorStore';
-import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../_utils/planMappers';
-import type { MonitorRowVM } from '../_components/types';
-import ProductDetailModal from '../_components/ProductDetailModal';
-import IncidentConfirmModal from '../_components/IncidentConfirmModal';
-import { useMoldOptions } from '../_hooks/useMoldOptions';
-import MonitorKanbanTab from './_components/MonitorKanbanTab';
-import MonitorTimelineTab from './_components/MonitorTimelineTab';
 import {
+    MONITOR_GROUP_ORDER,
+    type MonitorGroupKey,
+    type MonitorRowVM,
+    ProductDetailModal,
+    IncidentConfirmModal,
+    useMoldOptions,
+} from '@/features/dashboard/production-plan';
+import {
+    MonitorKanbanTab,
+    MonitorTimelineTab,
     useMonitorColumns,
     useMonitorData,
     useMonitorGroups,
     useMonitorMachineGroups,
-} from './hooks';
-import styles from '../_components/ProductionPlanTable.module.css';
+} from '@/features/dashboard/production-plan/monitor';
+import styles from '@/features/dashboard/production-plan/components/ProductionPlanTable.module.css';
 
 const { Text } = Typography;
 const { Search } = Input;
