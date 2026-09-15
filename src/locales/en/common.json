@@ -1318,7 +1318,8 @@
     "machineManagement": {
         "header": {
             "title": "Machine Status",
-            "subtitle": "Monitor and manage your industrial machines"
+            "subtitle": "Monitor and manage your industrial machines",
+            "highlightedBadge": "Selected"
         },
         "fetchDetailsError": {
             "factory": "Failed to fetch factories"
@@ -4820,6 +4821,12 @@
     "errorManagement": {
         "title": "Error & Incident Management",
         "subtitle": "Track equipment downtime, root cause analysis, and corrective action workflows",
+        "navigation": {
+            "fromMachineStatusBanner": "Viewing incident {{code}} for machine {{machine}} transferred from Machine Status",
+            "backToMachineStatus": "Back to Machine Status",
+            "targetBadge": "Selected",
+            "targetMachineBadge": "Target Machine"
+        },
         "header": {
             "btnReport": "Report New Incident",
             "btnExport": "Export Excel",
@@ -4892,6 +4899,9 @@
             "preventiveAction": "Preventive Action (Long-term)",
             "preventiveActionPlaceholder": "Plan to prevent recurrence (maintenance, parameter calibration)...",
             "notes": "Additional Notes",
+            "endTimeRequired": "Please select incident end time when marking as resolved",
+            "resolutionRequired": "Please provide corrective action details when resolving",
+            "durationCalculated": "Calculated Downtime",
             "submit": "Save Incident",
             "cancel": "Cancel"
         },

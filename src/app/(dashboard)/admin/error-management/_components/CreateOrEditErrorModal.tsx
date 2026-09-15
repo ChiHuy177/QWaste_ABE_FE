@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Badge, Col, Form, Input, Modal, Row, Select, Space, Tag, Typography, theme } from 'antd';
+import {
+    Badge,
+    Col,
+    DatePicker,
+    Form,
+    Input,
+    Modal,
+    Row,
+    Select,
+    Space,
+    Tag,
+    Typography,
+    theme,
+} from 'antd';
 import {
     ClockCircleOutlined,
     EnvironmentOutlined,
@@ -9,6 +22,7 @@ import {
     ToolOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 import { CreateErrorIncidentDto, ErrorIncident } from '@/types/ErrorManagement';
 
 const { TextArea } = Input;
@@ -33,6 +47,11 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
     const { token } = theme.useToken();
     const [form] = Form.useForm();
 
+    const watchedStatus = Form.useWatch('status', form);
+    const watchedEndTime = Form.useWatch('endTime', form);
+
+    const isResolved = watchedStatus === 'resolved' || watchedStatus === 'closed';
+
     useEffect(() => {
         if (open) {
             if (incident) {
@@ -40,6 +59,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                     cause: incident.cause || '',
                     resolution: incident.resolution || '',
                     status: incident.status,
+                    endTime: incident.endTime ? dayjs(incident.endTime) : null,
                 });
             } else {
                 form.resetFields();
@@ -47,14 +67,53 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                     cause: '',
                     resolution: '',
                     status: 'open',
+                    endTime: null,
                 });
             }
         }
     }, [open, incident, form]);
 
+    // When status changes to resolved/closed, auto-populate endTime if empty
+    useEffect(() => {
+        if (open && isResolved) {
+            const currentEndTime = form.getFieldValue('endTime');
+            if (!currentEndTime) {
+                form.setFieldValue('endTime', dayjs());
+            }
+        }
+    }, [open, isResolved, form]);
+
+    // Live calculation of duration from Start Time to End Time
+    const calculatedDurationText = React.useMemo(() => {
+        if (!isResolved || !watchedEndTime || !incident?.startTime) return null;
+        const start = dayjs(incident.startTime);
+        const end = dayjs(watchedEndTime);
+        if (!start.isValid() || !end.isValid()) return null;
+        const diffMinutes = Math.max(0, end.diff(start, 'minute'));
+        const h = Math.floor(diffMinutes / 60);
+        const m = diffMinutes % 60;
+        if (h === 0) return `${m}m`;
+        return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
+    }, [isResolved, watchedEndTime, incident?.startTime]);
+
     const handleFormSubmit = async () => {
         try {
             const values = await form.validateFields();
+
+            let formattedEndTime: string | null = null;
+            if (values.endTime) {
+                formattedEndTime = dayjs.isDayjs(values.endTime)
+                    ? values.endTime.format('YYYY-MM-DD HH:mm:ss')
+                    : values.endTime;
+            } else if (values.status === 'resolved' || values.status === 'closed') {
+                formattedEndTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
+            }
+
+            let durationMinutes = incident?.durationMinutes || 0;
+            if (formattedEndTime && incident?.startTime) {
+                const diff = dayjs(formattedEndTime).diff(dayjs(incident.startTime), 'minute');
+                durationMinutes = Math.max(0, diff);
+            }
 
             const payload: CreateErrorIncidentDto = {
                 machineId: incident?.machineId || 101,
@@ -65,14 +124,9 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                 category: incident?.category || 'mechanical',
                 severity: incident?.severity || 'medium',
                 status: values.status || incident?.status || 'open',
-                startTime:
-                    incident?.startTime ||
-                    new Date().toISOString().replace('T', ' ').substring(0, 19),
-                endTime:
-                    values.status === 'resolved' || values.status === 'closed'
-                        ? incident?.endTime ||
-                          new Date().toISOString().replace('T', ' ').substring(0, 19)
-                        : incident?.endTime || null,
+                startTime: incident?.startTime || dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                endTime: formattedEndTime,
+                durationMinutes,
                 cause: values.cause,
                 resolution: values.resolution || '',
                 notes: incident?.notes || '',
@@ -298,9 +352,16 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                     name="resolution"
                     label={
                         <Text strong style={{ fontSize: 13 }}>
-                            {t('errorManagement.modal.resolution')}
+                            {t('errorManagement.modal.resolution')}{' '}
+                            {isResolved && <span style={{ color: token.colorError }}>*</span>}
                         </Text>
                     }
+                    rules={[
+                        {
+                            required: isResolved,
+                            message: t('errorManagement.modal.resolutionRequired'),
+                        },
+                    ]}
                 >
                     <TextArea
                         rows={3}
@@ -310,7 +371,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                 </Form.Item>
 
                 <Row gutter={16}>
-                    <Col xs={24} sm={12}>
+                    <Col xs={24} sm={isResolved ? 12 : 24}>
                         <Form.Item
                             name="status"
                             label={
@@ -371,7 +432,67 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                             />
                         </Form.Item>
                     </Col>
+
+                    {isResolved && (
+                        <Col xs={24} sm={12}>
+                            <Form.Item
+                                name="endTime"
+                                label={
+                                    <Text strong style={{ fontSize: 13 }}>
+                                        {t('errorManagement.modal.endTime')}{' '}
+                                        <span style={{ color: token.colorError }}>*</span>
+                                    </Text>
+                                }
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: t('errorManagement.modal.endTimeRequired'),
+                                    },
+                                ]}
+                            >
+                                <DatePicker
+                                    showTime
+                                    format="YYYY-MM-DD HH:mm:ss"
+                                    style={{ width: '100%', borderRadius: token.borderRadius }}
+                                />
+                            </Form.Item>
+                        </Col>
+                    )}
                 </Row>
+
+                {isResolved && calculatedDurationText && (
+                    <div
+                        style={{
+                            marginBottom: 16,
+                            padding: '10px 14px',
+                            background: token.colorFillAlter,
+                            border: `1px solid ${token.colorBorderSecondary}`,
+                            borderRadius: token.borderRadiusSM,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <Space size={6}>
+                            <ClockCircleOutlined style={{ color: token.colorPrimary }} />
+                            <Text style={{ fontSize: 13, color: token.colorTextSecondary }}>
+                                {t('errorManagement.modal.durationCalculated')}:
+                            </Text>
+                        </Space>
+                        <Tag
+                            color="processing"
+                            style={{
+                                margin: 0,
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                fontSize: 12.5,
+                                padding: '2px 8px',
+                            }}
+                        >
+                            {calculatedDurationText}
+                        </Tag>
+                    </div>
+                )}
             </Form>
         </Modal>
     );

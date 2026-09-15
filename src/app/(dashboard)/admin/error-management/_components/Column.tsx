@@ -20,10 +20,13 @@ const { Text } = Typography;
 
 export interface ErrorTableColumnProps {
     token: GlobalToken;
-    t: (key: string) => string;
+    t: (key: string, values?: Record<string, any>) => string;
     onViewDetail: (record: ErrorIncident) => void;
     onEdit: (record: ErrorIncident) => void;
     onDelete: (record: ErrorIncident) => void;
+    highlightedCode?: string | null;
+    highlightedMachineCode?: string | null;
+    isRowHighlighted?: (record: ErrorIncident) => boolean;
 }
 
 export const getErrorTableColumns = ({
@@ -32,6 +35,9 @@ export const getErrorTableColumns = ({
     onViewDetail,
     onEdit,
     onDelete,
+    highlightedCode,
+    highlightedMachineCode,
+    isRowHighlighted,
 }: ErrorTableColumnProps): ColumnsType<ErrorIncident> => {
     // Helper format duration
     const formatDuration = (minutes: number) => {
@@ -173,7 +179,7 @@ export const getErrorTableColumns = ({
         }
     };
 
-    return [
+    const rawColumns: ColumnsType<ErrorIncident> = [
         {
             title: () => t('errorManagement.table.columns.incidentCode'),
             dataIndex: 'code',
@@ -201,11 +207,28 @@ export const getErrorTableColumns = ({
             title: () => t('errorManagement.table.columns.machine'),
             dataIndex: 'machineName',
             key: 'machineName',
-            width: 170,
-            render: (machineName: string) => (
-                <Text strong style={{ color: token.colorTextHeading, display: 'block' }}>
-                    {machineName}
-                </Text>
+            width: 175,
+            render: (machineName: string, record) => (
+                <Space direction="vertical" size={2}>
+                    <Text
+                        strong
+                        style={{
+                            color: token.colorTextHeading,
+                            display: 'block',
+                        }}
+                    >
+                        {machineName}
+                    </Text>
+                    <Text
+                        type="secondary"
+                        style={{
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                        }}
+                    >
+                        {record.machineCode}
+                    </Text>
+                </Space>
             ),
         },
         {
@@ -417,4 +440,27 @@ export const getErrorTableColumns = ({
             ),
         },
     ];
+
+    return rawColumns.map((col, colIndex) => ({
+        ...col,
+        onCell: (record: ErrorIncident) => {
+            const isTarget = isRowHighlighted?.(record);
+            const userCell = col.onCell ? col.onCell(record) : {};
+            if (!isTarget) return userCell;
+
+            return {
+                ...userCell,
+                className: `${userCell?.className || ''} highlighted-incident-cell`.trim(),
+                style: {
+                    ...userCell?.style,
+                    backgroundColor: token.colorPrimaryBg || '#e6f4ff',
+                    ...(colIndex === 0
+                        ? {
+                              borderLeft: `4px solid ${token.colorPrimary}`,
+                          }
+                        : {}),
+                },
+            };
+        },
+    }));
 };

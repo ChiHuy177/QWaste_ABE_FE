@@ -292,4 +292,44 @@ export class ErrorManagementService {
         localIncidentsStore = localIncidentsStore.filter((item) => item.id !== id);
         return true;
     }
+
+    /**
+     * Find active incident (open / in_progress) associated with a machine
+     */
+    static getActiveIncidentForMachine(
+        machineCode?: string,
+        machineId?: string | number
+    ): ErrorIncident | undefined {
+        return localIncidentsStore.find((item) => {
+            const isActive = item.status === 'open' || item.status === 'in_progress';
+            if (!isActive) return false;
+
+            if (machineCode) {
+                const cleanCode = machineCode.toLowerCase().trim();
+                const itemCode = (item.machineCode || '').toLowerCase().trim();
+                const itemName = (item.machineName || '').toLowerCase().trim();
+                if (itemCode === cleanCode || itemName.includes(cleanCode)) {
+                    return true;
+                }
+            }
+
+            if (machineId) {
+                const idStr = String(machineId).toLowerCase().trim();
+                const itemIdStr = String(item.machineId).toLowerCase().trim();
+                if (idStr === itemIdStr) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+    }
+
+    /**
+     * Find incident by incident code
+     */
+    static getIncidentByCode(code: string): ErrorIncident | undefined {
+        const clean = code.toLowerCase().trim();
+        return localIncidentsStore.find((item) => item.code.toLowerCase().trim() === clean);
+    }
 }

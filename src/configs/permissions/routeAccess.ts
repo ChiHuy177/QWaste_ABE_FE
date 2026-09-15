@@ -6,6 +6,7 @@ export interface RouteConfig {
     action: Action;
     /** OR-condition: route is also accessible if ability grants this action on the same subject. */
     alternativeAction?: Action;
+    alwaysAllow?: boolean;
 }
 
 // Routes accessible to all authenticated users without permission check
@@ -24,6 +25,7 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = Object.fromEntries(
                 subject: permission.subject,
                 action: permission.action,
                 alternativeAction: permission.alternativeAction,
+                alwaysAllow: permission.alwaysShowInMenu,
             },
         ])
     )
@@ -75,6 +77,7 @@ export function hasRouteAccessWithAbility(route: string, ability: AppAbility): b
 }
 
 function canAccessWithConfig(ability: AppAbility, config: RouteConfig): boolean {
+    if (config.alwaysAllow) return true;
     if (ability.can(config.action, config.subject)) return true;
     if (config.alternativeAction && ability.can(config.alternativeAction, config.subject)) {
         return true;

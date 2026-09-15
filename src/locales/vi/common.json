@@ -1309,7 +1309,8 @@
     "machineManagement": {
         "header": {
             "title": "Trạng Thái Máy",
-            "subtitle": "Giám sát và quản lý máy móc công nghiệp của bạn"
+            "subtitle": "Giám sát và quản lý máy móc công nghiệp của bạn",
+            "highlightedBadge": "Đang chọn"
         },
         "stats": {
             "totalRun": "Tổng máy chạy",
@@ -4864,6 +4865,12 @@
     "errorManagement": {
         "title": "Quản lý Lỗi & Sự Cố Thiết Bị",
         "subtitle": "Theo dõi thời gian dừng máy, phân tích nguyên nhân gốc rễ và ghi nhận biện pháp khắc phục sự cố sản xuất",
+        "navigation": {
+            "fromMachineStatusBanner": "Đang xem sự cố {{code}} của máy {{machine}} chuyển tiếp từ Trạng thái máy",
+            "backToMachineStatus": "Quay lại Trạng thái máy",
+            "targetBadge": "Đang chọn",
+            "targetMachineBadge": "Máy đang chọn"
+        },
         "header": {
             "btnReport": "Báo cáo sự cố mới",
             "btnExport": "Xuất Excel",
@@ -4936,6 +4943,9 @@
             "preventiveAction": "Biện pháp phòng ngừa (Long-term Action)",
             "preventiveActionPlaceholder": "Kế hoạch cải tiến, điều chỉnh thông số hoặc chu kỳ bảo dưỡng để chống tái diễn...",
             "notes": "Ghi chú bổ sung",
+            "endTimeRequired": "Vui lòng chọn thời gian kết thúc khi đã hoàn thành xử lý",
+            "resolutionRequired": "Vui lòng nhập phương án / biện pháp khắc phục khi hoàn thành xử lý",
+            "durationCalculated": "Thời lượng tính toán",
             "submit": "Lưu thông tin",
             "cancel": "Hủy bỏ"
         },

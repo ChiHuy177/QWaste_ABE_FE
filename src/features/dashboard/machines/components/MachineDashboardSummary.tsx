@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, Typography, Flex, theme } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { Card, Row, Col, Statistic, Progress, Tag, Typography, Flex, Tooltip, theme } from 'antd';
 import type { GlobalToken } from 'antd';
 import {
     CheckCircleOutlined,
     WarningOutlined,
     CloseCircleOutlined,
     PoweroffOutlined,
+    RightOutlined,
 } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { MachineOverview } from '@/types/Machine';
 import { MOCK_MACHINE_PLAN } from '@/mockData/admin/factory/machineDashboard';
+import { ErrorManagementService } from '@/services/ErrorManagementService';
 
 const { Text } = Typography;
 
@@ -18,15 +21,31 @@ const getStatusTokens = (status: string, token: GlobalToken) => {
     switch (status) {
         case 'RUNTIME':
         case 'COMPLETE':
-            return { base: token.colorSuccess, bg: token.colorSuccessBg, border: token.colorSuccessBorder };
+            return {
+                base: token.colorSuccess,
+                bg: token.colorSuccessBg,
+                border: token.colorSuccessBorder,
+            };
         case 'IDLE':
         case 'TEMPORARY_STOP':
-            return { base: token.colorWarning, bg: token.colorWarningBg, border: token.colorWarningBorder };
+            return {
+                base: token.colorWarning,
+                bg: token.colorWarningBg,
+                border: token.colorWarningBorder,
+            };
         case 'ERROR':
         case 'WARNING':
-            return { base: token.colorError, bg: token.colorErrorBg, border: token.colorErrorBorder };
+            return {
+                base: token.colorError,
+                bg: token.colorErrorBg,
+                border: token.colorErrorBorder,
+            };
         default:
-            return { base: token.colorTextDisabled, bg: token.colorFillQuaternary, border: token.colorBorderSecondary };
+            return {
+                base: token.colorTextDisabled,
+                bg: token.colorFillQuaternary,
+                border: token.colorBorderSecondary,
+            };
     }
 };
 
@@ -43,6 +62,8 @@ interface Props {
 
 const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
     const { token } = theme.useToken();
+    const router = useRouter();
+    const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null);
 
     const productionSummary = useMemo(() => {
         return machines.map((m) => {
@@ -54,10 +75,7 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
     }, [machines]);
 
     const errorMachines = useMemo(
-        () =>
-            machines.filter(
-                (m) => m.currentStatus === 'ERROR' || m.currentStatus === 'WARNING'
-            ),
+        () => machines.filter((m) => m.currentStatus === 'ERROR' || m.currentStatus === 'WARNING'),
         [machines]
     );
 
@@ -67,12 +85,12 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
     );
 
     const totalPlan = useMemo(
-        () =>
-            machines.reduce((s, m) => s + (MOCK_MACHINE_PLAN[m.machineId]?.plan ?? 0), 0),
+        () => machines.reduce((s, m) => s + (MOCK_MACHINE_PLAN[m.machineId]?.plan ?? 0), 0),
         [machines]
     );
 
-    const overallPct = totalPlan > 0 ? Math.min(Math.round((totalActual / totalPlan) * 100), 100) : 0;
+    const overallPct =
+        totalPlan > 0 ? Math.min(Math.round((totalActual / totalPlan) * 100), 100) : 0;
 
     return (
         <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
@@ -90,8 +108,9 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                             suffix={`/ ${totalPlan} pcs`}
                             styles={{
                                 content: {
-                                    fontSize: 22, fontWeight: 700
-                                }
+                                    fontSize: 22,
+                                    fontWeight: 700,
+                                },
                             }}
                         />
                         <div style={{ textAlign: 'right' }}>
@@ -103,8 +122,8 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                                     overallPct >= 80
                                         ? token.colorSuccess
                                         : overallPct >= 50
-                                            ? token.colorWarning
-                                            : token.colorError
+                                          ? token.colorWarning
+                                          : token.colorError
                                 }
                             />
                         </div>
@@ -112,7 +131,11 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
 
                     {productionSummary.map(({ machine, plan, actual, pct }) => (
                         <div key={machine.machineId} style={{ marginBottom: 10 }}>
-                            <Flex justify="space-between" align="center" style={{ marginBottom: 2 }}>
+                            <Flex
+                                justify="space-between"
+                                align="center"
+                                style={{ marginBottom: 2 }}
+                            >
                                 <Flex gap={6} align="center">
                                     <span
                                         style={{
@@ -120,7 +143,10 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                                             width: 8,
                                             height: 8,
                                             borderRadius: '50%',
-                                            background: getStatusTokens(machine.currentStatus ?? 'OFFLINE', token).base,
+                                            background: getStatusTokens(
+                                                machine.currentStatus ?? 'OFFLINE',
+                                                token
+                                            ).base,
                                         }}
                                     />
                                     <Text style={{ fontSize: 13 }}>{machine.machineName}</Text>
@@ -139,8 +165,8 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                                         pct >= 80
                                             ? token.colorSuccess
                                             : pct >= 50
-                                                ? token.colorWarning
-                                                : token.colorError
+                                              ? token.colorWarning
+                                              : token.colorError
                                     }
                                     style={{ marginBottom: 0 }}
                                 />
@@ -181,52 +207,107 @@ const MachineDashboardSummary: React.FC<Props> = ({ machines }) => {
                             const status = m.currentStatus ?? 'OFFLINE';
                             const statusTokens = getStatusTokens(status, token);
                             const icon = STATUS_ICONS[status];
-                            const runtimeMap = m.runtimeByStatus as Record<string, number> | undefined;
+                            const runtimeMap = m.runtimeByStatus as
+                                Record<string, number> | undefined;
                             const errorSec =
                                 (runtimeMap?.['ERROR'] ?? 0) + (runtimeMap?.['WARNING'] ?? 0);
                             const errorHr = Math.round(errorSec / 360) / 10;
+                            const isHovered = hoveredMachineId === m.machineId;
+
+                            const activeIncident =
+                                ErrorManagementService.getActiveIncidentForMachine(
+                                    m.machineCode,
+                                    m.machineId
+                                );
+
+                            const handleRowClick = () => {
+                                const query = activeIncident
+                                    ? `?incidentCode=${encodeURIComponent(activeIncident.code)}&machineCode=${encodeURIComponent(m.machineCode || '')}&from=machines`
+                                    : `?machineCode=${encodeURIComponent(m.machineCode || m.machineName)}&from=machines`;
+                                router.push(`/admin/error-management${query}`);
+                            };
 
                             return (
-                                <div
+                                <Tooltip
                                     key={m.machineId}
-                                    style={{
-                                        padding: '10px 14px',
-                                        borderRadius: 8,
-                                        border: `1px solid ${getStatusTokens(status, token).border}`,
-                                        background: getStatusTokens(status, token).bg,
-                                        marginBottom: 8,
-                                    }}
+                                    title={
+                                        activeIncident
+                                            ? `Xem sự cố ${activeIncident.code} trong Quản lý sự cố`
+                                            : `Xem lịch sử sự cố máy ${m.machineName} (${m.machineCode || ''})`
+                                    }
                                 >
-                                    <Flex justify="space-between" align="center">
-                                        <Flex gap={8} align="center">
-                                            <span style={{ color: statusTokens.base, fontSize: 16 }}>{icon}</span>
-                                            <div>
-                                                <Text strong style={{ fontSize: 13 }}>
-                                                    {m.machineName}
-                                                </Text>
-                                                {m.machineCode && (
-                                                    <Text
-                                                        type="secondary"
-                                                        style={{ fontSize: 11, marginLeft: 6 }}
-                                                    >
-                                                        ({m.machineCode})
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={handleRowClick}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleRowClick();
+                                            }
+                                        }}
+                                        onMouseEnter={() => setHoveredMachineId(m.machineId)}
+                                        onMouseLeave={() => setHoveredMachineId(null)}
+                                        style={{
+                                            padding: '10px 14px',
+                                            borderRadius: token.borderRadius,
+                                            border: `1px solid ${isHovered ? token.colorPrimary : statusTokens.border}`,
+                                            background: isHovered
+                                                ? token.colorFillQuaternary
+                                                : statusTokens.bg,
+                                            boxShadow: isHovered ? token.boxShadowTertiary : 'none',
+                                            marginBottom: 8,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease-in-out',
+                                        }}
+                                    >
+                                        <Flex justify="space-between" align="center">
+                                            <Flex gap={8} align="center">
+                                                <span
+                                                    style={{
+                                                        color: statusTokens.base,
+                                                        fontSize: 16,
+                                                    }}
+                                                >
+                                                    {icon}
+                                                </span>
+                                                <div>
+                                                    <Text strong style={{ fontSize: 13 }}>
+                                                        {m.machineName}
                                                     </Text>
-                                                )}
-                                            </div>
+                                                    {m.machineCode && (
+                                                        <Text
+                                                            type="secondary"
+                                                            style={{ fontSize: 11, marginLeft: 6 }}
+                                                        >
+                                                            ({m.machineCode})
+                                                        </Text>
+                                                    )}
+                                                </div>
+                                            </Flex>
+                                            <Flex gap={8} align="center">
+                                                <Tag
+                                                    color={status === 'ERROR' ? 'error' : 'warning'}
+                                                    style={{ margin: 0, fontSize: 11 }}
+                                                >
+                                                    {status}
+                                                </Tag>
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {errorHr}h error
+                                                </Text>
+                                                <RightOutlined
+                                                    style={{
+                                                        fontSize: 11,
+                                                        color: isHovered
+                                                            ? token.colorPrimary
+                                                            : token.colorTextTertiary,
+                                                        transition: 'color 0.2s',
+                                                    }}
+                                                />
+                                            </Flex>
                                         </Flex>
-                                        <Flex gap={6} align="center">
-                                            <Tag
-                                                color={status === 'ERROR' ? 'error' : 'warning'}
-                                                style={{ margin: 0, fontSize: 11 }}
-                                            >
-                                                {status}
-                                            </Tag>
-                                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                                {errorHr}h error
-                                            </Text>
-                                        </Flex>
-                                    </Flex>
-                                </div>
+                                    </div>
+                                </Tooltip>
                             );
                         })
                     )}

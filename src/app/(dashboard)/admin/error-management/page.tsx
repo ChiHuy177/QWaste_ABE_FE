@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Badge,
     Button,
@@ -8,6 +8,7 @@ import {
     Flex,
     Grid,
     Popover,
+    Spin,
     Table,
     Tag,
     Tooltip,
@@ -15,12 +16,14 @@ import {
     theme,
 } from 'antd';
 import {
+    ArrowLeftOutlined,
     CalendarOutlined,
     FileExcelOutlined,
     FilterOutlined,
     ReloadOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
@@ -51,17 +54,33 @@ dayjs.extend(quarterOfYear);
 const { useBreakpoint } = Grid;
 const DEFAULT_PAGE_SIZE = 10;
 
-export default function ErrorManagementPage() {
+function ErrorManagementContent() {
     const { t, i18n } = useTranslation();
     const { token } = theme.useToken();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
+
+    const incidentCodeParam = searchParams.get('incidentCode');
+    const machineCodeParam = searchParams.get('machineCode');
+    const fromParam = searchParams.get('from');
+    const openEditParam = searchParams.get('openEdit');
 
     usePageTitle(t('errorManagement.title'));
 
     const [incidents, setIncidents] = useState<ErrorIncident[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [isExporting, setIsExporting] = useState<boolean>(false);
+
+    // Highlighting State
+    const [highlightedCode, setHighlightedCode] = useState<string | null>(
+        incidentCodeParam || null
+    );
+    const [highlightedMachineCode, setHighlightedMachineCode] = useState<string | null>(
+        machineCodeParam || null
+    );
+    const hasHandledNavigationRef = useRef<boolean>(false);
 
     // Search and filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -264,6 +283,63 @@ export default function ErrorManagementPage() {
         loadData();
     }, [loadData]);
 
+    // Handle navigation context (incidentCode / machineCode from Machine Status)
+    useEffect(() => {
+        if (
+            !loading &&
+            incidents.length > 0 &&
+            (incidentCodeParam || machineCodeParam) &&
+            !hasHandledNavigationRef.current
+        ) {
+            const target = incidents.find((i) => {
+                const codeParam = (incidentCodeParam || '').trim().toLowerCase();
+                const mCodeParam = (machineCodeParam || '').trim().toLowerCase();
+
+                if (codeParam && i.code.toLowerCase() === codeParam) return true;
+                if (mCodeParam) {
+                    const itemCode = (i.machineCode || '').toLowerCase();
+                    const itemName = (i.machineName || '').toLowerCase();
+                    if (
+                        itemCode === mCodeParam ||
+                        itemName === mCodeParam ||
+                        itemName.includes(mCodeParam)
+                    ) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (target) {
+                setHighlightedCode(target.code);
+                setHighlightedMachineCode(target.machineCode);
+
+                // Auto-switch to page containing the target incident
+                const targetIndex = incidents.findIndex((i) => i.id === target.id);
+                if (targetIndex !== -1) {
+                    const targetPage = Math.floor(targetIndex / pageSize);
+                    if (targetPage !== page) {
+                        setPage(targetPage);
+                    }
+                }
+
+                // Scroll to target row smoothly
+                setTimeout(() => {
+                    const element = document.getElementById(`incident-row-${target.code}`);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 350);
+
+                if (openEditParam === 'true') {
+                    setSelectedIncident(target);
+                    setIsModalOpen(true);
+                }
+            }
+            hasHandledNavigationRef.current = true;
+        }
+    }, [loading, incidents, incidentCodeParam, machineCodeParam, openEditParam, pageSize, page]);
+
     // Active filters count
     const drawerFilterCount = [codeFilter, machineNameFilter, statusFilter].filter(Boolean).length;
     const activeFilterCount = [codeFilter, machineNameFilter, statusFilter, timeFilterMode].filter(
@@ -419,6 +495,32 @@ export default function ErrorManagementPage() {
         }
     };
 
+    const isRowHighlighted = useCallback(
+        (record: ErrorIncident) => {
+            const targetCode = (highlightedCode || incidentCodeParam)?.trim().toLowerCase();
+            const targetMachine = (highlightedMachineCode || machineCodeParam)
+                ?.trim()
+                .toLowerCase();
+
+            if (targetCode && record.code.toLowerCase() === targetCode) {
+                return true;
+            }
+            if (targetMachine) {
+                const mCode = (record.machineCode || '').toLowerCase();
+                const mName = (record.machineName || '').toLowerCase();
+                if (
+                    mCode === targetMachine ||
+                    mName === targetMachine ||
+                    mName.includes(targetMachine)
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        [highlightedCode, incidentCodeParam, highlightedMachineCode, machineCodeParam]
+    );
+
     const columns = useMemo(
         () =>
             getErrorTableColumns({
@@ -427,8 +529,11 @@ export default function ErrorManagementPage() {
                 onViewDetail: handleOpenDetailDrawer,
                 onEdit: handleOpenEditModal,
                 onDelete: handleDelete,
+                highlightedCode,
+                highlightedMachineCode,
+                isRowHighlighted,
             }),
-        [token, t]
+        [token, t, highlightedCode, highlightedMachineCode, isRowHighlighted]
     );
 
     const handleTableChange = (pagination: any) => {
@@ -437,6 +542,14 @@ export default function ErrorManagementPage() {
             setPageSize(pagination.pageSize);
         }
     };
+
+    const handleBack = useCallback(() => {
+        if (fromParam === 'machines') {
+            router.push('/admin/machines');
+        } else {
+            router.back();
+        }
+    }, [fromParam, router]);
 
     return (
         <div
@@ -451,6 +564,21 @@ export default function ErrorManagementPage() {
             {/* Header with Search, FilterDrawer, Refresh and Export */}
             <ResponsivePageHeader
                 title={t('errorManagement.title')}
+                onBack={fromParam ? handleBack : undefined}
+                backLabel={
+                    fromParam
+                        ? isMobile
+                            ? undefined
+                            : t('common.back', { defaultValue: 'Quay lại' })
+                        : undefined
+                }
+                backTooltip={
+                    fromParam === 'machines'
+                        ? t('errorManagement.navigation.backToMachineStatus', {
+                              defaultValue: 'Quay lại Trạng thái máy',
+                          })
+                        : t('common.back', { defaultValue: 'Quay lại' })
+                }
                 rightContent={
                     <div
                         style={{
@@ -647,6 +775,13 @@ export default function ErrorManagementPage() {
                         loading={loading}
                         onChange={handleTableChange}
                         rowKey="id"
+                        onRow={(record) => ({
+                            id: `incident-row-${record.code}`,
+                            'data-highlighted': isRowHighlighted(record) ? 'true' : undefined,
+                        })}
+                        rowClassName={(record) =>
+                            isRowHighlighted(record) ? 'highlighted-incident-row' : ''
+                        }
                         pagination={{
                             current: page + 1,
                             pageSize: pageSize,
@@ -686,5 +821,19 @@ export default function ErrorManagementPage() {
                 onEdit={handleOpenEditModal}
             />
         </div>
+    );
+}
+
+export default function ErrorManagementPage() {
+    return (
+        <Suspense
+            fallback={
+                <div style={{ padding: 40, textAlign: 'center' }}>
+                    <Spin size="large" />
+                </div>
+            }
+        >
+            <ErrorManagementContent />
+        </Suspense>
     );
 }

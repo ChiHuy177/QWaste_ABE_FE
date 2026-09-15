@@ -67,6 +67,7 @@ export interface CreateErrorIncidentDto {
     zoneName?: string;
     startTime?: string;
     endTime?: string | null;
+    durationMinutes?: number;
     category?: ErrorCategory;
     severity?: ErrorSeverity;
     status?: ErrorStatus;
