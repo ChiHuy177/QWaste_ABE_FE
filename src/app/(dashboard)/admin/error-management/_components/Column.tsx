@@ -197,9 +197,6 @@ export const getErrorTableColumns = ({
                     >
                         {code}
                     </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                        {record.machineCode}
-                    </Text>
                 </Space>
             ),
         },
@@ -209,7 +206,7 @@ export const getErrorTableColumns = ({
             key: 'machineName',
             width: 175,
             render: (machineName: string, record) => (
-                <Space direction="vertical" size={2}>
+                <Space orientation="vertical" size={2}>
                     <Text
                         strong
                         style={{
@@ -218,15 +215,6 @@ export const getErrorTableColumns = ({
                         }}
                     >
                         {machineName}
-                    </Text>
-                    <Text
-                        type="secondary"
-                        style={{
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                        }}
-                    >
-                        {record.machineCode}
                     </Text>
                 </Space>
             ),

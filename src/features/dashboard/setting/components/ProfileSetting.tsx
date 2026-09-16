@@ -315,7 +315,11 @@ export function ProfileSetting({
                     <Col xs={24} sm={16} md={18}>
                         <form onSubmit={handleSubmit}>
                             <Card style={{ border: `1px solid ${token.colorBorder}` }}>
-                                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+                                <Space
+                                    orientation="vertical"
+                                    size="large"
+                                    style={{ width: '100%' }}
+                                >
                                     {/* Personal Information Section Title */}
                                     <div
                                         style={{
@@ -349,7 +353,7 @@ export function ProfileSetting({
                                         {/* Full Name */}
                                         <Col xs={24} md={12}>
                                             <Space
-                                                direction="vertical"
+                                                orientation="vertical"
                                                 size={8}
                                                 style={{ width: '100%' }}
                                             >
@@ -411,7 +415,7 @@ export function ProfileSetting({
                                         {/* Email */}
                                         <Col xs={24} md={12}>
                                             <Space
-                                                direction="vertical"
+                                                orientation="vertical"
                                                 size={8}
                                                 style={{ width: '100%' }}
                                             >
@@ -470,7 +474,7 @@ export function ProfileSetting({
                                     {/* Phone Number Section */}
                                     <div>
                                         <Space
-                                            direction="vertical"
+                                            orientation="vertical"
                                             size={8}
                                             style={{ width: '100%' }}
                                         >

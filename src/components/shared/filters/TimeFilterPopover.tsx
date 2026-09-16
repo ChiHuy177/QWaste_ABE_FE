@@ -304,7 +304,7 @@ const ShiftSection = React.memo<ShiftSectionProps>(
                     onChange={(e) => onChange(e.target.value as number | null)}
                     style={{ width: '100%' }}
                 >
-                    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={6} style={{ width: '100%' }}>
                         <Radio value={null}>{allShiftsLabel}</Radio>
                         {groupedShifts.map((option) => {
                             const filter = industryFilters.find((f) => f.filterId === option.value);
