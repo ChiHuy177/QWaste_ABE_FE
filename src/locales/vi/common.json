@@ -570,8 +570,8 @@
         "summary": {
             "lines": "Khu vực",
             "products": "Mã hàng",
-            "dailyPieces": "Miếng hôm nay",
-            "weeklyPieces": "Miếng trong tuần"
+            "dailyPieces": "Sản lượng hôm nay",
+            "weeklyPieces": "Sản lượng trong tuần"
         },
         "filters": {
             "machinePlaceholder": "Tìm theo máy"
@@ -1316,7 +1316,7 @@
             "totalRun": "Tổng máy chạy",
             "totalIdle": "Tổng máy chờ",
             "totalError": "Tổng máy lỗi",
-            "totalEmpty": "Tổng máy trống",
+            "totalOffline": "Tổng máy ngoại tuyến",
             "powerConsumption": "Tiêu thụ điện hiện tại",
             "machineTime": "Thời gian chạy",
             "production": "Sản lượng"

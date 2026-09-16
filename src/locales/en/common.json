@@ -1328,7 +1328,7 @@
             "totalRun": "Total Run",
             "totalIdle": "Total Idle",
             "totalError": "Total Error",
-            "totalEmpty": "Total Empty",
+            "totalOffline": "Total Offline",
             "powerConsumption": "Current Power Consumption",
             "machineTime": "Run Time",
             "production": "Production count"

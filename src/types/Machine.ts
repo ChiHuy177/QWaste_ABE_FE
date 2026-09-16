@@ -118,7 +118,7 @@ export interface MachineStats {
     totalRun: number;
     totalIdle: number;
     totalError: number;
-    totalEmpty: number;
+    totalOffline: number;
 }
 
 export type ZoneFilter = 'all' | 'zone1' | 'zone2' | 'zone3';
