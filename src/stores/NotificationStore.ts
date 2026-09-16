@@ -14,6 +14,14 @@ export interface INotificationStoreState {
     error: string | null;
 }
 
+// Module-level, không phải state Redux — chỉ để dọn đúng 2 subscription trước
+// khi connectWebSocket() đăng ký lại. Từ khi WebSocketService chuyển sang model
+// nhiều callback/topic (Map<string, Set<callback>>), gọi subscribe() lại trên
+// cùng destination mà không unsubscribe cái cũ trước sẽ cộng thêm callback
+// trùng — mỗi tin nhắn tới sẽ bắn handleMessage nhiều lần sau mỗi lần reconnect.
+let unsubscribePrivateQueue: (() => void) | null = null;
+let unsubscribePublicTopic: (() => void) | null = null;
+
 const initialState: INotificationStoreState = {
     unreadCount: 0,
     isWebSocketConnected: false,
@@ -235,14 +243,22 @@ export const notificationActions = {
         };
 
         try {
+            // Dọn subscription cũ trước — connectWebSocket() có thể chạy lại nhiều lần
+            // (mỗi lần isConnected true, kể cả sau reconnect), không dọn sẽ đăng ký
+            // trùng nhiều callback trên cùng 1 topic.
+            unsubscribePrivateQueue?.();
+            unsubscribePublicTopic?.();
+
             // Private queue: server gửi cho đúng user này (sendToUser)
-            wsService.subscribe<WebSocketMessage>('/user/queue/messages', (message) =>
-                handleMessage(message, 'private')
+            unsubscribePrivateQueue = wsService.subscribe<WebSocketMessage>(
+                '/user/queue/messages',
+                (message) => handleMessage(message, 'private')
             );
 
             // Public topic: server broadcast đến tất cả user (broadcastToAll)
-            wsService.subscribe<WebSocketMessage>('/topic/public', (message) =>
-                handleMessage(message, 'public')
+            unsubscribePublicTopic = wsService.subscribe<WebSocketMessage>(
+                '/topic/public',
+                (message) => handleMessage(message, 'public')
             );
 
             dispatch(slice.actions.setWebSocketConnected(true));
@@ -254,6 +270,10 @@ export const notificationActions = {
 
     disconnectWebSocket: () => (dispatch: Dispatch) => {
         console.log('[WebSocket-Notification] ===== DISCONNECTING =====');
+        unsubscribePrivateQueue?.();
+        unsubscribePublicTopic?.();
+        unsubscribePrivateQueue = null;
+        unsubscribePublicTopic = null;
         dispatch(slice.actions.setWebSocketConnected(false));
         dispatch(slice.actions.setUnreadCount(0));
         dispatch(slice.actions.setNotifications([]));
