@@ -37,6 +37,7 @@ const BASE_PATHS = {
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
     DASHBOARD: `${API}/dashboard/${V1}`,
     WORK_CALENDAR: `${API}/workCalendar/${V1}`,
+    SHIFT_PATTERNS: `${API}/shiftPatterns/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -84,6 +85,14 @@ export const ENDPOINTS = {
                     `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byDateRange`,
                     machineId
                 ),
+            PERFORMANCE_REPORT: {
+                BY_FILTER: `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byFilter`,
+                BY_DATE_RANGE: `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byDateRange`,
+                MACHINE_BY_FILTER: (machineId: PathParam) =>
+                    `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byFilter/${machineId}`,
+                MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+                    `${BASE_PATHS.SPACES_MONITORING}/performanceReport/byDateRange/${machineId}`,
+            },
         },
     },
     SPACE_LEVELS: {
@@ -179,6 +188,10 @@ export const ENDPOINTS = {
         SPACE_LEVELS: {
             HIGHEST: `${BASE_PATHS.UTILS}/spaceLevels/highest`,
         },
+        FILTERS: {
+            ALL_PERIODS: `${BASE_PATHS.UTILS}/filters/allPeriods`,
+            SHIFTS_FOR_DATE: `${BASE_PATHS.UTILS}/filters/shiftsForDate`,
+        },
     },
     EXCEL_EXPORT: {
         MACHINE_STATUS_LOG_REPORT_BY_FILTER: `${BASE_PATHS.EXCEL_EXPORT}/machineStatusLogReport/byFilter`,
@@ -250,6 +263,26 @@ export const ENDPOINTS = {
             WITH_PARAM(`${BASE_PATHS.DASHBOARD}/runtime/byFilter`, machineId),
         RUNTIME_FOR_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
             WITH_PARAM(`${BASE_PATHS.DASHBOARD}/runtime/byDateRange`, machineId),
+        EFFICIENCY: {
+            BY_FILTER: `${BASE_PATHS.DASHBOARD}/efficiency/byFilter`,
+            BY_DATE_RANGE: `${BASE_PATHS.DASHBOARD}/efficiency/byDateRange`,
+            MACHINE_BY_FILTER: (machineId: PathParam) =>
+                `${BASE_PATHS.DASHBOARD}/efficiency/byFilter/${machineId}`,
+            MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+                `${BASE_PATHS.DASHBOARD}/efficiency/byDateRange/${machineId}`,
+        },
+        CAPACITY: {
+            MACHINE_BY_FILTER: (machineId: PathParam) =>
+                `${BASE_PATHS.DASHBOARD}/capacity/byFilter/${machineId}`,
+            MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+                `${BASE_PATHS.DASHBOARD}/capacity/byDateRange/${machineId}`,
+        },
+        PRODUCTION: {
+            BY_MACHINE_BY_FILTER: (machineId: PathParam) =>
+                `${BASE_PATHS.DASHBOARD}/production/byMachine/byFilter/${machineId}`,
+            BY_MACHINE_BY_DATE_RANGE: (machineId: PathParam) =>
+                `${BASE_PATHS.DASHBOARD}/production/byMachine/byDateRange/${machineId}`,
+        },
     },
     WORK_CALENDAR: {
         BASE: BASE_PATHS.WORK_CALENDAR,
@@ -257,6 +290,11 @@ export const ENDPOINTS = {
         RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
         CHECK_ALARM: `${BASE_PATHS.WORK_CALENDAR}/checkAlarm`,
         CONFIRM_MONTH: `${BASE_PATHS.WORK_CALENDAR}/confirmMonth`,
+    },
+    SHIFT_PATTERNS: {
+        BASE: BASE_PATHS.SHIFT_PATTERNS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SHIFT_PATTERNS, id),
+        PICKING: `${BASE_PATHS.SHIFT_PATTERNS}/picking`,
     },
 } as const;
 

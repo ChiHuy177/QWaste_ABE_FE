@@ -15,12 +15,15 @@ import {
     theme,
     Tooltip,
     Typography,
+    Spin,
 } from 'antd';
+import { UtilsService } from '@/services/UtilsService';
 import dayjs, { Dayjs } from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import { useTranslation } from 'react-i18next';
 import { IndustryFilter } from '@/types/IndustryFilter';
+import { computePresetDateRange } from '@/app/(dashboard)/admin/space-monitoring/_components/TimeFilterPopover';
 import {
     ALL_LABEL_STYLES,
     ALL_TIME_GRAINS,
@@ -83,7 +86,7 @@ const { useBreakpoint } = Grid;
 const SHIFT_ALL = '__ALL__';
 
 function checkShiftActive(filter: IndustryFilter): boolean {
-    if (filter.category !== 'SHIFT') return false;
+    if (filter.category !== 'SHIFT' && filter.category !== 'OT') return false;
     const currentTime = dayjs().format('HH:mm:ss');
     if (!filter.crossesMidnight) {
         return currentTime >= filter.startTime && currentTime < filter.endTime;
@@ -157,7 +160,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     }, [draftYear, lang]);
 
     const shiftFilters = useMemo(
-        () => industryFilters.filter((f) => f.category === 'SHIFT'),
+        () => industryFilters.filter((f) => f.category === 'SHIFT' || f.category === 'OT'),
         [industryFilters]
     );
     const periodFilters = useMemo(
@@ -165,21 +168,116 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         [industryFilters]
     );
 
-    // Shift chips include a synthetic "All" option; the active shift also gets a small
-    // dot indicator (not a nested pill) so the currently-running shift stays visible
-    // without the chip looking like a tag stuffed inside another tag.
+    // Backend rule (Error 915): Single shift filtering is only supported when viewing a single specific day
+    const isSingleDay = useMemo(() => {
+        if (draftMode === 'CUSTOM_RANGE') {
+            return (
+                draftDateRange[0].format('YYYY-MM-DD') === draftDateRange[1].format('YYYY-MM-DD')
+            );
+        }
+        const selectedPeriod = periodFilters.find((f) => f.filterId === draftPeriodId);
+        if (!selectedPeriod) return false;
+        return selectedPeriod.periodCode === 'TODAY' || selectedPeriod.periodCode === 'YESTERDAY';
+    }, [draftMode, draftDateRange, periodFilters, draftPeriodId]);
+
+    const pickedDate = useMemo(() => {
+        if (!isSingleDay) return null;
+        if (draftMode === 'CUSTOM_RANGE') {
+            return draftDateRange[0].format('YYYY-MM-DD');
+        }
+        const selectedPeriod = periodFilters.find((f) => f.filterId === draftPeriodId);
+        if (selectedPeriod?.periodCode === 'TODAY') {
+            return dayjs().format('YYYY-MM-DD');
+        }
+        if (selectedPeriod?.periodCode === 'YESTERDAY') {
+            return dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+        }
+        return null;
+    }, [isSingleDay, draftMode, draftDateRange, periodFilters, draftPeriodId]);
+
+    // Automatically clear specific shift filter if period spans more than 1 day
+    useEffect(() => {
+        if (!isSingleDay && draftShiftId !== null) {
+            setDraftShiftId(null);
+        }
+    }, [isSingleDay, draftShiftId]);
+
+    const [dynamicShifts, setDynamicShifts] = useState<IndustryFilter[]>([]);
+    const [isLoadingShifts, setIsLoadingShifts] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (!isSingleDay || !pickedDate) {
+            setDynamicShifts([]);
+            setIsLoadingShifts(false);
+            return;
+        }
+
+        let isCancelled = false;
+        setIsLoadingShifts(true);
+
+        UtilsService.getShiftsForDate(pickedDate)
+            .then((shifts) => {
+                if (!isCancelled) {
+                    const validShifts = shifts || [];
+                    setDynamicShifts(validShifts);
+                    if (
+                        draftShiftId !== null &&
+                        !validShifts.some((s) => s.filterId === draftShiftId)
+                    ) {
+                        setDraftShiftId(null);
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error('Failed to fetch shifts for date:', pickedDate, err);
+                if (!isCancelled) {
+                    setDynamicShifts([]);
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsLoadingShifts(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [pickedDate, isSingleDay]);
+
+    const availableShifts = useMemo(() => {
+        if (!isSingleDay) return [];
+        return dynamicShifts;
+    }, [isSingleDay, dynamicShifts]);
+
+    // Shift chips include a synthetic "All" option
     const shiftChipOptions = useMemo<
-        Array<{ value: number | typeof SHIFT_ALL; label: React.ReactNode }>
+        Array<{ value: number | typeof SHIFT_ALL; label: React.ReactNode; disabled?: boolean }>
     >(
         () => [
             { value: SHIFT_ALL, label: lang === 'vi' ? 'Tất cả' : 'All' },
-            ...shiftFilters.map((filter) => ({
+            ...availableShifts.map((filter) => ({
                 value: filter.filterId,
+                disabled: !isSingleDay,
                 label: (
-                    <Space size={5} align="center">
-                        <span>{lang === 'vi' ? filter.displayNameVi : filter.displayNameEn}</span>
-                        {checkShiftActive(filter) && (
-                            <Tooltip title={lang === 'vi' ? 'Đang hoạt động' : 'Active'}>
+                    <Tooltip
+                        title={
+                            !isSingleDay
+                                ? lang === 'vi'
+                                    ? 'Chỉ hỗ trợ chọn ca cụ thể khi xem trong 1 ngày'
+                                    : 'Shift filtering is only supported when viewing a single day'
+                                : checkShiftActive(filter)
+                                  ? lang === 'vi'
+                                      ? 'Đang hoạt động'
+                                      : 'Active'
+                                  : undefined
+                        }
+                    >
+                        <Space size={5} align="center">
+                            <span>
+                                {lang === 'vi' ? filter.displayNameVi : filter.displayNameEn}
+                            </span>
+                            {checkShiftActive(filter) && (
                                 <span
                                     style={{
                                         width: 6,
@@ -190,13 +288,13 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                                         flexShrink: 0,
                                     }}
                                 />
-                            </Tooltip>
-                        )}
-                    </Space>
+                            )}
+                        </Space>
+                    </Tooltip>
                 ),
             })),
         ],
-        [shiftFilters, lang, token.colorSuccess]
+        [availableShifts, lang, token.colorSuccess, isSingleDay]
     );
 
     const periodChipOptions = useMemo(
@@ -349,12 +447,22 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     }, [draftShiftLabel, draftRangeLabel, draftGrainLabel, lang]);
 
     const handleApply = useCallback(() => {
+        let sDate = draftDateRange[0].format('YYYY-MM-DD');
+        let eDate = draftDateRange[1].format('YYYY-MM-DD');
+
+        if (draftMode === 'PRESET' && draftPeriodId !== null) {
+            const presetObj = periodFilters.find((f) => f.filterId === draftPeriodId);
+            const [pStart, pEnd] = computePresetDateRange(presetObj);
+            sDate = pStart;
+            eDate = pEnd;
+        }
+
         onApply({
             mode: draftMode,
             periodId: draftMode === 'PRESET' ? draftPeriodId : null,
             shiftId: draftShiftId,
-            startDate: draftDateRange[0].format('YYYY-MM-DD'),
-            endDate: draftDateRange[1].format('YYYY-MM-DD'),
+            startDate: sDate,
+            endDate: eDate,
             grain: grainEnabled ? draftGrain : undefined,
             labelStyle: grainEnabled ? draftLabelStyle : undefined,
         });
@@ -363,6 +471,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         draftMode,
         draftPeriodId,
         draftShiftId,
+        periodFilters,
         draftDateRange,
         grainEnabled,
         draftGrain,
@@ -568,38 +677,11 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                     paddingTop: 4,
                 }}
             >
-                {/* Shift is independent of PRESET vs CUSTOM_RANGE, so it sits above the
-                    tabs — otherwise switching tabs would appear to drop the selection. */}
-                {shiftFilters.length > 0 && (
-                    <>
-                        <Typography.Text type="secondary" style={sectionLabelStyle}>
-                            {lang === 'vi' ? 'Ca làm việc' : 'Shifts'}
-                            {requiredMark}
-                        </Typography.Text>
-                        <div
-                            className="qw-time-filter-chips"
-                            style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
-                        >
-                            <Tag.CheckableTagGroup
-                                options={shiftChipOptions}
-                                value={draftShiftId ?? SHIFT_ALL}
-                                onChange={(nextValue) =>
-                                    setDraftShiftId(
-                                        nextValue == null || nextValue === SHIFT_ALL
-                                            ? null
-                                            : Number(nextValue)
-                                    )
-                                }
-                            />
-                        </div>
-                    </>
-                )}
-
                 <Typography.Text
                     type="secondary"
                     style={{
                         ...sectionLabelStyle,
-                        marginTop: shiftFilters.length > 0 ? 16 : 0,
+                        marginTop: 0,
                         marginBottom: 4,
                     }}
                 >
@@ -623,6 +705,51 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                         },
                     ]}
                 />
+
+                {/* Shift selection - moved below Time Range tabs */}
+                <div style={{ marginTop: 14 }}>
+                    <Typography.Text type="secondary" style={sectionLabelStyle}>
+                        {lang === 'vi' ? 'Ca làm việc' : 'Shifts'}
+                        {requiredMark}
+                    </Typography.Text>
+                    {!isSingleDay && (
+                        <Typography.Text
+                            type="secondary"
+                            style={{
+                                fontSize: 11,
+                                display: 'block',
+                                marginBottom: 6,
+                                color: '#faad14',
+                            }}
+                        >
+                            {lang === 'vi'
+                                ? '(*) Khi xem khoảng ngày, mặc định xem tất cả các ca (không chọn ca riêng lẻ).'
+                                : '(*) Date range: viewing all shifts by default (individual shift selection disabled).'}
+                        </Typography.Text>
+                    )}
+                    {isLoadingShifts ? (
+                        <div style={{ padding: '8px 0', textAlign: 'center' }}>
+                            <Spin size="small" />
+                        </div>
+                    ) : (
+                        <div
+                            className="qw-time-filter-chips"
+                            style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+                        >
+                            <Tag.CheckableTagGroup
+                                options={shiftChipOptions}
+                                value={draftShiftId ?? SHIFT_ALL}
+                                onChange={(nextValue) =>
+                                    setDraftShiftId(
+                                        nextValue == null || nextValue === SHIFT_ALL
+                                            ? null
+                                            : Number(nextValue)
+                                    )
+                                }
+                            />
+                        </div>
+                    )}
+                </div>
 
                 {grainEnabled && (
                     <>

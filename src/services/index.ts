@@ -17,3 +17,6 @@ export * from './StepService';
 export * from './ExcelExportService';
 export * from './ProductionPlanService';
 export * from './DashboardService';
+export * from './WorkCalendarService';
+export * from './ShiftPatternService';
+export * from './IndustryFilterService';
