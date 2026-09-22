@@ -18,17 +18,18 @@ export interface MachineHeroHeaderProps {
     selectedRow: MachineStatusSummaryItem;
     workshopName?: string;
     isXs?: boolean;
+    isMobile?: boolean;
 }
 
 export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
-    ({ selectedRow, workshopName, isXs }) => {
+    ({ selectedRow, workshopName, isXs, isMobile }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
 
         return (
             <div
                 style={{
-                    padding: '12px 16px',
+                    padding: isMobile ? '10px 12px' : '12px 16px',
                     borderRadius: token.borderRadiusLG,
                     border: `1px solid ${token.colorBorderSecondary}`,
                     background: token.colorFillAlter,
@@ -36,8 +37,8 @@ export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     flexShrink: 0,
-                    flexWrap: isXs ? 'wrap' : 'nowrap',
-                    gap: 12,
+                    flexWrap: isMobile || isXs ? 'wrap' : 'nowrap',
+                    gap: isMobile ? 8 : 12,
                 }}
             >
                 <div

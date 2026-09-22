@@ -18,6 +18,7 @@ export interface ModalHeaderProps {
     startDate: string;
     endDate: string;
     totalMachinesCount: number;
+    isMobile?: boolean;
 }
 
 export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
@@ -32,6 +33,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
         startDate,
         endDate,
         totalMachinesCount,
+        isMobile,
     }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
@@ -58,29 +60,49 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                     justifyContent: 'space-between',
                     paddingRight: 28,
                     paddingBottom: 4,
-                    gap: 12,
+                    gap: 10,
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}
+                >
                     <div
                         style={{
-                            width: 34,
-                            height: 34,
+                            width: 32,
+                            height: 32,
                             borderRadius: token.borderRadiusSM,
                             backgroundColor: token.colorPrimaryBg,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: token.colorPrimary,
+                            flexShrink: 0,
                         }}
                     >
-                        <FieldTimeOutlined style={{ fontSize: 18 }} />
+                        <FieldTimeOutlined style={{ fontSize: 16 }} />
                     </div>
-                    <div>
-                        <Title level={4} style={{ margin: 0, lineHeight: 1.25, fontSize: 16.5 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <Title
+                            level={4}
+                            style={{
+                                margin: 0,
+                                lineHeight: 1.25,
+                                fontSize: isMobile ? 14.5 : 16.5,
+                            }}
+                            ellipsis={{ tooltip: titleText }}
+                        >
                             {titleText}
                         </Title>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
+                        <Text
+                            type="secondary"
+                            style={{
+                                fontSize: 11.5,
+                                display: 'block',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             {subtitleText} • {dateRangeText}
                         </Text>
                     </div>

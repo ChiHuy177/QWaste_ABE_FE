@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Card, Typography, theme, Empty, Select, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,7 +12,6 @@ import {
     Tooltip,
     ResponsiveContainer,
     ReferenceLine,
-    Cell,
 } from 'recharts';
 import { DashboardMachineEfficiencyResponse } from '@/types/Dashboard';
 import { MachineOeeData } from '@/types/ProductionOverview';
@@ -144,6 +143,37 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
             },
         ];
 
+        // Handle clicking anywhere in the column space / category band
+        const handleChartClick = useCallback(
+            (state: any) => {
+                if (!onSelectMachine || !state) return;
+
+                // 1. Try activePayload (populated when clicking inside the column/band)
+                if (state.activePayload && state.activePayload.length > 0) {
+                    const rawItem = state.activePayload[0]
+                        .payload as NormalizedMachineEfficiencyItem;
+                    if (rawItem && rawItem.machineCode) {
+                        onSelectMachine(rawItem.machineCode, rawItem.machineId);
+                        return;
+                    }
+                }
+
+                // 2. Try activeTooltipIndex (index of the active column)
+                if (
+                    typeof state.activeTooltipIndex === 'number' &&
+                    state.activeTooltipIndex >= 0 &&
+                    state.activeTooltipIndex < chartData.length
+                ) {
+                    const rawItem = chartData[state.activeTooltipIndex];
+                    if (rawItem && rawItem.machineCode) {
+                        onSelectMachine(rawItem.machineCode, rawItem.machineId);
+                        return;
+                    }
+                }
+            },
+            [chartData, onSelectMachine]
+        );
+
         // Custom Tooltip
         const renderTooltip = (props: any) => {
             const { active, payload } = props;
@@ -168,6 +198,12 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
 
             return (
                 <div
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSelectMachine && rawItem.machineCode) {
+                            onSelectMachine(rawItem.machineCode, rawItem.machineId);
+                        }
+                    }}
                     style={{
                         backgroundColor: token.colorBgElevated,
                         border: `1px solid ${token.colorBorderSecondary}`,
@@ -175,6 +211,8 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
                         padding: '8px 12px',
                         boxShadow: token.boxShadowSecondary,
                         minWidth: 160,
+                        cursor: onSelectMachine ? 'pointer' : 'default',
+                        pointerEvents: 'auto',
                     }}
                 >
                     <div
@@ -252,6 +290,10 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
                     </div>
                     {onSelectMachine && (
                         <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectMachine(rawItem.machineCode, rawItem.machineId);
+                            }}
                             style={{
                                 marginTop: 6,
                                 paddingTop: 6,
@@ -259,12 +301,75 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
                                 fontSize: 10,
                                 color: token.colorPrimary,
                                 textAlign: 'center',
+                                fontWeight: 600,
+                                cursor: 'pointer',
                             }}
                         >
                             {t('productionOverview.machineDetail.selectMachine')} ➔
                         </div>
                     )}
                 </div>
+            );
+        };
+
+        // Custom Bar Shape with dedicated full-column clickable hit area
+        const renderCustomBar = (barProps: any) => {
+            const { x, y, width, height, payload, background: bg } = barProps;
+            if (!payload) return null;
+
+            const eff = payload.efficiencyPercentage;
+            const barColor = getBarColor(eff);
+
+            // Full column hit area using background dimensions from Recharts or calculated bounds
+            const hitX = bg?.x ?? x - (Math.max(width, 36) - width) / 2;
+            const hitY = bg?.y ?? 10;
+            const hitWidth = bg?.width ?? Math.max(width, 36);
+            const hitHeight = bg?.height ?? Math.max((y ?? 0) + (height ?? 0) - hitY, 200);
+
+            // Minimum visible height of 6px for very low values (e.g. 5.2% or 0%)
+            const minH = 6;
+            const barH = Math.max(height || 0, minH);
+            const barY = (y || 0) + (height || 0) - barH;
+
+            const handleClick = (e: React.MouseEvent) => {
+                e.stopPropagation();
+                if (onSelectMachine && payload.machineCode) {
+                    onSelectMachine(payload.machineCode, payload.machineId);
+                }
+            };
+
+            return (
+                <g
+                    style={{ cursor: onSelectMachine ? 'pointer' : 'default' }}
+                    onClick={handleClick}
+                >
+                    {/* 1. Full-height column hit area (transparent to eyes, but 100% solid to pointer clicks) */}
+                    <rect
+                        x={hitX}
+                        y={hitY}
+                        width={hitWidth}
+                        height={hitHeight}
+                        fill="rgba(0, 0, 0, 0.001)"
+                        style={{
+                            cursor: onSelectMachine ? 'pointer' : 'default',
+                            pointerEvents: 'all',
+                        }}
+                    />
+                    {/* 2. The visible colored bar */}
+                    <rect
+                        x={x}
+                        y={barY}
+                        width={width}
+                        height={barH}
+                        rx={4}
+                        ry={4}
+                        fill={barColor}
+                        style={{
+                            cursor: onSelectMachine ? 'pointer' : 'default',
+                            pointerEvents: 'all',
+                        }}
+                    />
+                </g>
             );
         };
 
@@ -413,6 +518,8 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
                                 <BarChart
                                     data={chartData}
                                     margin={{ top: 10, right: 35, left: -20, bottom: 0 }}
+                                    onClick={handleChartClick}
+                                    style={{ cursor: onSelectMachine ? 'pointer' : 'default' }}
                                 >
                                     <CartesianGrid
                                         strokeDasharray="3 3"
@@ -440,7 +547,17 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
                                         tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
                                         axisLine={{ stroke: token.colorBorderSecondary }}
                                     />
-                                    <Tooltip content={renderTooltip} />
+                                    <Tooltip
+                                        content={renderTooltip}
+                                        cursor={{
+                                            fill: token.colorFillTertiary,
+                                            opacity: 0.5,
+                                            cursor: onSelectMachine ? 'pointer' : 'default',
+                                        }}
+                                        wrapperStyle={{
+                                            pointerEvents: 'none',
+                                        }}
+                                    />
 
                                     {/* Reference lines for 85% and 70% */}
                                     <ReferenceLine
@@ -470,25 +587,9 @@ export const MachineOeeChartCard: React.FC<MachineOeeChartCardProps> = React.mem
 
                                     <Bar
                                         dataKey="displayValue"
-                                        radius={[4, 4, 0, 0]}
+                                        shape={renderCustomBar}
                                         maxBarSize={28}
-                                    >
-                                        {chartData.map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={getBarColor(entry.efficiencyPercentage)}
-                                                style={{
-                                                    cursor: onSelectMachine ? 'pointer' : 'default',
-                                                }}
-                                                onClick={() =>
-                                                    onSelectMachine?.(
-                                                        entry.machineCode,
-                                                        entry.machineId
-                                                    )
-                                                }
-                                            />
-                                        ))}
-                                    </Bar>
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>

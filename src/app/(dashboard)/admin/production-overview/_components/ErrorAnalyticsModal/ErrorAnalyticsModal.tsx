@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Modal, theme, Skeleton, Grid, Empty } from 'antd';
+import { Modal, theme, Skeleton, Grid, Empty, Button, Tag, Segmented, ConfigProvider } from 'antd';
+import { ArrowLeftOutlined, UnorderedListOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { SpaceService } from '@/services/SpaceService';
@@ -64,6 +65,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
         const [errorDateRange, setErrorDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(
             null
         );
+        const [mobileActiveView, setMobileActiveView] = useState<'list' | 'detail'>('list');
 
         const reduxState = useAppSelector((state) => state.factoryOverview) as
             IFactoryOverviewStoreState | undefined;
@@ -241,7 +243,12 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 setSelectedRow(null);
                 setSearchText('');
                 setSelectedWorkshopId('all');
+                setMobileActiveView('list');
                 return;
+            }
+
+            if (isSingleMachineMode) {
+                setMobileActiveView('detail');
             }
 
             setSelectedRow((prev) => {
@@ -251,13 +258,19 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 }
                 return filteredSummaryData[0];
             });
-        }, [isOpen, filteredSummaryData]);
+        }, [isOpen, filteredSummaryData, isSingleMachineMode]);
 
-        // Stable machine selection handler that also resets inner date range
-        const handleSelectMachine = useCallback((machine: MachineStatusSummaryItem) => {
-            setSelectedRow(machine);
-            setErrorDateRange(null);
-        }, []);
+        // Stable machine selection handler that also resets inner date range and switches view on mobile
+        const handleSelectMachine = useCallback(
+            (machine: MachineStatusSummaryItem) => {
+                setSelectedRow(machine);
+                setErrorDateRange(null);
+                if (isMobile) {
+                    setMobileActiveView('detail');
+                }
+            },
+            [isMobile]
+        );
 
         const handleToggleSort = useCallback(() => {
             setSortByError((prev) => !prev);
@@ -372,6 +385,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                         startDate={startDate}
                         endDate={endDate}
                         totalMachinesCount={filteredSummaryData.length}
+                        isMobile={isMobile}
                     />
                 }
                 open={isOpen}
@@ -381,15 +395,17 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 centered
                 style={{
                     maxWidth: isSingleMachineMode ? 1080 : 1440,
-                    top: 20,
+                    top: isMobile ? 12 : 20,
                     paddingBottom: 0,
                 }}
                 styles={{
                     body: {
-                        height: isMobile ? 'auto' : 'calc(88vh - 90px)',
-                        minHeight: isMobile ? 'auto' : 640,
-                        overflow: isMobile ? 'auto' : 'hidden',
-                        padding: isMobile ? '12px' : '10px 20px 16px',
+                        height: isMobile ? 'calc(90vh - 70px)' : 'calc(88vh - 90px)',
+                        minHeight: isMobile ? 480 : 640,
+                        overflow: 'hidden',
+                        padding: isMobile ? '10px 12px 14px' : '10px 20px 16px',
+                        display: 'flex',
+                        flexDirection: 'column',
                     },
                 }}
                 destroyOnClose
@@ -397,12 +413,14 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 {loading ? (
                     <div
                         style={{
-                            height: isMobile ? 'auto' : '100%',
+                            height: '100%',
                             display: isMobile ? 'flex' : 'grid',
                             flexDirection: isMobile ? 'column' : 'row',
                             gridTemplateColumns: isMobile ? undefined : '40% 60%',
                             gap: 20,
                             paddingTop: 16,
+                            flex: 1,
+                            minHeight: 0,
                         }}
                     >
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -424,17 +442,284 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                             <Skeleton active paragraph={{ rows: 14 }} />
                         </div>
                     </div>
-                ) : (
+                ) : isMobile ? (
+                    /* MOBILE MASTER-DETAIL LAYOUT */
                     <div
                         style={{
-                            display: isMobile || isSingleMachineMode ? 'flex' : 'grid',
-                            flexDirection: isMobile ? 'column' : 'row',
-                            gridTemplateColumns:
-                                isMobile || isSingleMachineMode ? undefined : '36% 64%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '100%',
+                            minHeight: 0,
+                            flex: 1,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        {/* Mobile Segmented Switcher with prominent active highlight (only in Plant-wide mode with multiple machines) */}
+                        {!isSingleMachineMode && (
+                            <ConfigProvider
+                                theme={{
+                                    components: {
+                                        Segmented: {
+                                            itemSelectedBg: token.colorPrimary,
+                                            itemSelectedColor: token.colorWhite,
+                                            itemHoverColor: token.colorPrimary,
+                                            itemActiveBg: token.colorPrimaryActive,
+                                            trackBg: token.colorFillAlter,
+                                            trackPadding: 3,
+                                        },
+                                    },
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        marginBottom: 10,
+                                        flexShrink: 0,
+                                        border: `1px solid ${token.colorBorderSecondary}`,
+                                        borderRadius: token.borderRadiusLG,
+                                        padding: 2,
+                                        backgroundColor: token.colorFillAlter,
+                                    }}
+                                >
+                                    <Segmented
+                                        block
+                                        size="middle"
+                                        value={mobileActiveView}
+                                        onChange={(v) =>
+                                            setMobileActiveView(v as 'list' | 'detail')
+                                        }
+                                        options={[
+                                            {
+                                                value: 'list',
+                                                icon: (
+                                                    <UnorderedListOutlined
+                                                        style={{
+                                                            fontSize: 13,
+                                                            color:
+                                                                mobileActiveView === 'list'
+                                                                    ? token.colorWhite
+                                                                    : token.colorTextSecondary,
+                                                        }}
+                                                    />
+                                                ),
+                                                label: (
+                                                    <span
+                                                        style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: 6,
+                                                            fontWeight:
+                                                                mobileActiveView === 'list'
+                                                                    ? 600
+                                                                    : 500,
+                                                            fontSize: 13,
+                                                        }}
+                                                    >
+                                                        <span>
+                                                            {t(
+                                                                'factoryOverview.modal.machineListTabTitle'
+                                                            ) || 'Danh sách máy'}
+                                                        </span>
+                                                        <span
+                                                            style={{
+                                                                backgroundColor:
+                                                                    mobileActiveView === 'list'
+                                                                        ? 'rgba(255, 255, 255, 0.25)'
+                                                                        : token.colorFillSecondary,
+                                                                color:
+                                                                    mobileActiveView === 'list'
+                                                                        ? token.colorWhite
+                                                                        : token.colorTextSecondary,
+                                                                padding: '0 6px',
+                                                                borderRadius: 10,
+                                                                fontSize: 11,
+                                                                fontWeight: 600,
+                                                                lineHeight: '16px',
+                                                                display: 'inline-block',
+                                                            }}
+                                                        >
+                                                            {filteredSummaryData.length}
+                                                        </span>
+                                                    </span>
+                                                ),
+                                            },
+                                            {
+                                                value: 'detail',
+                                                disabled: !selectedRow,
+                                                icon: (
+                                                    <FileTextOutlined
+                                                        style={{
+                                                            fontSize: 13,
+                                                            color:
+                                                                mobileActiveView === 'detail'
+                                                                    ? token.colorWhite
+                                                                    : !selectedRow
+                                                                      ? token.colorTextDisabled
+                                                                      : token.colorTextSecondary,
+                                                        }}
+                                                    />
+                                                ),
+                                                label: (
+                                                    <span
+                                                        style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            fontWeight:
+                                                                mobileActiveView === 'detail'
+                                                                    ? 600
+                                                                    : 500,
+                                                            fontSize: 13,
+                                                            opacity: selectedRow ? 1 : 0.5,
+                                                        }}
+                                                    >
+                                                        {t(
+                                                            'factoryOverview.modal.incidentDetailTabTitle'
+                                                        ) || 'Chi tiết sự cố'}
+                                                    </span>
+                                                ),
+                                            },
+                                        ]}
+                                    />
+                                </div>
+                            </ConfigProvider>
+                        )}
+
+                        {/* Mobile View: List or Detail */}
+                        {!isSingleMachineMode && mobileActiveView === 'list' ? (
+                            <div
+                                style={{
+                                    flex: 1,
+                                    minHeight: 0,
+                                    height: '100%',
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <MachineListSidebar
+                                    filteredSummaryData={filteredSummaryData}
+                                    selectedMachineId={selectedRow?.machineId || null}
+                                    onSelectMachine={handleSelectMachine}
+                                    searchText={searchText}
+                                    onSearchTextChange={handleSearchTextChange}
+                                    selectedWorkshopId={selectedWorkshopId}
+                                    onWorkshopChange={handleWorkshopChange}
+                                    workshopOptions={workshopOptions}
+                                    sortByError={sortByError}
+                                    onToggleSort={handleToggleSort}
+                                    machinesWithErrorCount={machinesWithErrorCount}
+                                    machineWorkshopMap={machineWorkshopMap}
+                                    isMobile={isMobile}
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                style={{
+                                    flex: 1,
+                                    minHeight: 0,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 10,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                {!isSingleMachineMode && (
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingBottom: 2,
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            icon={<ArrowLeftOutlined />}
+                                            onClick={() => setMobileActiveView('list')}
+                                            style={{
+                                                fontWeight: 500,
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                color: token.colorPrimary,
+                                                borderRadius: token.borderRadiusSM,
+                                                backgroundColor: token.colorPrimaryBg,
+                                                padding: '4px 10px',
+                                                height: 28,
+                                            }}
+                                        >
+                                            {t('factoryOverview.modal.backToList') ||
+                                                'Quay lại danh sách máy'}
+                                        </Button>
+                                        <Tag
+                                            color="blue"
+                                            bordered={false}
+                                            style={{
+                                                margin: 0,
+                                                borderRadius: 10,
+                                                fontSize: 11,
+                                            }}
+                                        >
+                                            {filteredSummaryData.findIndex(
+                                                (m) => m.machineId === selectedRow?.machineId
+                                            ) + 1}{' '}
+                                            / {filteredSummaryData.length}
+                                        </Tag>
+                                    </div>
+                                )}
+
+                                {selectedRow ? (
+                                    <>
+                                        <MachineHeroHeader
+                                            selectedRow={selectedRow}
+                                            workshopName={selectedWorkshopName}
+                                            isXs={isXs}
+                                            isMobile={isMobile}
+                                        />
+                                        <IncidentHistoryTable
+                                            filteredErrorDetails={filteredErrorDetails}
+                                            loading={loadingErrorDetails}
+                                            errorDateRange={errorDateRange}
+                                            onErrorDateRangeChange={setErrorDateRange}
+                                            disabledDate={disabledDate}
+                                            startDate={startDate}
+                                            endDate={endDate}
+                                            isMobile={isMobile}
+                                        />
+                                    </>
+                                ) : (
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Empty
+                                            description={
+                                                t('factoryOverview.modal.selectMachinePrompt') ||
+                                                t('common.noData') ||
+                                                'Vui lòng chọn thiết bị để xem chi tiết'
+                                            }
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* DESKTOP SPLIT LAYOUT */
+                    <div
+                        style={{
+                            display: isSingleMachineMode ? 'flex' : 'grid',
+                            gridTemplateColumns: isSingleMachineMode ? undefined : '36% 64%',
                             gap: isSingleMachineMode ? 0 : 20,
-                            height: isMobile ? 'auto' : '100%',
+                            height: '100%',
                             paddingTop: 4,
                             width: '100%',
+                            flex: 1,
+                            minHeight: 0,
                         }}
                     >
                         {/* LEFT PANE: Machine Directory Table (Plant-wide mode only) */}
@@ -452,27 +737,22 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                 onToggleSort={handleToggleSort}
                                 machinesWithErrorCount={machinesWithErrorCount}
                                 machineWorkshopMap={machineWorkshopMap}
+                                isMobile={isMobile}
                             />
                         )}
 
                         {/* RIGHT PANE: Selected Machine Details & Incident Table */}
                         <div
                             style={{
-                                borderLeft:
-                                    isMobile || isSingleMachineMode
-                                        ? 'none'
-                                        : `1px solid ${token.colorBorderSecondary}`,
-                                borderTop:
-                                    isMobile && !isSingleMachineMode
-                                        ? `1px solid ${token.colorBorderSecondary}`
-                                        : 'none',
-                                paddingLeft: isMobile || isSingleMachineMode ? 0 : 20,
-                                paddingTop: isMobile && !isSingleMachineMode ? 16 : 0,
+                                borderLeft: isSingleMachineMode
+                                    ? 'none'
+                                    : `1px solid ${token.colorBorderSecondary}`,
+                                paddingLeft: isSingleMachineMode ? 0 : 20,
                                 display: 'flex',
                                 flexDirection: 'column',
-                                height: isMobile ? 'auto' : '100%',
+                                height: '100%',
                                 minHeight: 0,
-                                overflow: isMobile ? 'visible' : 'hidden',
+                                overflow: 'hidden',
                                 gap: 12,
                                 width: isSingleMachineMode ? '100%' : undefined,
                                 flex: isSingleMachineMode ? 1 : undefined,
@@ -480,14 +760,12 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                         >
                             {selectedRow ? (
                                 <>
-                                    {/* 1. Hero Header Card */}
                                     <MachineHeroHeader
                                         selectedRow={selectedRow}
                                         workshopName={selectedWorkshopName}
                                         isXs={isXs}
+                                        isMobile={isMobile}
                                     />
-
-                                    {/* 2. Incident & Error History Section */}
                                     <IncidentHistoryTable
                                         filteredErrorDetails={filteredErrorDetails}
                                         loading={loadingErrorDetails}

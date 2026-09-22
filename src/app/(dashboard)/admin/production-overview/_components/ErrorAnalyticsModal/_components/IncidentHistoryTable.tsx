@@ -47,7 +47,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                 {
                     title: t('factoryOverview.table.header.start') || 'Thời gian sự cố',
                     key: 'timeRange',
-                    width: 175,
+                    width: isMobile ? 155 : 175,
                     sorter: (a, b) =>
                         new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime(),
                     render: (_: any, record: MachineErrorDetailItem) => {
@@ -101,7 +101,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     title: t('factoryOverview.table.header.errorName') || 'Tên lỗi',
                     dataIndex: 'errorName',
                     key: 'errorName',
-                    width: 175,
+                    width: isMobile ? 150 : 175,
                     ellipsis: true,
                     render: (name: string) => (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -148,7 +148,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     dataIndex: 'durationHours',
                     key: 'durationHours',
                     align: 'right' as const,
-                    width: 95,
+                    width: isMobile ? 85 : 95,
                     sorter: (a, b) =>
                         (Number(a.durationHours) || 0) - (Number(b.durationHours) || 0),
                     render: (v: number) => {
@@ -170,7 +170,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     },
                 },
             ],
-            [token, t]
+            [token, t, isMobile]
         );
 
         return (
@@ -189,33 +189,48 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                 {/* Header toolbar */}
                 <div
                     style={{
-                        padding: '10px 16px',
+                        padding: isMobile ? '8px 12px' : '10px 16px',
                         borderBottom: `1px solid ${token.colorBorderSecondary}`,
                         background: token.colorFillAlter,
                         display: 'flex',
-                        alignItems: 'center',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        alignItems: isMobile ? 'stretch' : 'center',
                         justifyContent: 'space-between',
                         flexShrink: 0,
+                        gap: isMobile ? 8 : 12,
                     }}
                 >
                     <div
                         style={{
                             display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'space-between',
                             gap: 8,
+                            minWidth: 0,
                         }}
                     >
-                        <HistoryOutlined
-                            style={{
-                                color: token.colorPrimary,
-                                fontSize: 15,
-                            }}
-                        />
-                        <Text strong style={{ fontSize: 14 }}>
-                            {t('factoryOverview.modal.errorHistoryTitle') ||
-                                t('factoryOverview.table.title.errorHistory') ||
-                                'Lịch sử sự cố & cảnh báo'}
-                        </Text>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                            <HistoryOutlined
+                                style={{
+                                    color: token.colorPrimary,
+                                    fontSize: 15,
+                                    flexShrink: 0,
+                                }}
+                            />
+                            <Text
+                                strong
+                                style={{
+                                    fontSize: isMobile ? 13 : 14,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                }}
+                            >
+                                {t('factoryOverview.modal.errorHistoryTitle') ||
+                                    t('factoryOverview.table.title.errorHistory') ||
+                                    'Lịch sử sự cố & cảnh báo'}
+                            </Text>
+                        </div>
                         <Tag
                             color={filteredErrorDetails.length > 0 ? 'error' : 'success'}
                             style={{
@@ -223,6 +238,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                 margin: 0,
                                 fontSize: 11,
                                 fontWeight: 600,
+                                flexShrink: 0,
                             }}
                         >
                             {t('factoryOverview.modal.incidentCount', {
@@ -236,7 +252,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 8,
+                            width: isMobile ? '100%' : 'auto',
                         }}
                     >
                         <DatePicker.RangePicker
@@ -255,7 +271,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                             ]}
                             allowClear
                             style={{
-                                width: 220,
+                                width: isMobile ? '100%' : 220,
                                 borderRadius: token.borderRadiusSM,
                             }}
                         />
@@ -287,7 +303,8 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     }
                     size="small"
                     scroll={{
-                        y: isMobile ? undefined : 'calc(88vh - 270px)',
+                        x: isMobile ? 510 : undefined,
+                        y: isMobile ? 'calc(100vh - 380px)' : 'calc(88vh - 270px)',
                     }}
                     style={{
                         height: isMobile ? 'auto' : '100%',

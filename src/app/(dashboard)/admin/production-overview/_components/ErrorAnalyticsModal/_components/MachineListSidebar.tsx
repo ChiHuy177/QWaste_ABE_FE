@@ -181,9 +181,10 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                     <RightOutlined
                         style={{
                             fontSize: 11,
-                            color: isSelected ? token.colorPrimary : 'transparent',
+                            color: isSelected ? token.colorPrimary : token.colorTextQuaternary,
                             transform: isSelected ? 'translateX(2px)' : 'none',
                             transition: 'all 0.18s ease',
+                            opacity: isSelected ? 1 : 0.6,
                         }}
                     />
                 </div>
@@ -218,6 +219,7 @@ export interface MachineListSidebarProps {
     onToggleSort: () => void;
     machinesWithErrorCount: number;
     machineWorkshopMap: Map<string, { id: number; name: string }>;
+    isMobile?: boolean;
 }
 
 export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
@@ -234,6 +236,7 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
         onToggleSort,
         machinesWithErrorCount,
         machineWorkshopMap,
+        isMobile,
     }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
@@ -249,17 +252,24 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                     overflow: 'hidden',
                 }}
             >
-                {/* Toolbar: Workshop filter (40%) + Search input (60%) */}
+                {/* Toolbar: Workshop filter + Search input */}
                 <div
                     style={{
                         flexShrink: 0,
                         display: 'flex',
-                        gap: 10,
+                        flexDirection: isMobile ? 'column' : 'row',
+                        gap: isMobile ? 8 : 10,
                         width: '100%',
-                        alignItems: 'center',
+                        alignItems: isMobile ? 'stretch' : 'center',
                     }}
                 >
-                    <div style={{ flex: 4, minWidth: 0 }}>
+                    <div
+                        style={{
+                            flex: isMobile ? undefined : 4,
+                            width: isMobile ? '100%' : undefined,
+                            minWidth: 0,
+                        }}
+                    >
                         <Select
                             placeholder={
                                 t('factoryOverview.filter.chooseZone') || 'Chọn phân xưởng'
@@ -271,13 +281,21 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                             style={{ width: '100%' }}
                         />
                     </div>
-                    <div style={{ flex: 6, minWidth: 0 }}>
+                    <div
+                        style={{
+                            flex: isMobile ? undefined : 6,
+                            width: isMobile ? '100%' : undefined,
+                            minWidth: 0,
+                        }}
+                    >
                         <SearchInput
                             value={searchText}
                             onChange={onSearchTextChange}
                             placeholder={
                                 t('factoryOverview.filter.searchMachines') || 'Tìm kiếm máy...'
                             }
+                            width="100%"
+                            style={{ width: '100%', maxWidth: '100%' }}
                         />
                     </div>
                 </div>

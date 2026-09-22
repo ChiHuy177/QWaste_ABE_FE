@@ -2255,6 +2255,11 @@
         },
         "modal": {
             "title": "运行时间分析",
+            "backToList": "返回设备列表",
+            "machineListTab": "设备列表 ({{count}})",
+            "machineListTabTitle": "设备列表",
+            "incidentDetailTab": "故障详情",
+            "incidentDetailTabTitle": "故障详情",
             "allPlant": "全厂",
             "allWorkshops": "所有车间",
             "machinesWithError": "{{count}} 台设备有故障",

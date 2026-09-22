@@ -3192,6 +3192,11 @@
         },
         "modal": {
             "title": "Time Analytics",
+            "backToList": "Back to machine list",
+            "machineListTab": "Machine List ({{count}})",
+            "machineListTabTitle": "Machine List",
+            "incidentDetailTab": "Incident Details",
+            "incidentDetailTabTitle": "Incident Details",
             "allPlant": "Entire Plant",
             "allWorkshops": "All Workshops",
             "machinesWithError": "{{count}} with error",

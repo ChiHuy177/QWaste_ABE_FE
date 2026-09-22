@@ -2810,6 +2810,11 @@
         },
         "modal": {
             "title": "Phân tích thời gian hoạt động",
+            "backToList": "Quay lại danh sách máy",
+            "machineListTab": "Danh sách máy ({{count}})",
+            "machineListTabTitle": "Danh sách máy",
+            "incidentDetailTab": "Chi tiết sự cố",
+            "incidentDetailTabTitle": "Chi tiết sự cố",
             "allPlant": "Toàn nhà máy",
             "allWorkshops": "Tất cả phân xưởng",
             "machinesWithError": "{{count}} máy có lỗi",
