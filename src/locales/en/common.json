@@ -427,9 +427,16 @@
             "selectedDateLabel": "Selected Date: ",
             "workingStatusLabel": "Working Status",
             "dayTypeLabel": "Day Type",
+            "shiftPatternLabel": "Shift Pattern",
+            "selectPatternPlaceholder": "Select shift pattern",
+            "defaultPatternTag": "Default",
             "statusWorking": "Working",
             "statusOff": "Off",
             "btnApply": "Apply"
+        },
+        "errors": {
+            "patternRequired": "Please select a shift pattern for working day.",
+            "patternRequiredDate": "Please select a shift pattern for working day ({{date}})."
         },
         "drawer": {
             "bulkEditTitle": "Edit Selected Date(s)",
@@ -3115,6 +3122,7 @@
     },
     "factoryOverview": {
         "title": "Space Monitoring",
+        "machines": "Machine List",
         "selectFactory": "Select factory",
         "selectTimePeriod": "Select time period",
         "noDataAvailable": "No data available",
@@ -3146,6 +3154,10 @@
             "selectNone": "Select None",
             "chooseZone": "Choose Zone",
             "searchMachines": "Search Machines...",
+            "highestError": "Highest Error",
+            "defaultOrder": "Default",
+            "startDate": "Start date",
+            "endDate": "End date",
             "quickSelect": "Quick Select",
             "top10Highest": "Top 10 Highest",
             "top10Lowest": "Top 10 Lowest",
@@ -3173,9 +3185,30 @@
                 "duration": "Duration",
                 "machine": "Machine",
                 "errorName": "Error Name",
+                "errorReason": "Error Cause",
                 "status": "Status"
             },
             "noErrorData": "No error data available"
+        },
+        "modal": {
+            "title": "Time Analytics",
+            "allPlant": "Entire Plant",
+            "allWorkshops": "All Workshops",
+            "machinesWithError": "{{count}} with error",
+            "totalMachines": "{{count}} machines",
+            "totalErrorTime": "Total error time: {{time}}",
+            "operatingNormally": "Operating normally (0h error)",
+            "errorBadge": "{{time}} error",
+            "errorHistoryTitle": "Incident & Error History",
+            "incidentCount": "{{count}} incidents",
+            "noIncidentsInRange": "No incidents in selected date range",
+            "noErrorData": "No error incidents occurred",
+            "stableOperationDesc": "Device operated stably during selected period",
+            "selectMachinePrompt": "Please select a machine to view details",
+            "unknownIncident": "Unknown machine stop incident",
+            "unrecordedReason": "Unrecorded",
+            "timeAnalytics": "Time Analytics",
+            "back": "Back"
         },
         "charts": {
             "title": {
@@ -3230,11 +3263,6 @@
             "date": "Date",
             "selectDate": "Select date",
             "timePeriod": "Time Period"
-        },
-        "modal": {
-            "title": "Time Analytics",
-            "timeAnalytics": "Time Analytics",
-            "back": "Back"
         },
         "allFactories": "All factories",
         "emptyState": "No space monitoring data available. Please select filters and try again.",

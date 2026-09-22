@@ -81,6 +81,8 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
             actual: number;
             ratio: number | null;
             stoppageNote?: string;
+            shiftId?: number | null;
+            shiftLabel?: string | null;
         }
 
         // Transform chart data (API buckets only, no mock fallback)
@@ -99,6 +101,8 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                         planned: b.plannedQuantity,
                         actual: b.actualQuantity,
                         ratio: b.productionRatioPercentage,
+                        shiftId: b.shiftId,
+                        shiftLabel: b.shiftLabel,
                     };
                 });
             }
@@ -232,13 +236,30 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                         lineHeight: 1.6,
                     }}
                 >
-                    <div style={{ fontWeight: 700, color: token.colorText, marginBottom: 4 }}>
-                        {label}{' '}
-                        {item.bucketStart && item.bucketEnd && (
-                            <span style={{ fontWeight: 400, color: token.colorTextSecondary }}>
-                                ({dayjs(item.bucketStart).format('DD/MM HH:mm')} -{' '}
-                                {dayjs(item.bucketEnd).format('DD/MM HH:mm')})
-                            </span>
+                    <div
+                        style={{
+                            fontWeight: 700,
+                            color: token.colorText,
+                            marginBottom: 4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                        }}
+                    >
+                        <span>
+                            {label}{' '}
+                            {item.bucketStart && item.bucketEnd && (
+                                <span style={{ fontWeight: 400, color: token.colorTextSecondary }}>
+                                    ({dayjs(item.bucketStart).format('DD/MM HH:mm')} -{' '}
+                                    {dayjs(item.bucketEnd).format('DD/MM HH:mm')})
+                                </span>
+                            )}
+                        </span>
+                        {item.shiftLabel && (
+                            <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>
+                                {item.shiftLabel}
+                            </Tag>
                         )}
                     </div>
 

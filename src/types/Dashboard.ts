@@ -75,6 +75,8 @@ export interface DashboardMachineProductionBucket {
     plannedQuantity: number | null;
     actualQuantity: number;
     productionRatioPercentage: number | null;
+    shiftId?: number | null;
+    shiftLabel?: string | null;
 }
 
 export interface DashboardMachineProductionSeriesResponse {
@@ -107,6 +109,8 @@ export interface SingleMachinePerformanceBucket {
     runtimeSeconds: number;
     downtimeSeconds: number;
     efficiencyPercentage: number | null;
+    shiftId?: number | null;
+    shiftLabel?: string | null;
 }
 
 export interface SingleMachinePerformanceResponse {
@@ -117,6 +121,18 @@ export interface SingleMachinePerformanceResponse {
     machineName: string;
     machineCode: string | null;
     buckets: SingleMachinePerformanceBucket[];
+}
+
+export interface SpacePerformanceReportResponse {
+    rangeStart: string;
+    rangeEnd: string;
+    bucketGranularity: MachineProductionBucketGranularity;
+    machines: Array<{
+        machineId: string;
+        machineName: string;
+        machineCode: string | null;
+        buckets: SingleMachinePerformanceBucket[];
+    }>;
 }
 
 export interface SingleMachinePerformanceFilterParams {

@@ -418,9 +418,16 @@
             "selectedDateLabel": "Ngày chọn: ",
             "workingStatusLabel": "Trạng thái đi làm",
             "dayTypeLabel": "Loại ngày",
+            "shiftPatternLabel": "Mẫu ca",
+            "selectPatternPlaceholder": "Chọn mẫu ca áp dụng",
+            "defaultPatternTag": "Mặc định",
             "statusWorking": "Đi làm",
             "statusOff": "Nghỉ",
             "btnApply": "Áp dụng"
+        },
+        "errors": {
+            "patternRequired": "Vui lòng chọn mẫu ca cho ngày làm việc.",
+            "patternRequiredDate": "Vui lòng chọn mẫu ca cho ngày làm việc ({{date}})."
         },
         "drawer": {
             "bulkEditTitle": "Chỉnh sửa ngày đã chọn",
@@ -2733,6 +2740,7 @@
     },
     "factoryOverview": {
         "title": "Tổng Quan Nhà Máy",
+        "machines": "Danh sách thiết bị",
         "selectFactory": "Chọn nhà máy",
         "selectTimePeriod": "Chọn khoảng thời gian",
         "noDataAvailable": "Chưa có dữ liệu",
@@ -2764,6 +2772,10 @@
             "selectNone": "Bỏ chọn",
             "chooseZone": "Chọn khu vực",
             "searchMachines": "Tìm kiếm máy...",
+            "highestError": "Lỗi nhiều nhất",
+            "defaultOrder": "Mặc định",
+            "startDate": "Từ ngày",
+            "endDate": "Đến ngày",
             "quickSelect": "Chọn nhanh",
             "top10Highest": "Top 10 cao nhất",
             "top10Lowest": "Top 10 thấp nhất",
@@ -2791,9 +2803,30 @@
                 "duration": "Thời gian",
                 "machine": "Máy",
                 "errorName": "Tên lỗi",
+                "errorReason": "Nguyên nhân lỗi",
                 "status": "Trạng thái"
             },
             "noErrorData": "Chưa có dữ liệu lỗi"
+        },
+        "modal": {
+            "title": "Phân tích thời gian hoạt động",
+            "allPlant": "Toàn nhà máy",
+            "allWorkshops": "Tất cả phân xưởng",
+            "machinesWithError": "{{count}} máy có lỗi",
+            "totalMachines": "{{count}} máy",
+            "totalErrorTime": "Tổng thời gian lỗi: {{time}}",
+            "operatingNormally": "Hoạt động ổn định (0h lỗi)",
+            "errorBadge": "{{time}} lỗi",
+            "errorHistoryTitle": "Lịch sử sự cố & cảnh báo",
+            "incidentCount": "{{count}} sự cố",
+            "noIncidentsInRange": "Không có sự cố trong khoảng ngày đã chọn",
+            "noErrorData": "Không phát sinh sự cố lỗi",
+            "stableOperationDesc": "Thiết bị hoạt động ổn định trong khoảng thời gian đã chọn",
+            "selectMachinePrompt": "Vui lòng chọn thiết bị để xem chi tiết",
+            "unknownIncident": "Sự cố dừng máy không xác định",
+            "unrecordedReason": "Chưa ghi nhận",
+            "timeAnalytics": "Phân tích thời gian",
+            "back": "Quay lại"
         },
         "charts": {
             "title": {
@@ -2848,11 +2881,6 @@
             "date": "Ngày",
             "selectDate": "Chọn ngày",
             "timePeriod": "Khoảng thời gian"
-        },
-        "modal": {
-            "title": "Phân tích thời gian",
-            "timeAnalytics": "Phân tích thời gian",
-            "back": "Quay lại"
         },
         "allFactories": "Tất cả nhà máy",
         "emptyState": "Chưa có dữ liệu tổng quan nhà máy. Vui lòng chọn bộ lọc và thử lại.",

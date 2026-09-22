@@ -111,29 +111,15 @@ const ProductionOverviewPage: React.FC = () => {
                 const filters = await IndustryFilterService.getIndustryFiltersForPicking();
                 setIndustryFilters(filters);
                 if (filters.length > 0) {
-                    const dayShiftFilter =
-                        filters.find(
-                            (f) =>
-                                f.category === 'SHIFT' &&
-                                (f.displayNameVi?.toLowerCase().includes('ngày') ||
-                                    f.displayNameEn?.toLowerCase().includes('day') ||
-                                    f.shiftNumber === 1 ||
-                                    f.displayNameVi?.toLowerCase().includes('ca 1') ||
-                                    f.displayNameEn?.toLowerCase().includes('shift 1'))
-                        ) ||
-                        filters.find((f) => f.category === 'SHIFT' && isShiftActiveHelper(f)) ||
-                        filters.find((f) => f.category === 'SHIFT');
+                    const todayFilter =
+                        filters.find((f) => f.category === 'PERIOD' && f.periodCode === 'TODAY') ||
+                        filters.find((f) => f.category === 'PERIOD') ||
+                        filters[0];
 
-                    if (dayShiftFilter) {
-                        setSelectedTimePeriod(dayShiftFilter.filterId);
-                        setSelectedShiftFilterId(null);
-                    } else {
-                        const defaultPeriod =
-                            filters.find(
-                                (f) => f.category === 'PERIOD' && f.periodCode === 'TODAY'
-                            ) || filters[0];
-                        setSelectedTimePeriod(defaultPeriod.filterId);
+                    if (todayFilter) {
+                        setSelectedTimePeriod(todayFilter.filterId);
                     }
+                    setSelectedShiftFilterId(null);
                 }
             } catch (err) {
                 console.error('Failed to load industry filters:', err);
@@ -159,7 +145,9 @@ const ProductionOverviewPage: React.FC = () => {
 
     const groupedTimePeriodOptions = useMemo(
         () => ({
-            SHIFT: timePeriodOptions.filter((option) => option.category === 'SHIFT'),
+            SHIFT: timePeriodOptions.filter(
+                (option) => option.category === 'SHIFT' || option.category === 'OT'
+            ),
             PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
         }),
         [timePeriodOptions]
@@ -311,7 +299,7 @@ const ProductionOverviewPage: React.FC = () => {
                     effectiveIsShift = !!effectivePeriodId;
                 } else {
                     const filterObj = industryFilters.find((f) => f.filterId === effectivePeriodId);
-                    const isShift = filterObj?.category === 'SHIFT';
+                    const isShift = filterObj?.category === 'SHIFT' || filterObj?.category === 'OT';
                     effectiveFilterId = effectivePeriodId;
                     effectiveShiftFilterId = isShift ? null : effectiveShiftId;
                     effectiveIsShift = isShift;
@@ -866,10 +854,14 @@ const ProductionOverviewPage: React.FC = () => {
         selectedMachineCode,
     ]);
 
-    const restrictMachineIds = useMemo(
-        () => (selectedMachineCode ? [selectedMachineCode] : undefined),
-        [selectedMachineCode]
-    );
+    const restrictMachineIds = useMemo(() => {
+        if (!selectedMachineCode) return undefined;
+        const ids = [selectedMachineCode];
+        if (resolvedMachineId && resolvedMachineId !== selectedMachineCode) {
+            ids.push(resolvedMachineId);
+        }
+        return ids;
+    }, [selectedMachineCode, resolvedMachineId]);
 
     const headerActions = useMemo(
         () => (

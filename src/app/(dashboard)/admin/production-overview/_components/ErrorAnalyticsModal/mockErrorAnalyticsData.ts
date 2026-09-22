@@ -5,6 +5,7 @@ import {
     MtbfChartResponse,
     MttrChartResponse,
 } from '@/types/Monitoring';
+import dayjs from 'dayjs';
 
 export interface MockWorkshop {
     spaceId: number;
@@ -105,13 +106,18 @@ export const MOCK_MACHINE_STATUS_SUMMARY: MachineStatusSummaryItem[] = [
     },
 ];
 
-export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetailItem[] => {
+export const getMockMachineErrorDetails = (
+    machineId: string,
+    startDate?: string,
+    endDate?: string
+): MachineErrorDetailItem[] => {
     const errorMap: Record<string, MachineErrorDetailItem[]> = {
         'CNC-01': [
             {
                 id: 'ERR-001',
                 machineId: 'CNC-01',
                 errorName: 'Quá nhiệt đầu trục chính (Spindle Overheat)',
+                reason: 'Hệ thống nước làm mát bị nghẽn lọc tản nhiệt',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T08:30:00',
                 endTime: '2026-08-28T09:15:00',
@@ -121,6 +127,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-002',
                 machineId: 'CNC-01',
                 errorName: 'Kẹt phoi băng tải xả phôi (Conveyor Jam)',
+                reason: 'Phoi dôi phôi cuộn quấn vào trục cuốn băng tải',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T11:20:00',
                 endTime: '2026-08-28T11:47:00',
@@ -132,6 +139,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-003',
                 machineId: 'CNC-02',
                 errorName: 'Gãy dao phay ngón số 4 (Tool #4 Breakage)',
+                reason: 'Quá tải bước tiến dao khi gia công bề mặt hợp kim cứng',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T07:15:00',
                 endTime: '2026-08-28T08:45:00',
@@ -141,6 +149,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-004',
                 machineId: 'CNC-02',
                 errorName: 'Lệch sai số tọa độ trục Z (Z-axis Deviation)',
+                reason: 'Lỏng khớp nối trục vít me bi dẫn hướng',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T13:00:00',
                 endTime: '2026-08-28T14:42:00',
@@ -152,6 +161,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-005',
                 machineId: 'CNC-03',
                 errorName: 'Áp suất dầu bôi trơn thấp (Low Hydraulic Pressure)',
+                reason: 'Rò rỉ ống dẫn dầu thủy lực cụm bơm phụ trợ',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T06:10:00',
                 endTime: '2026-08-28T08:30:00',
@@ -161,6 +171,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-006',
                 machineId: 'CNC-03',
                 errorName: 'Kẹt tay gắp phôi tự động (Robotic Arm Jam)',
+                reason: 'Cảm biến kẹp phôi bám mạt bụi kim loại',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T10:15:00',
                 endTime: '2026-08-28T13:45:00',
@@ -172,6 +183,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-007',
                 machineId: 'LASER-01',
                 errorName: 'Nhiệt độ thấu kính hội tụ vượt ngưỡng (Optics Overheat)',
+                reason: 'Thấu kính bảo vệ bám bụi bẩn chưa kịp vệ sinh định kỳ',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T09:00:00',
                 endTime: '2026-08-28T11:30:00',
@@ -181,6 +193,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-008',
                 machineId: 'LASER-01',
                 errorName: 'Cảnh báo áp suất khí bảo vệ N2 thấp (Low Assist Gas)',
+                reason: 'Bình tích áp N2 sụt giảm áp suất dưới 15 bar',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T14:10:00',
                 endTime: '2026-08-28T15:40:00',
@@ -192,6 +205,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-009',
                 machineId: 'PRESS-01',
                 errorName: 'Lỗi rò rỉ van thủy lực sơ cấp (Hydraulic Valve Leak)',
+                reason: 'Lão hóa gioăng phớt cao su làm kín lòng xi lanh',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T08:00:00',
                 endTime: '2026-08-28T11:30:00',
@@ -201,6 +215,7 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
                 id: 'ERR-010',
                 machineId: 'PRESS-01',
                 errorName: 'Kẹt cảm biến an toàn cửa bảo vệ (Safety Gate Fault)',
+                reason: 'Lệch cữ hành trình cảm biến tiếp điểm cửa chắn',
                 logStatus: 'ERROR',
                 startTime: '2026-08-28T15:00:00',
                 endTime: '2026-08-28T16:00:00',
@@ -209,28 +224,47 @@ export const getMockMachineErrorDetails = (machineId: string): MachineErrorDetai
         ],
     };
 
-    return (
-        errorMap[machineId] || [
-            {
-                id: `ERR-${machineId}-01`,
-                machineId,
-                errorName: 'Cảnh báo cảm biến nạp phôi (Material Feed Sensor Warning)',
-                logStatus: 'ERROR',
-                startTime: '2026-08-28T09:00:00',
-                endTime: '2026-08-28T09:45:00',
-                durationHours: 0.75,
-            },
-            {
-                id: `ERR-${machineId}-02`,
-                machineId,
-                errorName: 'Độ rung động cơ vượt ngưỡng cho phép (High Motor Vibration)',
-                logStatus: 'ERROR',
-                startTime: '2026-08-28T14:20:00',
-                endTime: '2026-08-28T15:05:00',
-                durationHours: 0.75,
-            },
-        ]
-    );
+    const rawItems = errorMap[machineId] || [
+        {
+            id: `ERR-${machineId}-01`,
+            machineId,
+            errorName: 'Cảnh báo cảm biến nạp phôi (Material Feed Sensor Warning)',
+            reason: 'Phôi bị lệch cữ nạp nguyên liệu đầu vào',
+            logStatus: 'ERROR',
+            startTime: '2026-08-28T09:00:00',
+            endTime: '2026-08-28T09:45:00',
+            durationHours: 0.75,
+        },
+        {
+            id: `ERR-${machineId}-02`,
+            machineId,
+            errorName: 'Độ rung động cơ vượt ngưỡng cho phép (High Motor Vibration)',
+            reason: 'Vòng bi trục động cơ khô mỡ bôi trơn',
+            logStatus: 'ERROR',
+            startTime: '2026-08-28T14:20:00',
+            endTime: '2026-08-28T15:05:00',
+            durationHours: 0.75,
+        },
+    ];
+
+    if (!startDate) return rawItems;
+
+    const sDay = dayjs(startDate);
+    const eDay = endDate ? dayjs(endDate) : sDay;
+    const diffDays = Math.max(0, eDay.diff(sDay, 'day'));
+
+    return rawItems.map((item, idx) => {
+        const dayOffset = diffDays === 0 ? 0 : idx % (diffDays + 1);
+        const targetDate = sDay.add(dayOffset, 'day').format('YYYY-MM-DD');
+        const origStartTime = item.startTime ? item.startTime.split('T')[1] : '08:30:00';
+        const origEndTime = item.endTime ? item.endTime.split('T')[1] : '09:15:00';
+
+        return {
+            ...item,
+            startTime: `${targetDate}T${origStartTime}`,
+            endTime: `${targetDate}T${origEndTime}`,
+        };
+    });
 };
 
 export const getMockMtbfData = (): MtbfChartResponse => {

@@ -2193,6 +2193,7 @@
     },
     "factoryOverview": {
         "title": "工厂概览",
+        "machines": "设备列表",
         "selectFactory": "选择工厂",
         "selectTimePeriod": "选择时间段",
         "noDataAvailable": "暂无数据",
@@ -2241,7 +2242,36 @@
             "searchFactory": "搜索工厂...",
             "date": "日期",
             "selectDate": "选择日期",
-            "timePeriod": "时间段"
+            "timePeriod": "时间段",
+            "highestError": "故障最多",
+            "defaultOrder": "默认",
+            "startDate": "开始日期",
+            "endDate": "结束日期"
+        },
+        "tables": {
+            "errors": {
+                "errorReason": "故障原因"
+            }
+        },
+        "modal": {
+            "title": "运行时间分析",
+            "allPlant": "全厂",
+            "allWorkshops": "所有车间",
+            "machinesWithError": "{{count}} 台设备有故障",
+            "totalMachines": "{{count}} 台设备",
+            "totalErrorTime": "总故障时间: {{time}}",
+            "operatingNormally": "运行稳定 (0小时故障)",
+            "errorBadge": "{{time}} 故障",
+            "errorHistoryTitle": "故障与警报历史",
+            "incidentCount": "{{count}} 起事件",
+            "noIncidentsInRange": "所选日期范围内无故障事件",
+            "noErrorData": "无故障事件发生",
+            "stableOperationDesc": "设备在所选时间范围内运行稳定",
+            "selectMachinePrompt": "请选择设备以查看详情",
+            "unknownIncident": "未知停机事件",
+            "unrecordedReason": "未记录",
+            "timeAnalytics": "时间分析",
+            "back": "返回"
         }
     },
     "sidebar": {
