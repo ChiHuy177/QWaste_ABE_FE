@@ -11,7 +11,7 @@ export interface ModalHeaderProps {
     isSingleMachineMode: boolean;
     machineName?: string;
     machineId?: string;
-    totalErrorHours?: number;
+    formattedTotalDowntime?: string;
     spaceName?: string;
     workshopName?: string;
     isDateRange: boolean;
@@ -26,7 +26,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
         isSingleMachineMode,
         machineName,
         machineId,
-        totalErrorHours,
+        formattedTotalDowntime,
         spaceName,
         workshopName,
         isDateRange,
@@ -39,18 +39,17 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
         const { token } = theme.useToken();
 
         const titleText = isSingleMachineMode
-            ? `${t('factoryOverview.table.title.errorHistory') || 'Lịch sử sự cố'} — ${machineName || machineId || ''}`
-            : t('factoryOverview.table.title.timeAnalytics') ||
-              t('factoryOverview.modal.title') ||
-              'Phân tích thời gian hoạt động';
+            ? `${t('productionOverview.downtimeModal.title')} — ${machineName || machineId || ''}`
+            : t('productionOverview.downtimeModal.title');
 
-        const subtitleText = isSingleMachineMode
-            ? workshopName || spaceName || t('factoryOverview.modal.allPlant') || 'Toàn nhà máy'
-            : spaceName || t('factoryOverview.modal.allPlant') || 'Toàn nhà máy';
+        const subtitlePlant =
+            (isSingleMachineMode ? workshopName : spaceName) ||
+            spaceName ||
+            t('common.allPlant', 'Toàn nhà máy');
 
         const dateRangeText = isDateRange
-            ? `${startDate} ~ ${endDate}`
-            : startDate || t('filters.today') || 'Hôm nay';
+            ? `${startDate} • ${endDate}`
+            : startDate || t('filters.today', 'Hôm nay');
 
         return (
             <div
@@ -64,12 +63,18 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                 }}
             >
                 <div
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        minWidth: 0,
+                        flex: 1,
+                    }}
                 >
                     <div
                         style={{
-                            width: 32,
-                            height: 32,
+                            width: 34,
+                            height: 34,
                             borderRadius: token.borderRadiusSM,
                             backgroundColor: token.colorPrimaryBg,
                             display: 'flex',
@@ -79,7 +84,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                             flexShrink: 0,
                         }}
                     >
-                        <FieldTimeOutlined style={{ fontSize: 16 }} />
+                        <FieldTimeOutlined style={{ fontSize: 18 }} />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
                         <Title
@@ -87,7 +92,8 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                             style={{
                                 margin: 0,
                                 lineHeight: 1.25,
-                                fontSize: isMobile ? 14.5 : 16.5,
+                                fontSize: isMobile ? 15 : 16.5,
+                                fontWeight: 700,
                             }}
                             ellipsis={{ tooltip: titleText }}
                         >
@@ -96,14 +102,15 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                         <Text
                             type="secondary"
                             style={{
-                                fontSize: 11.5,
+                                fontSize: 12,
                                 display: 'block',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
+                                marginTop: 2,
                             }}
                         >
-                            {subtitleText} • {dateRangeText}
+                            {subtitlePlant} • {dateRangeText}
                         </Text>
                     </div>
                 </div>
@@ -119,9 +126,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                             fontSize: 12,
                         }}
                     >
-                        {t('factoryOverview.modal.errorBadge', {
-                            time: totalErrorHours ? `${totalErrorHours}h` : '0h',
-                        }) || `${totalErrorHours || 0}h lỗi`}
+                        {formattedTotalDowntime || '0m'}
                     </Tag>
                 ) : (
                     <Tag
@@ -130,11 +135,13 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                             borderRadius: 12,
                             margin: 0,
                             padding: '2px 10px',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             fontSize: 12,
                         }}
                     >
-                        {totalMachinesCount} {t('factoryOverview.filter.machines') || 'thiết bị'}
+                        {t('productionOverview.downtimeModal.machinesCount', {
+                            count: totalMachinesCount,
+                        })}
                     </Tag>
                 )}
             </div>

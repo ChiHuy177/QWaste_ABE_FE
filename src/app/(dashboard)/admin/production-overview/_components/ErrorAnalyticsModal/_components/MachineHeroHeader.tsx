@@ -9,22 +9,28 @@ import {
     CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { MachineStatusSummaryItem } from '@/types/Monitoring';
-import { formatHours } from '../errorAnalyticsUtils';
+import { DowntimeMachineInfo } from '@/types/Downtime';
 
 const { Title } = Typography;
 
 export interface MachineHeroHeaderProps {
-    selectedRow: MachineStatusSummaryItem;
+    machineInfo: DowntimeMachineInfo;
     workshopName?: string;
     isXs?: boolean;
     isMobile?: boolean;
 }
 
 export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
-    ({ selectedRow, workshopName, isXs, isMobile }) => {
+    ({ machineInfo, workshopName, isXs, isMobile }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
+
+        const resolvedWorkshop =
+            workshopName ||
+            (machineInfo.location ? machineInfo.location.split('-')[1]?.trim() : '') ||
+            t('productionOverview.downtimeModal.workshopTag', 'Xưởng');
+
+        const hasDowntime = (machineInfo.totalDowntimeMinutes || 0) > 0;
 
         return (
             <div
@@ -77,43 +83,47 @@ export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
                                 margin: 0,
                                 fontSize: 16,
                                 color: token.colorTextHeading,
+                                fontWeight: 700,
                             }}
-                            ellipsis={{ tooltip: selectedRow.machineName }}
+                            ellipsis={{ tooltip: machineInfo.machineName }}
                         >
-                            {selectedRow.machineName}
+                            {machineInfo.machineName}
                         </Title>
                         <div
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 6,
-                                marginTop: 3,
+                                marginTop: 4,
                                 flexWrap: 'wrap',
                             }}
                         >
-                            {workshopName && (
+                            {resolvedWorkshop && (
                                 <Tag
                                     color="blue"
                                     icon={<ShopOutlined />}
                                     style={{
                                         margin: 0,
-                                        fontSize: 11,
+                                        fontSize: 11.5,
                                         borderRadius: 4,
                                     }}
                                 >
-                                    {workshopName}
+                                    {resolvedWorkshop}
                                 </Tag>
                             )}
-                            <Tag
-                                bordered={false}
-                                style={{
-                                    margin: 0,
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                }}
-                            >
-                                {selectedRow.machineId}
-                            </Tag>
+                            {machineInfo.machineCode &&
+                                !/^[0-9a-fA-F-]{36}$/.test(machineInfo.machineCode) && (
+                                    <Tag
+                                        bordered={false}
+                                        style={{
+                                            margin: 0,
+                                            fontSize: 11.5,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        {machineInfo.machineCode}
+                                    </Tag>
+                                )}
                         </div>
                     </div>
                 </div>
@@ -123,9 +133,10 @@ export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
+                        flexShrink: 0,
                     }}
                 >
-                    {selectedRow.totalErrorHours > 0 ? (
+                    {hasDowntime ? (
                         <Tag
                             color="error"
                             icon={<WarningOutlined />}
@@ -137,9 +148,11 @@ export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
                                 margin: 0,
                             }}
                         >
-                            {t('factoryOverview.modal.totalErrorTime', {
-                                time: formatHours(selectedRow.totalErrorHours),
-                            }) || `Tổng thời gian lỗi: ${formatHours(selectedRow.totalErrorHours)}`}
+                            {t('productionOverview.downtimeModal.totalErrorTime', {
+                                time:
+                                    machineInfo.formattedTotalDowntime ||
+                                    `${machineInfo.totalDowntimeMinutes}m`,
+                            })}
                         </Tag>
                     ) : (
                         <Tag
@@ -153,8 +166,7 @@ export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
                                 margin: 0,
                             }}
                         >
-                            {t('factoryOverview.modal.operatingNormally') ||
-                                'Hoạt động ổn định (0h lỗi)'}
+                            {t('productionOverview.downtimeModal.operatingNormally')}
                         </Tag>
                     )}
                 </div>

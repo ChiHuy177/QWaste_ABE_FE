@@ -5,16 +5,16 @@ import { Modal, theme, Skeleton, Grid, Empty, Button, Tag, Segmented, ConfigProv
 import { ArrowLeftOutlined, UnorderedListOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { SpaceService } from '@/services/SpaceService';
-import { MachineStatusSummaryItem, MachineErrorDetailItem } from '@/types/Monitoring';
+import { toast } from 'sonner';
+import { DowntimeService } from '@/services/DowntimeService';
+import {
+    DowntimeMachineRollupItem,
+    DowntimeMachineInfo,
+    DowntimeMachineIncidentItem,
+} from '@/types/Downtime';
 import { useAppSelector } from '@/stores/hook';
 import { IFactoryOverviewStoreState } from '@/stores/FactoryOverviewStore';
 import { collectAllMachines } from '@/utils/spaceStatsUtils';
-import {
-    MOCK_MACHINE_STATUS_SUMMARY,
-    MOCK_WORKSHOPS,
-    getMockMachineErrorDetails,
-} from './mockErrorAnalyticsData';
 import {
     MachineListSidebar,
     MachineHeroHeader,
@@ -53,20 +53,30 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
             restrictToMachineIds && restrictToMachineIds.length > 0
         );
 
-        const [loading, setLoading] = useState(false);
-        const [summaryData, setSummaryData] = useState<MachineStatusSummaryItem[]>([]);
-        const [selectedRow, setSelectedRow] = useState<MachineStatusSummaryItem | null>(null);
+        // --- Left Column (Machines List) States ---
+        const [loadingMachines, setLoadingMachines] = useState(false);
+        const [machinesList, setMachinesList] = useState<DowntimeMachineRollupItem[]>([]);
+        const [totalAffectedCount, setTotalAffectedCount] = useState(0);
+        const [selectedMachine, setSelectedMachine] = useState<DowntimeMachineRollupItem | null>(
+            null
+        );
         const [searchText, setSearchText] = useState('');
+        const [debouncedSearch, setDebouncedSearch] = useState('');
         const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | 'all' | null>('all');
         const [sortByError, setSortByError] = useState(true);
 
-        const [errorDetails, setErrorDetails] = useState<MachineErrorDetailItem[]>([]);
-        const [loadingErrorDetails, setLoadingErrorDetails] = useState(false);
+        // --- Right Column (Incidents & Details) States ---
+        const [loadingIncidents, setLoadingIncidents] = useState(false);
+        const [selectedMachineInfo, setSelectedMachineInfo] = useState<DowntimeMachineInfo | null>(
+            null
+        );
+        const [incidents, setIncidents] = useState<DowntimeMachineIncidentItem[]>([]);
         const [errorDateRange, setErrorDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(
             null
         );
         const [mobileActiveView, setMobileActiveView] = useState<'list' | 'detail'>('list');
 
+        // Space / Redux data for workshop tree mapping
         const reduxState = useAppSelector((state) => state.factoryOverview) as
             IFactoryOverviewStoreState | undefined;
 
@@ -76,7 +86,9 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
 
         const workshopOptions = useMemo(() => {
             const allLabel =
-                t('factoryOverview.modal.allWorkshops') || t('common.all') || 'Tất cả phân xưởng';
+                t('productionOverview.downtimeModal.allWorkshops') ||
+                t('common.all') ||
+                'Tất cả phân xưởng';
             if (spaceData?.children && spaceData.children.length > 0) {
                 return [
                     { label: allLabel, value: 'all' as const },
@@ -86,13 +98,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                     })),
                 ];
             }
-            return [
-                { label: allLabel, value: 'all' as const },
-                ...MOCK_WORKSHOPS.map((ws) => ({
-                    label: ws.spaceName,
-                    value: ws.spaceId,
-                })),
-            ];
+            return [{ label: allLabel, value: 'all' as const }];
         }, [spaceData, t]);
 
         const machineWorkshopMap = useMemo(() => {
@@ -104,145 +110,148 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                         map.set(m.machineId, { id: workshop.spaceId, name: workshop.spaceName })
                     );
                 });
-                return map;
             }
-            MOCK_WORKSHOPS.forEach((ws) => {
-                ws.machineIds.forEach((mId) =>
-                    map.set(mId, { id: ws.spaceId, name: ws.spaceName })
-                );
-            });
             return map;
         }, [spaceData]);
 
-        const filteredSummaryData = useMemo(() => {
-            let result = summaryData;
+        // Debounce search text input
+        useEffect(() => {
+            const timer = setTimeout(() => {
+                setDebouncedSearch(searchText);
+            }, 300);
+            return () => clearTimeout(timer);
+        }, [searchText]);
 
-            if (selectedWorkshopId !== null && selectedWorkshopId !== 'all') {
-                result = result.filter(
-                    (item) => machineWorkshopMap.get(item.machineId)?.id === selectedWorkshopId
-                );
-            }
-
-            if (searchText.trim() !== '') {
-                const lowerSearch = searchText.toLowerCase();
-                result = result.filter(
-                    (item) =>
-                        item.machineName.toLowerCase().includes(lowerSearch) ||
-                        item.machineId.toLowerCase().includes(lowerSearch)
-                );
-            }
-
-            if (sortByError) {
-                result = [...result].sort(
-                    (a, b) => (b.totalErrorHours || 0) - (a.totalErrorHours || 0)
-                );
-            }
-
-            return result;
-        }, [summaryData, searchText, selectedWorkshopId, machineWorkshopMap, sortByError]);
-
-        const machinesWithErrorCount = useMemo(() => {
-            return filteredSummaryData.filter((m) => (m.totalErrorHours || 0) > 0).length;
-        }, [filteredSummaryData]);
-
-        const restrictKey = restrictToMachineIds?.join(',');
-
-        // Fetch Machine Status Summary
+        // Fetch Machines List (Left Column)
         useEffect(() => {
             if (!isOpen) return;
 
-            const fetchData = async () => {
-                setLoading(true);
-                try {
-                    let summaryRes: any;
+            let isMounted = true;
 
+            const fetchMachines = async () => {
+                setLoadingMachines(true);
+                try {
+                    const querySpaceId =
+                        selectedWorkshopId !== 'all' && selectedWorkshopId !== null
+                            ? selectedWorkshopId
+                            : (spaceId ?? undefined);
+
+                    let res;
                     if (isDateRange) {
-                        summaryRes = await (
-                            SpaceService as any
-                        ).getMachineStatusSummaryByDateRange?.(
+                        res = await DowntimeService.getMachinesByDateRange({
                             startDate,
                             endDate,
-                            spaceId ?? 1,
-                            filterId ?? undefined
-                        );
+                            spaceId: querySpaceId,
+                            keyword: debouncedSearch.trim() || undefined,
+                            page: 0,
+                            size: 100,
+                        });
                     } else {
-                        summaryRes = await (SpaceService as any).getMachineStatusSummaryByFilter?.(
-                            filterId ?? 1,
-                            spaceId ?? 1
-                        );
+                        res = await DowntimeService.getMachinesByFilter({
+                            filterId: filterId ?? 1,
+                            spaceId: querySpaceId,
+                            keyword: debouncedSearch.trim() || undefined,
+                            page: 0,
+                            size: 100,
+                        });
                     }
 
-                    let items: MachineStatusSummaryItem[] = Array.isArray(summaryRes?.data)
-                        ? summaryRes.data
-                        : Array.isArray(summaryRes)
-                          ? summaryRes
-                          : [];
+                    if (!isMounted) return;
 
-                    if (items.length === 0) {
-                        items = [...MOCK_MACHINE_STATUS_SUMMARY];
-                    }
+                    let items = res?.page?.content || [];
+                    const totalAffected = res?.totalAffectedMachines ?? items.length;
 
                     if (restrictToMachineIds && restrictToMachineIds.length > 0) {
-                        items = items.filter(
+                        const restricted = items.filter(
                             (i) =>
                                 restrictToMachineIds.includes(i.machineId) ||
-                                restrictToMachineIds.includes(i.machineName)
+                                (i.machineCode && restrictToMachineIds.includes(i.machineCode))
                         );
+                        if (restricted.length > 0) {
+                            items = restricted;
+                        }
+                    }
+
+                    setMachinesList(items);
+                    setTotalAffectedCount(totalAffected);
+
+                    // Auto-select first machine or keep existing selection
+                    setSelectedMachine((prev) => {
                         if (items.length === 0) {
-                            items = [
-                                {
+                            if (restrictToMachineIds && restrictToMachineIds.length > 0) {
+                                return {
                                     machineId: restrictToMachineIds[0],
+                                    machineCode: restrictToMachineIds[0],
                                     machineName: `Thiết bị ${restrictToMachineIds[0]}`,
-                                    totalRuntimeHours: 16.0,
-                                    totalIdleHours: 2.5,
-                                    totalErrorHours: 3.5,
-                                    totalOfflineHours: 2.0,
-                                },
-                            ];
+                                    location: '',
+                                    totalDowntimeMinutes: 0,
+                                    formattedDowntime: '0m',
+                                };
+                            }
+                            return null;
                         }
-                    }
-
-                    setSummaryData(items);
-                } catch (error) {
-                    console.warn(
-                        'Backend machine status summary not available yet, using mock data:',
-                        error
+                        if (prev && items.some((item) => item.machineId === prev.machineId)) {
+                            return prev;
+                        }
+                        return items[0];
+                    });
+                } catch (error: any) {
+                    if (!isMounted) return;
+                    console.error('Error fetching downtime machine list:', error);
+                    toast.error(
+                        error?.message ||
+                            t('common.errorOccurred', 'Không thể tải danh sách thiết bị downtime')
                     );
-                    let mockItems = [...MOCK_MACHINE_STATUS_SUMMARY];
-                    if (restrictToMachineIds && restrictToMachineIds.length > 0) {
-                        mockItems = mockItems.filter(
-                            (i) =>
-                                restrictToMachineIds.includes(i.machineId) ||
-                                restrictToMachineIds.includes(i.machineName)
-                        );
-                        if (mockItems.length === 0) {
-                            mockItems = [
-                                {
-                                    machineId: restrictToMachineIds[0],
-                                    machineName: `Thiết bị ${restrictToMachineIds[0]}`,
-                                    totalRuntimeHours: 16.0,
-                                    totalIdleHours: 2.5,
-                                    totalErrorHours: 3.5,
-                                    totalOfflineHours: 2.0,
-                                },
-                            ];
-                        }
-                    }
-                    setSummaryData(mockItems);
+                    setMachinesList([]);
                 } finally {
-                    setLoading(false);
+                    if (isMounted) {
+                        setLoadingMachines(false);
+                    }
                 }
             };
 
-            fetchData();
-        }, [isOpen, spaceId, filterId, startDate, endDate, isDateRange, restrictKey]);
+            fetchMachines();
 
-        // Auto-select first machine upon modal opening or filter changes
+            return () => {
+                isMounted = false;
+            };
+        }, [
+            isOpen,
+            spaceId,
+            filterId,
+            startDate,
+            endDate,
+            isDateRange,
+            debouncedSearch,
+            selectedWorkshopId,
+            restrictToMachineIds,
+            t,
+        ]);
+
+        // Client-side sort toggle for machines list
+        const displayedMachines = useMemo(() => {
+            if (sortByError) {
+                return [...machinesList].sort(
+                    (a, b) => (b.totalDowntimeMinutes || 0) - (a.totalDowntimeMinutes || 0)
+                );
+            }
+            return [...machinesList].sort((a, b) => a.machineName.localeCompare(b.machineName));
+        }, [machinesList, sortByError]);
+
+        const machinesWithErrorCount = useMemo(() => {
+            return machinesList.filter((m) => (m.totalDowntimeMinutes || 0) > 0).length;
+        }, [machinesList]);
+
+        // Reset state upon modal open/close
         useEffect(() => {
             if (!isOpen) {
-                setSelectedRow(null);
+                setSelectedMachine(null);
+                setSelectedMachineInfo(null);
+                setIncidents([]);
                 setSearchText('');
+                setDebouncedSearch('');
                 setSelectedWorkshopId('all');
+                setErrorDateRange(null);
                 setMobileActiveView('list');
                 return;
             }
@@ -250,20 +259,100 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
             if (isSingleMachineMode) {
                 setMobileActiveView('detail');
             }
+        }, [isOpen, isSingleMachineMode]);
 
-            setSelectedRow((prev) => {
-                if (filteredSummaryData.length === 0) return null;
-                if (prev && filteredSummaryData.some((item) => item.machineId === prev.machineId)) {
-                    return prev;
+        // Fetch Machine Details & Incident History (Right Column)
+        useEffect(() => {
+            if (!isOpen || !selectedMachine) {
+                setSelectedMachineInfo(null);
+                setIncidents([]);
+                return;
+            }
+
+            let isMounted = true;
+
+            const fetchIncidents = async () => {
+                setLoadingIncidents(true);
+                try {
+                    let res;
+
+                    if (errorDateRange && errorDateRange[0] && errorDateRange[1]) {
+                        res = await DowntimeService.getMachineIncidentsByDateRange({
+                            machineId: selectedMachine.machineId,
+                            startDate: errorDateRange[0].format('YYYY-MM-DD'),
+                            endDate: errorDateRange[1].format('YYYY-MM-DD'),
+                            page: 0,
+                            size: 100,
+                        });
+                    } else if (isDateRange) {
+                        res = await DowntimeService.getMachineIncidentsByDateRange({
+                            machineId: selectedMachine.machineId,
+                            startDate,
+                            endDate,
+                            page: 0,
+                            size: 100,
+                        });
+                    } else {
+                        res = await DowntimeService.getMachineIncidentsByFilter({
+                            machineId: selectedMachine.machineId,
+                            filterId: filterId ?? 1,
+                            page: 0,
+                            size: 100,
+                        });
+                    }
+
+                    if (!isMounted) return;
+
+                    if (res?.machineInfo) {
+                        setSelectedMachineInfo(res.machineInfo);
+                    } else {
+                        setSelectedMachineInfo({
+                            machineId: selectedMachine.machineId,
+                            machineCode: selectedMachine.machineCode,
+                            machineName: selectedMachine.machineName,
+                            location: selectedMachine.location,
+                            totalDowntimeMinutes: selectedMachine.totalDowntimeMinutes,
+                            formattedTotalDowntime: selectedMachine.formattedDowntime,
+                            totalIncidents: res?.page?.totalElements ?? 0,
+                        });
+                    }
+
+                    setIncidents(res?.page?.content || []);
+                } catch (error: any) {
+                    if (!isMounted) return;
+                    console.error('Error fetching machine incidents:', error);
+                    toast.error(
+                        error?.message ||
+                            t('common.errorOccurred', 'Không thể tải lịch sử sự cố thiết bị')
+                    );
+                    setIncidents([]);
+                } finally {
+                    if (isMounted) {
+                        setLoadingIncidents(false);
+                    }
                 }
-                return filteredSummaryData[0];
-            });
-        }, [isOpen, filteredSummaryData, isSingleMachineMode]);
+            };
 
-        // Stable machine selection handler that also resets inner date range and switches view on mobile
+            fetchIncidents();
+
+            return () => {
+                isMounted = false;
+            };
+        }, [
+            isOpen,
+            selectedMachine?.machineId,
+            filterId,
+            startDate,
+            endDate,
+            isDateRange,
+            errorDateRange,
+            t,
+        ]);
+
+        // Machine selection handler
         const handleSelectMachine = useCallback(
-            (machine: MachineStatusSummaryItem) => {
-                setSelectedRow(machine);
+            (machine: DowntimeMachineRollupItem) => {
+                setSelectedMachine(machine);
                 setErrorDateRange(null);
                 if (isMobile) {
                     setMobileActiveView('detail');
@@ -284,107 +373,48 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
             setSelectedWorkshopId(wsId);
         }, []);
 
-        // Fetch Error Details for selected machine
-        useEffect(() => {
-            if (!selectedRow) {
-                setErrorDetails([]);
-                return;
-            }
-
-            const fetchErrorDetails = async () => {
-                setLoadingErrorDetails(true);
-                try {
-                    let res: any;
-                    if (isDateRange) {
-                        res = await (SpaceService as any).getErrorDetailByDateRange?.(
-                            startDate,
-                            endDate,
-                            selectedRow.machineId,
-                            filterId ?? undefined
-                        );
-                    } else if (filterId) {
-                        res = await (SpaceService as any).getErrorDetailByFilter?.(
-                            filterId,
-                            selectedRow.machineId
-                        );
-                    }
-                    const items = Array.isArray(res?.errors)
-                        ? res.errors
-                        : Array.isArray(res?.errors?.content)
-                          ? res.errors.content
-                          : [];
-                    if (items.length > 0) {
-                        setErrorDetails(items);
-                    } else {
-                        setErrorDetails(
-                            getMockMachineErrorDetails(selectedRow.machineId, startDate, endDate)
-                        );
-                    }
-                } catch (_error) {
-                    setErrorDetails(
-                        getMockMachineErrorDetails(selectedRow.machineId, startDate, endDate)
-                    );
-                } finally {
-                    setLoadingErrorDetails(false);
-                }
-            };
-
-            fetchErrorDetails();
-        }, [selectedRow?.machineId, filterId, startDate, endDate, isDateRange]);
-
-        // Reset errorDateRange when outer date bounds change
-        useEffect(() => {
-            setErrorDateRange(null);
-        }, [isOpen, startDate, endDate]);
-
-        // Lock inner date picker strictly within outer startDate and endDate
+        // Lock inner date picker strictly within outer startDate and endDate if in date range mode
         const disabledDate = useCallback(
             (current: Dayjs) => {
                 if (!current) return false;
-                if (startDate && current.isBefore(dayjs(startDate).startOf('day'))) {
-                    return true;
-                }
-                if (endDate && current.isAfter(dayjs(endDate).endOf('day'))) {
-                    return true;
+                if (isDateRange) {
+                    if (startDate && current.isBefore(dayjs(startDate).startOf('day'))) {
+                        return true;
+                    }
+                    if (endDate && current.isAfter(dayjs(endDate).endOf('day'))) {
+                        return true;
+                    }
                 }
                 return false;
             },
-            [startDate, endDate]
+            [isDateRange, startDate, endDate]
         );
 
-        // Filter error history client-side by chosen date range within the outer period
-        const filteredErrorDetails = useMemo(() => {
-            if (!errorDateRange || !errorDateRange[0] || !errorDateRange[1]) {
-                return errorDetails;
-            }
-            const sTime = errorDateRange[0].startOf('day').valueOf();
-            const eTime = errorDateRange[1].endOf('day').valueOf();
-            return errorDetails.filter((err) => {
-                const errTime = new Date(err.startTime || 0).getTime();
-                return errTime >= sTime && errTime <= eTime;
-            });
-        }, [errorDetails, errorDateRange]);
-
         const selectedWorkshopName = useMemo(() => {
-            if (!selectedRow) return '';
-            const ws = machineWorkshopMap.get(selectedRow.machineId);
-            return ws?.name || t('factoryOverview.filter.zones') || 'Khu vực máy';
-        }, [selectedRow?.machineId, machineWorkshopMap, t]);
+            if (!selectedMachine) return '';
+            const ws = machineWorkshopMap.get(selectedMachine.machineId);
+            return ws?.name || '';
+        }, [selectedMachine?.machineId, machineWorkshopMap]);
 
         return (
             <Modal
                 title={
                     <ModalHeader
                         isSingleMachineMode={isSingleMachineMode}
-                        machineName={selectedRow?.machineName}
-                        machineId={selectedRow?.machineId}
-                        totalErrorHours={selectedRow?.totalErrorHours}
+                        machineName={
+                            selectedMachineInfo?.machineName || selectedMachine?.machineName
+                        }
+                        machineId={selectedMachineInfo?.machineCode || selectedMachine?.machineId}
+                        formattedTotalDowntime={
+                            selectedMachineInfo?.formattedTotalDowntime ||
+                            selectedMachine?.formattedDowntime
+                        }
                         spaceName={spaceData?.spaceName}
                         workshopName={selectedWorkshopName}
                         isDateRange={isDateRange}
                         startDate={startDate}
                         endDate={endDate}
-                        totalMachinesCount={filteredSummaryData.length}
+                        totalMachinesCount={totalAffectedCount || displayedMachines.length}
                         isMobile={isMobile}
                     />
                 }
@@ -410,13 +440,13 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 }}
                 destroyOnClose
             >
-                {loading ? (
+                {loadingMachines && machinesList.length === 0 ? (
                     <div
                         style={{
                             height: '100%',
                             display: isMobile ? 'flex' : 'grid',
                             flexDirection: isMobile ? 'column' : 'row',
-                            gridTemplateColumns: isMobile ? undefined : '40% 60%',
+                            gridTemplateColumns: isMobile ? undefined : '36% 64%',
                             gap: 20,
                             paddingTop: 16,
                             flex: 1,
@@ -454,7 +484,6 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                             overflow: 'hidden',
                         }}
                     >
-                        {/* Mobile Segmented Switcher with prominent active highlight (only in Plant-wide mode with multiple machines) */}
                         {!isSingleMachineMode && (
                             <ConfigProvider
                                 theme={{
@@ -504,47 +533,27 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                                 label: (
                                                     <span
                                                         style={{
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: 6,
+                                                            fontSize: 13,
                                                             fontWeight:
                                                                 mobileActiveView === 'list'
                                                                     ? 600
-                                                                    : 500,
-                                                            fontSize: 13,
+                                                                    : 400,
+                                                            color:
+                                                                mobileActiveView === 'list'
+                                                                    ? token.colorWhite
+                                                                    : token.colorText,
                                                         }}
                                                     >
-                                                        <span>
-                                                            {t(
-                                                                'factoryOverview.modal.machineListTabTitle'
-                                                            ) || 'Danh sách máy'}
-                                                        </span>
-                                                        <span
-                                                            style={{
-                                                                backgroundColor:
-                                                                    mobileActiveView === 'list'
-                                                                        ? 'rgba(255, 255, 255, 0.25)'
-                                                                        : token.colorFillSecondary,
-                                                                color:
-                                                                    mobileActiveView === 'list'
-                                                                        ? token.colorWhite
-                                                                        : token.colorTextSecondary,
-                                                                padding: '0 6px',
-                                                                borderRadius: 10,
-                                                                fontSize: 11,
-                                                                fontWeight: 600,
-                                                                lineHeight: '16px',
-                                                                display: 'inline-block',
-                                                            }}
-                                                        >
-                                                            {filteredSummaryData.length}
-                                                        </span>
+                                                        {t(
+                                                            'productionOverview.downtimeModal.deviceList'
+                                                        )}{' '}
+                                                        ({displayedMachines.length})
                                                     </span>
                                                 ),
                                             },
                                             {
                                                 value: 'detail',
-                                                disabled: !selectedRow,
+                                                disabled: !selectedMachine,
                                                 icon: (
                                                     <FileTextOutlined
                                                         style={{
@@ -552,28 +561,27 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                                             color:
                                                                 mobileActiveView === 'detail'
                                                                     ? token.colorWhite
-                                                                    : !selectedRow
-                                                                      ? token.colorTextDisabled
-                                                                      : token.colorTextSecondary,
+                                                                    : token.colorTextSecondary,
                                                         }}
                                                     />
                                                 ),
                                                 label: (
                                                     <span
                                                         style={{
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
+                                                            fontSize: 13,
                                                             fontWeight:
                                                                 mobileActiveView === 'detail'
                                                                     ? 600
-                                                                    : 500,
-                                                            fontSize: 13,
-                                                            opacity: selectedRow ? 1 : 0.5,
+                                                                    : 400,
+                                                            color:
+                                                                mobileActiveView === 'detail'
+                                                                    ? token.colorWhite
+                                                                    : token.colorText,
                                                         }}
                                                     >
                                                         {t(
-                                                            'factoryOverview.modal.incidentDetailTabTitle'
-                                                        ) || 'Chi tiết sự cố'}
+                                                            'productionOverview.downtimeModal.incidentHistory'
+                                                        )}
                                                     </span>
                                                 ),
                                             },
@@ -583,8 +591,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                             </ConfigProvider>
                         )}
 
-                        {/* Mobile View: List or Detail */}
-                        {!isSingleMachineMode && mobileActiveView === 'list' ? (
+                        {mobileActiveView === 'list' && !isSingleMachineMode ? (
                             <div
                                 style={{
                                     flex: 1,
@@ -594,8 +601,8 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                 }}
                             >
                                 <MachineListSidebar
-                                    filteredSummaryData={filteredSummaryData}
-                                    selectedMachineId={selectedRow?.machineId || null}
+                                    filteredSummaryData={displayedMachines}
+                                    selectedMachineId={selectedMachine?.machineId || null}
                                     onSelectMachine={handleSelectMachine}
                                     searchText={searchText}
                                     onSearchTextChange={handleSearchTextChange}
@@ -647,8 +654,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                                 height: 28,
                                             }}
                                         >
-                                            {t('factoryOverview.modal.backToList') ||
-                                                'Quay lại danh sách máy'}
+                                            {t('productionOverview.downtimeModal.backToList')}
                                         </Button>
                                         <Tag
                                             color="blue"
@@ -659,25 +665,38 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                                 fontSize: 11,
                                             }}
                                         >
-                                            {filteredSummaryData.findIndex(
-                                                (m) => m.machineId === selectedRow?.machineId
+                                            {displayedMachines.findIndex(
+                                                (m) => m.machineId === selectedMachine?.machineId
                                             ) + 1}{' '}
-                                            / {filteredSummaryData.length}
+                                            / {displayedMachines.length}
                                         </Tag>
                                     </div>
                                 )}
 
-                                {selectedRow ? (
+                                {selectedMachineInfo || selectedMachine ? (
                                     <>
                                         <MachineHeroHeader
-                                            selectedRow={selectedRow}
+                                            machineInfo={
+                                                selectedMachineInfo || {
+                                                    machineId: selectedMachine!.machineId,
+                                                    machineCode: selectedMachine!.machineCode,
+                                                    machineName: selectedMachine!.machineName,
+                                                    location: selectedMachine!.location,
+                                                    totalDowntimeMinutes:
+                                                        selectedMachine!.totalDowntimeMinutes,
+                                                    formattedTotalDowntime:
+                                                        selectedMachine!.formattedDowntime,
+                                                    totalIncidents: incidents.length,
+                                                }
+                                            }
                                             workshopName={selectedWorkshopName}
                                             isXs={isXs}
                                             isMobile={isMobile}
                                         />
                                         <IncidentHistoryTable
-                                            filteredErrorDetails={filteredErrorDetails}
-                                            loading={loadingErrorDetails}
+                                            incidents={incidents}
+                                            totalIncidents={selectedMachineInfo?.totalIncidents}
+                                            loading={loadingIncidents}
                                             errorDateRange={errorDateRange}
                                             onErrorDateRangeChange={setErrorDateRange}
                                             disabledDate={disabledDate}
@@ -697,11 +716,9 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                         }}
                                     >
                                         <Empty
-                                            description={
-                                                t('factoryOverview.modal.selectMachinePrompt') ||
-                                                t('common.noData') ||
-                                                'Vui lòng chọn thiết bị để xem chi tiết'
-                                            }
+                                            description={t(
+                                                'productionOverview.downtimeModal.selectMachinePrompt'
+                                            )}
                                         />
                                     </div>
                                 )}
@@ -725,8 +742,8 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                         {/* LEFT PANE: Machine Directory Table (Plant-wide mode only) */}
                         {!isSingleMachineMode && (
                             <MachineListSidebar
-                                filteredSummaryData={filteredSummaryData}
-                                selectedMachineId={selectedRow?.machineId || null}
+                                filteredSummaryData={displayedMachines}
+                                selectedMachineId={selectedMachine?.machineId || null}
                                 onSelectMachine={handleSelectMachine}
                                 searchText={searchText}
                                 onSearchTextChange={handleSearchTextChange}
@@ -758,17 +775,30 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                 flex: isSingleMachineMode ? 1 : undefined,
                             }}
                         >
-                            {selectedRow ? (
+                            {selectedMachineInfo || selectedMachine ? (
                                 <>
                                     <MachineHeroHeader
-                                        selectedRow={selectedRow}
+                                        machineInfo={
+                                            selectedMachineInfo || {
+                                                machineId: selectedMachine!.machineId,
+                                                machineCode: selectedMachine!.machineCode,
+                                                machineName: selectedMachine!.machineName,
+                                                location: selectedMachine!.location,
+                                                totalDowntimeMinutes:
+                                                    selectedMachine!.totalDowntimeMinutes,
+                                                formattedTotalDowntime:
+                                                    selectedMachine!.formattedDowntime,
+                                                totalIncidents: incidents.length,
+                                            }
+                                        }
                                         workshopName={selectedWorkshopName}
                                         isXs={isXs}
                                         isMobile={isMobile}
                                     />
                                     <IncidentHistoryTable
-                                        filteredErrorDetails={filteredErrorDetails}
-                                        loading={loadingErrorDetails}
+                                        incidents={incidents}
+                                        totalIncidents={selectedMachineInfo?.totalIncidents}
+                                        loading={loadingIncidents}
                                         errorDateRange={errorDateRange}
                                         onErrorDateRangeChange={setErrorDateRange}
                                         disabledDate={disabledDate}
@@ -788,11 +818,9 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                                     }}
                                 >
                                     <Empty
-                                        description={
-                                            t('factoryOverview.modal.selectMachinePrompt') ||
-                                            t('common.noData') ||
-                                            'Vui lòng chọn thiết bị để xem chi tiết'
-                                        }
+                                        description={t(
+                                            'productionOverview.downtimeModal.selectMachinePrompt'
+                                        )}
                                     />
                                 </div>
                             )}

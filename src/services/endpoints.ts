@@ -38,6 +38,7 @@ const BASE_PATHS = {
     DASHBOARD: `${API}/dashboard/${V1}`,
     WORK_CALENDAR: `${API}/workCalendar/${V1}`,
     SHIFT_PATTERNS: `${API}/shiftPatterns/${V1}`,
+    DOWNTIME: `${API}/downtime/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -295,6 +296,14 @@ export const ENDPOINTS = {
         BASE: BASE_PATHS.SHIFT_PATTERNS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SHIFT_PATTERNS, id),
         PICKING: `${BASE_PATHS.SHIFT_PATTERNS}/picking`,
+    },
+    DOWNTIME: {
+        MACHINES_BY_FILTER: `${BASE_PATHS.DOWNTIME}/machines/byFilter`,
+        MACHINES_BY_DATE_RANGE: `${BASE_PATHS.DOWNTIME}/machines/byDateRange`,
+        MACHINE_INCIDENTS_BY_FILTER: (machineId: PathParam) =>
+            `${BASE_PATHS.DOWNTIME}/machines/byFilter/${machineId}/incidents`,
+        MACHINE_INCIDENTS_BY_DATE_RANGE: (machineId: PathParam) =>
+            `${BASE_PATHS.DOWNTIME}/machines/byDateRange/${machineId}/incidents`,
     },
 } as const;
 

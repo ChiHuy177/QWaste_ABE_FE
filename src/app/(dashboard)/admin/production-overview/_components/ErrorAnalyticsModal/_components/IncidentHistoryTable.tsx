@@ -11,25 +11,27 @@ import {
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { MachineErrorDetailItem } from '@/types/Monitoring';
-import { formatHours, formatIncidentTimeRange } from '../errorAnalyticsUtils';
+import { DowntimeMachineIncidentItem } from '@/types/Downtime';
+import { formatIncidentTimeRange, formatMinutesToDuration } from '../errorAnalyticsUtils';
 
 const { Text } = Typography;
 
 export interface IncidentHistoryTableProps {
-    filteredErrorDetails: MachineErrorDetailItem[];
+    incidents: DowntimeMachineIncidentItem[];
+    totalIncidents?: number;
     loading: boolean;
     errorDateRange: [Dayjs | null, Dayjs | null] | null;
     onErrorDateRangeChange: (dates: [Dayjs | null, Dayjs | null] | null) => void;
     disabledDate: (current: Dayjs) => boolean;
-    startDate: string;
-    endDate: string;
+    startDate?: string;
+    endDate?: string;
     isMobile: boolean;
 }
 
 export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.memo(
     ({
-        filteredErrorDetails,
+        incidents,
+        totalIncidents,
         loading,
         errorDateRange,
         onErrorDateRangeChange,
@@ -42,16 +44,16 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
         const { token } = theme.useToken();
 
         // Columns definition for the Incident / Error Table
-        const errorColumns: ColumnsType<MachineErrorDetailItem> = useMemo(
+        const errorColumns: ColumnsType<DowntimeMachineIncidentItem> = useMemo(
             () => [
                 {
-                    title: t('factoryOverview.table.header.start') || 'Thời gian sự cố',
-                    key: 'timeRange',
-                    width: isMobile ? 155 : 175,
+                    title: t('productionOverview.downtimeModal.colStart'),
+                    key: 'startTime',
+                    width: isMobile ? 150 : 175,
                     sorter: (a, b) =>
                         new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime(),
-                    render: (_: any, record: MachineErrorDetailItem) => {
-                        const { time, date } = formatIncidentTimeRange(
+                    render: (_: any, record: DowntimeMachineIncidentItem) => {
+                        const { time, date, isOngoing } = formatIncidentTimeRange(
                             record.startTime,
                             record.endTime
                         );
@@ -60,14 +62,14 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                 style={{
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: 2,
+                                    gap: 3,
                                     minWidth: 0,
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                     <CalendarOutlined
                                         style={{
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             color: token.colorPrimary,
                                             flexShrink: 0,
                                         }}
@@ -83,79 +85,104 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                         {date || '—'}
                                     </Text>
                                 </div>
-                                <Text
-                                    type="secondary"
+                                <div
                                     style={{
-                                        fontSize: 12,
-                                        paddingLeft: 16,
-                                        whiteSpace: 'nowrap',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        paddingLeft: 18,
                                     }}
                                 >
-                                    {time}
+                                    <Text
+                                        type="secondary"
+                                        style={{
+                                            fontSize: 12,
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        {time}
+                                    </Text>
+                                    {isOngoing && (
+                                        <Tag
+                                            color="error"
+                                            bordered={false}
+                                            style={{
+                                                fontSize: 10.5,
+                                                padding: '0 5px',
+                                                borderRadius: 4,
+                                                lineHeight: '16px',
+                                                margin: 0,
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            {t('productionOverview.downtimeModal.ongoing')}
+                                        </Tag>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    },
+                },
+                {
+                    title: t('productionOverview.downtimeModal.colRootCause'),
+                    dataIndex: 'rootCause',
+                    key: 'rootCause',
+                    ellipsis: true,
+                    render: (rootCause: string | null) => {
+                        const isRecorded = Boolean(rootCause?.trim());
+                        return (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <WarningOutlined
+                                    style={{
+                                        color: isRecorded
+                                            ? token.colorError
+                                            : token.colorTextQuaternary,
+                                        fontSize: 13,
+                                        flexShrink: 0,
+                                    }}
+                                />
+                                <Text
+                                    type={isRecorded ? undefined : 'secondary'}
+                                    style={{
+                                        fontSize: 12.5,
+                                        color: isRecorded
+                                            ? token.colorText
+                                            : token.colorTextTertiary,
+                                    }}
+                                    ellipsis={{
+                                        tooltip:
+                                            rootCause ||
+                                            t('productionOverview.downtimeModal.unrecordedReason'),
+                                    }}
+                                >
+                                    {rootCause ||
+                                        t('productionOverview.downtimeModal.unrecordedReason')}
                                 </Text>
                             </div>
                         );
                     },
                 },
                 {
-                    title: t('factoryOverview.table.header.errorName') || 'Tên lỗi',
-                    dataIndex: 'errorName',
-                    key: 'errorName',
-                    width: isMobile ? 150 : 175,
-                    ellipsis: true,
-                    render: (name: string) => (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <WarningOutlined
-                                style={{ color: token.colorError, fontSize: 13, flexShrink: 0 }}
-                            />
-                            <Text
-                                style={{ fontSize: 12.5, color: token.colorTextHeading }}
-                                ellipsis={{ tooltip: name }}
-                            >
-                                {name ||
-                                    t('factoryOverview.modal.unknownIncident') ||
-                                    'Sự cố dừng máy không xác định'}
-                            </Text>
-                        </div>
-                    ),
-                },
-                {
-                    title: t('factoryOverview.table.header.errorReason') || 'Nguyên nhân lỗi',
-                    dataIndex: 'reason',
-                    key: 'reason',
-                    ellipsis: true,
-                    render: (_: any, record: MachineErrorDetailItem) => {
-                        const reasonText =
-                            record.reason ||
-                            record.errorReason ||
-                            record.cause ||
-                            record.description ||
-                            t('factoryOverview.modal.unrecordedReason') ||
-                            'Chưa ghi nhận';
-                        return (
-                            <Text
-                                type={record.reason ? undefined : 'secondary'}
-                                style={{ fontSize: 12.5 }}
-                                ellipsis={{ tooltip: reasonText }}
-                            >
-                                {reasonText}
-                            </Text>
-                        );
-                    },
-                },
-                {
-                    title: t('factoryOverview.table.header.duration') || 'Thời gian',
-                    dataIndex: 'durationHours',
-                    key: 'durationHours',
+                    title: t('productionOverview.downtimeModal.colDuration'),
+                    key: 'duration',
                     align: 'right' as const,
                     width: isMobile ? 85 : 95,
-                    sorter: (a, b) =>
-                        (Number(a.durationHours) || 0) - (Number(b.durationHours) || 0),
-                    render: (v: number) => {
-                        const hours = Number(v) || 0;
+                    sorter: (a, b) => (a.durationMinutes || 0) - (b.durationMinutes || 0),
+                    render: (_: any, record: DowntimeMachineIncidentItem) => {
+                        const durationText =
+                            record.formattedDuration ||
+                            formatMinutesToDuration(record.durationMinutes);
+                        const isHighDuration = (record.durationMinutes || 0) >= 120;
                         return (
                             <Tag
-                                color={hours >= 2 ? 'error' : 'warning'}
+                                color={isHighDuration ? 'error' : 'warning'}
                                 style={{
                                     margin: 0,
                                     fontSize: 11,
@@ -164,7 +191,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                     padding: '0 6px',
                                 }}
                             >
-                                {formatHours(hours)}
+                                {durationText}
                             </Tag>
                         );
                     },
@@ -172,6 +199,8 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
             ],
             [token, t, isMobile]
         );
+
+        const displayedCount = totalIncidents ?? incidents.length;
 
         return (
             <div
@@ -226,13 +255,11 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                     textOverflow: 'ellipsis',
                                 }}
                             >
-                                {t('factoryOverview.modal.errorHistoryTitle') ||
-                                    t('factoryOverview.table.title.errorHistory') ||
-                                    'Lịch sử sự cố & cảnh báo'}
+                                {t('productionOverview.downtimeModal.incidentHistory')}
                             </Text>
                         </div>
                         <Tag
-                            color={filteredErrorDetails.length > 0 ? 'error' : 'success'}
+                            color={displayedCount > 0 ? 'error' : 'success'}
                             style={{
                                 borderRadius: 10,
                                 margin: 0,
@@ -241,9 +268,9 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                 flexShrink: 0,
                             }}
                         >
-                            {t('factoryOverview.modal.incidentCount', {
-                                count: filteredErrorDetails.length,
-                            }) || `${filteredErrorDetails.length} sự cố`}
+                            {t('productionOverview.downtimeModal.incidentCount', {
+                                count: displayedCount,
+                            })}
                         </Tag>
                     </div>
 
@@ -266,8 +293,8 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                             maxDate={endDate ? dayjs(endDate).endOf('day') : undefined}
                             format="DD/MM/YYYY"
                             placeholder={[
-                                t('factoryOverview.filter.startDate') || 'Từ ngày',
-                                t('factoryOverview.filter.endDate') || 'Đến ngày',
+                                t('productionOverview.downtimeModal.startDate'),
+                                t('productionOverview.downtimeModal.endDate'),
                             ]}
                             allowClear
                             style={{
@@ -279,14 +306,14 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                 </div>
 
                 {/* Ant Design Table */}
-                <Table<MachineErrorDetailItem>
+                <Table<DowntimeMachineIncidentItem>
                     className="full-height-table"
                     loading={loading}
                     columns={errorColumns}
-                    dataSource={filteredErrorDetails}
-                    rowKey={(record, index) => record.id?.toString() || index?.toString() || ''}
+                    dataSource={incidents}
+                    rowKey={(record, index) => record.incidentCode || String(index)}
                     pagination={
-                        filteredErrorDetails.length > 10
+                        incidents.length > 10
                             ? {
                                   pageSize: 10,
                                   size: 'small',
@@ -303,7 +330,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     }
                     size="small"
                     scroll={{
-                        x: isMobile ? 510 : undefined,
+                        x: isMobile ? 380 : undefined,
                         y: isMobile ? 'calc(100vh - 380px)' : 'calc(88vh - 270px)',
                     }}
                     style={{
@@ -327,12 +354,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                         fontSize: 13,
                                     }}
                                 >
-                                    {errorDateRange && errorDateRange[0] && errorDateRange[1]
-                                        ? t('factoryOverview.modal.noIncidentsInRange') ||
-                                          'Không có sự cố trong khoảng ngày đã chọn'
-                                        : t('factoryOverview.modal.noErrorData') ||
-                                          t('factoryOverview.table.noErrorData') ||
-                                          'Không phát sinh sự cố lỗi'}
+                                    {t('productionOverview.downtimeModal.noIncidents')}
                                 </div>
                                 <div
                                     style={{
@@ -341,8 +363,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                                         marginTop: 4,
                                     }}
                                 >
-                                    {t('factoryOverview.modal.stableOperationDesc') ||
-                                        'Thiết bị hoạt động ổn định trong khoảng thời gian đã chọn'}
+                                    {t('productionOverview.downtimeModal.operatingNormally')}
                                 </div>
                             </div>
                         ),

@@ -20,3 +20,4 @@ export * from './DashboardService';
 export * from './WorkCalendarService';
 export * from './ShiftPatternService';
 export * from './IndustryFilterService';
+export * from './DowntimeService';

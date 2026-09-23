@@ -4,24 +4,23 @@ import React, { useCallback } from 'react';
 import { Typography, Select, Tag, Button, Tooltip, Empty, theme } from 'antd';
 import { DesktopOutlined, RightOutlined, SortDescendingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { MachineStatusSummaryItem } from '@/types/Monitoring';
+import { DowntimeMachineRollupItem } from '@/types/Downtime';
 import { SearchInput } from '@/components/shared/SearchInput/SearchInput';
-import { formatHours } from '../errorAnalyticsUtils';
 
 const { Text } = Typography;
 
 // --- Subcomponent: Memoized Machine Card Item ---
 interface MachineCardItemProps {
-    machine: MachineStatusSummaryItem;
+    machine: DowntimeMachineRollupItem;
     isSelected: boolean;
     workshopName?: string;
-    onSelect: (machine: MachineStatusSummaryItem) => void;
+    onSelect: (machine: DowntimeMachineRollupItem) => void;
 }
 
 const MachineCardItem = React.memo<MachineCardItemProps>(
     ({ machine, isSelected, workshopName, onSelect }) => {
         const { token } = theme.useToken();
-        const hasError = (machine.totalErrorHours || 0) > 0;
+        const hasError = (machine.totalDowntimeMinutes || 0) > 0;
 
         const handleClick = useCallback(() => {
             onSelect(machine);
@@ -57,7 +56,7 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                     }
                 }}
             >
-                {/* Left: Icon + Name & Machine ID */}
+                {/* Left: Icon + Name & Machine Code */}
                 <div
                     style={{
                         display: 'flex',
@@ -69,8 +68,8 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                 >
                     <div
                         style={{
-                            width: 34,
-                            height: 34,
+                            width: 36,
+                            height: 36,
                             borderRadius: token.borderRadiusSM,
                             backgroundColor: isSelected
                                 ? token.colorPrimary
@@ -89,7 +88,7 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                             transition: 'all 0.18s ease',
                         }}
                     >
-                        <DesktopOutlined style={{ fontSize: 16 }} />
+                        <DesktopOutlined style={{ fontSize: 18 }} />
                     </div>
                     <div
                         style={{
@@ -112,34 +111,18 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                         >
                             {machine.machineName}
                         </Text>
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                            }}
-                        >
+                        {workshopName && (
                             <Text
                                 type="secondary"
                                 style={{
                                     fontSize: 11,
+                                    color: token.colorTextQuaternary,
                                     lineHeight: 1.2,
                                 }}
                             >
-                                {machine.machineId}
+                                {workshopName}
                             </Text>
-                            {workshopName && (
-                                <Text
-                                    type="secondary"
-                                    style={{
-                                        fontSize: 11,
-                                        color: token.colorTextQuaternary,
-                                    }}
-                                >
-                                    • {workshopName}
-                                </Text>
-                            )}
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -164,7 +147,7 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                                 fontWeight: 600,
                             }}
                         >
-                            {formatHours(machine.totalErrorHours)}
+                            {machine.formattedDowntime || `${machine.totalDowntimeMinutes}m`}
                         </Tag>
                     ) : (
                         <Text
@@ -175,7 +158,7 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
                                 paddingRight: 4,
                             }}
                         >
-                            0h
+                            0m
                         </Text>
                     )}
                     <RightOutlined
@@ -195,7 +178,7 @@ const MachineCardItem = React.memo<MachineCardItemProps>(
         return (
             prev.isSelected === next.isSelected &&
             prev.machine.machineId === next.machine.machineId &&
-            prev.machine.totalErrorHours === next.machine.totalErrorHours &&
+            prev.machine.totalDowntimeMinutes === next.machine.totalDowntimeMinutes &&
             prev.machine.machineName === next.machine.machineName &&
             prev.workshopName === next.workshopName &&
             prev.onSelect === next.onSelect
@@ -207,9 +190,9 @@ MachineCardItem.displayName = 'MachineCardItem';
 
 // --- Main Sidebar Component ---
 export interface MachineListSidebarProps {
-    filteredSummaryData: MachineStatusSummaryItem[];
+    filteredSummaryData: DowntimeMachineRollupItem[];
     selectedMachineId: string | null;
-    onSelectMachine: (machine: MachineStatusSummaryItem) => void;
+    onSelectMachine: (machine: DowntimeMachineRollupItem) => void;
     searchText: string;
     onSearchTextChange: (text: string) => void;
     selectedWorkshopId: number | 'all' | null;
@@ -271,9 +254,7 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                         }}
                     >
                         <Select
-                            placeholder={
-                                t('factoryOverview.filter.chooseZone') || 'Chọn phân xưởng'
-                            }
+                            placeholder={t('productionOverview.downtimeModal.allWorkshops')}
                             value={selectedWorkshopId}
                             onChange={onWorkshopChange}
                             options={workshopOptions}
@@ -291,9 +272,7 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                         <SearchInput
                             value={searchText}
                             onChange={onSearchTextChange}
-                            placeholder={
-                                t('factoryOverview.filter.searchMachines') || 'Tìm kiếm máy...'
-                            }
+                            placeholder={t('productionOverview.downtimeModal.searchPlaceholder')}
                             width="100%"
                             style={{ width: '100%', maxWidth: '100%' }}
                         />
@@ -339,7 +318,7 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                                     color: token.colorTextHeading,
                                 }}
                             >
-                                {t('factoryOverview.machines') || 'Danh sách thiết bị'}
+                                {t('productionOverview.downtimeModal.deviceList')}
                             </Text>
                             <Tag
                                 color={machinesWithErrorCount > 0 ? 'error' : 'default'}
@@ -352,20 +331,19 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                                 }}
                             >
                                 {machinesWithErrorCount > 0
-                                    ? t('factoryOverview.modal.machinesWithError', {
+                                    ? t('productionOverview.downtimeModal.errorMachinesBadge', {
                                           count: machinesWithErrorCount,
-                                      }) || `${machinesWithErrorCount} máy có lỗi`
-                                    : t('factoryOverview.modal.totalMachines', {
+                                      })
+                                    : t('productionOverview.downtimeModal.totalMachinesBadge', {
                                           count: filteredSummaryData.length,
-                                      }) || `${filteredSummaryData.length} máy`}
+                                      })}
                             </Tag>
                         </div>
                         <Tooltip
                             title={
                                 sortByError
-                                    ? t('factoryOverview.filter.highestError') ||
-                                      'Ưu tiên lỗi nhiều nhất'
-                                    : t('factoryOverview.filter.defaultOrder') || 'Thứ tự mặc định'
+                                    ? t('productionOverview.downtimeModal.mostErrors')
+                                    : t('productionOverview.downtimeModal.defaultOrder')
                             }
                         >
                             <Button
@@ -395,8 +373,8 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                                 }}
                             >
                                 {sortByError
-                                    ? t('factoryOverview.filter.highestError') || 'Lỗi nhiều nhất'
-                                    : t('factoryOverview.filter.defaultOrder') || 'Mặc định'}
+                                    ? t('productionOverview.downtimeModal.mostErrors')
+                                    : t('productionOverview.downtimeModal.defaultOrder')}
                             </Button>
                         </Tooltip>
                     </div>
@@ -422,9 +400,9 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                             >
                                 <Empty
                                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                    description={
-                                        t('common.noData') || 'Không tìm thấy thiết bị phù hợp'
-                                    }
+                                    description={t(
+                                        'productionOverview.downtimeModal.noMachinesFound'
+                                    )}
                                 />
                             </div>
                         ) : (

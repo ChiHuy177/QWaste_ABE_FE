@@ -17,3 +17,4 @@ export * from './ProductionOverview';
 export * from './ShiftPattern';
 export * from './WorkCalendar';
 export * from './IndustryFilter';
+export * from './Downtime';
