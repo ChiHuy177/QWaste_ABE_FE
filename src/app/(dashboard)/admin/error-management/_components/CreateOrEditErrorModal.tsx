@@ -43,8 +43,17 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
     const formFields = useMemo(() => getErrorManagementFormFields(t, 'edit'), [t]);
 
     useEffect(() => {
-        if (open && incident?.machineIncidentId) {
+        if (!open) {
+            setDetailData(null);
+            return;
+        }
+
+        if (incident?.machineIncidentId) {
             setDetailData(incident);
+            form.setFieldsValue({
+                rootCause: incident.rootCause || '',
+                resolution: incident.resolution || '',
+            });
             let isMounted = true;
             const fetchDetail = async () => {
                 try {
@@ -78,9 +87,6 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
             return () => {
                 isMounted = false;
             };
-        } else if (!open) {
-            setDetailData(null);
-            form.resetFields();
         }
     }, [open, incident, form]);
 
@@ -365,7 +371,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                 )}
 
                 {/* Input Form for Root Cause and Resolution */}
-                <Form form={form} layout="vertical">
+                <Form form={form} layout="vertical" preserve={false}>
                     <Row gutter={[16, 16]}>
                         {formFields.map((field) => {
                             const span = field.span || { xs: 24 };

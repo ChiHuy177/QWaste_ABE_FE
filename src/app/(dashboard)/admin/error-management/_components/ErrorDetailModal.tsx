@@ -198,7 +198,7 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
             open={open}
             onCancel={onClose}
             width={720}
-            destroyOnClose
+            destroyOnHidden
             title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 4 }}>
                     <div
