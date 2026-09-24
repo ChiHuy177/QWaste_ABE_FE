@@ -17,3 +17,4 @@ export * from './StepService';
 export * from './ExcelExportService';
 export * from './ProductionPlanService';
 export * from './ErrorManagementService';
+export * from './MachineIncidentService';

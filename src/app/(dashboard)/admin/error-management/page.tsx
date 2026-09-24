@@ -8,6 +8,8 @@ import {
     Flex,
     Grid,
     Popover,
+    Select,
+    Space,
     Spin,
     Table,
     Tag,
@@ -16,7 +18,6 @@ import {
     theme,
 } from 'antd';
 import {
-    ArrowLeftOutlined,
     CalendarOutlined,
     FileExcelOutlined,
     FilterOutlined,
@@ -31,14 +32,18 @@ import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { SearchInput } from '@/components/shared/SearchInput';
-import FilterDrawer from '@/components/shared/filters/FilterDrawer';
-import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
-import { CreateErrorIncidentDto, ErrorIncident, ErrorStatus } from '@/types/ErrorManagement';
-import { ErrorManagementService } from '@/services/ErrorManagementService';
+import {
+    MachineIncidentFilterParams,
+    MachineIncidentItem,
+    MachineIncidentStatus,
+    MachineIncidentUpdateRequest,
+} from '@/types/MachineIncident';
+import { MachineIncidentService } from '@/services/MachineIncidentService';
 import { getErrorTableColumns } from './_components/Column';
 import { CreateOrEditErrorModal } from './_components/CreateOrEditErrorModal';
-import { ErrorDetailDrawer } from './_components/ErrorDetailDrawer';
+import { ErrorDetailModal } from './_components/ErrorDetailModal';
+import { ErrorInfoBar } from './_components/ErrorInfoBar';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import {
@@ -69,7 +74,11 @@ function ErrorManagementContent() {
 
     usePageTitle(t('errorManagement.title'));
 
-    const [incidents, setIncidents] = useState<ErrorIncident[]>([]);
+    // Incident list & pagination
+    const [incidents, setIncidents] = useState<MachineIncidentItem[]>([]);
+    const [totalElements, setTotalElements] = useState<number>(0);
+    const [totalIncidents, setTotalIncidents] = useState<number>(0);
+    const [activeIncidents, setActiveIncidents] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const [isExporting, setIsExporting] = useState<boolean>(false);
 
@@ -84,10 +93,7 @@ function ErrorManagementContent() {
 
     // Search and filters
     const [searchTerm, setSearchTerm] = useState('');
-    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [codeFilter, setCodeFilter] = useState<string | undefined>(undefined);
-    const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
-    const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+    const [statusFilter, setStatusFilter] = useState<MachineIncidentStatus | undefined>(undefined);
 
     // Time period filter state (default to all time)
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
@@ -104,10 +110,10 @@ function ErrorManagementContent() {
     // Dynamic table height hook
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
-    // Modal & Drawer State
+    // Modal State
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
-    const [selectedIncident, setSelectedIncident] = useState<ErrorIncident | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+    const [selectedIncident, setSelectedIncident] = useState<MachineIncidentItem | null>(null);
     const [modalSubmitting, setModalSubmitting] = useState<boolean>(false);
 
     // Fetch industry filters for quick select
@@ -201,7 +207,6 @@ function ErrorManagementContent() {
                 onApply={handleApplyTimeFilter}
                 onReset={handleResetTimeFilter}
                 onCancel={() => setIsTimeFilterOpen(false)}
-                defaultDate="2025-08-25"
             />
         ),
         [
@@ -223,48 +228,38 @@ function ErrorManagementContent() {
         setPage(0);
     }, []);
 
-    // Fetch data
+    // Fetch data from backend
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const filterParams = {
-                searchText: searchTerm,
-                status: (statusFilter as ErrorStatus) || 'all',
+            const filterParams: MachineIncidentFilterParams = {
+                search: searchTerm || undefined,
+                status: statusFilter || undefined,
                 startDate: selectedStartDate || undefined,
                 endDate: selectedEndDate || undefined,
+                page,
+                size: pageSize,
+                sort: 'startTime,DESC',
             };
-            const listResult = await ErrorManagementService.getIncidents(filterParams);
 
-            // Additional client-side filter matching advanced fields
-            let data = listResult.data;
-            if (codeFilter) {
-                const term = codeFilter.toLowerCase();
-                data = data.filter((i) => i.code.toLowerCase().includes(term));
-            }
-            if (machineNameFilter) {
-                const term = machineNameFilter.toLowerCase();
-                data = data.filter(
-                    (i) =>
-                        i.machineName.toLowerCase().includes(term) ||
-                        i.machineCode.toLowerCase().includes(term)
-                );
+            const response = await MachineIncidentService.getIncidents(filterParams);
+
+            if (response?.page) {
+                setIncidents(response.page.content || []);
+                setTotalElements(response.page.totalElements || 0);
+            } else {
+                setIncidents([]);
+                setTotalElements(0);
             }
 
-            setIncidents(data);
+            setTotalIncidents(response?.totalIncidents ?? 0);
+            setActiveIncidents(response?.activeIncidents ?? 0);
         } catch (_err) {
             toast.error(t('errorManagement.messages.fetchError'));
         } finally {
             setLoading(false);
         }
-    }, [
-        searchTerm,
-        statusFilter,
-        codeFilter,
-        machineNameFilter,
-        selectedStartDate,
-        selectedEndDate,
-        t,
-    ]);
+    }, [searchTerm, statusFilter, selectedStartDate, selectedEndDate, page, pageSize, t]);
 
     const handleSearchPressEnter = useCallback(
         (value: string) => {
@@ -295,7 +290,7 @@ function ErrorManagementContent() {
                 const codeParam = (incidentCodeParam || '').trim().toLowerCase();
                 const mCodeParam = (machineCodeParam || '').trim().toLowerCase();
 
-                if (codeParam && i.code.toLowerCase() === codeParam) return true;
+                if (codeParam && i.incidentCode.toLowerCase() === codeParam) return true;
                 if (mCodeParam) {
                     const itemCode = (i.machineCode || '').toLowerCase();
                     const itemName = (i.machineName || '').toLowerCase();
@@ -311,11 +306,13 @@ function ErrorManagementContent() {
             });
 
             if (target) {
-                setHighlightedCode(target.code);
+                setHighlightedCode(target.incidentCode);
                 setHighlightedMachineCode(target.machineCode);
 
                 // Auto-switch to page containing the target incident
-                const targetIndex = incidents.findIndex((i) => i.id === target.id);
+                const targetIndex = incidents.findIndex(
+                    (i) => i.machineIncidentId === target.machineIncidentId
+                );
                 if (targetIndex !== -1) {
                     const targetPage = Math.floor(targetIndex / pageSize);
                     if (targetPage !== page) {
@@ -325,13 +322,13 @@ function ErrorManagementContent() {
 
                 // Scroll to target row smoothly
                 setTimeout(() => {
-                    const element = document.getElementById(`incident-row-${target.code}`);
+                    const element = document.getElementById(`incident-row-${target.incidentCode}`);
                     if (element) {
                         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 }, 350);
 
-                if (openEditParam === 'true') {
+                if (openEditParam === 'true' && target.endTime) {
                     setSelectedIncident(target);
                     setIsModalOpen(true);
                 }
@@ -340,102 +337,76 @@ function ErrorManagementContent() {
         }
     }, [loading, incidents, incidentCodeParam, machineCodeParam, openEditParam, pageSize, page]);
 
-    // Active filters count
-    const drawerFilterCount = [codeFilter, machineNameFilter, statusFilter].filter(Boolean).length;
-    const activeFilterCount = [codeFilter, machineNameFilter, statusFilter, timeFilterMode].filter(
-        Boolean
-    ).length;
-
-    // Advanced filter fields for FilterDrawer
-    const errorFilterFields: FilterField[] = useMemo(
+    // Status filter options for direct header Select
+    const statusOptions = useMemo(
         () => [
             {
-                key: 'code',
-                label: t('errorManagement.table.columns.incidentCode'),
-                placeholder: 'Ví dụ: ERR-2025...',
-                value: codeFilter ?? '',
-            },
-            {
-                key: 'machineName',
-                label: t('errorManagement.table.columns.machine'),
-                placeholder: 'Ví dụ: Máy ép, CNC...',
-                value: machineNameFilter ?? '',
-            },
-            {
-                key: 'status',
-                label: t('errorManagement.table.columns.status'),
-                type: 'select',
-                placeholder: t('errorManagement.filters.allStatuses', {
+                value: '',
+                label: t('errorManagement.filters.allStatuses', {
                     defaultValue: 'Tất cả trạng thái',
                 }),
-                value: statusFilter ?? '',
-                options: [
-                    { value: 'open', label: t('errorManagement.statuses.open') },
-                    { value: 'in_progress', label: t('errorManagement.statuses.in_progress') },
-                    { value: 'resolved', label: t('errorManagement.statuses.resolved') },
-                    { value: 'closed', label: t('errorManagement.statuses.closed') },
-                ],
+            },
+            {
+                value: 'IN_PROGRESS',
+                label: (
+                    <Space size={6}>
+                        <Badge status="warning" />
+                        <span>{t('errorManagement.statuses.IN_PROGRESS')}</span>
+                    </Space>
+                ),
+            },
+            {
+                value: 'RESOLVED',
+                label: (
+                    <Space size={6}>
+                        <Badge status="success" />
+                        <span>{t('errorManagement.statuses.RESOLVED')}</span>
+                    </Space>
+                ),
             },
         ],
-        [t, codeFilter, machineNameFilter, statusFilter]
+        [t]
     );
 
-    const handleResetFilters = useCallback(() => {
-        setCodeFilter(undefined);
-        setMachineNameFilter(undefined);
-        setStatusFilter(undefined);
-        setPage(0);
-    }, []);
-
-    const handleApplyFilters = useCallback((values: Record<string, string>) => {
-        setCodeFilter(values.code?.trim() || undefined);
-        setMachineNameFilter(values.machineName?.trim() || undefined);
-        setStatusFilter(values.status?.trim() || undefined);
-        setPage(0);
-    }, []);
+    const activeFilterCount = [statusFilter, timeFilterMode].filter(Boolean).length;
 
     // Actions
-    const handleOpenCreateModal = () => {
-        setSelectedIncident(null);
-        setIsModalOpen(true);
-    };
-
-    const handleOpenEditModal = (record: ErrorIncident) => {
+    const handleOpenEditModal = (record: MachineIncidentItem) => {
+        if (!record.endTime) {
+            toast.warning(t('errorManagement.table.cannotUpdateOngoing'));
+            return;
+        }
         setSelectedIncident(record);
         setIsModalOpen(true);
     };
 
-    const handleOpenDetailDrawer = (record: ErrorIncident) => {
+    const handleOpenDetailModal = (record: MachineIncidentItem) => {
         setSelectedIncident(record);
-        setIsDrawerOpen(true);
+        setIsDetailModalOpen(true);
     };
 
-    const handleModalSubmit = async (values: CreateErrorIncidentDto) => {
+    const handleModalSubmit = async (values: MachineIncidentUpdateRequest) => {
+        if (!selectedIncident) return;
         try {
             setModalSubmitting(true);
-            if (selectedIncident) {
-                await ErrorManagementService.updateIncident(selectedIncident.id, values);
-                toast.success(t('errorManagement.messages.updateSuccess'));
-            } else {
-                await ErrorManagementService.createIncident(values);
-                toast.success(t('errorManagement.messages.createSuccess'));
-            }
+            await MachineIncidentService.updateIncident(selectedIncident.machineIncidentId, values);
+            toast.success(t('errorManagement.messages.updateSuccess'));
             setIsModalOpen(false);
             await loadData();
-        } catch (_err) {
-            toast.error('Có lỗi xảy ra khi lưu thông tin');
+        } catch (err: any) {
+            const errorCode = err?.response?.data?.code || err?.code;
+            if (errorCode === 1902) {
+                toast.error(t('errorManagement.modal.cannotUpdateOngoing'));
+            } else {
+                toast.error(
+                    err?.response?.data?.message ||
+                        t('common.errorOccurred', {
+                            defaultValue: 'Có lỗi xảy ra khi lưu thông tin',
+                        })
+                );
+            }
         } finally {
             setModalSubmitting(false);
-        }
-    };
-
-    const handleDelete = async (record: ErrorIncident) => {
-        try {
-            await ErrorManagementService.deleteIncident(record.id);
-            toast.success(t('errorManagement.messages.deleteSuccess'));
-            await loadData();
-        } catch (_err) {
-            toast.error('Không thể xóa sự cố');
         }
     };
 
@@ -444,33 +415,29 @@ function ErrorManagementContent() {
         try {
             setIsExporting(true);
             const headers = [
-                'Mã Sự Cố',
-                'Tên Thiết Bị',
+                t('errorManagement.table.columns.incidentCode'),
+                t('errorManagement.table.columns.machine'),
                 'Mã Thiết Bị',
-                'Dây Chuyền',
-                'Khu Vực',
-                'Trạng Thái',
-                'Giờ Bắt Đầu',
-                'Giờ Kết Thúc',
-                'Thời Lượng (Phút)',
-                'Nguyên Nhân (Root Cause)',
-                'Cách Khắc Phục (Countermeasure)',
-                'Biện Pháp Phòng Ngừa',
+                t('errorManagement.table.columns.location'),
+                t('errorManagement.table.columns.status'),
+                t('errorManagement.table.columns.startTime'),
+                t('errorManagement.table.columns.endTime'),
+                `${t('errorManagement.table.columns.duration')} (phút)`,
+                t('errorManagement.table.columns.cause'),
+                t('errorManagement.table.columns.resolution'),
             ];
 
             const rows = incidents.map((item) => [
-                `"${item.code}"`,
-                `"${item.machineName}"`,
-                `"${item.machineCode}"`,
-                `"${item.lineName}"`,
-                `"${item.zoneName}"`,
+                `"${item.incidentCode}"`,
+                `"${item.machineName || ''}"`,
+                `"${item.machineCode || ''}"`,
+                `"${(item.location || '').replace(/"/g, '""')}"`,
                 `"${item.status}"`,
                 `"${item.startTime}"`,
-                `"${item.endTime || 'Đang xử lý'}"`,
-                item.durationMinutes,
-                `"${(item.cause || '').replace(/"/g, '""')}"`,
+                `"${item.endTime || t('errorManagement.table.ongoingBadge')}"`,
+                item.durationMinutes ?? '',
+                `"${(item.rootCause || '').replace(/"/g, '""')}"`,
                 `"${(item.resolution || '').replace(/"/g, '""')}"`,
-                `"${(item.preventiveAction || '').replace(/"/g, '""')}"`,
             ]);
 
             const csvContent =
@@ -481,7 +448,7 @@ function ErrorManagementContent() {
             link.setAttribute('href', url);
             link.setAttribute(
                 'download',
-                `QWaste_Error_Incidents_${new Date().toISOString().substring(0, 10)}.csv`
+                `QWaste_Machine_Incidents_${new Date().toISOString().substring(0, 10)}.csv`
             );
             document.body.appendChild(link);
             link.click();
@@ -489,20 +456,20 @@ function ErrorManagementContent() {
 
             toast.success(t('errorManagement.messages.exportSuccess'));
         } catch (_err) {
-            toast.error('Không thể xuất dữ liệu');
+            toast.error(t('common.errorOccurred', { defaultValue: 'Không thể xuất dữ liệu' }));
         } finally {
             setIsExporting(false);
         }
     };
 
     const isRowHighlighted = useCallback(
-        (record: ErrorIncident) => {
+        (record: MachineIncidentItem) => {
             const targetCode = (highlightedCode || incidentCodeParam)?.trim().toLowerCase();
             const targetMachine = (highlightedMachineCode || machineCodeParam)
                 ?.trim()
                 .toLowerCase();
 
-            if (targetCode && record.code.toLowerCase() === targetCode) {
+            if (targetCode && record.incidentCode.toLowerCase() === targetCode) {
                 return true;
             }
             if (targetMachine) {
@@ -526,14 +493,14 @@ function ErrorManagementContent() {
             getErrorTableColumns({
                 token,
                 t,
-                onViewDetail: handleOpenDetailDrawer,
+                onViewDetail: handleOpenDetailModal,
                 onEdit: handleOpenEditModal,
-                onDelete: handleDelete,
                 highlightedCode,
                 highlightedMachineCode,
                 isRowHighlighted,
+                isMobile,
             }),
-        [token, t, highlightedCode, highlightedMachineCode, isRowHighlighted]
+        [token, t, highlightedCode, highlightedMachineCode, isRowHighlighted, isMobile]
     );
 
     const handleTableChange = (pagination: any) => {
@@ -561,7 +528,7 @@ function ErrorManagementContent() {
                 flexDirection: 'column',
             }}
         >
-            {/* Header with Search, FilterDrawer, Refresh and Export */}
+            {/* Header with Search, FilterDrawer, Refresh and Export (No Create Button) */}
             <ResponsivePageHeader
                 title={t('errorManagement.title')}
                 onBack={fromParam ? handleBack : undefined}
@@ -588,37 +555,28 @@ function ErrorManagementContent() {
                             flexWrap: 'wrap',
                         }}
                     >
-                        {/* Search and Advanced Filter drawer paired together */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <SearchInput
-                                placeholder={t('errorManagement.filters.searchPlaceholder')}
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                                onPressEnter={handleSearchPressEnter}
-                                debounceMs={500}
-                                width={240}
-                            />
+                        {/* Search by incident code, machine name or code */}
+                        <SearchInput
+                            placeholder={t('errorManagement.filters.searchPlaceholder', {
+                                defaultValue: 'Tìm theo mã sự cố, tên máy, mã thiết bị...',
+                            })}
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            onPressEnter={handleSearchPressEnter}
+                            debounceMs={500}
+                            width={260}
+                        />
 
-                            <FilterDrawer
-                                open={showAdvancedFilters}
-                                onClose={() => setShowAdvancedFilters(false)}
-                                fields={errorFilterFields}
-                                onReset={handleResetFilters}
-                                onApply={handleApplyFilters}
-                                resetLabel={t('common.reset')}
-                                applyLabel={t('common.search')}
-                                title={t('common.advancedFilters')}
-                            >
-                                <Badge count={drawerFilterCount} size="small" offset={[-6, 4]}>
-                                    <Button
-                                        icon={<FilterOutlined />}
-                                        type={showAdvancedFilters ? 'primary' : 'default'}
-                                        onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                        style={{ borderRadius: 8 }}
-                                    />
-                                </Badge>
-                            </FilterDrawer>
-                        </div>
+                        {/* Quick Status Filter Dropdown directly on header */}
+                        <Select
+                            value={statusFilter ?? ''}
+                            onChange={(val) => {
+                                setStatusFilter(val ? (val as MachineIncidentStatus) : undefined);
+                                setPage(0);
+                            }}
+                            style={{ width: 175 }}
+                            options={statusOptions}
+                        />
 
                         {/* Time Filter Popover */}
                         <Popover
@@ -632,7 +590,7 @@ function ErrorManagementContent() {
                                 <Button
                                     icon={<CalendarOutlined />}
                                     style={{
-                                        borderRadius: 8,
+                                        borderRadius: token.borderRadiusSM,
                                         width: 220,
                                         display: 'flex',
                                         alignItems: 'center',
@@ -660,21 +618,15 @@ function ErrorManagementContent() {
                             </Tooltip>
                         </Popover>
 
-                        <Tooltip
-                            title={i18n.language === 'vi' ? 'Làm mới dữ liệu' : 'Refresh data'}
-                        >
+                        <Tooltip title={t('errorManagement.header.btnRefresh')}>
                             <Button
                                 icon={<ReloadOutlined />}
                                 onClick={loadData}
                                 loading={loading}
-                                style={{ borderRadius: 8 }}
+                                style={{ borderRadius: token.borderRadiusSM }}
                                 type="primary"
                             >
-                                {isMobile
-                                    ? i18n.language === 'vi'
-                                        ? 'Làm mới dữ liệu'
-                                        : 'Refresh data'
-                                    : null}
+                                {isMobile ? t('errorManagement.header.btnRefresh') : null}
                             </Button>
                         </Tooltip>
 
@@ -683,13 +635,16 @@ function ErrorManagementContent() {
                             icon={<FileExcelOutlined />}
                             onClick={handleExport}
                             loading={isExporting}
-                            style={{ borderRadius: 8 }}
+                            style={{ borderRadius: token.borderRadiusSM }}
                         >
                             {t('common.exportExcel')}
                         </Button>
                     </div>
                 }
             />
+
+            {/* KPI Summary Bar */}
+            <ErrorInfoBar totalIncidents={totalIncidents} activeIncidents={activeIncidents} />
 
             {/* Active Filter Tags */}
             {activeFilterCount > 0 && (
@@ -702,28 +657,6 @@ function ErrorManagementContent() {
                         <Tag closable onClose={handleResetTimeFilter} color="blue">
                             <CalendarOutlined style={{ marginRight: 4 }} />
                             {activeTimePeriodLabel}
-                        </Tag>
-                    )}
-                    {codeFilter && (
-                        <Tag
-                            closable
-                            onClose={() => {
-                                setCodeFilter(undefined);
-                                setPage(0);
-                            }}
-                        >
-                            {t('errorManagement.table.columns.incidentCode')}: {codeFilter}
-                        </Tag>
-                    )}
-                    {machineNameFilter && (
-                        <Tag
-                            closable
-                            onClose={() => {
-                                setMachineNameFilter(undefined);
-                                setPage(0);
-                            }}
-                        >
-                            {t('errorManagement.table.columns.machine')}: {machineNameFilter}
                         </Tag>
                     )}
                     {statusFilter && (
@@ -769,14 +702,14 @@ function ErrorManagementContent() {
                         overflow: 'hidden',
                     }}
                 >
-                    <Table<ErrorIncident>
+                    <Table<MachineIncidentItem>
                         columns={columns}
                         dataSource={incidents}
                         loading={loading}
                         onChange={handleTableChange}
-                        rowKey="id"
+                        rowKey="machineIncidentId"
                         onRow={(record) => ({
-                            id: `incident-row-${record.code}`,
+                            id: `incident-row-${record.incidentCode}`,
                             'data-highlighted': isRowHighlighted(record) ? 'true' : undefined,
                         })}
                         rowClassName={(record) =>
@@ -785,7 +718,7 @@ function ErrorManagementContent() {
                         pagination={{
                             current: page + 1,
                             pageSize: pageSize,
-                            total: incidents.length,
+                            total: totalElements,
                             hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
@@ -804,7 +737,7 @@ function ErrorManagementContent() {
                 </div>
             </Card>
 
-            {/* Edit Modal */}
+            {/* Update Root Cause & Resolution Modal */}
             <CreateOrEditErrorModal
                 open={isModalOpen}
                 incident={selectedIncident}
@@ -813,11 +746,11 @@ function ErrorManagementContent() {
                 loading={modalSubmitting}
             />
 
-            {/* Detail Drawer */}
-            <ErrorDetailDrawer
-                open={isDrawerOpen}
+            {/* Detail Modal */}
+            <ErrorDetailModal
+                open={isDetailModalOpen}
                 incident={selectedIncident}
-                onClose={() => setIsDrawerOpen(false)}
+                onClose={() => setIsDetailModalOpen(false)}
                 onEdit={handleOpenEditModal}
             />
         </div>

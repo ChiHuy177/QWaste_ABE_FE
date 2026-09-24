@@ -37,6 +37,7 @@ const BASE_PATHS = {
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
     WORK_CALENDAR: `${API}/workCalendar/${V1}`,
     INCIDENTS: `${API}/incidents/${V1}`,
+    MACHINE_INCIDENTS: `${API}/machineIncidents/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -213,6 +214,10 @@ export const ENDPOINTS = {
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.INCIDENTS, id),
         STATS: `${BASE_PATHS.INCIDENTS}/stats`,
         RESOLVE: (id: PathParam) => `${BASE_PATHS.INCIDENTS}/${id}/resolve`,
+    },
+    MACHINE_INCIDENTS: {
+        BASE: BASE_PATHS.MACHINE_INCIDENTS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MACHINE_INCIDENTS, id),
     },
 } as const;
 

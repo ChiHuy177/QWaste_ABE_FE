@@ -13,3 +13,4 @@ export * from './Step';
 export * from './FloorMap';
 export * from './ProductionPlan';
 export * from './ErrorManagement';
+export * from './MachineIncident';
