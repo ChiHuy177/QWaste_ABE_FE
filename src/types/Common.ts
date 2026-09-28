@@ -13,6 +13,9 @@ export interface PaginatedResult<T> {
     last: boolean;
     empty: boolean;
 }
+
+export type PageResponse<T> = PaginatedResult<T>;
+
 export interface CursorPage<T> {
     items: T[];
     nextCursor: string | null;

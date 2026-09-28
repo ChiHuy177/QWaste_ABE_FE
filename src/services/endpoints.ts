@@ -45,6 +45,7 @@ export const ENDPOINTS = {
         LOGOUT: `${BASE_PATHS.AUTH}/logout`,
         REGISTER: `${BASE_PATHS.USERS}/register/initiate`,
         REGISTER_VERIFY: `${BASE_PATHS.USERS}/register/verify`,
+        REGISTER_RESEND: `${BASE_PATHS.USERS}/register/resend`,
     },
     SPACES: {
         BASE: BASE_PATHS.SPACES,
@@ -113,9 +114,15 @@ export const ENDPOINTS = {
         RESTORE: (id: PathParam) => `${BASE_PATHS.USERS}/${id}/restoring`,
         CHANGE_PASSWORD_VERIFY: `${BASE_PATHS.USERS}/changePasswordVerification`,
         CHANGE_PASSWORD_CODE: `${BASE_PATHS.USERS}/changePasswordCode`,
+        ADMIN_RESET_PASSWORD: (userId: PathParam) =>
+            `${BASE_PATHS.USERS}/${userId}/changePasswordByAdmin`,
         ROLES_PERMISSIONS_SUMMARY: (userId: PathParam) =>
             `${BASE_PATHS.USERS}/${userId}/rolesAndPermissionsSummary`,
         UPDATE_ROLES_PERMISSIONS: `${BASE_PATHS.USERS}/rolesAndPermissions`,
+        PICKING_BY_ROLE: `${BASE_PATHS.USERS}/pickingByRole`,
+        REGISTER_INITIATE: `${BASE_PATHS.USERS}/register/initiate`,
+        REGISTER_VERIFY: `${BASE_PATHS.USERS}/register/verify`,
+        REGISTER_RESEND: `${BASE_PATHS.USERS}/register/resend`,
     },
     ENERGY: {
         OVERVIEW_BY_FILTER: `${BASE_PATHS.ENERGY}/overview/byFilter`,

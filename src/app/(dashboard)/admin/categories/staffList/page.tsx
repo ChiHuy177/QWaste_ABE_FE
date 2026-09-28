@@ -9,6 +9,7 @@ import {
 } from '@/features/dashboard/categories/staffList';
 import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
+import { SpaceService } from '@/services/SpaceService';
 import { toast } from 'sonner';
 import { Card, Table, Grid, Button } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -53,8 +54,8 @@ const StaffListPage = () => {
     const [loading, setLoading] = useState(true);
     const [staffData, setStaffData] = useState<UserProfile[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [factoryOptions, setFactoryOptions] = useState<SelectOption[]>([]);
-    const [factoryLoading, setFactoryLoading] = useState(false);
+    const [spaceOptions, setSpaceOptions] = useState<SelectOption[]>([]);
+    const [spaceLoading, setSpaceLoading] = useState(false);
     const [editLoading, setEditLoading] = useState(false);
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
@@ -84,13 +85,15 @@ const StaffListPage = () => {
             try {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
+                const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
+
                 const mappedData = {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
                     gender: fullStaffData.gender || '',
-                    accessibleFactoryIds:
-                        fullStaffData.accessibleFactories?.map((f) => f.factoryId) || [],
+                    spaceIds: accessibleIds,
+                    accessibleSpaceIds: accessibleIds,
                 };
 
                 setModalState({
@@ -186,20 +189,21 @@ const StaffListPage = () => {
             const userCode = staff.userCode?.toLowerCase() || '';
             const email = staff.email?.toLowerCase() || '';
             const phone = staff.phoneNumber?.toLowerCase() || '';
-            const factory =
-                staff.accessibleFactories?.map((factory) => factory.factoryCode.toLowerCase()) ||
-                [];
+            const spaces = [
+                ...(staff.accessibleSpaces?.map((s) => s.spaceName.toLowerCase()) || []),
+                ...(staff.accessibleSpaces?.map((s) => s.spaceCode.toLowerCase()) || []),
+            ];
             return (
                 fullname.includes(lowerSearchTerm) ||
                 userCode.includes(lowerSearchTerm) ||
                 email.includes(lowerSearchTerm) ||
                 phone.includes(lowerSearchTerm) ||
-                factory.some((f) => f.includes(lowerSearchTerm))
+                spaces.some((s) => s.includes(lowerSearchTerm))
             );
         });
     }, [staffData, searchTerm]);
 
-    const fetchStaffData = async () => {
+    const fetchStaffData = useCallback(async () => {
         try {
             setLoading(true);
             const response = await UserService.getAllStaff();
@@ -210,18 +214,30 @@ const StaffListPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
-    const fetchFactories = async () => {
-        setFactoryLoading(true);
-        // API call disabled: FactoryService.getFactoriesSimple();
-        setFactoryOptions([]);
-        setFactoryLoading(false);
-    };
+    const fetchSpaces = useCallback(async () => {
+        try {
+            setSpaceLoading(true);
+            const spaces = await SpaceService.getSpacesByLevel(1);
+            const options: SelectOption[] = (spaces || []).map((space) => ({
+                value: space.spaceId,
+                label: space.spaceName
+                    ? `${space.spaceName} (${space.spaceCode})`
+                    : space.spaceCode,
+            }));
+            setSpaceOptions(options);
+        } catch (error) {
+            console.error('Error fetching spaces:', error);
+        } finally {
+            setSpaceLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         fetchStaffData();
-    }, []);
+        fetchSpaces();
+    }, [fetchStaffData, fetchSpaces]);
 
     const handleSubmit = async (data: StaffFormData, mode: 'create' | 'edit') => {
         setConfirmModalState({
@@ -241,24 +257,36 @@ const StaffListPage = () => {
                       ? data.roles
                       : [data.roles];
 
-            const { accessibleFactoryIds, ...restData } = data;
-            const submitData: Partial<StaffFormData> & { roles: string[]; factoryIds?: number[] } =
-                {
-                    ...restData,
-                    roles,
-                    factoryIds: accessibleFactoryIds,
-                };
+            const selectedSpaceIds = data.accessibleSpaceIds || data.spaceIds || [];
+            const userId = mode === 'edit' ? modalState.data?.userId || data.userId : undefined;
 
-            if (mode === 'edit' && (!submitData.password || submitData.password.trim() === '')) {
-                delete submitData.password;
+            const submitData: Record<string, unknown> = {
+                address: data.address,
+                email: data.email,
+                fullname: data.fullname,
+                gender: data.gender,
+                phoneNumber: data.phoneNumber,
+                roles,
+                spaceIds: selectedSpaceIds,
+                userCode: data.userCode,
+                username: data.username,
+            };
+
+            if (mode === 'edit') {
+                if (userId) {
+                    submitData.userId = userId;
+                }
+            } else {
+                if (data.password) {
+                    submitData.password = data.password;
+                }
             }
 
             if (mode === 'create') {
                 await UserService.createStaff(submitData as unknown as Partial<UserProfile>);
                 toast.success(t('staffManagement.form.createSuccess'));
             } else {
-                if (modalState.data?.userId) {
-                    submitData.userId = modalState.data.userId;
+                if (userId) {
                     await UserService.updateStaff(submitData as unknown as UserProfile);
                     toast.success(t('staffManagement.form.updateSuccess'));
                 }
@@ -308,10 +336,10 @@ const StaffListPage = () => {
     const formFields = useMemo(
         () =>
             getStaffFormFields(t, modalState.mode, {
-                factoryOptions,
-                factoryLoading,
+                spaceOptions,
+                spaceLoading,
             }),
-        [t, modalState.mode, factoryOptions, factoryLoading]
+        [t, modalState.mode, spaceOptions, spaceLoading]
     );
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
@@ -485,12 +513,12 @@ const StaffListPage = () => {
                             : '-',
                     },
                     {
-                        key: 'accessibleFactories',
+                        key: 'accessibleSpaces',
                         icon: <BankOutlined />,
-                        label: t('staffManagement.table.headers.accessibleFactories'),
-                        children: viewModalState.data?.accessibleFactories?.length
-                            ? viewModalState.data.accessibleFactories
-                                  .map((factory) => factory.factoryCode)
+                        label: t('staffManagement.table.headers.accessibleSpaces'),
+                        children: viewModalState.data?.accessibleSpaces?.length
+                            ? viewModalState.data.accessibleSpaces
+                                  .map((space) => space.spaceName || space.spaceCode)
                                   .join(', ')
                             : '-',
                     },
