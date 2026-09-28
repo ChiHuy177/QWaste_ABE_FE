@@ -629,7 +629,7 @@ function ErrorManagementContent() {
                                 {isMobile ? t('errorManagement.header.btnRefresh') : null}
                             </Button>
                         </Tooltip>
-
+                        {/* 
                         <Button
                             type="primary"
                             icon={<FileExcelOutlined />}
@@ -638,7 +638,7 @@ function ErrorManagementContent() {
                             style={{ borderRadius: token.borderRadiusSM }}
                         >
                             {t('common.exportExcel')}
-                        </Button>
+                        </Button> */}
                     </div>
                 }
             />
