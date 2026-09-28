@@ -1,5 +1,8 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
 import { Action, Subject } from '@/configs/permissions/caslAbility';
+import { SpaceDTO, AccessibleSpace } from './Space';
+
+export type { SpaceDTO, AccessibleSpace };
 
 export interface UserSettings {
     id: string;
@@ -11,19 +14,11 @@ export interface UserSettings {
     updatedTime: number | null;
 }
 
-export interface StaffFormData {
-    userId?: string;
-    fullname: string;
-    email: string;
-    username: string;
-    password?: string;
-    phoneNumber: string;
-    userCode: string;
-    address: string;
-    roles: string | string[];
-    gender: string;
-    accessibleFactoryIds?: number[];
-    auditMetaData?: AuditMetaData;
+export interface AccessibleFactory {
+    factoryId: number;
+    factoryCode: string;
+    factoryName: string;
+    description?: string;
 }
 
 export interface PermissionRule {
@@ -36,13 +31,45 @@ export interface AllTypePermissions {
     grantedPermissions: string[];
     deniedPermissions: string[];
     finalPermissions: string[];
+    superAdmin?: boolean;
 }
 
-export interface AccessibleFactory {
-    factoryId: number;
-    factoryCode: string;
-    factoryName: string;
-    description?: string;
+export interface UserQueryParams {
+    page?: number;
+    size?: number;
+    sort?: string;
+    search?: string;
+    fullname?: string;
+    email?: string;
+    username?: string;
+    userCode?: string;
+}
+
+export interface UserListResponse {
+    userId: string;
+    fullname: string;
+    email: string;
+    username: string;
+    address: string;
+    phoneNumber: string;
+    userCode: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER' | string;
+    isDeleted: boolean;
+}
+
+export interface UserDetailResponse {
+    userId: string;
+    fullname: string;
+    email: string;
+    username: string;
+    address: string;
+    phoneNumber: string;
+    userCode: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER' | string;
+    roles: string[];
+    accessibleSpaces: SpaceDTO[];
+    auditMetaData: AuditMetaData;
+    softDeleteMetaData: SoftDeleteMetaData;
 }
 
 export interface UserProfile {
@@ -60,7 +87,96 @@ export interface UserProfile {
     softDeleteMetaData?: SoftDeleteMetaData;
     permissions?: PermissionRule[];
     allTypePermissions?: AllTypePermissions;
+    accessibleSpaces?: SpaceDTO[];
     accessibleFactories?: AccessibleFactory[];
+    accessibleFactoryIds?: number[];
+    spaceIds?: number[];
+    isDeleted?: boolean;
+}
+
+export interface StaffFormData {
+    userId?: string;
+    fullname: string;
+    email: string;
+    username: string;
+    password?: string;
+    phoneNumber: string;
+    userCode: string;
+    address: string;
+    roles: string | string[];
+    gender: string;
+    spaceIds?: number[];
+    accessibleFactoryIds?: number[];
+    accessibleSpaceIds?: number[];
+    auditMetaData?: AuditMetaData;
+}
+
+export interface UserCreationRequest {
+    fullname: string;
+    email: string;
+    username: string;
+    password?: string;
+    address: string;
+    phoneNumber: string;
+    userCode: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER' | string;
+    roles?: string[];
+    spaceIds?: number[];
+}
+
+export interface UserUpdationRequest {
+    userId: string;
+    fullname: string;
+    email: string;
+    username?: string;
+    address: string;
+    phoneNumber: string;
+    userCode: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER' | string;
+    roles?: string[];
+    spaceIds?: number[];
+}
+
+export interface UserRolesAndPermissionsUpdationRequest {
+    userId: string;
+    roleIds: number[];
+    grantedPermissionIds?: number[];
+    deniedPermissionIds?: number[];
+}
+
+export interface PasswordChangeVerificationRequest {
+    currentPassword: string;
+}
+
+export interface PasswordChangeWithCodeRequest {
+    verificationCode: string;
+    newPassword: string;
+    confirmNewPassword: string;
+}
+
+export interface UserRegistrationRequest {
+    fullname: string;
+    email: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+    phoneNumber: string;
+    userCode: string;
+    gender: 'MALE' | 'FEMALE';
+    address: string;
+    spaceId: number;
+    lang?: 'en' | 'vi';
+}
+
+export interface RegistrationVerificationRequest {
+    email: string;
+    verificationCode: string;
+}
+
+export interface RegistrationResendResponse {
+    cooldownSeconds: number;
+    expiresInSeconds: number;
+    resendsRemaining: number;
 }
 
 export interface UserPreference {
@@ -81,6 +197,7 @@ export type AccountRole =
     | 'client'
     | 'op' // legacy
     | 'qc'; // legacy
+
 export type ThemeOption = 'light' | 'dark' | 'system';
 
 export const THEME_OPTIONS: Array<{
@@ -103,6 +220,7 @@ export const LANGUAGE_OPTIONS: Array<{
     { value: 'en', label: 'English', flag: '🇺🇸', nativeName: 'English' },
     { value: 'vi', label: 'Vietnamese', flag: '🇻🇳', nativeName: 'Tiếng Việt' },
 ];
+
 export interface ValidationErrors {
     [fieldName: string]: string;
 }

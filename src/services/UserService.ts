@@ -1,4 +1,15 @@
-import { UserProfile, UserRolesPermissionsSummary, UserForPickingByRole } from '@/types/User';
+import {
+    UserProfile,
+    UserRolesPermissionsSummary,
+    UserForPickingByRole,
+    UserCreationRequest,
+    UserUpdationRequest,
+    UserRolesAndPermissionsUpdationRequest,
+    UserListResponse,
+    UserQueryParams,
+    RegistrationResendResponse,
+} from '@/types/User';
+import { PageResponse } from '@/types/Common';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
@@ -11,15 +22,29 @@ export class UserService {
         return response.result as UserProfile;
     }
 
-    static async getAllStaff(): Promise<UserProfile[]> {
-        const response = await NetworkService.requestJson<UserProfile[]>({
+    static async getAllStaff(params?: UserQueryParams): Promise<UserProfile[]> {
+        const response = await NetworkService.requestJson<
+            PageResponse<UserListResponse> | UserProfile[]
+        >({
             method: 'GET',
             url: ENDPOINTS.USERS.BASE,
+            data: params,
         });
-        return response.result as UserProfile[];
+        const result = response.result;
+        if (!result) return [];
+        if (Array.isArray(result)) return result as UserProfile[];
+        if (typeof result === 'object' && result !== null && 'content' in result) {
+            const page = result as PageResponse<UserListResponse>;
+            if (Array.isArray(page.content)) {
+                return page.content as unknown as UserProfile[];
+            }
+        }
+        return [];
     }
 
-    static async createStaff(userData: Partial<UserProfile>): Promise<UserProfile> {
+    static async createStaff(
+        userData: UserCreationRequest | Partial<UserProfile>
+    ): Promise<UserProfile> {
         const response = await NetworkService.requestJson<UserProfile>({
             method: 'POST',
             url: ENDPOINTS.USERS.BASE,
@@ -36,7 +61,7 @@ export class UserService {
         return response.result as UserProfile;
     }
 
-    static async updateStaff(userData: UserProfile): Promise<UserProfile> {
+    static async updateStaff(userData: UserUpdationRequest | UserProfile): Promise<UserProfile> {
         const response = await NetworkService.requestJson<UserProfile>({
             method: 'PUT',
             url: ENDPOINTS.USERS.BASE,
@@ -61,13 +86,17 @@ export class UserService {
         return response.result;
     }
 
-    static async changePasswordVerifycation(currentPassword: string): Promise<string> {
+    static async changePasswordVerification(currentPassword: string): Promise<string> {
         const response = await NetworkService.requestJson<string>({
             method: 'POST',
             url: ENDPOINTS.USERS.CHANGE_PASSWORD_VERIFY,
             data: { currentPassword },
         });
         return response.message as string;
+    }
+
+    static async changePasswordVerifycation(currentPassword: string): Promise<string> {
+        return this.changePasswordVerification(currentPassword);
     }
 
     static async changePasswordWithCode(
@@ -83,6 +112,14 @@ export class UserService {
         return response.message as string;
     }
 
+    static async adminResetPassword(userId: string): Promise<string> {
+        const response = await NetworkService.requestJson<string>({
+            method: 'PUT',
+            url: ENDPOINTS.USERS.ADMIN_RESET_PASSWORD(userId),
+        });
+        return response.message as string;
+    }
+
     static async getRolesAndPermissionsSummary(
         userId: string
     ): Promise<UserRolesPermissionsSummary> {
@@ -93,12 +130,9 @@ export class UserService {
         return response.result as UserRolesPermissionsSummary;
     }
 
-    static async updateRolesAndPermissions(data: {
-        userId: string;
-        roleIds: number[];
-        deniedPermissionIds: number[];
-        grantedPermissionIds: number[];
-    }): Promise<void> {
+    static async updateRolesAndPermissions(
+        data: UserRolesAndPermissionsUpdationRequest
+    ): Promise<void> {
         const response = await NetworkService.requestJson<void>({
             method: 'PUT',
             url: ENDPOINTS.USERS.UPDATE_ROLES_PERMISSIONS,
@@ -109,11 +143,7 @@ export class UserService {
 
     static async getOperators(): Promise<UserProfile[]> {
         try {
-            const response = await NetworkService.requestJson<UserProfile[]>({
-                method: 'GET',
-                url: ENDPOINTS.USERS.BASE,
-            });
-            const allUsers = response.result as UserProfile[];
+            const allUsers = await this.getAllStaff();
             const operators = allUsers.filter((user) => {
                 if (!user) return false;
                 return user.roles && Array.isArray(user.roles);
@@ -128,8 +158,17 @@ export class UserService {
     static async getUsersByRole(roleName: string): Promise<UserForPickingByRole[]> {
         const response = await NetworkService.requestJson<UserForPickingByRole[]>({
             method: 'GET',
-            url: `/api/users/v1/pickingByRole?roleName=${roleName}`,
+            url: `${ENDPOINTS.USERS.PICKING_BY_ROLE}?roleName=${roleName}`,
         });
         return response.result as UserForPickingByRole[];
+    }
+
+    static async resendRegistrationCode(email: string): Promise<RegistrationResendResponse> {
+        const response = await NetworkService.requestJson<RegistrationResendResponse>({
+            method: 'POST',
+            url: ENDPOINTS.USERS.REGISTER_RESEND,
+            data: { email },
+        });
+        return response.result as RegistrationResendResponse;
     }
 }
