@@ -267,6 +267,7 @@ export const getStaffFormFields = (
             label: t('staffManagement.form.fields.accessibleSpaces'),
             type: 'select',
             mode: 'multiple',
+            maxTagCount: 'responsive',
             placeholder: t('staffManagement.form.placeholders.accessibleSpaces'),
             required: VALIDATION_CONFIG.ACCESSIBLE_SPACES.required,
             options: spaceOptions,
