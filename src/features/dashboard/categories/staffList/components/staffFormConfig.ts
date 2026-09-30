@@ -1,6 +1,32 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { SelectOption } from '@/types/Common';
+import { SpaceWithChildrenResponse } from '@/types/Space';
 import { TFunction } from 'i18next';
+
+export const flattenSpacesToOptions = (
+    spaces: SpaceWithChildrenResponse[],
+    parentPath: string = ''
+): SelectOption[] => {
+    let options: SelectOption[] = [];
+    for (const space of spaces) {
+        const spaceName = space.spaceName || space.spaceCode || '';
+        const currentPath = parentPath ? `${parentPath} / ${spaceName}` : spaceName;
+        const label =
+            space.spaceName && space.spaceCode && space.spaceName !== space.spaceCode
+                ? `${currentPath} (${space.spaceCode})`
+                : currentPath;
+
+        options.push({
+            value: space.spaceId,
+            label,
+        });
+
+        if (space.children && space.children.length > 0) {
+            options = options.concat(flattenSpacesToOptions(space.children, currentPath));
+        }
+    }
+    return options;
+};
 
 interface StaffFormFieldsOptions {
     spaceOptions?: SelectOption[];
@@ -267,6 +293,7 @@ export const getStaffFormFields = (
             label: t('staffManagement.form.fields.accessibleSpaces'),
             type: 'select',
             mode: 'multiple',
+            maxTagCount: 'responsive',
             placeholder: t('staffManagement.form.placeholders.accessibleSpaces'),
             required: VALIDATION_CONFIG.ACCESSIBLE_SPACES.required,
             options: spaceOptions,

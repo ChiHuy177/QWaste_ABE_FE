@@ -240,6 +240,7 @@ export const renderSelectField = (field: FormFieldConfig) => {
             allowClear={field.allowClear}
             onChange={field.onChange}
             mode={field.mode}
+            maxTagCount={field.maxTagCount ?? (field.mode ? 'responsive' : undefined)}
         />
     );
 };
@@ -369,9 +370,7 @@ const ImageUploader = ({
             const fileMaxSizeMB = isSvg ? (svgMaxFileSizeMB ?? maxFileSizeMB) : maxFileSizeMB;
             const isLtMaxSize = file.size / 1024 / 1024 < fileMaxSizeMB;
             if (!isLtMaxSize) {
-                toast.error(
-                    `${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`
-                );
+                toast.error(`${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`);
                 return Upload.LIST_IGNORE;
             }
             onChange?.(file);
