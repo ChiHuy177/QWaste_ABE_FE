@@ -1,9 +1,9 @@
-'use client';
 import { UserProfile } from '@/types/User';
 import { Button, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { EditOutlined, DeleteOutlined, UndoOutlined, EyeOutlined } from '@ant-design/icons';
 import { AppAbility } from '@/configs/permissions/caslAbility';
+import { statusColors } from '@/configs/antdTheme';
 
 export type StaffTableColumnProps = {
     onView?: (user: UserProfile) => void;
@@ -59,10 +59,18 @@ export const getStaffTableColumns = (props?: StaffTableColumnProps): ColumnsType
             dataIndex: ['softDeleteMetaData', 'deleted'],
             key: 'softDeleteMetaData.deleted',
             width: 100,
-            render: (value) => {
+            render: (value, record) => {
+                const isDeleted = Boolean(record.softDeleteMetaData?.isDeleted ?? value);
+                const tagColor = isDeleted ? statusColors.light.error : statusColors.light.runtime;
                 return (
-                    <Tag color={value ? 'red' : 'green'}>
-                        {value
+                    <Tag
+                        style={{
+                            color: tagColor.base,
+                            backgroundColor: tagColor.bg,
+                            borderColor: tagColor.border,
+                        }}
+                    >
+                        {isDeleted
                             ? t('staffManagement.status.notWorking')
                             : t('staffManagement.status.working')}
                     </Tag>
@@ -79,7 +87,37 @@ export const getStaffTableColumns = (props?: StaffTableColumnProps): ColumnsType
             align: 'center',
             fixed: 'right',
             render: (_, record: UserProfile) => {
-                const isDeleted = record.softDeleteMetaData?.isDeleted;
+                const isDeleted = Boolean(
+                    record.softDeleteMetaData?.isDeleted ??
+                    (record.softDeleteMetaData as unknown as { deleted?: boolean })?.deleted
+                );
+
+                if (isDeleted) {
+                    return canUpdate ? (
+                        <Space size="small">
+                            <Popconfirm
+                                title={t('staffManagement.dialogs.restoreConfirmation.title')}
+                                description={t(
+                                    'staffManagement.dialogs.restoreConfirmation.description'
+                                )}
+                                onConfirm={() => props?.onRestore?.(record)}
+                                okText={t('common.yes')}
+                                cancelText={t('common.no')}
+                            >
+                                <Tooltip title={t('staffManagement.actions.restore')}>
+                                    <Button
+                                        type="primary"
+                                        icon={<UndoOutlined />}
+                                        style={{
+                                            backgroundColor: statusColors.light.runtime.base,
+                                            borderColor: statusColors.light.runtime.base,
+                                        }}
+                                    />
+                                </Tooltip>
+                            </Popconfirm>
+                        </Space>
+                    ) : null;
+                }
 
                 return (
                     <Space size="small">
@@ -94,10 +132,7 @@ export const getStaffTableColumns = (props?: StaffTableColumnProps): ColumnsType
                             </Tooltip>
                         )}
                         {canUpdate && (
-                            <Tooltip
-                                title={t('staffManagement.actions.edit')}
-                                style={{ color: '#4899FA' }}
-                            >
+                            <Tooltip title={t('staffManagement.actions.edit')}>
                                 <Button
                                     type="primary"
                                     icon={<EditOutlined />}
@@ -111,46 +146,22 @@ export const getStaffTableColumns = (props?: StaffTableColumnProps): ColumnsType
                                 />
                             </Tooltip>
                         )}
-
-                        {isDeleted
-                            ? canUpdate && (
-                                <Popconfirm
-                                    title={t('staffManagement.dialogs.restoreConfirmation.title')}
-                                    description={t(
-                                        'staffManagement.dialogs.restoreConfirmation.description'
-                                    )}
-                                    onConfirm={() => props?.onRestore?.(record)}
-                                    okText={t('common.yes')}
-                                    cancelText={t('common.no')}
-                                >
-                                    <Tooltip title={t('staffManagement.actions.restore')}>
-                                        <Button
-                                            type="primary"
-                                            icon={<UndoOutlined />}
-                                            style={{
-                                                backgroundColor: '#52c41a',
-                                                borderColor: '#52c41a',
-                                            }}
-                                        />
-                                    </Tooltip>
-                                </Popconfirm>
-                            )
-                            : canDelete && (
-                                <Popconfirm
-                                    title={t('staffManagement.dialogs.deleteConfirmation.title')}
-                                    description={t(
-                                        'staffManagement.dialogs.deleteConfirmation.description'
-                                    )}
-                                    onConfirm={() => props?.onDelete?.(record)}
-                                    okText={t('common.yes')}
-                                    cancelText={t('common.no')}
-                                    okButtonProps={{ danger: true }}
-                                >
-                                    <Tooltip title={t('staffManagement.actions.delete')}>
-                                        <Button danger type="primary" icon={<DeleteOutlined />} />
-                                    </Tooltip>
-                                </Popconfirm>
-                            )}
+                        {canDelete && (
+                            <Popconfirm
+                                title={t('staffManagement.dialogs.deleteConfirmation.title')}
+                                description={t(
+                                    'staffManagement.dialogs.deleteConfirmation.description'
+                                )}
+                                onConfirm={() => props?.onDelete?.(record)}
+                                okText={t('common.yes')}
+                                cancelText={t('common.no')}
+                                okButtonProps={{ danger: true }}
+                            >
+                                <Tooltip title={t('staffManagement.actions.delete')}>
+                                    <Button danger type="primary" icon={<DeleteOutlined />} />
+                                </Tooltip>
+                            </Popconfirm>
+                        )}
                     </Space>
                 );
             },
