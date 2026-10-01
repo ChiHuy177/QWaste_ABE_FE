@@ -16,7 +16,7 @@ import {
     Tag,
     Typography,
 } from 'antd';
-import { FilterOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { FilterOutlined, LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -39,6 +39,7 @@ import {
     type MoldTableColumnProps,
     getMoldFormFields,
     toOperationTypeOptions,
+    MoldImportModal,
 } from '@/features/dashboard/categories/mold';
 
 const { useBreakpoint } = Grid;
@@ -71,6 +72,8 @@ const MoldListPage = () => {
         mode: 'create' | 'edit';
         data: Mold | null;
     }>({ open: false, mode: 'create', data: null });
+
+    const [importModalOpen, setImportModalOpen] = useState(false);
 
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
@@ -386,6 +389,15 @@ const MoldListPage = () => {
                                 />
                             </Badge>
                         </FilterDrawer>
+                        <Can I="import" a="mold">
+                            <Button
+                                icon={<UploadOutlined />}
+                                block={isMobile}
+                                onClick={() => setImportModalOpen(true)}
+                            >
+                                {t('moldManagement.import.button')}
+                            </Button>
+                        </Can>
                         <Can I="create" a="mold">
                             <Button
                                 type="primary"
@@ -601,6 +613,15 @@ const MoldListPage = () => {
                 onConfirm={handleConfirmAction}
                 onCancel={handleCancelConfirm}
                 t={t}
+            />
+
+            <MoldImportModal
+                open={importModalOpen}
+                onCancel={() => setImportModalOpen(false)}
+                onSuccess={() => {
+                    setImportModalOpen(false);
+                    queryClient.invalidateQueries({ queryKey: moldQueryKeys.lists });
+                }}
             />
         </div>
     );

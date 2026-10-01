@@ -185,6 +185,7 @@ export const ENDPOINTS = {
         BASE: BASE_PATHS.MOLDS,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
         RESTORE: (id: PathParam) => `${BASE_PATHS.MOLDS}/${id}/restoring`,
+        IMPORT: `${BASE_PATHS.MOLDS}/import`,
     },
     OPERATION_TYPES: {
         BASE: BASE_PATHS.OPERATION_TYPES,
