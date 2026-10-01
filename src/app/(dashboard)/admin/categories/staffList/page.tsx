@@ -85,6 +85,22 @@ const StaffListPage = () => {
             try {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
+                if (fullStaffData.accessibleSpaces?.length) {
+                    setSpaceOptions((prev) => {
+                        const existingIds = new Set(prev.map((opt) => opt.value));
+                        const extraOptions: SelectOption[] = fullStaffData
+                            .accessibleSpaces!.filter((s) => !existingIds.has(s.spaceId))
+                            .map((s) => ({
+                                value: s.spaceId,
+                                label:
+                                    s.spaceName && s.spaceCode && s.spaceName !== s.spaceCode
+                                        ? `${s.spaceName} (${s.spaceCode})`
+                                        : s.spaceName || s.spaceCode || String(s.spaceId),
+                            }));
+                        return extraOptions.length > 0 ? [...prev, ...extraOptions] : prev;
+                    });
+                }
+
                 const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
 
                 const mappedData = {
@@ -113,8 +129,16 @@ const StaffListPage = () => {
         [t]
     );
 
-    const handleViewStaff = useCallback((staff: UserProfile) => {
+    const handleViewStaff = useCallback(async (staff: UserProfile) => {
         setViewModalState({ open: true, data: staff });
+        if (staff.userId && (!staff.accessibleSpaces || staff.accessibleSpaces.length === 0)) {
+            try {
+                const fullStaffData = await UserService.getStaffById(staff.userId);
+                setViewModalState({ open: true, data: fullStaffData });
+            } catch (error) {
+                console.error('Error fetching staff details for view:', error);
+            }
+        }
     }, []);
 
     const handleDeleteStaff = useCallback(
@@ -190,8 +214,8 @@ const StaffListPage = () => {
             const email = staff.email?.toLowerCase() || '';
             const phone = staff.phoneNumber?.toLowerCase() || '';
             const spaces = [
-                ...(staff.accessibleSpaces?.map((s) => s.spaceName.toLowerCase()) || []),
-                ...(staff.accessibleSpaces?.map((s) => s.spaceCode.toLowerCase()) || []),
+                ...(staff.accessibleSpaces?.map((s) => s.spaceName?.toLowerCase() || '') || []),
+                ...(staff.accessibleSpaces?.map((s) => s.spaceCode?.toLowerCase() || '') || []),
             ];
             return (
                 fullname.includes(lowerSearchTerm) ||
@@ -222,9 +246,10 @@ const StaffListPage = () => {
             const spaces = await SpaceService.getSpacesByLevel(1);
             const options: SelectOption[] = (spaces || []).map((space) => ({
                 value: space.spaceId,
-                label: space.spaceName
-                    ? `${space.spaceName} (${space.spaceCode})`
-                    : space.spaceCode,
+                label:
+                    space.spaceName && space.spaceCode && space.spaceName !== space.spaceCode
+                        ? `${space.spaceName} (${space.spaceCode})`
+                        : space.spaceName || space.spaceCode,
             }));
             setSpaceOptions(options);
         } catch (error) {
@@ -518,7 +543,13 @@ const StaffListPage = () => {
                         label: t('staffManagement.table.headers.accessibleSpaces'),
                         children: viewModalState.data?.accessibleSpaces?.length
                             ? viewModalState.data.accessibleSpaces
-                                  .map((space) => space.spaceName || space.spaceCode)
+                                  .map((space) =>
+                                      space.spaceName &&
+                                      space.spaceCode &&
+                                      space.spaceName !== space.spaceCode
+                                          ? `${space.spaceName} (${space.spaceCode})`
+                                          : space.spaceName || space.spaceCode
+                                  )
                                   .join(', ')
                             : '-',
                     },
