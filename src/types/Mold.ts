@@ -30,3 +30,14 @@ export interface MoldUpdateFormData extends MoldFormData {
 
 /** Mold khả dụng cho picker/kế hoạch: chưa bị soft-delete. */
 export const isMoldSchedulable = (mold: Mold): boolean => !mold.softDeleteMetaData?.isDeleted;
+
+export interface MoldImportRowError {
+    rowIndex: number;
+    column: string;
+    message: string;
+}
+
+export interface MoldImportResult {
+    totalInserted: number;
+    errors: MoldImportRowError[];
+}

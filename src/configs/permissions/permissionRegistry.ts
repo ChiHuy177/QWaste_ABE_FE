@@ -323,6 +323,13 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Restore deleted mold',
     },
+    {
+        slug: 'mold:import',
+        subject: 'mold',
+        action: 'import',
+        routes: [],
+        description: 'Import mold catalog from Excel',
+    },
 
     // Operation Type
     {

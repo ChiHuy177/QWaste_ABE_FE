@@ -40,6 +40,7 @@ const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
 const PLANNER_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'machine' },
     { action: 'view', subject: 'mold' },
+    { action: 'import', subject: 'mold' },
     { action: 'view', subject: 'operation_type' },
     { action: 'view', subject: 'space_level' },
     { action: 'view', subject: 'space' },

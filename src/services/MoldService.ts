@@ -1,4 +1,5 @@
-import { Mold, MoldFormData, MoldUpdateFormData } from '@/types/Mold';
+import { Mold, MoldFormData, MoldImportResult, MoldUpdateFormData } from '@/types/Mold';
+import { ApiResponse } from '@/types/ApiResponse';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
@@ -52,5 +53,15 @@ export class MoldService {
             url: ENDPOINTS.MOLDS.RESTORE(moldId),
         });
         return response.message as string;
+    }
+
+    static async importMolds(file: File): Promise<ApiResponse<MoldImportResult>> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return await NetworkService.requestFormData<MoldImportResult>({
+            method: 'POST',
+            url: ENDPOINTS.MOLDS.IMPORT,
+            data: formData,
+        });
     }
 }
