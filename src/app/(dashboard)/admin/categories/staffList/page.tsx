@@ -5,6 +5,7 @@ import { EntityFormModal } from '@/components/shared/FormModal';
 import {
     getStaffFormFields,
     getStaffTableColumns,
+    formatSpaceOptionLabel,
     type StaffTableColumnProps,
 } from '@/features/dashboard/categories/staffList';
 import { UserProfile, StaffFormData } from '@/types/User';
@@ -72,6 +73,24 @@ const StaffListPage = () => {
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
+    const fetchSpaces = useCallback(async (): Promise<SelectOption[]> => {
+        try {
+            setSpaceLoading(true);
+            const level1Spaces = await SpaceService.getSpacesByLevel(1);
+            const options: SelectOption[] = (level1Spaces || []).map((space) => ({
+                value: space.spaceId,
+                label: formatSpaceOptionLabel(space.spaceName, space.spaceCode, space.spaceId),
+            }));
+            setSpaceOptions(options);
+            return options;
+        } catch (error) {
+            console.error('Error fetching spaces:', error);
+            return [];
+        } finally {
+            setSpaceLoading(false);
+        }
+    }, []);
+
     const handleEditStaff = useCallback(
         async (staff: UserProfile) => {
             // Open modal immediately with loading state
@@ -85,31 +104,19 @@ const StaffListPage = () => {
             try {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
-                if (fullStaffData.accessibleSpaces?.length) {
-                    setSpaceOptions((prev) => {
-                        const existingIds = new Set(prev.map((opt) => opt.value));
-                        const extraOptions: SelectOption[] = fullStaffData
-                            .accessibleSpaces!.filter((s) => !existingIds.has(s.spaceId))
-                            .map((s) => ({
-                                value: s.spaceId,
-                                label:
-                                    s.spaceName && s.spaceCode && s.spaceName !== s.spaceCode
-                                        ? `${s.spaceName} (${s.spaceCode})`
-                                        : s.spaceName || s.spaceCode || String(s.spaceId),
-                            }));
-                        return extraOptions.length > 0 ? [...prev, ...extraOptions] : prev;
-                    });
-                }
+                const accessibleSpaceValues = (fullStaffData.accessibleSpaces || []).map((s) => ({
+                    value: s.spaceId,
+                    label: formatSpaceOptionLabel(s.spaceName, s.spaceCode, s.spaceId),
+                }));
 
-                const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
-
-                const mappedData = {
+                const mappedData: StaffFormData = {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
                     gender: fullStaffData.gender || '',
-                    spaceIds: accessibleIds,
-                    accessibleSpaceIds: accessibleIds,
+                    spaceIds: fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [],
+                    accessibleSpaceIds: accessibleSpaceValues,
+                    accessibleSpaces: fullStaffData.accessibleSpaces || [],
                 };
 
                 setModalState({
@@ -240,25 +247,6 @@ const StaffListPage = () => {
         }
     }, [t]);
 
-    const fetchSpaces = useCallback(async () => {
-        try {
-            setSpaceLoading(true);
-            const spaces = await SpaceService.getSpacesByLevel(1);
-            const options: SelectOption[] = (spaces || []).map((space) => ({
-                value: space.spaceId,
-                label:
-                    space.spaceName && space.spaceCode && space.spaceName !== space.spaceCode
-                        ? `${space.spaceName} (${space.spaceCode})`
-                        : space.spaceName || space.spaceCode,
-            }));
-            setSpaceOptions(options);
-        } catch (error) {
-            console.error('Error fetching spaces:', error);
-        } finally {
-            setSpaceLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
         fetchStaffData();
         fetchSpaces();
@@ -282,7 +270,12 @@ const StaffListPage = () => {
                       ? data.roles
                       : [data.roles];
 
-            const selectedSpaceIds = data.accessibleSpaceIds || data.spaceIds || [];
+            const rawSpaces = data.accessibleSpaceIds || data.spaceIds || [];
+            const selectedSpaceIds = (Array.isArray(rawSpaces) ? rawSpaces : [rawSpaces])
+                .map((item: any) =>
+                    typeof item === 'object' && item !== null && 'value' in item ? item.value : item
+                )
+                .filter((id) => id !== undefined && id !== null);
             const userId = mode === 'edit' ? modalState.data?.userId || data.userId : undefined;
 
             const submitData: Record<string, unknown> = {
@@ -544,11 +537,11 @@ const StaffListPage = () => {
                         children: viewModalState.data?.accessibleSpaces?.length
                             ? viewModalState.data.accessibleSpaces
                                   .map((space) =>
-                                      space.spaceName &&
-                                      space.spaceCode &&
-                                      space.spaceName !== space.spaceCode
-                                          ? `${space.spaceName} (${space.spaceCode})`
-                                          : space.spaceName || space.spaceCode
+                                      formatSpaceOptionLabel(
+                                          space.spaceName,
+                                          space.spaceCode,
+                                          space.spaceId
+                                      )
                                   )
                                   .join(', ')
                             : '-',

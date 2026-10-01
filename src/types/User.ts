@@ -107,7 +107,8 @@ export interface StaffFormData {
     gender: string;
     spaceIds?: number[];
     accessibleFactoryIds?: number[];
-    accessibleSpaceIds?: number[];
+    accessibleSpaceIds?: (number | { value: number; label: string })[];
+    accessibleSpaces?: SpaceDTO[];
     auditMetaData?: AuditMetaData;
 }
 

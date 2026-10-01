@@ -1,6 +1,43 @@
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 import { SelectOption } from '@/types/Common';
+import { SpaceWithChildrenResponse } from '@/types/Space';
+import { Select } from 'antd';
 import { TFunction } from 'i18next';
+
+export const formatSpaceOptionLabel = (
+    spaceName?: string | null,
+    spaceCode?: string | null,
+    spaceId?: number | string
+): string => {
+    if (spaceName && spaceCode && spaceName !== spaceCode) {
+        return `${spaceName} (${spaceCode})`;
+    }
+    return spaceName || spaceCode || (spaceId !== undefined ? String(spaceId) : '');
+};
+
+export const flattenSpacesToOptions = (spaces: SpaceWithChildrenResponse[]): SelectOption[] => {
+    const options: SelectOption[] = [];
+    const seen = new Set<number>();
+
+    const traverse = (node: SpaceWithChildrenResponse) => {
+        if (!seen.has(node.spaceId)) {
+            seen.add(node.spaceId);
+            options.push({
+                value: node.spaceId,
+                label: formatSpaceOptionLabel(node.spaceName, node.spaceCode, node.spaceId),
+            });
+        }
+
+        if (node.children && Array.isArray(node.children)) {
+            node.children.forEach(traverse);
+        }
+    };
+
+    if (Array.isArray(spaces)) {
+        spaces.forEach(traverse);
+    }
+    return options;
+};
 
 interface StaffFormFieldsOptions {
     spaceOptions?: SelectOption[];
@@ -266,13 +303,27 @@ export const getStaffFormFields = (
             name: 'accessibleSpaceIds',
             label: t('staffManagement.form.fields.accessibleSpaces'),
             type: 'select',
-            mode: 'multiple',
-            placeholder: t('staffManagement.form.placeholders.accessibleSpaces'),
             required: VALIDATION_CONFIG.ACCESSIBLE_SPACES.required,
-            options: spaceOptions,
-            loading: spaceLoading,
-            allowClear: true,
             span: { xs: 24, md: 12 },
+            render: (field: FormFieldConfig) => (
+                <Select
+                    placeholder={t('staffManagement.form.placeholders.accessibleSpaces')}
+                    size="middle"
+                    mode="multiple"
+                    labelInValue
+                    options={spaceOptions}
+                    loading={spaceLoading}
+                    allowClear
+                    disabled={field.disabled as boolean}
+                    showSearch={{
+                        filterOption: (input, option) =>
+                            (option?.label ?? '')
+                                .toString()
+                                .toLowerCase()
+                                .includes(input.toLowerCase()),
+                    }}
+                />
+            ),
         },
     ];
 };
