@@ -7,7 +7,7 @@ import {
     getStaffTableColumns,
     type StaffTableColumnProps,
 } from '@/features/dashboard/categories/staffList';
-import { UserProfile, StaffFormData } from '@/types/User';
+import { UserProfile, StaffFormData, SpaceDTO } from '@/types/User';
 import { UserService } from '@/services/UserService';
 import { SpaceService } from '@/services/SpaceService';
 import { toast } from 'sonner';
@@ -346,13 +346,14 @@ const StaffListPage = () => {
     };
 
     const currentSpaceOptions = useMemo(() => {
-        if (modalState.mode === 'create' || !modalState.data?.accessibleSpaces?.length) {
+        const staffSpaces = modalState.data?.accessibleSpaces;
+        if (modalState.mode === 'create' || !staffSpaces || staffSpaces.length === 0) {
             return spaceOptions;
         }
         const existingValues = new Set(spaceOptions.map((opt) => opt.value));
-        const extraOptions: SelectOption[] = (modalState.data.accessibleSpaces || [])
-            .filter((s) => !existingValues.has(s.spaceId))
-            .map((s) => ({
+        const extraOptions: SelectOption[] = staffSpaces
+            .filter((s: SpaceDTO) => !existingValues.has(s.spaceId))
+            .map((s: SpaceDTO) => ({
                 value: s.spaceId,
                 label:
                     s.spaceName && s.spaceCode && s.spaceName !== s.spaceCode

@@ -108,6 +108,7 @@ export interface StaffFormData {
     spaceIds?: number[];
     accessibleFactoryIds?: number[];
     accessibleSpaceIds?: number[];
+    accessibleSpaces?: SpaceDTO[];
     auditMetaData?: AuditMetaData;
 }
 
