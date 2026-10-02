@@ -546,13 +546,7 @@ const StaffListPage = () => {
                         label: t('staffManagement.table.headers.accessibleSpaces'),
                         children: viewModalState.data?.accessibleSpaces?.length
                             ? viewModalState.data.accessibleSpaces
-                                  .map((space) =>
-                                      space.spaceName &&
-                                      space.spaceCode &&
-                                      space.spaceName !== space.spaceCode
-                                          ? `${space.spaceName} (${space.spaceCode})`
-                                          : space.spaceName || space.spaceCode
-                                  )
+                                  .map((space) => space.spaceName || space.spaceCode)
                                   .join(', ')
                             : '-',
                     },
