@@ -11,7 +11,8 @@ import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
 import { SpaceService } from '@/services/SpaceService';
 import { toast } from 'sonner';
-import { Card, Table, Grid, Button, Select } from 'antd';
+import { Card, Table, Grid, Button } from 'antd';
+import { SpacePickingWithChildren } from '@/types/Space';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
     PlusOutlined,
@@ -85,21 +86,34 @@ const StaffListPage = () => {
             try {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
-                const accessibleSpaceValues = (fullStaffData.accessibleSpaces || []).map((s) => ({
-                    value: s.spaceId,
-                    label:
-                        s.spaceName && s.spaceCode && s.spaceName !== s.spaceCode
-                            ? `${s.spaceName} (${s.spaceCode})`
-                            : s.spaceName || s.spaceCode || String(s.spaceId),
-                }));
+                if (fullStaffData.accessibleSpaces?.length) {
+                    setSpaceOptions((prev) => {
+                        const existingIds = new Set(prev.map((o) => o.value));
+                        const newOptions: SelectOption[] = [];
+                        for (const s of fullStaffData.accessibleSpaces!) {
+                            if (!existingIds.has(s.spaceId)) {
+                                newOptions.push({
+                                    value: s.spaceId,
+                                    label:
+                                        s.spaceName && s.spaceCode && s.spaceName !== s.spaceCode
+                                            ? `${s.spaceName} (${s.spaceCode})`
+                                            : s.spaceName || s.spaceCode || String(s.spaceId),
+                                });
+                            }
+                        }
+                        return newOptions.length ? [...prev, ...newOptions] : prev;
+                    });
+                }
+
+                const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
 
                 const mappedData = {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
                     gender: fullStaffData.gender || '',
-                    spaceIds: fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [],
-                    accessibleSpaceIds: accessibleSpaceValues as any,
+                    spaceIds: accessibleIds,
+                    accessibleSpaceIds: accessibleIds,
                 };
 
                 setModalState({
@@ -119,16 +133,8 @@ const StaffListPage = () => {
         [t]
     );
 
-    const handleViewStaff = useCallback(async (staff: UserProfile) => {
+    const handleViewStaff = useCallback((staff: UserProfile) => {
         setViewModalState({ open: true, data: staff });
-        if (staff.userId && (!staff.accessibleSpaces || staff.accessibleSpaces.length === 0)) {
-            try {
-                const fullStaffData = await UserService.getStaffById(staff.userId);
-                setViewModalState({ open: true, data: fullStaffData });
-            } catch (error) {
-                console.error('Error fetching staff details for view:', error);
-            }
-        }
     }, []);
 
     const handleDeleteStaff = useCallback(
@@ -234,12 +240,20 @@ const StaffListPage = () => {
         try {
             setSpaceLoading(true);
             const spaces = await SpaceService.getSpacesByLevel(1);
-            const options: SelectOption[] = (spaces || []).map((space) => ({
-                value: space.spaceId,
-                label: space.spaceName
-                    ? `${space.spaceName} (${space.spaceCode})`
-                    : space.spaceCode,
-            }));
+            const options: SelectOption[] = [];
+            const addSpace = (space: SpacePickingWithChildren) => {
+                options.push({
+                    value: space.spaceId,
+                    label:
+                        space.spaceName && space.spaceCode && space.spaceName !== space.spaceCode
+                            ? `${space.spaceName} (${space.spaceCode})`
+                            : space.spaceName || space.spaceCode || String(space.spaceId),
+                });
+                if (space.children?.length) {
+                    space.children.forEach(addSpace);
+                }
+            };
+            (spaces || []).forEach(addSpace);
             setSpaceOptions(options);
         } catch (error) {
             console.error('Error fetching spaces:', error);
@@ -271,12 +285,7 @@ const StaffListPage = () => {
                       ? data.roles
                       : [data.roles];
 
-            const rawSpaces = (data as any).accessibleSpaceIds || data.spaceIds || [];
-            const selectedSpaceIds = (Array.isArray(rawSpaces) ? rawSpaces : [rawSpaces])
-                .map((item: any) =>
-                    typeof item === 'object' && item !== null && 'value' in item ? item.value : item
-                )
-                .filter((id) => id !== undefined && id !== null);
+            const selectedSpaceIds = data.accessibleSpaceIds || data.spaceIds || [];
             const userId = mode === 'edit' ? modalState.data?.userId || data.userId : undefined;
 
             const submitData: Record<string, unknown> = {
@@ -352,41 +361,14 @@ const StaffListPage = () => {
         });
     };
 
-    const formFields = useMemo(() => {
-        const fields = getStaffFormFields(t, modalState.mode, {
-            spaceOptions,
-            spaceLoading,
-        });
-
-        return fields.map((field) => {
-            if (field.name === 'accessibleSpaceIds') {
-                return {
-                    ...field,
-                    render: (f: any) => (
-                        <Select
-                            placeholder={t('staffManagement.form.placeholders.accessibleSpaces')}
-                            size="middle"
-                            mode="multiple"
-                            labelInValue
-                            maxTagCount={10}
-                            options={spaceOptions}
-                            loading={spaceLoading}
-                            allowClear
-                            disabled={f.disabled as boolean}
-                            showSearch={{
-                                filterOption: (input, option) =>
-                                    (option?.label ?? '')
-                                        .toString()
-                                        .toLowerCase()
-                                        .includes(input.toLowerCase()),
-                            }}
-                        />
-                    ),
-                };
-            }
-            return field;
-        });
-    }, [t, modalState.mode, spaceOptions, spaceLoading]);
+    const formFields = useMemo(
+        () =>
+            getStaffFormFields(t, modalState.mode, {
+                spaceOptions,
+                spaceLoading,
+            }),
+        [t, modalState.mode, spaceOptions, spaceLoading]
+    );
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
