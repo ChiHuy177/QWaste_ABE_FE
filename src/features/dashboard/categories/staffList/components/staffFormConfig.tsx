@@ -311,6 +311,7 @@ export const getStaffFormFields = (
                     size="middle"
                     mode="multiple"
                     labelInValue
+                    maxTagCount={10}
                     options={spaceOptions}
                     loading={spaceLoading}
                     allowClear
