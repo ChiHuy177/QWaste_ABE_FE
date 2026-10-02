@@ -11,7 +11,7 @@ import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
 import { SpaceService } from '@/services/SpaceService';
 import { toast } from 'sonner';
-import { Card, Table, Grid, Button } from 'antd';
+import { Card, Table, Grid, Button, Select } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
     PlusOutlined,
@@ -85,15 +85,21 @@ const StaffListPage = () => {
             try {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
-                const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
+                const accessibleSpaceValues = (fullStaffData.accessibleSpaces || []).map((s) => ({
+                    value: s.spaceId,
+                    label:
+                        s.spaceName && s.spaceCode && s.spaceName !== s.spaceCode
+                            ? `${s.spaceName} (${s.spaceCode})`
+                            : s.spaceName || s.spaceCode || String(s.spaceId),
+                }));
 
                 const mappedData = {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
                     gender: fullStaffData.gender || '',
-                    spaceIds: accessibleIds,
-                    accessibleSpaceIds: accessibleIds,
+                    spaceIds: fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [],
+                    accessibleSpaceIds: accessibleSpaceValues as any,
                 };
 
                 setModalState({
@@ -113,8 +119,16 @@ const StaffListPage = () => {
         [t]
     );
 
-    const handleViewStaff = useCallback((staff: UserProfile) => {
+    const handleViewStaff = useCallback(async (staff: UserProfile) => {
         setViewModalState({ open: true, data: staff });
+        if (staff.userId && (!staff.accessibleSpaces || staff.accessibleSpaces.length === 0)) {
+            try {
+                const fullStaffData = await UserService.getStaffById(staff.userId);
+                setViewModalState({ open: true, data: fullStaffData });
+            } catch (error) {
+                console.error('Error fetching staff details for view:', error);
+            }
+        }
     }, []);
 
     const handleDeleteStaff = useCallback(
@@ -257,7 +271,12 @@ const StaffListPage = () => {
                       ? data.roles
                       : [data.roles];
 
-            const selectedSpaceIds = data.accessibleSpaceIds || data.spaceIds || [];
+            const rawSpaces = (data as any).accessibleSpaceIds || data.spaceIds || [];
+            const selectedSpaceIds = (Array.isArray(rawSpaces) ? rawSpaces : [rawSpaces])
+                .map((item: any) =>
+                    typeof item === 'object' && item !== null && 'value' in item ? item.value : item
+                )
+                .filter((id) => id !== undefined && id !== null);
             const userId = mode === 'edit' ? modalState.data?.userId || data.userId : undefined;
 
             const submitData: Record<string, unknown> = {
@@ -333,14 +352,41 @@ const StaffListPage = () => {
         });
     };
 
-    const formFields = useMemo(
-        () =>
-            getStaffFormFields(t, modalState.mode, {
-                spaceOptions,
-                spaceLoading,
-            }),
-        [t, modalState.mode, spaceOptions, spaceLoading]
-    );
+    const formFields = useMemo(() => {
+        const fields = getStaffFormFields(t, modalState.mode, {
+            spaceOptions,
+            spaceLoading,
+        });
+
+        return fields.map((field) => {
+            if (field.name === 'accessibleSpaceIds') {
+                return {
+                    ...field,
+                    render: (f: any) => (
+                        <Select
+                            placeholder={t('staffManagement.form.placeholders.accessibleSpaces')}
+                            size="middle"
+                            mode="multiple"
+                            labelInValue
+                            maxTagCount={10}
+                            options={spaceOptions}
+                            loading={spaceLoading}
+                            allowClear
+                            disabled={f.disabled as boolean}
+                            showSearch={{
+                                filterOption: (input, option) =>
+                                    (option?.label ?? '')
+                                        .toString()
+                                        .toLowerCase()
+                                        .includes(input.toLowerCase()),
+                            }}
+                        />
+                    ),
+                };
+            }
+            return field;
+        });
+    }, [t, modalState.mode, spaceOptions, spaceLoading]);
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
@@ -518,7 +564,13 @@ const StaffListPage = () => {
                         label: t('staffManagement.table.headers.accessibleSpaces'),
                         children: viewModalState.data?.accessibleSpaces?.length
                             ? viewModalState.data.accessibleSpaces
-                                  .map((space) => space.spaceName || space.spaceCode)
+                                  .map((space) =>
+                                      space.spaceName &&
+                                      space.spaceCode &&
+                                      space.spaceName !== space.spaceCode
+                                          ? `${space.spaceName} (${space.spaceCode})`
+                                          : space.spaceName || space.spaceCode
+                                  )
                                   .join(', ')
                             : '-',
                     },
