@@ -56,6 +56,7 @@ export interface FormFieldConfig {
     allowDecimal?: boolean;
     decimalPlaces?: number;
     mode?: 'multiple' | 'tags';
+    maxTagCount?: number | 'responsive';
     render?: (props: any) => React.ReactNode;
     renderCustom?: (fieldKey: string) => React.ReactNode;
     onChange?: (value: any, form?: any) => void;
@@ -88,8 +89,8 @@ export interface EntityFormModalProps<TFormData extends Record<string, unknown>>
         edit?: string;
     };
     width?:
-        | number
-        | { xs?: string | string; sm?: number | string; md?: number | string; lg?: string };
+    | number
+    | { xs?: string | string; sm?: number | string; md?: number | string; lg?: string };
     buttonLabels?: {
         cancel: string;
         create: string;

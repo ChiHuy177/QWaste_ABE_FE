@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import {
@@ -55,6 +55,7 @@ const StaffListPage = () => {
     const [staffData, setStaffData] = useState<UserProfile[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [spaceOptions, setSpaceOptions] = useState<SelectOption[]>([]);
+    const baseSpaceOptionsRef = useRef<SelectOption[]>([]);
     const [spaceLoading, setSpaceLoading] = useState(false);
     const [editLoading, setEditLoading] = useState(false);
     const [confirmModalState, setConfirmModalState] = useState<{
@@ -86,6 +87,19 @@ const StaffListPage = () => {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
                 const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
+
+                // Supplement spaceOptions with spaces that are already assigned to this staff
+                // but may not be in the base level-1 options (e.g. level-2/3 spaces from old data)
+                const existingIds = new Set(baseSpaceOptionsRef.current.map((o) => o.value));
+                const extraOptions: SelectOption[] = (fullStaffData.accessibleSpaces || [])
+                    .filter((s) => !existingIds.has(s.spaceId))
+                    .map((s) => ({
+                        value: s.spaceId,
+                        label: s.spaceName ? `${s.spaceName} (${s.spaceCode})` : s.spaceCode,
+                    }));
+                if (extraOptions.length > 0) {
+                    setSpaceOptions([...baseSpaceOptionsRef.current, ...extraOptions]);
+                }
 
                 const mappedData = {
                     ...fullStaffData,
@@ -227,6 +241,7 @@ const StaffListPage = () => {
                     : space.spaceCode,
             }));
             setSpaceOptions(options);
+            baseSpaceOptionsRef.current = options;
         } catch (error) {
             console.error('Error fetching spaces:', error);
         } finally {
@@ -453,7 +468,11 @@ const StaffListPage = () => {
 
             <EntityFormModal<StaffFormData>
                 open={modalState.open}
-                onOpenChange={(open) => setModalState({ ...modalState, open })}
+                onOpenChange={(open) => {
+                    setModalState({ ...modalState, open });
+                    // Reset spaceOptions to base level-1 list when closing
+                    if (!open) setSpaceOptions(baseSpaceOptionsRef.current);
+                }}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
                 initialData={modalState.data}
