@@ -9,6 +9,7 @@ import {
     message,
     Image,
     Switch,
+    Tooltip,
 } from 'antd';
 import {
     EyeInvisibleOutlined,
@@ -230,6 +231,8 @@ export const renderNumberField = (field: FormFieldConfig) => {
 };
 
 export const renderSelectField = (field: FormFieldConfig) => {
+    const showTooltipOnOverflow = field.maxTagCount !== undefined && field.mode === 'multiple';
+
     return (
         <Select
             placeholder={field.placeholder}
@@ -240,6 +243,19 @@ export const renderSelectField = (field: FormFieldConfig) => {
             allowClear={field.allowClear}
             onChange={field.onChange}
             mode={field.mode}
+            maxTagCount={field.maxTagCount}
+            maxTagPlaceholder={
+                showTooltipOnOverflow
+                    ? (omittedValues) => {
+                        const titles = omittedValues.map((v) => v.label).join(', ');
+                        return (
+                            <Tooltip title={titles} overlayStyle={{ maxWidth: 400 }}>
+                                <span>+{omittedValues.length} ...</span>
+                            </Tooltip>
+                        );
+                    }
+                    : undefined
+            }
         />
     );
 };

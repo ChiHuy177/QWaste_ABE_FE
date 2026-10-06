@@ -272,6 +272,7 @@ export const getStaffFormFields = (
             options: spaceOptions,
             loading: spaceLoading,
             allowClear: true,
+            maxTagCount: 5,
             span: { xs: 24, md: 12 },
         },
     ];
