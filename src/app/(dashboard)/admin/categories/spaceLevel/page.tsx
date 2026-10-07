@@ -24,7 +24,6 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -71,15 +70,6 @@ const SpaceLevelListPage = () => {
     const { handleError } = useApiErrorHandler();
     const ability = useAbility();
     const [searchTerm, setSearchTerm] = useState('');
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
         loading: boolean;
@@ -263,26 +253,19 @@ const SpaceLevelListPage = () => {
     });
 
     const handleDeleteLevel = useCallback(
-        (level: SpaceLevelDTO) => {
+        async (level: SpaceLevelDTO) => {
             if (!checkPermission('delete', 'space_level')) {
                 return;
             }
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        await deleteSpaceLevel(level.spaceLevelId);
-                        toast.success(t('spaceLevelManagement.deleteSuccess'));
-                    } catch (error) {
-                        console.error('Error deleting space level:', error);
-                        handleError(error, {
-                            fallbackKey: 'spaceLevelManagement.deleteError',
-                        });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                await deleteSpaceLevel(level.spaceLevelId);
+                toast.success(t('spaceLevelManagement.deleteSuccess'));
+            } catch (error) {
+                console.error('Error deleting space level:', error);
+                handleError(error, {
+                    fallbackKey: 'spaceLevelManagement.deleteError',
+                });
+            }
         },
         [t, checkPermission, deleteSpaceLevel, handleError]
     );
@@ -324,12 +307,7 @@ const SpaceLevelListPage = () => {
     const filteredData = levelData;
 
     const handleSubmit = async (data: SpaceLevelFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: SpaceLevelFormData, mode: 'create' | 'edit') => {
@@ -362,35 +340,6 @@ const SpaceLevelListPage = () => {
             });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     const formFields = useMemo(
@@ -666,14 +615,6 @@ const SpaceLevelListPage = () => {
                 auditMetaData={modalState.data?.auditMetaData}
                 t={t}
                 loading={isFormLoading}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

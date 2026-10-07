@@ -39,7 +39,6 @@ import { MachineFormData, MachineUpdateFormData } from '@/types/Machine';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { SpaceWithChildrenResponse } from '@/types/Space';
 import {
@@ -102,15 +101,6 @@ const MachineListPageContent = () => {
     const { startUpload } = useUploadThing('imageUploader');
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormLoading, setIsFormLoading] = useState(false);
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
     const [selectedSpaceId, setSelectedSpaceId] = useState<number | undefined>(undefined);
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -370,26 +360,19 @@ const MachineListPageContent = () => {
     }, [levelOneSpacesQuery.error, spacesTreeQuery.error, handleError]);
 
     const handleDeleteMachine = useCallback(
-        (machine: Machine) => {
+        async (machine: Machine) => {
             if (!checkPermission('delete', 'machine')) {
                 return;
             }
 
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const machineId = machine.machineId;
-                        await deleteMachine(machineId);
-                        toast.success(t('machineListManagement.deleteSuccess'));
-                    } catch (error) {
-                        console.error('Error deleting machine:', error);
-                        handleError(error, { fallbackKey: 'machineListManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const machineId = machine.machineId;
+                await deleteMachine(machineId);
+                toast.success(t('machineListManagement.deleteSuccess'));
+            } catch (error) {
+                console.error('Error deleting machine:', error);
+                handleError(error, { fallbackKey: 'machineListManagement.deleteError' });
+            }
         },
         [t, checkPermission, deleteMachine, handleError]
     );
@@ -461,12 +444,7 @@ const MachineListPageContent = () => {
     };
 
     const handleSubmit = async (data: MachineFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const uploadMachineImageIfNeeded = async (value: unknown): Promise<string> => {
@@ -534,34 +512,6 @@ const MachineListPageContent = () => {
             });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     const formFields = useMemo(
@@ -985,14 +935,6 @@ const MachineListPageContent = () => {
                 auditMetaData={modalState.data?.auditMetaData}
                 t={t}
                 loading={isFormLoading}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

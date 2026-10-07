@@ -12,7 +12,6 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { Can, useAbility } from '@/contexts/AbilityContext';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
 import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
@@ -61,12 +60,6 @@ const MoldListPage = () => {
     }>({ open: false, mode: 'create', data: null });
 
     const [importModalOpen, setImportModalOpen] = useState(false);
-
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({ open: false, type: 'create', pendingAction: null });
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -186,21 +179,14 @@ const MoldListPage = () => {
     );
 
     const handleDeleteMold = useCallback(
-        (mold: Mold) => {
+        async (mold: Mold) => {
             if (!checkPermission('delete', 'mold')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const message = await deleteMold(mold.moldId);
-                        toast.success(message || t('moldManagement.deleteSuccess'));
-                    } catch (error) {
-                        handleError(error, { fallbackKey: 'moldManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const message = await deleteMold(mold.moldId);
+                toast.success(message || t('moldManagement.deleteSuccess'));
+            } catch (error) {
+                handleError(error, { fallbackKey: 'moldManagement.deleteError' });
+            }
         },
         [checkPermission, deleteMold, handleError, t]
     );
@@ -241,29 +227,7 @@ const MoldListPage = () => {
     };
 
     const handleSubmit = async (data: MoldFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
-    };
-
-    const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) return;
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pendingAction
-        } finally {
-            setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({ open: false, type: 'create', pendingAction: null });
+        await executeSubmit(data, mode);
     };
 
     const handleApplyFilters = useCallback(() => {
@@ -588,14 +552,6 @@ const MoldListPage = () => {
                 }}
                 width={{ xs: '90%', sm: 620, md: 700 }}
                 auditMetaData={modalState.data?.auditMetaData}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
 

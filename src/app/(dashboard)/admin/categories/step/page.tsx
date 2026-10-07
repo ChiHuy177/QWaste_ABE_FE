@@ -21,7 +21,6 @@ import AdvancedFilterPanel, {
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -58,15 +57,6 @@ const StepListPage = () => {
     );
 
     const activeFilterCount = [stepNameFilter, stepDescriptionFilter].filter(Boolean).length;
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -135,27 +125,20 @@ const StepListPage = () => {
     );
 
     const handleDeleteStep = useCallback(
-        (step: StepDTO) => {
+        async (step: StepDTO) => {
             if (!checkPermission('delete', 'step')) {
                 return;
             }
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        await StandardStepService.deleteStep(step.standardStepId);
-                        toast.success(t('stepManagement.deleteSuccess'));
-                        fetchStepData();
-                    } catch (error: unknown) {
-                        console.error('Error deleting step:', error);
-                        handleError(error, {
-                            fallbackKey: 'stepManagement.deleteError',
-                        });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                await StandardStepService.deleteStep(step.standardStepId);
+                toast.success(t('stepManagement.deleteSuccess'));
+                fetchStepData();
+            } catch (error: unknown) {
+                console.error('Error deleting step:', error);
+                handleError(error, {
+                    fallbackKey: 'stepManagement.deleteError',
+                });
+            }
         },
         [t, fetchStepData, checkPermission, handleError]
     );
@@ -239,12 +222,7 @@ const StepListPage = () => {
     }, [fetchStepData]);
 
     const handleSubmit = async (data: CreateStepRequest, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: CreateStepRequest, mode: 'create' | 'edit') => {
@@ -284,35 +262,6 @@ const StepListPage = () => {
             });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     const formFields = useMemo(() => getStepFormFields(t), [t]);
@@ -528,14 +477,6 @@ const StepListPage = () => {
                 auditMetaData={modalState.data?.auditMetaData}
                 t={t}
                 loading={isFormLoading}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

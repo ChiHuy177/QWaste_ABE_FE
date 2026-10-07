@@ -39,7 +39,6 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -94,15 +93,6 @@ const SpaceListPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormLoading, setIsFormLoading] = useState(false);
 
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
         loading: boolean;
@@ -266,21 +256,15 @@ const SpaceListPage = () => {
     const handleDeleteSpace = useCallback(
         async (space: SpaceWithChildrenResponse) => {
             if (!checkPermission('delete', 'space')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const spaceId = space.spaceId;
-                        await deleteSpace(spaceId);
-                        toast.success(t('spaceManagement.deleteSuccess'));
-                    } catch (error) {
-                        handleError(error, {
-                            fallbackKey: 'spaceManagement.deleteError',
-                        });
-                    }
-                },
-            });
+            try {
+                const spaceId = space.spaceId;
+                await deleteSpace(spaceId);
+                toast.success(t('spaceManagement.deleteSuccess'));
+            } catch (error) {
+                handleError(error, {
+                    fallbackKey: 'spaceManagement.deleteError',
+                });
+            }
         },
         [t, checkPermission, deleteSpace, handleError]
     );
@@ -389,12 +373,7 @@ const SpaceListPage = () => {
     }, [searchTerm, filteredData]);
 
     const handleSubmit = async (data: SpaceFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const uploadFloorPlanIfNeeded = async (value: unknown): Promise<string | null> => {
@@ -455,18 +434,6 @@ const SpaceListPage = () => {
                         : 'spaceManagement.form.updateError',
             });
             throw error;
-        }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-            } catch {
-                setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-            }
         }
     };
 
@@ -791,16 +758,6 @@ const SpaceListPage = () => {
                 auditMetaData={modalState.data?.auditMetaData}
                 t={t}
                 loading={isFormLoading}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={() =>
-                    setConfirmModalState({ open: false, type: 'create', pendingAction: null })
-                }
-                t={t}
             />
         </div>
     );

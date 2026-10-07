@@ -19,7 +19,6 @@ import AdvancedFilterPanel, {
     FilterField,
 } from '@/components/shared/filters/AdvancedFilterPanel';
 import { PermissionService } from '@/services';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { getApiErrorMessage } from '@/utils/apiError';
 
@@ -47,15 +46,6 @@ const PermissionManagementPage = () => {
     const [moduleFilter, setModuleFilter] = useState<string | undefined>(undefined);
 
     const activeFilterCount = [moduleFilter].filter(Boolean).length;
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
     const screens = Grid.useBreakpoint();
     const isMobileResponsive = !screens.md;
 
@@ -89,24 +79,17 @@ const PermissionManagementPage = () => {
 
     // Handle Delete Action
     const handleDeletePermission = useCallback(
-        (permission: Permission) => {
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        await PermissionService.deletePermission(permission.permissionId!);
-                        setPermissionData((prev) =>
-                            (prev ?? []).filter((p) => p.permissionId !== permission.permissionId)
-                        );
-                        toast.success(t('permissionManagement.messages.deleteSuccess'));
-                    } catch (error) {
-                        console.error('Error deleting permission:', error);
-                        toast.error(t('permissionManagement.messages.deleteError'));
-                        throw error;
-                    }
-                },
-            });
+        async (permission: Permission) => {
+            try {
+                await PermissionService.deletePermission(permission.permissionId!);
+                setPermissionData((prev) =>
+                    (prev ?? []).filter((p) => p.permissionId !== permission.permissionId)
+                );
+                toast.success(t('permissionManagement.messages.deleteSuccess'));
+            } catch (error) {
+                console.error('Error deleting permission:', error);
+                toast.error(t('permissionManagement.messages.deleteError'));
+            }
         },
         [t]
     );
@@ -220,12 +203,7 @@ const PermissionManagementPage = () => {
             return;
         }
 
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeFormSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeFormSubmit(data, mode);
     };
 
     const executeFormSubmit = async (data: PermissionFormData, mode: 'create' | 'edit') => {
@@ -340,35 +318,6 @@ const PermissionManagementPage = () => {
         };
 
         return formData;
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     return (
@@ -494,14 +443,6 @@ const PermissionManagementPage = () => {
                 width={700}
                 t={t}
                 auditMetaData={modalState.data?.auditMetaData}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </>
     );

@@ -28,7 +28,6 @@ import { SearchInput } from '@/components/shared/SearchInput';
 import AdvancedFilterPanel, {
     FilterField,
 } from '@/components/shared/filters/AdvancedFilterPanel';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { SelectOption } from '@/types/Common';
@@ -66,15 +65,6 @@ const StaffListPage = () => {
     const baseSpaceOptionsRef = useRef<SelectOption[]>([]);
     const [spaceLoading, setSpaceLoading] = useState(false);
     const [editLoading, setEditLoading] = useState(false);
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
 
     usePageTitle(t('pageTitle.staffList'));
 
@@ -140,23 +130,16 @@ const StaffListPage = () => {
     }, []);
 
     const handleDeleteStaff = useCallback(
-        (staff: UserProfile) => {
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const userId = staff.userId;
-                        await UserService.deleteStaff(userId!);
-                        toast.success(t('staffManagement.deleteSuccess'));
-                        fetchStaffData();
-                    } catch (error) {
-                        console.error('Error deleting staff:', error);
-                        toast.error(t('staffManagement.deleteError'));
-                        throw error;
-                    }
-                },
-            });
+        async (staff: UserProfile) => {
+            try {
+                const userId = staff.userId;
+                await UserService.deleteStaff(userId!);
+                toast.success(t('staffManagement.deleteSuccess'));
+                fetchStaffData();
+            } catch (error) {
+                console.error('Error deleting staff:', error);
+                toast.error(t('staffManagement.deleteError'));
+            }
         },
         [t]
     );
@@ -311,12 +294,7 @@ const StaffListPage = () => {
     }, [fetchStaffData, fetchSpaces]);
 
     const handleSubmit = async (data: StaffFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: StaffFormData, mode: 'create' | 'edit') => {
@@ -373,35 +351,6 @@ const StaffListPage = () => {
             });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     const formFields = useMemo(
@@ -627,14 +576,6 @@ const StaffListPage = () => {
                             : t('staffManagement.status.working'),
                     },
                 ]}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

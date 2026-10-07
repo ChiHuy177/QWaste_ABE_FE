@@ -21,7 +21,6 @@ import AdvancedFilterPanel, {
 } from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
@@ -48,15 +47,6 @@ const IndustryFilterListPage = () => {
 
     const activeFilterCount = [categoryFilter, periodCodeFilter].filter(Boolean).length;
     const { handleError } = useApiErrorHandler();
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -117,27 +107,20 @@ const IndustryFilterListPage = () => {
     );
 
     const handleDeleteIndustryFilter = useCallback(
-        (filter: IndustryFilter) => {
+        async (filter: IndustryFilter) => {
             if (!checkPermission('delete', 'industry_filter')) {
                 return;
             }
 
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const filterId = filter.filterId;
-                        await IndustryFilterService.deleteIndustryFilter(filterId);
-                        toast.success(t('industryFilterManagement.deleteSuccess'));
-                        fetchIndustryFilterData();
-                    } catch (error) {
-                        console.error('Error deleting industry filter:', error);
-                        handleError(error, { fallbackKey: 'industryFilterManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const filterId = filter.filterId;
+                await IndustryFilterService.deleteIndustryFilter(filterId);
+                toast.success(t('industryFilterManagement.deleteSuccess'));
+                fetchIndustryFilterData();
+            } catch (error) {
+                console.error('Error deleting industry filter:', error);
+                handleError(error, { fallbackKey: 'industryFilterManagement.deleteError' });
+            }
         },
         [t, fetchIndustryFilterData, checkPermission, handleError]
     );
@@ -232,12 +215,7 @@ const IndustryFilterListPage = () => {
     }, [fetchIndustryFilterData]);
 
     const handleSubmit = async (data: IndustryFilterFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: IndustryFilterFormData, mode: 'create' | 'edit') => {
@@ -266,36 +244,6 @@ const IndustryFilterListPage = () => {
             });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                // Reset state on error
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     const formFields = useMemo(
@@ -642,14 +590,6 @@ const IndustryFilterListPage = () => {
                         <ShiftBreaksContent filter={modalState.data} t={t} />
                     ) : null
                 }
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

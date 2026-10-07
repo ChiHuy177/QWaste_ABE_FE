@@ -21,7 +21,6 @@ import AdvancedFilterPanel, {
 import { UserService, RoleService } from '@/services';
 import { UserPermission } from '@/types/User';
 import { Role } from '@/types/Role';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { isRequestCancelled } from '@/utils/apiError';
 
 const UserManagementPage = () => {
@@ -49,15 +48,6 @@ const UserManagementPage = () => {
     const [grantedPermissionSlugs, setGrantedPermissionSlugs] = useState<string[]>([]);
     const [deniedPermissionSlugs, setDeniedPermissionSlugs] = useState<string[]>([]);
     const [roleForm] = Form.useForm();
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'edit',
-        pendingAction: null,
-    });
     const screens = Grid.useBreakpoint();
     const isMobileResponsive = !screens.md;
 
@@ -314,29 +304,22 @@ const UserManagementPage = () => {
             return; // Validation failed, don't proceed
         }
 
-        setConfirmModalState({
-            open: true,
-            type: 'edit',
-            pendingAction: async () => {
-                setLoading(true);
-                try {
-                    await UserService.updateRolesAndPermissions({
-                        userId: modalState.data!.userId,
-                        roleIds: selectedRoleIds,
-                        deniedPermissionIds: [],
-                        grantedPermissionIds: [],
-                    });
-                    toast.success(t('userManagement.messages.updateSuccess'));
-                    await fetchUsers();
-                } catch (error) {
-                    console.error('Error updating roles:', error);
-                    toast.error(t('userManagement.messages.updateError'));
-                    throw error;
-                } finally {
-                    setLoading(false);
-                }
-            },
-        });
+        setLoading(true);
+        try {
+            await UserService.updateRolesAndPermissions({
+                userId: modalState.data!.userId,
+                roleIds: selectedRoleIds,
+                deniedPermissionIds: [],
+                grantedPermissionIds: [],
+            });
+            toast.success(t('userManagement.messages.updateSuccess'));
+            await fetchUsers();
+        } catch (error) {
+            console.error('Error updating roles:', error);
+            toast.error(t('userManagement.messages.updateError'));
+        } finally {
+            setLoading(false);
+        }
     }, [modalState.data?.userId, selectedRoleIds, t, fetchUsers]);
 
     // Update custom permissions (from Tab 3)
@@ -351,58 +334,23 @@ const UserManagementPage = () => {
             .filter((p) => p.permissionType === 'grant')
             .map((p) => p.permissionId);
 
-        setConfirmModalState({
-            open: true,
-            type: 'edit',
-            pendingAction: async () => {
-                setLoading(true);
-                try {
-                    await UserService.updateRolesAndPermissions({
-                        userId: modalState.data!.userId,
-                        roleIds: selectedRoleIds,
-                        deniedPermissionIds,
-                        grantedPermissionIds,
-                    });
-                    toast.success(t('userManagement.messages.updateSuccess'));
-                    await fetchUsers();
-                } catch (error) {
-                    console.error('Error updating permissions:', error);
-                    toast.error(t('userManagement.messages.updateError'));
-                    throw error;
-                } finally {
-                    setLoading(false);
-                }
-            },
-        });
-    }, [modalState.data?.userId, selectedRoleIds, customPermissions, t, fetchUsers]);
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setConfirmModalState({
-                    open: false,
-                    type: 'edit',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'edit',
-                    pendingAction: null,
-                });
-            }
+        setLoading(true);
+        try {
+            await UserService.updateRolesAndPermissions({
+                userId: modalState.data!.userId,
+                roleIds: selectedRoleIds,
+                deniedPermissionIds,
+                grantedPermissionIds,
+            });
+            toast.success(t('userManagement.messages.updateSuccess'));
+            await fetchUsers();
+        } catch (error) {
+            console.error('Error updating permissions:', error);
+            toast.error(t('userManagement.messages.updateError'));
+        } finally {
+            setLoading(false);
         }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'edit',
-            pendingAction: null,
-        });
-    };
+    }, [modalState.data?.userId, selectedRoleIds, customPermissions, t, fetchUsers]);
 
     return (
         <>
@@ -641,14 +589,6 @@ const UserManagementPage = () => {
                     ]}
                 />
             </Modal>
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
-            />
         </>
     );
 };

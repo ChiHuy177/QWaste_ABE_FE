@@ -21,7 +21,6 @@ import AdvancedFilterPanel, {
 } from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
@@ -55,17 +54,6 @@ const MachineTypeListPage = () => {
         Boolean
     ).length;
 
-    // ConfirmModal State
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
-
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
         loading: boolean;
@@ -95,22 +83,15 @@ const MachineTypeListPage = () => {
     const handleDeleteMachineType = useCallback(
         async (machineType: MachineType) => {
             if (!checkPermission('delete', 'machine_type')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const machineTypeId = machineType.machineTypeId;
-                        await MachineTypeService.deleteMachineType(machineTypeId);
-                        toast.success(t('machineTypeManagement.deleteSuccess'));
-                        fetchMachineTypeData();
-                    } catch (error) {
-                        console.error('Error deleting machine type:', error);
-                        handleError(error, { fallbackKey: 'machineTypeManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const machineTypeId = machineType.machineTypeId;
+                await MachineTypeService.deleteMachineType(machineTypeId);
+                toast.success(t('machineTypeManagement.deleteSuccess'));
+                fetchMachineTypeData();
+            } catch (error) {
+                console.error('Error deleting machine type:', error);
+                handleError(error, { fallbackKey: 'machineTypeManagement.deleteError' });
+            }
         },
         [t, checkPermission, handleError]
     );
@@ -241,37 +222,7 @@ const MachineTypeListPage = () => {
     };
 
     const handleSubmit = async (data: MachineTypeFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({ open: false, type: 'create', pendingAction: null });
+        await executeSubmit(data, mode);
     };
 
     const formFields = useMemo(
@@ -496,14 +447,6 @@ const MachineTypeListPage = () => {
                 }}
                 width={{ xs: '90%', sm: 550, md: 650 }}
                 auditMetaData={modalState.data?.auditMetaData}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </div>

@@ -18,7 +18,6 @@ import AdvancedFilterPanel, {
     FilterField,
 } from '@/components/shared/filters/AdvancedFilterPanel';
 import { RoleService } from '@/services';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 
 const RoleManagementPage = () => {
     const [modalState, setModalState] = useState<{
@@ -38,15 +37,6 @@ const RoleManagementPage = () => {
     );
 
     const activeFilterCount = [roleNameFilter, roleDescriptionFilter].filter(Boolean).length;
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
     const screens = Grid.useBreakpoint();
     const isMobileResponsive = !screens.md;
 
@@ -80,22 +70,15 @@ const RoleManagementPage = () => {
 
     // Handle Delete Action
     const handleDeleteRole = useCallback(
-        (role: Role) => {
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        await RoleService.deleteRole(role.roleId!);
-                        setRoleData(prev => (prev ?? []).filter(r => r.roleId !== role.roleId));
-                        toast.success(t('roleManagement.messages.deleteSuccess'));
-                    } catch (error) {
-                        console.error('Error deleting role:', error);
-                        toast.error(t('roleManagement.messages.deleteError'));
-                        throw error;
-                    }
-                },
-            });
+        async (role: Role) => {
+            try {
+                await RoleService.deleteRole(role.roleId!);
+                setRoleData(prev => (prev ?? []).filter(r => r.roleId !== role.roleId));
+                toast.success(t('roleManagement.messages.deleteSuccess'));
+            } catch (error) {
+                console.error('Error deleting role:', error);
+                toast.error(t('roleManagement.messages.deleteError'));
+            }
         },
         [t]
     );
@@ -159,12 +142,7 @@ const RoleManagementPage = () => {
     const handleApplyFilters = useCallback(() => {}, []);
 
     const handleFormSubmit = async (data: RoleFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeFormSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeFormSubmit(data, mode);
     };
 
     const executeFormSubmit = async (data: RoleFormData, mode: 'create' | 'edit') => {
@@ -212,35 +190,6 @@ const RoleManagementPage = () => {
             description: role.description,
             permissionIds: role.permissions?.map(p => p.permissionId) || [],
         };
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     return (
@@ -359,14 +308,6 @@ const RoleManagementPage = () => {
                     edit: t('roleManagement.form.editTitle'),
                 }}
                 width={900}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </>

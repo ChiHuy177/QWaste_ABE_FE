@@ -26,7 +26,6 @@ import { FactoryPickingResponse } from '@/types/Factory';
 import { ZonePickingResponse } from '@/types/Zone';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
@@ -52,15 +51,6 @@ const MachineStaffingPage = () => {
 
     const activeFilterCount = [machineCodeFilter, machineNameFilter].filter(Boolean).length;
     const { handleError } = useApiErrorHandler();
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'edit',
-        pendingAction: null,
-    });
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -199,12 +189,7 @@ const MachineStaffingPage = () => {
             throw new Error('Only edit mode is supported');
         }
 
-        setConfirmModalState({
-            open: true,
-            type: 'edit',
-            pendingAction: () => executeSubmit(data),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data);
     };
 
     const executeSubmit = async (data: MachineOperatorHistoryFormData) => {
@@ -232,35 +217,6 @@ const MachineStaffingPage = () => {
             handleError(error, { fallbackKey: 'machineStaffing.form.createError' });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'edit',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                setConfirmModalState({
-                    open: false,
-                    type: 'edit',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'edit',
-            pendingAction: null,
-        });
     };
 
     // Handle search button click
@@ -514,14 +470,6 @@ const MachineStaffingPage = () => {
                 }}
                 width={{ xs: '90%', sm: '80vh', md: '80vh' }}
                 auditMetaData={modalState.data?.auditMetaData}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </div>

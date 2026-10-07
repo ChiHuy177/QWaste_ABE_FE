@@ -12,7 +12,6 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { Can, useAbility } from '@/contexts/AbilityContext';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
 import AdvancedFilterPanel, {
@@ -51,12 +50,6 @@ const OperationTypeListPage = () => {
         mode: 'create' | 'edit';
         data: OperationType | null;
     }>({ open: false, mode: 'create', data: null });
-
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({ open: false, type: 'create', pendingAction: null });
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -180,21 +173,14 @@ const OperationTypeListPage = () => {
     );
 
     const handleDeleteOperationType = useCallback(
-        (operationType: OperationType) => {
+        async (operationType: OperationType) => {
             if (!checkPermission('delete', 'operation_type')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const message = await deleteOperationType(operationType.operationTypeId);
-                        toast.success(message || t('operationTypeManagement.deleteSuccess'));
-                    } catch (error) {
-                        handleError(error, { fallbackKey: 'operationTypeManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const message = await deleteOperationType(operationType.operationTypeId);
+                toast.success(message || t('operationTypeManagement.deleteSuccess'));
+            } catch (error) {
+                handleError(error, { fallbackKey: 'operationTypeManagement.deleteError' });
+            }
         },
         [checkPermission, deleteOperationType, handleError, t]
     );
@@ -223,29 +209,7 @@ const OperationTypeListPage = () => {
     };
 
     const handleSubmit = async (data: OperationTypeFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
-    };
-
-    const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) return;
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pendingAction
-        } finally {
-            setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({ open: false, type: 'create', pendingAction: null });
+        await executeSubmit(data, mode);
     };
 
     const columnProps: OperationTypeTableColumnProps = useMemo(
@@ -475,14 +439,6 @@ const OperationTypeListPage = () => {
                 }}
                 width={{ xs: '90%', sm: 550, md: 650 }}
                 auditMetaData={modalState.data?.auditMetaData}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </div>
