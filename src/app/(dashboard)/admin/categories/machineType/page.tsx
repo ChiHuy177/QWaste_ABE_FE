@@ -16,6 +16,9 @@ import { MachineTypeService } from '@/services/MachineTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { MachineTypeFormData } from '@/types/MachineType';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
@@ -40,6 +43,17 @@ const MachineTypeListPage = () => {
     const [machineTypeData, setMachineTypeData] = useState<MachineType[]>([]);
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [machineTypeNameFilter, setMachineTypeNameFilter] = useState<string | undefined>(
+        undefined
+    );
+    const [machineTypeDescriptionFilter, setMachineTypeDescriptionFilter] = useState<
+        string | undefined
+    >(undefined);
+
+    const activeFilterCount = [machineTypeNameFilter, machineTypeDescriptionFilter].filter(
+        Boolean
+    ).length;
 
     // ConfirmModal State
     const [confirmModalState, setConfirmModalState] = useState<{
@@ -130,16 +144,46 @@ const MachineTypeListPage = () => {
     const columns = useMemo(() => getMachineTypeTableColumns(columnProps), [columnProps]);
 
     const filteredMachineTypeData = useMemo(() => {
-        if (!searchTerm.trim()) {
-            return machineTypeData;
-        }
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const nameFilter = machineTypeNameFilter?.toLowerCase();
+        const descriptionFilter = machineTypeDescriptionFilter?.toLowerCase();
         return machineTypeData.filter((machineType) => {
             const machineTypeName = machineType.machineTypeName?.toLowerCase() || '';
+            const description = machineType.description?.toLowerCase() || '';
 
-            return machineTypeName.includes(lowerSearchTerm);
+            const matchesSearch = !lowerSearchTerm || machineTypeName.includes(lowerSearchTerm);
+            const matchesName = !nameFilter || machineTypeName.includes(nameFilter);
+            const matchesDescription = !descriptionFilter || description.includes(descriptionFilter);
+            return matchesSearch && matchesName && matchesDescription;
         });
-    }, [machineTypeData, searchTerm]);
+    }, [machineTypeData, searchTerm, machineTypeNameFilter, machineTypeDescriptionFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'machineTypeName',
+                label: t('machineTypeManagement.table.headers.machineTypeName'),
+                placeholder: t('machineTypeManagement.form.placeholders.machineTypeName'),
+                value: machineTypeNameFilter ?? '',
+                onChange: (val) => setMachineTypeNameFilter(val.trim() || undefined),
+            },
+            {
+                key: 'description',
+                label: t('machineTypeManagement.table.headers.description'),
+                placeholder: t('machineTypeManagement.form.placeholders.description'),
+                value: machineTypeDescriptionFilter ?? '',
+                onChange: (val) => setMachineTypeDescriptionFilter(val.trim() || undefined),
+            },
+        ],
+        [t, machineTypeNameFilter, machineTypeDescriptionFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setMachineTypeNameFilter(undefined);
+        setMachineTypeDescriptionFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const rowSelection: TableProps<MachineType>['rowSelection'] = {
         selectedRowKeys,
@@ -259,6 +303,10 @@ const MachineTypeListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Can I="create" a="machine_type">
                             <Button
@@ -298,6 +346,17 @@ const MachineTypeListPage = () => {
                     />
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={viewModalState.data?.machineTypeName}

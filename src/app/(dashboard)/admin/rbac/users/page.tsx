@@ -15,6 +15,9 @@ import {
     UserBasicInfo,
 } from '@/features/dashboard/rbac/users';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { UserService, RoleService } from '@/services';
 import { UserPermission } from '@/types/User';
 import { Role } from '@/types/Role';
@@ -33,6 +36,10 @@ const UserManagementPage = () => {
     const [loading, setLoading] = useState(false);
     const [userData, setUserData] = useState<UserWithRBAC[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [roleFilter].filter(Boolean).length;
     const [activeTab, setActiveTab] = useState('1');
     const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
     const [customPermissions, setCustomPermissions] = useState<UserPermission[]>([]);
@@ -227,25 +234,53 @@ const UserManagementPage = () => {
 
     const columns = useMemo(() => getUserTableColumns(columnProps), [columnProps]);
 
+    const roleOptions = useMemo(() => {
+        const roles = new Set((userData ?? []).flatMap((u) => u.roles ?? []));
+        return Array.from(roles)
+            .sort()
+            .map((role) => ({
+                value: role,
+                label: t(`staffManagement.form.fields.role.${role}`, { defaultValue: role }),
+            }));
+    }, [userData, t]);
+
     const filteredUserData = useMemo(() => {
         if (!userData) return [];
-        if (!searchTerm.trim()) {
-            return userData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
         return userData.filter((user) => {
             const username = user.username?.toLowerCase() || '';
             const email = user.email?.toLowerCase() || '';
             const fullname = `${user.firstName} ${user.lastName}`.toLowerCase();
 
-            return (
+            const matchesSearch =
+                !lowerSearchTerm ||
                 username.includes(lowerSearchTerm) ||
                 email.includes(lowerSearchTerm) ||
-                fullname.includes(lowerSearchTerm)
-            );
+                fullname.includes(lowerSearchTerm);
+            const matchesRole = !roleFilter || (user.roles ?? []).some((r) => r === roleFilter);
+            return matchesSearch && matchesRole;
         });
-    }, [userData, searchTerm]);
+    }, [userData, searchTerm, roleFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'role',
+                label: t('userManagement.table.headers.role', { defaultValue: 'Role' }),
+                value: roleFilter ?? '',
+                onChange: (val) => setRoleFilter(val || undefined),
+                type: 'select',
+                options: roleOptions,
+            },
+        ],
+        [t, roleFilter, roleOptions]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setRoleFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
 
     const handleCloseModal = () => {
@@ -384,10 +419,25 @@ const UserManagementPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{

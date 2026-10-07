@@ -3,19 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
 import { toast } from 'sonner';
-import {
-    Badge,
-    Button,
-    Card,
-    Flex,
-    Table,
-    Grid,
-    Spin,
-    Modal,
-    Descriptions,
-    Tag,
-    Typography,
-} from 'antd';
+import { Button, Card, Flex, Table, Grid, Spin, Modal, Descriptions, Tag, Typography } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -40,8 +28,7 @@ import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
-import FilterDrawer from '@/components/shared/filters/FilterDrawer';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { UtilsService } from '@/services/UtilsService';
 
 const { useBreakpoint } = Grid;
@@ -418,6 +405,13 @@ const SpaceLevelListPage = () => {
                 label: t('spaceLevelManagement.table.headers.spaceLevel'),
                 placeholder: t('spaceLevelManagement.form.placeholders.level'),
                 value: spaceLevelFilter !== undefined ? String(spaceLevelFilter) : '',
+                onChange: (val) => {
+                    const trimmed = val.trim();
+                    const levelNum = trimmed ? Number(trimmed) : undefined;
+                    setSpaceLevelFilter(
+                        levelNum !== undefined && !isNaN(levelNum) ? levelNum : undefined
+                    );
+                },
                 colProps: { xs: 24, sm: 12, md: 12 },
             },
             {
@@ -425,6 +419,7 @@ const SpaceLevelListPage = () => {
                 label: t('spaceLevelManagement.table.headers.spaceLevelName'),
                 placeholder: t('spaceLevelManagement.form.placeholders.levelName'),
                 value: spaceLevelNameFilter ?? '',
+                onChange: (val) => setSpaceLevelNameFilter(val.trim() || undefined),
                 colProps: { xs: 24, sm: 12, md: 12 },
             },
         ],
@@ -437,10 +432,7 @@ const SpaceLevelListPage = () => {
         setPage(0);
     }, []);
 
-    const handleApplyFilters = useCallback((values: Record<string, string>) => {
-        const levelNum = values.spaceLevel?.trim() ? Number(values.spaceLevel.trim()) : undefined;
-        setSpaceLevelFilter(levelNum !== undefined && !isNaN(levelNum) ? levelNum : undefined);
-        setSpaceLevelNameFilter(values.spaceLevelName?.trim() || undefined);
+    const handleApplyFilters = useCallback(() => {
         setPage(0);
     }, []);
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
@@ -467,25 +459,11 @@ const SpaceLevelListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
-                        <FilterDrawer
-                            open={showAdvancedFilters}
-                            onClose={() => setShowAdvancedFilters(false)}
-                            fields={spaceLevelFilterFields}
-                            onReset={handleResetFilters}
-                            onApply={handleApplyFilters}
-                            resetLabel={t('common.reset')}
-                            applyLabel={t('common.search')}
-                            title={t('common.advancedFilters')}
-                        >
-                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
-                                <Button
-                                    icon={<FilterOutlined />}
-                                    type={showAdvancedFilters ? 'primary' : 'default'}
-                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                />
-                            </Badge>
-                        </FilterDrawer>
                         <Can I="create" a="space_level">
                             <Button
                                 type="primary"
@@ -500,6 +478,17 @@ const SpaceLevelListPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={spaceLevelFilterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={

@@ -4133,6 +4133,7 @@
         "table": {
             "headers": {
                 "machineName": "Tên Máy",
+                "machineCode": "Mã Máy",
                 "operatorCount": "Số Công Nhân",
                 "notes": "Ghi Chú",
                 "createdAt": "Ngày Tạo"

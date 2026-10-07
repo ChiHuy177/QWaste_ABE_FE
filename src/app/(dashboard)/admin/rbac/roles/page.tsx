@@ -14,6 +14,9 @@ import {
 } from '@/features/dashboard/rbac/roles';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { RoleService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 
@@ -28,6 +31,13 @@ const RoleManagementPage = () => {
     const [loading, setLoading] = useState(false);
     const [roleData, setRoleData] = useState<Role[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [roleNameFilter, setRoleNameFilter] = useState<string | undefined>(undefined);
+    const [roleDescriptionFilter, setRoleDescriptionFilter] = useState<string | undefined>(
+        undefined
+    );
+
+    const activeFilterCount = [roleNameFilter, roleDescriptionFilter].filter(Boolean).length;
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
         type: ConfirmationType;
@@ -104,18 +114,49 @@ const RoleManagementPage = () => {
 
     const filteredRoleData = useMemo(() => {
         if (!roleData) return [];
-        if (!searchTerm.trim()) {
-            return roleData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const nameFilter = roleNameFilter?.toLowerCase();
+        const descriptionFilter = roleDescriptionFilter?.toLowerCase();
         return roleData.filter((role) => {
             const roleName = role.roleName?.toLowerCase() || '';
             const description = role.description?.toLowerCase() || '';
 
-            return roleName.includes(lowerSearchTerm) || description.includes(lowerSearchTerm);
+            const matchesSearch =
+                !lowerSearchTerm ||
+                roleName.includes(lowerSearchTerm) ||
+                description.includes(lowerSearchTerm);
+            const matchesName = !nameFilter || roleName.includes(nameFilter);
+            const matchesDescription = !descriptionFilter || description.includes(descriptionFilter);
+            return matchesSearch && matchesName && matchesDescription;
         });
-    }, [roleData, searchTerm]);
+    }, [roleData, searchTerm, roleNameFilter, roleDescriptionFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'roleName',
+                label: t('roleManagement.columns.name'),
+                placeholder: t('roleManagement.form.roleName.placeholder'),
+                value: roleNameFilter ?? '',
+                onChange: (val) => setRoleNameFilter(val.trim() || undefined),
+            },
+            {
+                key: 'description',
+                label: t('roleManagement.columns.description'),
+                placeholder: t('roleManagement.form.description.placeholder'),
+                value: roleDescriptionFilter ?? '',
+                onChange: (val) => setRoleDescriptionFilter(val.trim() || undefined),
+            },
+        ],
+        [t, roleNameFilter, roleDescriptionFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setRoleNameFilter(undefined);
+        setRoleDescriptionFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const handleFormSubmit = async (data: RoleFormData, mode: 'create' | 'edit') => {
         setConfirmModalState({
@@ -217,6 +258,10 @@ const RoleManagementPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Button
                             type="primary"
@@ -241,6 +286,17 @@ const RoleManagementPage = () => {
                     />
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{

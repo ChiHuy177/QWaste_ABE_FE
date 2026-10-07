@@ -25,6 +25,9 @@ import {
 } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
@@ -54,6 +57,11 @@ const StaffListPage = () => {
     const [loading, setLoading] = useState(true);
     const [staffData, setStaffData] = useState<UserProfile[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+    const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [roleFilter, statusFilter].filter(Boolean).length;
     const [spaceOptions, setSpaceOptions] = useState<SelectOption[]>([]);
     const baseSpaceOptionsRef = useRef<SelectOption[]>([]);
     const [spaceLoading, setSpaceLoading] = useState(false);
@@ -191,12 +199,26 @@ const StaffListPage = () => {
 
     const columns = useMemo(() => getStaffTableColumns(columnProps), [columnProps]);
 
+    const roleOptions = useMemo(() => {
+        const roles = new Set((staffData ?? []).flatMap((s) => s.roles ?? []));
+        return Array.from(roles)
+            .sort()
+            .map((role) => ({
+                value: role,
+                label: t(`staffManagement.form.fields.role.${role}`, { defaultValue: role }),
+            }));
+    }, [staffData, t]);
+
+    const statusOptions = useMemo(
+        () => [
+            { value: 'working', label: t('staffManagement.status.working') },
+            { value: 'notWorking', label: t('staffManagement.status.notWorking') },
+        ],
+        [t]
+    );
+
     const filteredStaffData = useMemo(() => {
         if (!staffData) return [];
-        if (!searchTerm.trim()) {
-            return staffData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
         return staffData.filter((staff) => {
             const fullname = staff.fullname?.toLowerCase() || '';
@@ -207,15 +229,49 @@ const StaffListPage = () => {
                 ...(staff.accessibleSpaces?.map((s) => s.spaceName.toLowerCase()) || []),
                 ...(staff.accessibleSpaces?.map((s) => s.spaceCode.toLowerCase()) || []),
             ];
-            return (
+            const matchesSearch =
+                !lowerSearchTerm ||
                 fullname.includes(lowerSearchTerm) ||
                 userCode.includes(lowerSearchTerm) ||
                 email.includes(lowerSearchTerm) ||
                 phone.includes(lowerSearchTerm) ||
-                spaces.some((s) => s.includes(lowerSearchTerm))
-            );
+                spaces.some((s) => s.includes(lowerSearchTerm));
+            const matchesRole = !roleFilter || (staff.roles ?? []).some((r) => r === roleFilter);
+            const isWorking = !staff.softDeleteMetaData?.isDeleted;
+            const matchesStatus =
+                !statusFilter || (statusFilter === 'working' ? isWorking : !isWorking);
+            return matchesSearch && matchesRole && matchesStatus;
         });
-    }, [staffData, searchTerm]);
+    }, [staffData, searchTerm, roleFilter, statusFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'role',
+                label: t('staffManagement.table.headers.role'),
+                value: roleFilter ?? '',
+                onChange: (val) => setRoleFilter(val || undefined),
+                type: 'select',
+                options: roleOptions,
+            },
+            {
+                key: 'status',
+                label: t('staffManagement.table.headers.status'),
+                value: statusFilter ?? '',
+                onChange: (val) => setStatusFilter(val || undefined),
+                type: 'select',
+                options: statusOptions,
+            },
+        ],
+        [t, roleFilter, statusFilter, roleOptions, statusOptions]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setRoleFilter(undefined);
+        setStatusFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const fetchStaffData = useCallback(async () => {
         try {
@@ -387,6 +443,10 @@ const StaffListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         {checkPermissionSilent('create', 'staff') && (
                             <Button
@@ -417,6 +477,17 @@ const StaffListPage = () => {
                     ) : undefined
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{

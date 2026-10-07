@@ -15,6 +15,9 @@ import {
 } from '@/features/dashboard/categories/step';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
@@ -48,6 +51,13 @@ const StepListPage = () => {
     const [loading, setLoading] = useState(true);
     const [stepData, setStepData] = useState<StepDTO[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [stepNameFilter, setStepNameFilter] = useState<string | undefined>(undefined);
+    const [stepDescriptionFilter, setStepDescriptionFilter] = useState<string | undefined>(
+        undefined
+    );
+
+    const activeFilterCount = [stepNameFilter, stepDescriptionFilter].filter(Boolean).length;
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
         type: ConfirmationType;
@@ -181,15 +191,48 @@ const StepListPage = () => {
 
     const filteredData = useMemo(() => {
         if (!stepData) return [];
-        if (!searchTerm.trim()) return stepData;
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const nameFilter = stepNameFilter?.toLowerCase();
+        const descriptionFilter = stepDescriptionFilter?.toLowerCase();
         return stepData.filter((step) => {
             const name = step.stepName?.toLowerCase() || '';
             const desc = step.description?.toLowerCase() || '';
-            return name.includes(lowerSearchTerm) || desc.includes(lowerSearchTerm);
+            const matchesSearch =
+                !lowerSearchTerm ||
+                name.includes(lowerSearchTerm) ||
+                desc.includes(lowerSearchTerm);
+            const matchesName = !nameFilter || name.includes(nameFilter);
+            const matchesDescription = !descriptionFilter || desc.includes(descriptionFilter);
+            return matchesSearch && matchesName && matchesDescription;
         });
-    }, [stepData, searchTerm]);
+    }, [stepData, searchTerm, stepNameFilter, stepDescriptionFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'stepName',
+                label: t('stepManagement.table.headers.stepName'),
+                placeholder: t('stepManagement.form.placeholders.stepName'),
+                value: stepNameFilter ?? '',
+                onChange: (val) => setStepNameFilter(val.trim() || undefined),
+            },
+            {
+                key: 'description',
+                label: t('stepManagement.table.headers.description'),
+                placeholder: t('stepManagement.form.placeholders.description'),
+                value: stepDescriptionFilter ?? '',
+                onChange: (val) => setStepDescriptionFilter(val.trim() || undefined),
+            },
+        ],
+        [t, stepNameFilter, stepDescriptionFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setStepNameFilter(undefined);
+        setStepDescriptionFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     useEffect(() => {
         fetchStepData();
@@ -297,6 +340,10 @@ const StepListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Can I="create" a="step">
                             <Button
@@ -311,6 +358,17 @@ const StepListPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={viewModalState.data?.stepName}

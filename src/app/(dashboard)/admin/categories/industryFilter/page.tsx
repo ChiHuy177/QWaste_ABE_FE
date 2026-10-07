@@ -16,6 +16,9 @@ import {
 } from '@/features/dashboard/categories/industryFilter';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
@@ -39,6 +42,11 @@ const IndustryFilterListPage = () => {
     const [industryFilterData, setIndustryFilterData] = useState<IndustryFilter[] | null>(null);
     const [isFormLoading, setIsFormLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+    const [periodCodeFilter, setPeriodCodeFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [categoryFilter, periodCodeFilter].filter(Boolean).length;
     const { handleError } = useApiErrorHandler();
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
@@ -165,11 +173,8 @@ const IndustryFilterListPage = () => {
 
     const filteredIndustryFilterData = useMemo(() => {
         if (!industryFilterData) return [];
-        if (!searchTerm.trim()) {
-            return industryFilterData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const periodFilter = periodCodeFilter?.toLowerCase();
         return industryFilterData.filter((filter) => {
             const displayNameEn = filter.displayNameEn?.toLowerCase() || '';
             const displayNameVi = filter.displayNameVi?.toLowerCase() || '';
@@ -177,15 +182,50 @@ const IndustryFilterListPage = () => {
             const category = filter.category?.toLowerCase() || '';
             const periodCode = filter.periodCode?.toLowerCase() || '';
 
-            return (
+            const matchesSearch =
+                !lowerSearchTerm ||
                 displayNameEn.includes(lowerSearchTerm) ||
                 displayNameVi.includes(lowerSearchTerm) ||
                 shortNameEn.includes(lowerSearchTerm) ||
                 category.includes(lowerSearchTerm) ||
-                periodCode.includes(lowerSearchTerm)
-            );
+                periodCode.includes(lowerSearchTerm);
+            const matchesCategory = !categoryFilter || filter.category === categoryFilter;
+            const matchesPeriodCode = !periodFilter || periodCode.includes(periodFilter);
+            return matchesSearch && matchesCategory && matchesPeriodCode;
         });
-    }, [industryFilterData, searchTerm]);
+    }, [industryFilterData, searchTerm, categoryFilter, periodCodeFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'category',
+                label: t('industryFilterManagement.table.headers.category', {
+                    defaultValue: 'Category',
+                }),
+                value: categoryFilter ?? '',
+                onChange: (val) => setCategoryFilter(val || undefined),
+                type: 'select',
+                options: [
+                    { value: 'SHIFT', label: t('industryFilterManagement.categories.shift') },
+                    { value: 'PERIOD', label: t('industryFilterManagement.categories.period') },
+                ],
+            },
+            {
+                key: 'periodCode',
+                label: t('industryFilterManagement.table.headers.periodCode'),
+                value: periodCodeFilter ?? '',
+                onChange: (val) => setPeriodCodeFilter(val.trim() || undefined),
+            },
+        ],
+        [t, categoryFilter, periodCodeFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setCategoryFilter(undefined);
+        setPeriodCodeFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     useEffect(() => {
         fetchIndustryFilterData();
@@ -291,6 +331,10 @@ const IndustryFilterListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Can I="create" a="industry_filter">
                             <Button
@@ -322,6 +366,17 @@ const IndustryFilterListPage = () => {
                     </Can>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 open={viewModalState.open}

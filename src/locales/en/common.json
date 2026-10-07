@@ -4078,6 +4078,7 @@
         "table": {
             "headers": {
                 "machineName": "Machine Name",
+                "machineCode": "Machine Code",
                 "factoryName": "Factory Name",
                 "operatorCount": "Operator Count",
                 "notes": "Notes",

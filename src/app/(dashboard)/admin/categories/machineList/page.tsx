@@ -4,7 +4,6 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
-    Badge,
     Button,
     Card,
     Flex,
@@ -51,8 +50,7 @@ import { SpaceService } from '@/services';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { MachineFilterInfo } from '@/features/dashboard/machines';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
-import FilterDrawer from '@/components/shared/filters/FilterDrawer';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { useUploadThing } from '@/utils/uploadthing';
 
 const { useBreakpoint } = Grid;
@@ -594,18 +592,21 @@ const MachineListPageContent = () => {
                 label: t('machineListManagement.table.headers.machineName'),
                 placeholder: t('machineListManagement.filters.namePlaceholder'),
                 value: machineNameFilter ?? '',
+                onChange: (val) => setMachineNameFilter(val.trim() || undefined),
             },
             {
                 key: 'machineCode',
                 label: t('machineListManagement.table.headers.machineCode'),
                 placeholder: t('machineListManagement.filters.machineCodePlaceholder'),
                 value: machineCodeFilter ?? '',
+                onChange: (val) => setMachineCodeFilter(val.trim() || undefined),
             },
             {
                 key: 'mqttTopic',
                 label: t('machineListManagement.form.fields.topic'),
                 placeholder: t('machineListManagement.filters.topicPlaceholder'),
                 value: mqttTopicFilter ?? '',
+                onChange: (val) => setMqttTopicFilter(val.trim() || undefined),
             },
         ],
         [t, machineNameFilter, machineCodeFilter, mqttTopicFilter]
@@ -639,10 +640,7 @@ const MachineListPageContent = () => {
         setPage(0);
     }, []);
 
-    const handleApplyFilters = useCallback((values: Record<string, string>) => {
-        setMachineNameFilter(values.machineName?.trim() || undefined);
-        setMachineCodeFilter(values.machineCode?.trim() || undefined);
-        setMqttTopicFilter(values.mqttTopic?.trim() || undefined);
+    const handleApplyFilters = useCallback(() => {
         setPage(0);
     }, []);
 
@@ -673,25 +671,11 @@ const MachineListPageContent = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
-                        <FilterDrawer
-                            open={showAdvancedFilters}
-                            onClose={() => setShowAdvancedFilters(false)}
-                            fields={machineFilterFields}
-                            onReset={handleResetFilters}
-                            onApply={handleApplyFilters}
-                            resetLabel={t('common.reset')}
-                            applyLabel={t('common.search')}
-                            title={t('common.advancedFilters')}
-                        >
-                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
-                                <Button
-                                    icon={<FilterOutlined />}
-                                    type={showAdvancedFilters ? 'primary' : 'default'}
-                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                />
-                            </Badge>
-                        </FilterDrawer>
 
                         <SpaceTreeSelect
                             value={selectedSpaceId}
@@ -715,6 +699,17 @@ const MachineListPageContent = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={machineFilterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={viewModalState.data?.machineName}

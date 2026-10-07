@@ -15,6 +15,9 @@ import {
 } from '@/features/dashboard/rbac/permissions';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { PermissionService } from '@/services';
 import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
@@ -40,6 +43,10 @@ const PermissionManagementPage = () => {
     const [loading, setLoading] = useState(false);
     const [permissionData, setPermissionData] = useState<Permission[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [moduleFilter, setModuleFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [moduleFilter].filter(Boolean).length;
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
         type: ConfirmationType;
@@ -116,25 +123,61 @@ const PermissionManagementPage = () => {
 
     const columns = useMemo(() => getPermissionTableColumns(columnProps), [columnProps]);
 
+    const moduleOptions = useMemo(() => {
+        const subjects = new Set(
+            (permissionData ?? []).map((p) => toSnakeCase(p.slug.split(':')[0] || 'other'))
+        );
+        return Array.from(subjects)
+            .sort()
+            .map((subjectKey) => ({
+                value: subjectKey,
+                label: t(`permissionSubjects.${subjectKey}`, {
+                    defaultValue: subjectKey
+                        .split('_')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' '),
+                }),
+            }));
+    }, [permissionData, t]);
+
     const filteredPermissionData = useMemo(() => {
         if (!permissionData) return [];
-        if (!searchTerm.trim()) {
-            return permissionData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
         return permissionData.filter((permission) => {
             const permissionName = permission.permissionName?.toLowerCase() || '';
             const slug = permission.slug?.toLowerCase() || '';
             const description = permission.description?.toLowerCase() || '';
 
-            return (
+            const matchesSearch =
+                !lowerSearchTerm ||
                 permissionName.includes(lowerSearchTerm) ||
                 slug.includes(lowerSearchTerm) ||
-                description.includes(lowerSearchTerm)
-            );
+                description.includes(lowerSearchTerm);
+            const matchesModule =
+                !moduleFilter || toSnakeCase(permission.slug.split(':')[0] || 'other') === moduleFilter;
+            return matchesSearch && matchesModule;
         });
-    }, [permissionData, searchTerm]);
+    }, [permissionData, searchTerm, moduleFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'module',
+                label: t('permissionManagement.filters.module', { defaultValue: 'Module' }),
+                value: moduleFilter ?? '',
+                onChange: (val) => setModuleFilter(val || undefined),
+                type: 'select',
+                options: moduleOptions,
+            },
+        ],
+        [t, moduleFilter, moduleOptions]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setModuleFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const groupedPermissionData = useMemo((): PermissionTableRow[] => {
         if (!filteredPermissionData) return [];
@@ -343,6 +386,10 @@ const PermissionManagementPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Button
                             color="primary"
@@ -369,6 +416,17 @@ const PermissionManagementPage = () => {
                     />
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{

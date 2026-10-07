@@ -19,6 +19,9 @@ import {
 import { MachineOperatorHistoryService } from '@/services/MachineOperatorHistoryService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { FactoryPickingResponse } from '@/types/Factory';
 import { ZonePickingResponse } from '@/types/Zone';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -43,6 +46,11 @@ const MachineStaffingPage = () => {
     const [loading, setLoading] = useState(false);
     const [historyData, setHistoryData] = useState<MachineOperatorHistory[] | null>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [machineCodeFilter, setMachineCodeFilter] = useState<string | undefined>(undefined);
+    const [machineNameFilter, setMachineNameFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [machineCodeFilter, machineNameFilter].filter(Boolean).length;
     const { handleError } = useApiErrorHandler();
     const [confirmModalState, setConfirmModalState] = useState<{
         open: boolean;
@@ -131,17 +139,47 @@ const MachineStaffingPage = () => {
 
     const filteredHistoryData = useMemo(() => {
         if (!historyData) return [];
-        if (!searchTerm.trim()) {
-            return historyData;
-        }
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const codeFilter = machineCodeFilter?.toLowerCase();
+        const nameFilter = machineNameFilter?.toLowerCase();
         return historyData.filter((record) => {
             const machineName = record.machineName?.toLowerCase() || '';
             const machineCode = record.machineCode?.toLowerCase() || '';
 
-            return machineName.includes(lowerSearchTerm) || machineCode.includes(lowerSearchTerm);
+            const matchesSearch =
+                !lowerSearchTerm ||
+                machineName.includes(lowerSearchTerm) ||
+                machineCode.includes(lowerSearchTerm);
+            const matchesCode = !codeFilter || machineCode.includes(codeFilter);
+            const matchesName = !nameFilter || machineName.includes(nameFilter);
+            return matchesSearch && matchesCode && matchesName;
         });
-    }, [historyData, searchTerm]);
+    }, [historyData, searchTerm, machineCodeFilter, machineNameFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'machineCode',
+                label: t('machineStaffing.table.headers.machineCode'),
+                value: machineCodeFilter ?? '',
+                onChange: (val) => setMachineCodeFilter(val.trim() || undefined),
+            },
+            {
+                key: 'machineName',
+                label: t('machineStaffing.table.headers.machineName'),
+                value: machineNameFilter ?? '',
+                onChange: (val) => setMachineNameFilter(val.trim() || undefined),
+            },
+        ],
+        [t, machineCodeFilter, machineNameFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setMachineCodeFilter(undefined);
+        setMachineNameFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const fetchHistoryData = async (zoneId: number) => {
         try {
@@ -267,6 +305,10 @@ const MachineStaffingPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Select
                             placeholder="Select Factory"
@@ -316,6 +358,17 @@ const MachineStaffingPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={viewModalState.data?.machineName}
