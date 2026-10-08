@@ -16,7 +16,7 @@ const VALIDATION_CONFIG = Object.freeze({
     PHONE_NUMBER: { pattern: /^[0-9]{10}$/, max: 10, required: true },
     ROLE: { required: true },
     GENDER: { required: true },
-    ACCESSIBLE_SPACES: { required: false },
+    ACCESSIBLE_SPACES: { required: true },
 });
 
 export const getStaffFormFields = (
@@ -273,6 +273,12 @@ export const getStaffFormFields = (
             loading: spaceLoading,
             allowClear: true,
             maxTagCount: 5,
+            rules: [
+                {
+                    required: VALIDATION_CONFIG.ACCESSIBLE_SPACES.required,
+                    message: t('staffManagement.form.validation.required'),
+                },
+            ],
             span: { xs: 24, md: 12 },
         },
     ];
