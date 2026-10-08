@@ -4,6 +4,7 @@ import type { CSSProperties, ReactElement, MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceService } from '@/services/SpaceService';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
+import type { SpaceLevelDTO } from '@/types/SpaceLevel';
 import { toast } from 'sonner';
 import {
     Button,
@@ -111,7 +112,13 @@ const SpaceListPage = () => {
         queryKey: spaceLevelQueryKeys.lists,
         queryFn: async () => {
             const response = await SpaceLevelService.getAllSpaceLevels();
-            return [...response].sort((a, b) => a.spaceLevel - b.spaceLevel);
+            const rawData = response as unknown as
+                | SpaceLevelDTO[]
+                | { content: SpaceLevelDTO[] }
+                | null
+                | undefined;
+            const levels = Array.isArray(rawData) ? rawData : (rawData?.content ?? []);
+            return [...levels].sort((a, b) => a.spaceLevel - b.spaceLevel);
         },
     });
 
@@ -119,7 +126,7 @@ const SpaceListPage = () => {
         queryKey: spaceQueryKeys.tree,
         queryFn: async () => {
             const response = await SpaceService.getAllSpacesTree();
-            return sanitizeSpaceTree(response);
+            return sanitizeSpaceTree(response ?? []);
         },
     });
 
