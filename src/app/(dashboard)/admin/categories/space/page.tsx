@@ -76,6 +76,21 @@ const isLocalFile = (value: unknown): value is File => {
     return typeof File !== 'undefined' && value instanceof File;
 };
 
+const getNumericLevel = (
+    item:
+        Partial<SpaceLevelDTO> | Partial<SpaceWithChildrenResponse['spaceLevel']> | null | undefined
+): number => {
+    if (!item) return 0;
+    const raw =
+        item.spaceLevel ??
+        (item as { level?: number }).level ??
+        (item as { space_level?: number }).space_level;
+    if (raw !== undefined && raw !== null && !Number.isNaN(Number(raw))) {
+        return Number(raw);
+    }
+    return Number(item.spaceLevelId ?? 0);
+};
+
 const SpaceListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
@@ -111,14 +126,25 @@ const SpaceListPage = () => {
     const spaceLevelsQuery = useQuery({
         queryKey: spaceLevelQueryKeys.lists,
         queryFn: async () => {
-            const response = await SpaceLevelService.getAllSpaceLevels();
-            const rawData = response as unknown as
-                | SpaceLevelDTO[]
-                | { content: SpaceLevelDTO[] }
-                | null
-                | undefined;
-            const levels = Array.isArray(rawData) ? rawData : (rawData?.content ?? []);
-            return [...levels].sort((a, b) => a.spaceLevel - b.spaceLevel);
+            try {
+                const paginated = await SpaceLevelService.getSpaceLevelsPaginated({
+                    page: 0,
+                    size: 100,
+                    sort: 'spaceLevel,ASC',
+                });
+                const content = paginated?.content;
+                if (Array.isArray(content) && content.length > 0) {
+                    return [...content].sort((a, b) => getNumericLevel(a) - getNumericLevel(b));
+                }
+            } catch {
+                // Fallback to getAllSpaceLevels if paginated request fails
+            }
+
+            const response = (await SpaceLevelService.getAllSpaceLevels()) as unknown;
+            const levels = Array.isArray(response)
+                ? response
+                : ((response as { content?: SpaceLevelDTO[] })?.content ?? []);
+            return [...levels].sort((a, b) => getNumericLevel(a) - getNumericLevel(b));
         },
     });
 
@@ -132,6 +158,7 @@ const SpaceListPage = () => {
 
     const spaceLevels = spaceLevelsQuery.data ?? [];
     const spaceData = spacesTreeQuery.data ?? [];
+
     const loading =
         spaceLevelsQuery.isLoading ||
         spaceLevelsQuery.isFetching ||
@@ -154,7 +181,7 @@ const SpaceListPage = () => {
 
     const maxSpaceLevel = useMemo(() => {
         if (!spaceLevels.length) return 0;
-        return spaceLevels[spaceLevels.length - 1].spaceLevel;
+        return Math.max(...spaceLevels.map(getNumericLevel));
     }, [spaceLevels]);
 
     const handleCreateRoot = () => {
@@ -162,8 +189,22 @@ const SpaceListPage = () => {
             toast.error(t('spaceManagement.errors.noLevelConfigured'));
             return;
         }
-        const rootLevel = spaceLevels.find((l) => l.spaceLevel === 1);
-        if (!rootLevel) return;
+
+        // Per Space API: Root spaces strictly require level 1 (lowest numeric tier = highest hierarchy rank).
+        // If level 1 is not explicit, pick the level with the lowest numeric value.
+        const validLevels = spaceLevels.filter((l) => getNumericLevel(l) > 0);
+        const rootLevel =
+            spaceLevels.find((l) => getNumericLevel(l) === 1) ||
+            (validLevels.length > 0
+                ? validLevels.reduce((min, curr) =>
+                      getNumericLevel(curr) < getNumericLevel(min) ? curr : min
+                  )
+                : spaceLevels[0]);
+
+        if (!rootLevel) {
+            toast.error(t('spaceManagement.errors.noLevelConfigured'));
+            return;
+        }
 
         setModalState({
             open: true,
@@ -181,10 +222,15 @@ const SpaceListPage = () => {
         (parentSpace: SpaceWithChildrenResponse) => {
             if (!checkPermission('create', 'space')) return;
 
-            const currentLevelValue = parentSpace.spaceLevel.spaceLevel;
-            const targetLevelConfig = spaceLevels.find(
-                (l) => l.spaceLevel === currentLevelValue + 1
+            // Per Space API: Child space level must be exactly parent.spaceLevel + 1
+            const currentLevelValue = getNumericLevel(parentSpace.spaceLevel);
+            let targetLevelConfig = spaceLevels.find(
+                (l) => getNumericLevel(l) === currentLevelValue + 1
             );
+
+            if (!targetLevelConfig) {
+                targetLevelConfig = spaceLevels.find((l) => getNumericLevel(l) > currentLevelValue);
+            }
 
             if (!targetLevelConfig) {
                 toast.error(t('spaceManagement.errors.noLevelConfigured'));
@@ -202,7 +248,7 @@ const SpaceListPage = () => {
                 },
             });
         },
-        [checkPermission, spaceLevels]
+        [checkPermission, spaceLevels, t]
     );
 
     const handleEditSpace = useCallback(
@@ -406,14 +452,20 @@ const SpaceListPage = () => {
             const floorPlanImageUrl = await uploadFloorPlanIfNeeded(data.floorPlanImageUrl);
 
             if (mode === 'create') {
+                const spaceLevelId = modalState.data?.spaceLevelId;
+                if (!spaceLevelId) {
+                    toast.error(t('spaceManagement.errors.noLevelConfigured'));
+                    return;
+                }
+
                 const payload: SpaceCreationRequest = {
-                    spaceCode: data.spaceCode,
-                    spaceName: data.spaceName,
-                    floorPlanImageUrl,
-                    description: data.description ?? undefined,
-                    displayOrder: data.displayOrder,
-                    spaceLevelId: modalState.data?.spaceLevelId,
-                    parentSpaceId: modalState.data?.parentSpaceId,
+                    spaceCode: data.spaceCode.trim().toUpperCase(),
+                    spaceName: data.spaceName.trim(),
+                    floorPlanImageUrl: floorPlanImageUrl ?? null,
+                    description: data.description?.trim() || undefined,
+                    displayOrder: Number(data.displayOrder),
+                    spaceLevelId: Number(spaceLevelId),
+                    parentSpaceId: modalState.data?.parentSpaceId ?? null,
                 };
                 await createSpace(payload);
                 toast.success(t('spaceManagement.form.createSuccess'));
@@ -421,12 +473,12 @@ const SpaceListPage = () => {
                 if (modalState.data?.spaceId) {
                     const submitData: SpaceUpdationRequest = {
                         spaceId: modalState.data.spaceId,
-                        spaceCode: data.spaceCode,
-                        spaceName: data.spaceName,
-                        floorPlanImageUrl,
-                        description: data.description ?? undefined,
-                        displayOrder: data.displayOrder,
-                        parentSpaceId: modalState.data.parentId,
+                        spaceCode: data.spaceCode.trim().toUpperCase(),
+                        spaceName: data.spaceName.trim(),
+                        floorPlanImageUrl: floorPlanImageUrl ?? null,
+                        description: data.description?.trim() || undefined,
+                        displayOrder: Number(data.displayOrder),
+                        parentSpaceId: modalState.data?.parentId ?? null,
                     };
                     await updateSpace(submitData);
                     toast.success(t('spaceManagement.form.updateSuccess'));
@@ -480,6 +532,7 @@ const SpaceListPage = () => {
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 block={isMobile}
+                                loading={spaceLevelsQuery.isLoading}
                                 onClick={handleCreateRoot}
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >

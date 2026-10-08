@@ -13,7 +13,6 @@ import { ColumnsType } from 'antd/es/table';
 import { spaceLevelColors, spaceLevelTextColors } from '@/configs/antdTheme';
 import { AppAbility } from '@/configs/permissions/caslAbility';
 
-
 const ACTION_BUTTON_SIZE = 34;
 const ACTION_BUTTON_GAP = 8;
 
@@ -42,12 +41,9 @@ export const getSpaceTableColumns = ({
     const canUpdateSpace = ability.can('update', 'space');
     const canDeleteSpace = ability.can('delete', 'space');
     const hasOverflowActions = canCreateSpace || canDeleteSpace;
-    const visibleActionCount =
-        1 + (canUpdateSpace ? 1 : 0) + (hasOverflowActions ? 1 : 0);
+    const visibleActionCount = 1 + (canUpdateSpace ? 1 : 0) + (hasOverflowActions ? 1 : 0);
     const actionColumnWidth =
-        visibleActionCount * ACTION_BUTTON_SIZE
-        + (visibleActionCount - 1) * ACTION_BUTTON_GAP
-        + 32;
+        visibleActionCount * ACTION_BUTTON_SIZE + (visibleActionCount - 1) * ACTION_BUTTON_GAP + 32;
     const actionButtonStyle = {
         width: ACTION_BUTTON_SIZE,
         height: ACTION_BUTTON_SIZE,
@@ -156,32 +152,34 @@ export const getSpaceTableColumns = ({
                 },
             }),
             render: (_, record: SpaceWithChildrenResponse) => {
-                const isMaxLevel = record.spaceLevel?.spaceLevel >= maxSpaceLevel;
+                const isMaxLevel =
+                    maxSpaceLevel > 0 &&
+                    Number(record.spaceLevel?.spaceLevel ?? 0) >= maxSpaceLevel;
                 const hasChildren = !!record.children && record.children.length > 0;
                 const overflowItems: MenuProps['items'] = [
                     ...(canCreateSpace
                         ? [
-                            {
-                                key: 'add-child',
-                                icon: <PlusOutlined />,
-                                label: t('spaceManagement.actions.create'),
-                                disabled: isMaxLevel,
-                            },
-                        ]
+                              {
+                                  key: 'add-child',
+                                  icon: <PlusOutlined />,
+                                  label: t('spaceManagement.actions.create'),
+                                  disabled: isMaxLevel,
+                              },
+                          ]
                         : []),
                     ...(canCreateSpace && canDeleteSpace ? [{ type: 'divider' as const }] : []),
                     ...(canDeleteSpace
                         ? [
-                            {
-                                key: 'delete',
-                                danger: true,
-                                icon: <DeleteOutlined />,
-                                label: hasChildren
-                                    ? t('spaceManagement.errors.cannotDeleteHasChildren')
-                                    : t('spaceManagement.actions.delete'),
-                                disabled: hasChildren,
-                            },
-                        ]
+                              {
+                                  key: 'delete',
+                                  danger: true,
+                                  icon: <DeleteOutlined />,
+                                  label: hasChildren
+                                      ? t('spaceManagement.errors.cannotDeleteHasChildren')
+                                      : t('spaceManagement.actions.delete'),
+                                  disabled: hasChildren,
+                              },
+                          ]
                         : []),
                 ];
 
@@ -228,7 +226,11 @@ export const getSpaceTableColumns = ({
 
                         {hasOverflowActions && (
                             <span style={actionSlotStyle}>
-                                <Tooltip title={t('common.moreActions', { defaultValue: 'More actions' })}>
+                                <Tooltip
+                                    title={t('common.moreActions', {
+                                        defaultValue: 'More actions',
+                                    })}
+                                >
                                     <Dropdown
                                         trigger={['click']}
                                         menu={{
@@ -250,7 +252,9 @@ export const getSpaceTableColumns = ({
                                             type="default"
                                             icon={<EllipsisOutlined />}
                                             onClick={(e) => e.stopPropagation()}
-                                            aria-label={t('common.moreActions', { defaultValue: 'More actions' })}
+                                            aria-label={t('common.moreActions', {
+                                                defaultValue: 'More actions',
+                                            })}
                                             style={actionButtonStyle}
                                         />
                                     </Dropdown>

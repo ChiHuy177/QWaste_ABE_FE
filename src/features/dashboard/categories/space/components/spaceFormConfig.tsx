@@ -2,11 +2,11 @@ import { TFunction } from 'i18next';
 import { FormFieldConfig } from '@/components/shared/FormModal/types';
 
 const VALIDATION_CONFIG = Object.freeze({
-    SPACE_CODE: { min: 2, max: 10, pattern: '^[A-Z0-9_-]+$', required: true },
+    SPACE_CODE: { min: 2, max: 10, pattern: '^[a-zA-Z0-9_-]+$', required: true },
     SPACE_NAME: { min: 5, max: 50, required: true },
     DISPLAY_ORDER: { min: 1, required: true, maxLength: 9 },
     FLOOR_PLAN_IMAGE_URL: { required: false },
-    DESCRIPTION: { max: 500, required: false },
+    DESCRIPTION: { max: 2000, required: false },
 });
 
 export const getSpaceFormFields = (t: TFunction, _mode: 'create' | 'edit'): FormFieldConfig[] => {
@@ -15,6 +15,7 @@ export const getSpaceFormFields = (t: TFunction, _mode: 'create' | 'edit'): Form
             name: 'spaceCode',
             label: t('spaceManagement.form.fields.code'),
             type: 'text',
+            textTransform: 'uppercase',
             placeholder: t('spaceManagement.form.placeholders.code'),
             required: VALIDATION_CONFIG.SPACE_CODE.required,
             maxLength: VALIDATION_CONFIG.SPACE_CODE.max,
