@@ -1,5 +1,6 @@
 import { TFunction } from 'i18next';
-import { FormFieldConfig } from '@/components/shared/FormModal/types';
+import { FormFieldConfig } from '@/components/shared/FormModal';
+import type { SpaceTreeSelectOption } from '@/components/shared/filters/SpaceTreeSelect';
 
 const VALIDATION_CONFIG = Object.freeze({
     SPACE_CODE: { min: 2, max: 10, pattern: '^[a-zA-Z0-9_-]+$', required: true },
@@ -9,8 +10,71 @@ const VALIDATION_CONFIG = Object.freeze({
     DESCRIPTION: { max: 2000, required: false },
 });
 
-export const getSpaceFormFields = (t: TFunction, _mode: 'create' | 'edit'): FormFieldConfig[] => {
+export interface SpaceFormFieldOptions {
+    spaceTreeData?: SpaceTreeSelectOption[];
+    onParentChange?: (parentSpaceId: number | null) => void;
+    validateParentSpace?: (parentSpaceId: number | null) => string | null;
+}
+
+export const getSpaceFormFields = (
+    t: TFunction,
+    mode: 'create' | 'edit',
+    options?: SpaceFormFieldOptions
+): FormFieldConfig[] => {
     return [
+        {
+            name: 'parentSpaceId',
+            label: t('spaceManagement.form.fields.parentSpace'),
+            type: 'space-tree-select',
+            placeholder: t('spaceManagement.form.placeholders.parentSpace'),
+            required: false,
+            allowClear: true,
+            disabled: mode === 'edit',
+            span: { xs: 24, sm: 16 },
+            extra:
+                mode === 'edit'
+                    ? t('spaceManagement.form.help.parentSpaceEditDisabled')
+                    : undefined,
+            treeData: options?.spaceTreeData,
+            onChange: options?.onParentChange,
+            rules: [
+                {
+                    validator: async (_, value) => {
+                        if (value !== undefined && value !== null && options?.validateParentSpace) {
+                            const errorMsg = options.validateParentSpace(value);
+                            if (errorMsg) {
+                                return Promise.reject(new Error(errorMsg));
+                            }
+                        }
+                        return Promise.resolve();
+                    },
+                },
+            ],
+        },
+        {
+            name: 'displayOrder',
+            label: t('spaceManagement.form.fields.order'),
+            type: 'number',
+            placeholder: '0',
+            maxLength: VALIDATION_CONFIG.DISPLAY_ORDER.maxLength,
+            required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
+            rules: [
+                {
+                    required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
+                    message: t('spaceManagement.form.validation.required', {
+                        defaultValue: 'This field is required',
+                    }),
+                },
+                {
+                    type: 'number',
+                    min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
+                    message: t('spaceManagement.form.validation.minValue', {
+                        min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
+                    }),
+                },
+            ],
+            span: { xs: 24, sm: 8 },
+        },
         {
             name: 'spaceCode',
             label: t('spaceManagement.form.fields.code'),
@@ -55,30 +119,6 @@ export const getSpaceFormFields = (t: TFunction, _mode: 'create' | 'edit'): Form
                     min: VALIDATION_CONFIG.SPACE_NAME.min,
                     message: t('spaceManagement.form.validation.minLength', {
                         min: VALIDATION_CONFIG.SPACE_NAME.min,
-                    }),
-                },
-            ],
-            span: { xs: 24, sm: 12 },
-        },
-        {
-            name: 'displayOrder',
-            label: t('spaceManagement.form.fields.order'),
-            type: 'number',
-            placeholder: '0',
-            maxLength: VALIDATION_CONFIG.DISPLAY_ORDER.maxLength,
-            required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
-            rules: [
-                {
-                    required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
-                    message: t('spaceManagement.form.validation.required', {
-                        defaultValue: 'This field is required',
-                    }),
-                },
-                {
-                    type: 'number',
-                    min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
-                    message: t('spaceManagement.form.validation.minValue', {
-                        min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
                     }),
                 },
             ],

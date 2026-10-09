@@ -12,6 +12,7 @@ import {
     Typography,
     Skeleton,
     Tabs,
+    theme,
 } from 'antd';
 import { toast } from 'sonner';
 import { EntityFormModalProps, FormFieldConfig } from './types';
@@ -45,6 +46,7 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
     fields,
     title,
     description,
+    topContent,
     width = 450,
     buttonLabels,
     auditMetaData,
@@ -55,6 +57,7 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
 }: EntityFormModalProps<TFormData>) {
     const [form] = Form.useForm<TFormData>();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { token } = theme.useToken();
     const isEditMode = mode === 'edit';
     const useTabbedLayout = layout === 'tabs' && children;
 
@@ -224,7 +227,12 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
             destroyOnHidden
             mask={{ closable: !isSubmitting }}
         >
-            {currentDescription && <p style={{ color: '#6b7280', marginBottom: 24 }}>{currentDescription}</p>}
+            {currentDescription && (
+                <p style={{ color: token.colorTextSecondary, marginBottom: 24 }}>
+                    {currentDescription}
+                </p>
+            )}
+            {topContent && <div style={{ marginBottom: 18 }}>{topContent}</div>}
 
             {loading ? (
                 <div style={{ padding: '16px 0' }}>
@@ -335,8 +343,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                     <Text type="secondary">
                                         {auditMetaData.createdAt
                                             ? dayjs(auditMetaData.createdAt).format(
-                                                'DD/MM/YYYY HH:mm:ss'
-                                            )
+                                                  'DD/MM/YYYY HH:mm:ss'
+                                              )
                                             : '-'}
                                     </Text>
                                 </Descriptions.Item>
@@ -347,8 +355,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                     <Text type="secondary">
                                         {auditMetaData.updatedAt
                                             ? dayjs(auditMetaData.updatedAt).format(
-                                                'DD/MM/YYYY HH:mm:ss'
-                                            )
+                                                  'DD/MM/YYYY HH:mm:ss'
+                                              )
                                             : '-'}
                                     </Text>
                                 </Descriptions.Item>
@@ -369,8 +377,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                 {isSubmitting
                                     ? labels.saving
                                     : isEditMode
-                                        ? labels.edit
-                                        : labels.create}
+                                      ? labels.edit
+                                      : labels.create}
                             </Button>
                         </div>
                     </Form.Item>

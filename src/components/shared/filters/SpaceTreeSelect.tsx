@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TreeSelect, TreeSelectProps, Tooltip } from 'antd';
+import { TreeSelect, TreeSelectProps, Tooltip, Tag } from 'antd';
 import { SpaceService } from '@/services/SpaceService';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
 
 export interface SpaceTreeSelectOption {
@@ -9,6 +10,7 @@ export interface SpaceTreeSelectOption {
     title: React.ReactNode;
     label: string;
     displayLabel: React.ReactNode;
+    disabled?: boolean;
     children?: SpaceTreeSelectOption[];
 }
 
@@ -23,22 +25,62 @@ export interface SpaceTreeSelectProps extends Omit<TreeSelectProps<number>, 'tre
 export interface SpaceTreeNode {
     spaceId: number;
     spaceName: string;
+    spaceLevel?: { spaceLevel?: number } | number | Record<string, unknown>;
     children?: SpaceTreeNode[];
+}
+
+export interface MapSpaceTreeOptions {
+    maxSelectableLevel?: number;
+    disabledSpaceIds?: number[];
+    maxBadgeText?: string;
+    t?: TFunction;
 }
 
 export const mapSpaceTreeToTreeSelect = (
     nodes: SpaceTreeNode[],
-    parentPathName: string = ''
+    parentPathName: string = '',
+    options?: MapSpaceTreeOptions
 ): SpaceTreeSelectOption[] => {
     return nodes.map((node) => {
         const currentPathName = parentPathName
             ? `${parentPathName} / ${node.spaceName}`
             : node.spaceName;
+
+        const rawLevel =
+            typeof node.spaceLevel === 'object' && node.spaceLevel !== null
+                ? ((
+                      node.spaceLevel as {
+                          spaceLevel?: number;
+                          space_level?: number;
+                          level?: number;
+                      }
+                  ).spaceLevel ??
+                  (node.spaceLevel as { space_level?: number }).space_level ??
+                  (node.spaceLevel as { level?: number }).level)
+                : node.spaceLevel;
+        const levelNum = Number(rawLevel ?? 0);
+
+        const isMaxLevelReached =
+            options?.maxSelectableLevel !== undefined &&
+            options.maxSelectableLevel > 0 &&
+            levelNum >= options.maxSelectableLevel;
+        const isExcluded = options?.disabledSpaceIds?.includes(node.spaceId) ?? false;
+        const isDisabled = isMaxLevelReached || isExcluded;
+
+        const maxBadgeText =
+            options?.maxBadgeText ??
+            (options?.t
+                ? options.t('spaceManagement.maxLevelBadge', { defaultValue: 'Tối đa' })
+                : 'Tối đa');
+
         return {
             value: node.spaceId,
+            disabled: isDisabled,
             title: (
                 <span
-                    title={node.spaceName}
+                    title={
+                        isMaxLevelReached ? `${node.spaceName} (${maxBadgeText})` : node.spaceName
+                    }
                     style={{
                         maxWidth: '220px',
                         overflow: 'hidden',
@@ -46,9 +88,25 @@ export const mapSpaceTreeToTreeSelect = (
                         whiteSpace: 'nowrap',
                         display: 'inline-block',
                         verticalAlign: 'middle',
+                        opacity: isDisabled ? 0.45 : 1,
                     }}
                 >
                     {node.spaceName}
+                    {isMaxLevelReached && (
+                        <Tag
+                            color="error"
+                            bordered={false}
+                            style={{
+                                fontSize: 10,
+                                marginInlineStart: 6,
+                                marginInlineEnd: 0,
+                                paddingInline: 4,
+                                lineHeight: '16px',
+                            }}
+                        >
+                            {maxBadgeText}
+                        </Tag>
+                    )}
                 </span>
             ),
             label: currentPathName,
@@ -59,7 +117,7 @@ export const mapSpaceTreeToTreeSelect = (
             ),
             children:
                 node.children && node.children.length > 0
-                    ? mapSpaceTreeToTreeSelect(node.children, currentPathName)
+                    ? mapSpaceTreeToTreeSelect(node.children, currentPathName, options)
                     : undefined,
         };
     });
@@ -120,7 +178,7 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
 
                 if (!fetchPromise) {
                     fetchPromise = SpaceService.getAllSpacesTree().then((response) => {
-                        return mapSpaceTreeToTreeSelect(response);
+                        return mapSpaceTreeToTreeSelect(response, '', { t });
                     });
                 }
 
@@ -156,8 +214,7 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
     const isDataEmpty = displayData.length === 0;
 
     // Remove undefined hacking. Force numeric cast to satisfy Ant Design strict equality `===` checks.
-    const safeValue =
-        value !== undefined && value !== null ? Number(value) : undefined;
+    const safeValue = value !== undefined && value !== null ? Number(value) : undefined;
     const hasAutoSelectedRef = useRef(false);
 
     useEffect(() => {
@@ -201,7 +258,7 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
             loading={isActuallyLoading}
             allowClear
             treeDefaultExpandAll={false}
-            showSearch={{ treeNodeFilterProp: "label" }}
+            showSearch={{ treeNodeFilterProp: 'label' }}
             treeNodeLabelProp="displayLabel"
             styles={mergedStyles}
             {...props}
