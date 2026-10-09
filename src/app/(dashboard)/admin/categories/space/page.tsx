@@ -190,8 +190,6 @@ const SpaceListPage = () => {
             return;
         }
 
-        // Per Space API: Root spaces strictly require level 1 (lowest numeric tier = highest hierarchy rank).
-        // If level 1 is not explicit, pick the level with the lowest numeric value.
         const validLevels = spaceLevels.filter((l) => getNumericLevel(l) > 0);
         const rootLevel =
             spaceLevels.find((l) => getNumericLevel(l) === 1) ||
@@ -222,7 +220,6 @@ const SpaceListPage = () => {
         (parentSpace: SpaceWithChildrenResponse) => {
             if (!checkPermission('create', 'space')) return;
 
-            // Per Space API: Child space level must be exactly parent.spaceLevel + 1
             const currentLevelValue = getNumericLevel(parentSpace.spaceLevel);
             let targetLevelConfig = spaceLevels.find(
                 (l) => getNumericLevel(l) === currentLevelValue + 1
