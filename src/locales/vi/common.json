@@ -1831,6 +1831,7 @@
                 "description": "Bạn có chắc chắn muốn xóa khu vực này không?"
             }
         },
+        "maxLevelBadge": "Tối đa",
         "form": {
             "createTitle": "Tạo khu vực mới",
             "createDescription": "Gán vào cấp cha: {{parentName}} ({{spaceLevelName}})",
@@ -1843,6 +1844,7 @@
             "updateSuccess": "Cập nhật khu vực thành công",
             "updateError": "Cập nhật khu vực thất bại",
             "fields": {
+                "parentSpace": "Khu vực cha",
                 "code": "Mã khu vực",
                 "name": "Tên khu vực",
                 "order": "Thứ tự hiển thị",
@@ -1850,6 +1852,7 @@
                 "description": "Mô tả"
             },
             "placeholders": {
+                "parentSpace": "Chọn khu vực cha (để trống nếu là khu vực gốc)...",
                 "code": "Nhập mã khu vực",
                 "name": "Nhập tên khu vực",
                 "order": "Nhập thứ tự hiển thị",
@@ -1857,6 +1860,9 @@
                 "description": "Nhập mô tả chi tiết về khu vực"
             },
             "help": {
+                "noticePrefix": "Lưu ý:",
+                "parentSpaceHint": "Để trống để tạo khu vực gốc (Cấp 1). Chọn khu vực cha để tự động tính cấp tiếp theo.",
+                "parentSpaceEditDisabled": "Không thể thay đổi khu vực cha khi cập nhật.",
                 "floorPlanImageUrl": "Tải lên ảnh sơ đồ mặt bằng cho trang Floor Map."
             },
             "upload": {
@@ -1869,7 +1875,8 @@
                 "noWhitespaceOnly": "Không được chỉ chứa khoảng trắng",
                 "codePattern": "Định dạng không hợp lệ (A-Z0-9_-)",
                 "url": "URL không hợp lệ",
-                "minValue": "Giá trị tối thiểu là {{min}}"
+                "minValue": "Giá trị tối thiểu là {{min}}",
+                "cannotAddChildToMaxLevel": "Không thể tạo khu vực con vì khu vực này đã đạt cấp tối đa (Cấp {{maxLevel}})."
             },
             "buttons": {
                 "cancel": "Hủy",

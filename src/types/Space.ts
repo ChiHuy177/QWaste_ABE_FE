@@ -85,6 +85,7 @@ export interface SpaceUpdationRequest {
 
 /** Form values submitted by the create/edit Space modal (see spaceFormConfig.tsx). */
 export interface SpaceFormData {
+    parentSpaceId?: number | null;
     spaceCode: string;
     spaceName: string;
     displayOrder: number;

@@ -1873,6 +1873,7 @@
                 "description": "Are you sure you want to delete this space?"
             }
         },
+        "maxLevelBadge": "Max",
         "form": {
             "createTitle": "Create New Space",
             "createDescription": "Assign to parent: {{parentName}} ({{spaceLevelName}})",
@@ -1885,6 +1886,7 @@
             "updateSuccess": "Space updated successfully",
             "updateError": "Failed to update space",
             "fields": {
+                "parentSpace": "Parent Space",
                 "code": "Space Code",
                 "name": "Space Name",
                 "order": "Display Order",
@@ -1892,6 +1894,7 @@
                 "description": "Description"
             },
             "placeholders": {
+                "parentSpace": "Select parent space (leave empty for root space)...",
                 "code": "Enter space code",
                 "name": "Enter space name",
                 "order": "Enter display order",
@@ -1899,6 +1902,9 @@
                 "description": "Enter detailed description of the space"
             },
             "help": {
+                "noticePrefix": "Note:",
+                "parentSpaceHint": "Leave empty to create root space (Level 1). Select parent to auto-derive child level.",
+                "parentSpaceEditDisabled": "Parent space cannot be changed when updating.",
                 "floorPlanImageUrl": "Upload the floor plan image used by the Floor Map page."
             },
             "upload": {
@@ -1911,7 +1917,8 @@
                 "noWhitespaceOnly": "Cannot contain only whitespace characters",
                 "codePattern": "Format invalid (A-Z0-9_-)",
                 "url": "Invalid URL",
-                "minValue": "Minimum value is {{min}}"
+                "minValue": "Minimum value is {{min}}",
+                "cannotAddChildToMaxLevel": "Cannot create child space because this space is already at the maximum level (Level {{maxLevel}})."
             },
             "buttons": {
                 "cancel": "Cancel",
