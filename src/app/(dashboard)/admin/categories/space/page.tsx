@@ -81,14 +81,9 @@ const getNumericLevel = (
         Partial<SpaceLevelDTO> | Partial<SpaceWithChildrenResponse['spaceLevel']> | null | undefined
 ): number => {
     if (!item) return 0;
-    const raw =
-        item.spaceLevel ??
-        (item as { level?: number }).level ??
-        (item as { space_level?: number }).space_level;
-    if (raw !== undefined && raw !== null && !Number.isNaN(Number(raw))) {
-        return Number(raw);
-    }
-    return Number(item.spaceLevelId ?? 0);
+    const raw = item.spaceLevel ?? item.spaceLevelId;
+    const num = Number(raw);
+    return !Number.isNaN(num) ? num : 0;
 };
 
 const SpaceListPage = () => {
