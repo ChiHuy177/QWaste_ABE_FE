@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
     MONITOR_GROUP_ORDER,
     type MonitorGroupKey,
-} from '@/app/(dashboard)/admin/production-plan/_utils/planMappers';
+} from '@/features/dashboard/production-plan';
 
 export interface IProductionPlanMonitorStoreState {
     searchText: string;

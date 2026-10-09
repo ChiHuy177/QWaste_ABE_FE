@@ -12,14 +12,19 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { Can, useAbility } from '@/contexts/AbilityContext';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { OperationType, OperationTypeFormData } from '@/types/OperationType';
-import { getOperationTypeTableColumns, OperationTypeTableColumnProps } from './_components/Columns';
-import { getOperationTypeFormFields } from './_components/operationTypeFormConfig';
+import {
+    getOperationTypeTableColumns,
+    type OperationTypeTableColumnProps,
+    getOperationTypeFormFields,
+} from '@/features/dashboard/categories/operationType';
 
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
@@ -46,12 +51,6 @@ const OperationTypeListPage = () => {
         data: OperationType | null;
     }>({ open: false, mode: 'create', data: null });
 
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({ open: false, type: 'create', pendingAction: null });
-
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
         loading: boolean;
@@ -59,6 +58,18 @@ const OperationTypeListPage = () => {
     }>({ open: false, loading: false, data: null });
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [operationTypeCodeFilter, setOperationTypeCodeFilter] = useState<string | undefined>(
+        undefined
+    );
+    const [operationTypeNameFilter, setOperationTypeNameFilter] = useState<string | undefined>(
+        undefined
+    );
+
+    const activeFilterCount = [operationTypeCodeFilter, operationTypeNameFilter].filter(
+        Boolean
+    ).length;
 
     // BE chỉ có GET /v1 không phân trang — search/sort/phân trang chạy client-side.
     const operationTypesQuery = useQuery({
@@ -69,13 +80,47 @@ const OperationTypeListPage = () => {
     const operationTypeData = useMemo(() => {
         const all = operationTypesQuery.data ?? [];
         const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return all;
-        return all.filter(
-            (operationType) =>
+        const codeFilter = operationTypeCodeFilter?.toLowerCase();
+        const nameFilter = operationTypeNameFilter?.toLowerCase();
+        return all.filter((operationType) => {
+            const matchesSearch =
+                !keyword ||
                 operationType.operationTypeCode.toLowerCase().includes(keyword) ||
-                operationType.operationTypeName.toLowerCase().includes(keyword)
-        );
-    }, [operationTypesQuery.data, searchTerm]);
+                operationType.operationTypeName.toLowerCase().includes(keyword);
+            const matchesCode =
+                !codeFilter || operationType.operationTypeCode.toLowerCase().includes(codeFilter);
+            const matchesName =
+                !nameFilter || operationType.operationTypeName.toLowerCase().includes(nameFilter);
+            return matchesSearch && matchesCode && matchesName;
+        });
+    }, [operationTypesQuery.data, searchTerm, operationTypeCodeFilter, operationTypeNameFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'operationTypeCode',
+                label: t('operationTypeManagement.table.headers.operationTypeCode'),
+                placeholder: t('operationTypeManagement.form.placeholders.operationTypeCode'),
+                value: operationTypeCodeFilter ?? '',
+                onChange: (val) => setOperationTypeCodeFilter(val.trim() || undefined),
+            },
+            {
+                key: 'operationTypeName',
+                label: t('operationTypeManagement.table.headers.operationTypeName'),
+                placeholder: t('operationTypeManagement.form.placeholders.operationTypeName'),
+                value: operationTypeNameFilter ?? '',
+                onChange: (val) => setOperationTypeNameFilter(val.trim() || undefined),
+            },
+        ],
+        [t, operationTypeCodeFilter, operationTypeNameFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setOperationTypeCodeFilter(undefined);
+        setOperationTypeNameFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const isLoading = operationTypesQuery.isLoading || operationTypesQuery.isFetching;
 
@@ -128,21 +173,14 @@ const OperationTypeListPage = () => {
     );
 
     const handleDeleteOperationType = useCallback(
-        (operationType: OperationType) => {
+        async (operationType: OperationType) => {
             if (!checkPermission('delete', 'operation_type')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const message = await deleteOperationType(operationType.operationTypeId);
-                        toast.success(message || t('operationTypeManagement.deleteSuccess'));
-                    } catch (error) {
-                        handleError(error, { fallbackKey: 'operationTypeManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const message = await deleteOperationType(operationType.operationTypeId);
+                toast.success(message || t('operationTypeManagement.deleteSuccess'));
+            } catch (error) {
+                handleError(error, { fallbackKey: 'operationTypeManagement.deleteError' });
+            }
         },
         [checkPermission, deleteOperationType, handleError, t]
     );
@@ -171,29 +209,7 @@ const OperationTypeListPage = () => {
     };
 
     const handleSubmit = async (data: OperationTypeFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
-    };
-
-    const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) return;
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pendingAction
-        } finally {
-            setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({ open: false, type: 'create', pendingAction: null });
+        await executeSubmit(data, mode);
     };
 
     const columnProps: OperationTypeTableColumnProps = useMemo(
@@ -246,6 +262,10 @@ const OperationTypeListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Can I="create" a="operation_type">
                             <Button
@@ -263,6 +283,17 @@ const OperationTypeListPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={viewModalState.data?.operationTypeName}
@@ -408,14 +439,6 @@ const OperationTypeListPage = () => {
                 }}
                 width={{ xs: '90%', sm: 550, md: 650 }}
                 auditMetaData={modalState.data?.auditMetaData}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </div>

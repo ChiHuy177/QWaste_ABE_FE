@@ -3,19 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
 import { toast } from 'sonner';
-import {
-    Badge,
-    Button,
-    Card,
-    Flex,
-    Table,
-    Grid,
-    Spin,
-    Modal,
-    Descriptions,
-    Tag,
-    Typography,
-} from 'antd';
+import { Button, Card, Flex, Table, Grid, Spin, Modal, Descriptions, Tag, Typography } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -26,19 +14,20 @@ import {
     SpaceLevelCreationRequest,
     SpaceLevelUpdationRequest,
 } from '@/types/SpaceLevel';
-import { getSpaceLevelTableColumns, SpaceLevelTableColumnProps } from './_components/Columns';
+import {
+    getSpaceLevelTableColumns,
+    type SpaceLevelTableColumnProps,
+    getSpaceLevelFormFields,
+} from '@/features/dashboard/categories/spaceLevel';
 import { EntityFormModal } from '@/components/shared/FormModal';
-import { getSpaceLevelFormFields } from './_components/spaceLevelFormConfig';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
-import FilterDrawer from '@/components/shared/filters/FilterDrawer';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { UtilsService } from '@/services/UtilsService';
 
 const { useBreakpoint } = Grid;
@@ -81,15 +70,6 @@ const SpaceLevelListPage = () => {
     const { handleError } = useApiErrorHandler();
     const ability = useAbility();
     const [searchTerm, setSearchTerm] = useState('');
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
         loading: boolean;
@@ -273,26 +253,19 @@ const SpaceLevelListPage = () => {
     });
 
     const handleDeleteLevel = useCallback(
-        (level: SpaceLevelDTO) => {
+        async (level: SpaceLevelDTO) => {
             if (!checkPermission('delete', 'space_level')) {
                 return;
             }
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        await deleteSpaceLevel(level.spaceLevelId);
-                        toast.success(t('spaceLevelManagement.deleteSuccess'));
-                    } catch (error) {
-                        console.error('Error deleting space level:', error);
-                        handleError(error, {
-                            fallbackKey: 'spaceLevelManagement.deleteError',
-                        });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                await deleteSpaceLevel(level.spaceLevelId);
+                toast.success(t('spaceLevelManagement.deleteSuccess'));
+            } catch (error) {
+                console.error('Error deleting space level:', error);
+                handleError(error, {
+                    fallbackKey: 'spaceLevelManagement.deleteError',
+                });
+            }
         },
         [t, checkPermission, deleteSpaceLevel, handleError]
     );
@@ -334,12 +307,7 @@ const SpaceLevelListPage = () => {
     const filteredData = levelData;
 
     const handleSubmit = async (data: SpaceLevelFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: SpaceLevelFormData, mode: 'create' | 'edit') => {
@@ -374,35 +342,6 @@ const SpaceLevelListPage = () => {
         }
     };
 
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
-    };
-
     const formFields = useMemo(
         () => getSpaceLevelFormFields(t, modalState.mode),
         [t, modalState.mode]
@@ -415,6 +354,13 @@ const SpaceLevelListPage = () => {
                 label: t('spaceLevelManagement.table.headers.spaceLevel'),
                 placeholder: t('spaceLevelManagement.form.placeholders.level'),
                 value: spaceLevelFilter !== undefined ? String(spaceLevelFilter) : '',
+                onChange: (val) => {
+                    const trimmed = val.trim();
+                    const levelNum = trimmed ? Number(trimmed) : undefined;
+                    setSpaceLevelFilter(
+                        levelNum !== undefined && !isNaN(levelNum) ? levelNum : undefined
+                    );
+                },
                 colProps: { xs: 24, sm: 12, md: 12 },
             },
             {
@@ -422,6 +368,7 @@ const SpaceLevelListPage = () => {
                 label: t('spaceLevelManagement.table.headers.spaceLevelName'),
                 placeholder: t('spaceLevelManagement.form.placeholders.levelName'),
                 value: spaceLevelNameFilter ?? '',
+                onChange: (val) => setSpaceLevelNameFilter(val.trim() || undefined),
                 colProps: { xs: 24, sm: 12, md: 12 },
             },
         ],
@@ -434,10 +381,7 @@ const SpaceLevelListPage = () => {
         setPage(0);
     }, []);
 
-    const handleApplyFilters = useCallback((values: Record<string, string>) => {
-        const levelNum = values.spaceLevel?.trim() ? Number(values.spaceLevel.trim()) : undefined;
-        setSpaceLevelFilter(levelNum !== undefined && !isNaN(levelNum) ? levelNum : undefined);
-        setSpaceLevelNameFilter(values.spaceLevelName?.trim() || undefined);
+    const handleApplyFilters = useCallback(() => {
         setPage(0);
     }, []);
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
@@ -464,25 +408,11 @@ const SpaceLevelListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
-                        <FilterDrawer
-                            open={showAdvancedFilters}
-                            onClose={() => setShowAdvancedFilters(false)}
-                            fields={spaceLevelFilterFields}
-                            onReset={handleResetFilters}
-                            onApply={handleApplyFilters}
-                            resetLabel={t('common.reset')}
-                            applyLabel={t('common.search')}
-                            title={t('common.advancedFilters')}
-                        >
-                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
-                                <Button
-                                    icon={<FilterOutlined />}
-                                    type={showAdvancedFilters ? 'primary' : 'default'}
-                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                />
-                            </Badge>
-                        </FilterDrawer>
                         <Can I="create" a="space_level">
                             <Button
                                 type="primary"
@@ -497,6 +427,17 @@ const SpaceLevelListPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={spaceLevelFilterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={
@@ -674,14 +615,6 @@ const SpaceLevelListPage = () => {
                 auditMetaData={modalState.data?.auditMetaData}
                 t={t}
                 loading={isFormLoading}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

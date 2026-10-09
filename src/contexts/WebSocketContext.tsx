@@ -92,7 +92,6 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
                 url: WS_URL,
                 debug: isDev,
                 reconnectInterval: 3000,
-                maxReconnectAttempts: 5,
             }).catch((err) => {
                 console.error('[WebSocketProvider] Connection failed:', err);
             });

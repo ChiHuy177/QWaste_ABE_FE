@@ -7,15 +7,20 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { UserOutlined, LoadingOutlined } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { UserWithRBAC, UserProfile } from '@/types/User';
-import { getUserTableColumns, UserTableColumnProps } from './_components/Columns';
+import {
+    getUserTableColumns,
+    type UserTableColumnProps,
+    RoleAssignment,
+    CustomPermissions,
+    UserBasicInfo,
+} from '@/features/dashboard/rbac/users';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { RoleAssignment } from './_components/RoleAssignment';
-import { CustomPermissions } from './_components/CustomPermissions';
-import { UserBasicInfo } from './_components/UserBasicInfo';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { UserService, RoleService } from '@/services';
 import { UserPermission } from '@/types/User';
 import { Role } from '@/types/Role';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { isRequestCancelled } from '@/utils/apiError';
 
 const UserManagementPage = () => {
@@ -30,6 +35,10 @@ const UserManagementPage = () => {
     const [loading, setLoading] = useState(false);
     const [userData, setUserData] = useState<UserWithRBAC[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [roleFilter].filter(Boolean).length;
     const [activeTab, setActiveTab] = useState('1');
     const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
     const [customPermissions, setCustomPermissions] = useState<UserPermission[]>([]);
@@ -39,15 +48,6 @@ const UserManagementPage = () => {
     const [grantedPermissionSlugs, setGrantedPermissionSlugs] = useState<string[]>([]);
     const [deniedPermissionSlugs, setDeniedPermissionSlugs] = useState<string[]>([]);
     const [roleForm] = Form.useForm();
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'edit',
-        pendingAction: null,
-    });
     const screens = Grid.useBreakpoint();
     const isMobileResponsive = !screens.md;
 
@@ -224,25 +224,53 @@ const UserManagementPage = () => {
 
     const columns = useMemo(() => getUserTableColumns(columnProps), [columnProps]);
 
+    const roleOptions = useMemo(() => {
+        const roles = new Set((userData ?? []).flatMap((u) => u.roles ?? []));
+        return Array.from(roles)
+            .sort()
+            .map((role) => ({
+                value: role,
+                label: t(`staffManagement.form.fields.role.${role}`, { defaultValue: role }),
+            }));
+    }, [userData, t]);
+
     const filteredUserData = useMemo(() => {
         if (!userData) return [];
-        if (!searchTerm.trim()) {
-            return userData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
         return userData.filter((user) => {
             const username = user.username?.toLowerCase() || '';
             const email = user.email?.toLowerCase() || '';
             const fullname = `${user.firstName} ${user.lastName}`.toLowerCase();
 
-            return (
+            const matchesSearch =
+                !lowerSearchTerm ||
                 username.includes(lowerSearchTerm) ||
                 email.includes(lowerSearchTerm) ||
-                fullname.includes(lowerSearchTerm)
-            );
+                fullname.includes(lowerSearchTerm);
+            const matchesRole = !roleFilter || (user.roles ?? []).some((r) => r === roleFilter);
+            return matchesSearch && matchesRole;
         });
-    }, [userData, searchTerm]);
+    }, [userData, searchTerm, roleFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'role',
+                label: t('userManagement.table.headers.role', { defaultValue: 'Role' }),
+                value: roleFilter ?? '',
+                onChange: (val) => setRoleFilter(val || undefined),
+                type: 'select',
+                options: roleOptions,
+            },
+        ],
+        [t, roleFilter, roleOptions]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setRoleFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
 
     const handleCloseModal = () => {
@@ -276,29 +304,22 @@ const UserManagementPage = () => {
             return; // Validation failed, don't proceed
         }
 
-        setConfirmModalState({
-            open: true,
-            type: 'edit',
-            pendingAction: async () => {
-                setLoading(true);
-                try {
-                    await UserService.updateRolesAndPermissions({
-                        userId: modalState.data!.userId,
-                        roleIds: selectedRoleIds,
-                        deniedPermissionIds: [],
-                        grantedPermissionIds: [],
-                    });
-                    toast.success(t('userManagement.messages.updateSuccess'));
-                    await fetchUsers();
-                } catch (error) {
-                    console.error('Error updating roles:', error);
-                    toast.error(t('userManagement.messages.updateError'));
-                    throw error;
-                } finally {
-                    setLoading(false);
-                }
-            },
-        });
+        setLoading(true);
+        try {
+            await UserService.updateRolesAndPermissions({
+                userId: modalState.data!.userId,
+                roleIds: selectedRoleIds,
+                deniedPermissionIds: [],
+                grantedPermissionIds: [],
+            });
+            toast.success(t('userManagement.messages.updateSuccess'));
+            await fetchUsers();
+        } catch (error) {
+            console.error('Error updating roles:', error);
+            toast.error(t('userManagement.messages.updateError'));
+        } finally {
+            setLoading(false);
+        }
     }, [modalState.data?.userId, selectedRoleIds, t, fetchUsers]);
 
     // Update custom permissions (from Tab 3)
@@ -313,58 +334,23 @@ const UserManagementPage = () => {
             .filter((p) => p.permissionType === 'grant')
             .map((p) => p.permissionId);
 
-        setConfirmModalState({
-            open: true,
-            type: 'edit',
-            pendingAction: async () => {
-                setLoading(true);
-                try {
-                    await UserService.updateRolesAndPermissions({
-                        userId: modalState.data!.userId,
-                        roleIds: selectedRoleIds,
-                        deniedPermissionIds,
-                        grantedPermissionIds,
-                    });
-                    toast.success(t('userManagement.messages.updateSuccess'));
-                    await fetchUsers();
-                } catch (error) {
-                    console.error('Error updating permissions:', error);
-                    toast.error(t('userManagement.messages.updateError'));
-                    throw error;
-                } finally {
-                    setLoading(false);
-                }
-            },
-        });
-    }, [modalState.data?.userId, selectedRoleIds, customPermissions, t, fetchUsers]);
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setConfirmModalState({
-                    open: false,
-                    type: 'edit',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'edit',
-                    pendingAction: null,
-                });
-            }
+        setLoading(true);
+        try {
+            await UserService.updateRolesAndPermissions({
+                userId: modalState.data!.userId,
+                roleIds: selectedRoleIds,
+                deniedPermissionIds,
+                grantedPermissionIds,
+            });
+            toast.success(t('userManagement.messages.updateSuccess'));
+            await fetchUsers();
+        } catch (error) {
+            console.error('Error updating permissions:', error);
+            toast.error(t('userManagement.messages.updateError'));
+        } finally {
+            setLoading(false);
         }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'edit',
-            pendingAction: null,
-        });
-    };
+    }, [modalState.data?.userId, selectedRoleIds, customPermissions, t, fetchUsers]);
 
     return (
         <>
@@ -381,10 +367,25 @@ const UserManagementPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{
@@ -588,14 +589,6 @@ const UserManagementPage = () => {
                     ]}
                 />
             </Modal>
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
-            />
         </>
     );
 };

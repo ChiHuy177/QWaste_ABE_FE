@@ -15,10 +15,12 @@ import {
 import { WorkCalendarService } from '@/services/WorkCalendarService';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { WorkCalendarHeader } from './_components/WorkCalendarHeader';
-import { WorkCalendarSummary } from './_components/WorkCalendarSummary';
-import { WorkCalendarGrid } from './_components/WorkCalendarGrid';
-import { EditDayModal } from './_components/EditDayModal';
+import {
+    WorkCalendarHeader,
+    WorkCalendarSummary,
+    WorkCalendarGrid,
+    EditDayModal,
+} from '@/features/dashboard/work-calendar';
 
 const { useBreakpoint } = Grid;
 

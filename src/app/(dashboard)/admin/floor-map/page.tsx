@@ -26,9 +26,12 @@ import {
     FloorMapMachineResponse,
     MachineFloorPositionRequest,
 } from '@/types/FloorMap';
-import { FloorMapCanvasShell } from './_components/FloorMapCanvasShell';
-import { MachineListPanel } from './_components/MachineListPanel';
-import { getDefaultMachinePosition, isMachinePlaced } from './_utils/floorMapRatio';
+import {
+    FloorMapCanvasShell,
+    MachineListPanel,
+    getDefaultMachinePosition,
+    isMachinePlaced,
+} from '@/features/dashboard/floor-map';
 
 type DraftPositions = Record<string, MachineFloorPositionRequest>;
 

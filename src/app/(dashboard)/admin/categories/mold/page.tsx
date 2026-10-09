@@ -3,20 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import {
-    Badge,
-    Button,
-    Card,
-    Descriptions,
-    Flex,
-    Grid,
-    Modal,
-    Spin,
-    Table,
-    Tag,
-    Typography,
-} from 'antd';
-import { FilterOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Card, Descriptions, Flex, Grid, Modal, Spin, Table, Tag, Typography } from 'antd';
+import { FilterOutlined, LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -24,18 +12,21 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { Can, useAbility } from '@/contexts/AbilityContext';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
-import FilterDrawer from '@/components/shared/filters/FilterDrawer';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { MoldService } from '@/services/MoldService';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { Mold, MoldFormData } from '@/types/Mold';
-import { getMoldTableColumns, MoldTableColumnProps } from './_components/Columns';
-import { getMoldFormFields, toOperationTypeOptions } from './_components/moldFormConfig';
+import {
+    getMoldTableColumns,
+    type MoldTableColumnProps,
+    getMoldFormFields,
+    toOperationTypeOptions,
+    MoldImportModal,
+} from '@/features/dashboard/categories/mold';
 
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
@@ -68,11 +59,7 @@ const MoldListPage = () => {
         data: Mold | null;
     }>({ open: false, mode: 'create', data: null });
 
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({ open: false, type: 'create', pendingAction: null });
+    const [importModalOpen, setImportModalOpen] = useState(false);
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -192,21 +179,14 @@ const MoldListPage = () => {
     );
 
     const handleDeleteMold = useCallback(
-        (mold: Mold) => {
+        async (mold: Mold) => {
             if (!checkPermission('delete', 'mold')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const message = await deleteMold(mold.moldId);
-                        toast.success(message || t('moldManagement.deleteSuccess'));
-                    } catch (error) {
-                        handleError(error, { fallbackKey: 'moldManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const message = await deleteMold(mold.moldId);
+                toast.success(message || t('moldManagement.deleteSuccess'));
+            } catch (error) {
+                handleError(error, { fallbackKey: 'moldManagement.deleteError' });
+            }
         },
         [checkPermission, deleteMold, handleError, t]
     );
@@ -247,34 +227,10 @@ const MoldListPage = () => {
     };
 
     const handleSubmit = async (data: MoldFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
-    const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) return;
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pendingAction
-        } finally {
-            setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-    };
-
-    const handleApplyFilters = useCallback((values: Record<string, string>) => {
-        setMoldCodeFilter(values.moldCode?.trim() || undefined);
-        setMoldNameFilter(values.moldName?.trim() || undefined);
+    const handleApplyFilters = useCallback(() => {
         setPage(0);
     }, []);
 
@@ -327,6 +283,7 @@ const MoldListPage = () => {
                 label: t('moldManagement.table.headers.moldCode'),
                 placeholder: t('moldManagement.form.placeholders.moldCode'),
                 value: moldCodeFilter ?? '',
+                onChange: (val) => setMoldCodeFilter(val.trim() || undefined),
                 colProps: { xs: 24, sm: 12 },
             },
             {
@@ -334,6 +291,7 @@ const MoldListPage = () => {
                 label: t('moldManagement.table.headers.moldName'),
                 placeholder: t('moldManagement.form.placeholders.moldName'),
                 value: moldNameFilter ?? '',
+                onChange: (val) => setMoldNameFilter(val.trim() || undefined),
                 colProps: { xs: 24, sm: 12 },
             },
         ],
@@ -363,25 +321,20 @@ const MoldListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
-                        <FilterDrawer
-                            open={showAdvancedFilters}
-                            onClose={() => setShowAdvancedFilters(false)}
-                            fields={filterFields}
-                            onReset={handleResetFilters}
-                            onApply={handleApplyFilters}
-                            resetLabel={t('common.reset')}
-                            applyLabel={t('common.search')}
-                            title={t('common.advancedFilters')}
-                        >
-                            <Badge count={activeFilterCount} size="small" offset={[-6, 4]}>
-                                <Button
-                                    icon={<FilterOutlined />}
-                                    type={showAdvancedFilters ? 'primary' : 'default'}
-                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                />
-                            </Badge>
-                        </FilterDrawer>
+                        <Can I="import" a="mold">
+                            <Button
+                                icon={<UploadOutlined />}
+                                block={isMobile}
+                                onClick={() => setImportModalOpen(true)}
+                            >
+                                {t('moldManagement.import.button')}
+                            </Button>
+                        </Can>
                         <Can I="create" a="mold">
                             <Button
                                 type="primary"
@@ -398,6 +351,17 @@ const MoldListPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             {activeFilterCount > 0 && (
                 <Flex gap={8} align="center" wrap style={{ marginBottom: 12 }}>
@@ -591,12 +555,13 @@ const MoldListPage = () => {
                 t={t}
             />
 
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
+            <MoldImportModal
+                open={importModalOpen}
+                onCancel={() => setImportModalOpen(false)}
+                onSuccess={() => {
+                    setImportModalOpen(false);
+                    queryClient.invalidateQueries({ queryKey: moldQueryKeys.lists });
+                }}
             />
         </div>
     );

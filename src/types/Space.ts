@@ -7,6 +7,15 @@ export interface SpaceLevel {
     spaceLevelName: string;
 }
 
+export interface SpaceDTO {
+    spaceId: number;
+    spaceCode: string;
+    spaceName: string;
+    description?: string;
+}
+
+export type AccessibleSpace = SpaceDTO;
+
 export interface SpaceDetailResponse {
     spaceId: number;
     parentId: number | null;

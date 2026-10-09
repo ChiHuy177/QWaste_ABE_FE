@@ -84,7 +84,17 @@ export interface WebSocketErrorMessage {
     timestamp: number;
 }
 
-export const isFatalAuthError = (code: number): boolean => {
+// Mã làm rớt kết nối qua ERROR frame (801-804/809). Không phải tất cả đều là
+// "lỗi xác thực" — 809 là do chạm hạn mức kết nối đồng thời — nhưng cả nhóm
+// đều đồng nghĩa STOMP đã đóng kết nối, không được reconnect ngay.
+export const isFatalCloseCode = (code: number): boolean => {
+    return (code >= 801 && code <= 804) || code === WebSocketErrorCode.WS_TOO_MANY_CONNECTIONS;
+};
+
+// Trong nhóm mã fatal, chỉ 801-804 là do phiên đăng nhập chết (hết hạn/bị huỷ)
+// — nên điều hướng về màn hình login. 809 (quá nhiều kết nối) không phải vậy:
+// phiên vẫn sống, chỉ là hạn mức kết nối đầy, nên KHÔNG được coi là sessionExpired.
+export const isSessionDeadError = (code: number): boolean => {
     return code >= 801 && code <= 804;
 };
 
@@ -92,7 +102,6 @@ export interface WebSocketConfig {
     url: string;
     debug?: boolean;
     reconnectInterval?: number;
-    maxReconnectAttempts?: number;
 }
 
 // ─── New unified message format from backend NotificationService ─────────────
