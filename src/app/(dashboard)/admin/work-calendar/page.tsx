@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Grid } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'next/navigation';
@@ -13,6 +12,8 @@ import {
     DayType,
 } from '@/types/WorkCalendar';
 import { WorkCalendarService } from '@/services/WorkCalendarService';
+import { ShiftPatternService } from '@/services/ShiftPatternService';
+import { ShiftPatternForPicking } from '@/types/ShiftPattern';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { getApiErrorMessage } from '@/utils/apiError';
 import {
@@ -21,8 +22,6 @@ import {
     WorkCalendarGrid,
     EditDayModal,
 } from '@/features/dashboard/work-calendar';
-
-const { useBreakpoint } = Grid;
 
 /**
  * Helper to construct Map<string, WorkCalendarDayResponse> from array
@@ -37,8 +36,6 @@ export default function WorkCalendarPage() {
     const { t } = useTranslation('common');
     usePageTitle(t('pageTitle.workCalendar', t('workCalendar.header.title')));
     const searchParams = useSearchParams();
-    const screens = useBreakpoint();
-    const isMobile = !screens.md;
 
     const now = useMemo(() => dayjs(), []);
     const initialYear = searchParams.get('year') ? Number(searchParams.get('year')) : now.year();
@@ -59,10 +56,24 @@ export default function WorkCalendarPage() {
     const [draftDaysMap, setDraftDaysMap] = useState<Map<string, WorkCalendarDayResponse>>(
         new Map()
     );
+    const [shiftPatterns, setShiftPatterns] = useState<ShiftPatternForPicking[]>([]);
 
     // Bulk selection state & Modal state
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+
+    // Fetch shift patterns for picking once
+    useEffect(() => {
+        const fetchPatterns = async () => {
+            try {
+                const patterns = await ShiftPatternService.getShiftPatternsForPicking();
+                setShiftPatterns(patterns);
+            } catch {
+                // Ignore silent fail on picking fetch
+            }
+        };
+        fetchPatterns();
+    }, []);
 
     // Fetch month calendar data
     const fetchCalendar = useCallback(
@@ -98,7 +109,9 @@ export default function WorkCalendarPage() {
             const draft = draftDaysMap.get(orig.date);
             if (
                 draft &&
-                (draft.dayType !== orig.dayType || draft.isWorkingDay !== orig.isWorkingDay)
+                (draft.dayType !== orig.dayType ||
+                    draft.isWorkingDay !== orig.isWorkingDay ||
+                    draft.shiftPatternId !== orig.shiftPatternId)
             ) {
                 return true;
             }
@@ -130,7 +143,13 @@ export default function WorkCalendarPage() {
     }, [monthData]);
 
     const handleEditModalSave = useCallback(
-        (dates: string[], dayType: DayType, isWorkingDay: boolean) => {
+        (
+            dates: string[],
+            dayType: DayType,
+            isWorkingDay: boolean,
+            shiftPatternId?: number | null,
+            patternCode?: string | null
+        ) => {
             setDraftDaysMap((prev) => {
                 const next = new Map(prev);
                 dates.forEach((date) => {
@@ -140,7 +159,8 @@ export default function WorkCalendarPage() {
                             ...current,
                             dayType,
                             isWorkingDay,
-                            plannedTime: isWorkingDay ? current.plannedTime || 22.5 : 0.0,
+                            shiftPatternId: isWorkingDay ? shiftPatternId : null,
+                            patternCode: isWorkingDay ? patternCode : null,
                         });
                     }
                 });
@@ -170,10 +190,24 @@ export default function WorkCalendarPage() {
                 toast.error(t('workCalendar.notifications.missingDataError', { date: dateStr }));
                 return;
             }
+
+            // Client validation to prevent Backend Error 1806: shiftPatternId required when isWorkingDay === true
+            if (dayDraft.isWorkingDay && !dayDraft.shiftPatternId) {
+                toast.error(
+                    t('workCalendar.errors.patternRequiredDate', {
+                        date: dateStr,
+                        defaultValue: `Vui lòng chọn mẫu ca cho ngày làm việc (${dateStr})`,
+                    })
+                );
+                return;
+            }
+
+            // Client validation to prevent Backend Error 1807: omit/null shiftPatternId when isWorkingDay === false
             payload.push({
                 date: dayDraft.date,
                 dayType: dayDraft.dayType,
                 isWorkingDay: dayDraft.isWorkingDay,
+                shiftPatternId: dayDraft.isWorkingDay ? dayDraft.shiftPatternId : undefined,
             });
         }
 
@@ -286,6 +320,7 @@ export default function WorkCalendarPage() {
                 open={isEditModalOpen}
                 selectedDates={selectedDates}
                 daysMap={draftDaysMap}
+                shiftPatterns={shiftPatterns}
                 onClose={handleCloseEditModal}
                 onSave={handleEditModalSave}
             />

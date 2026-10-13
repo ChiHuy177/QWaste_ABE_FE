@@ -36,6 +36,7 @@ const BASE_PATHS = {
     OPERATION_TYPES: `${API}/operationTypes/${V1}`,
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
     WORK_CALENDAR: `${API}/workCalendar/${V1}`,
+    SHIFT_PATTERNS: `${API}/shiftPatterns/${V1}`,
 } as const;
 
 export const ENDPOINTS = {
@@ -214,6 +215,11 @@ export const ENDPOINTS = {
         RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
         CHECK_ALARM: `${BASE_PATHS.WORK_CALENDAR}/checkAlarm`,
         CONFIRM_MONTH: `${BASE_PATHS.WORK_CALENDAR}/confirmMonth`,
+    },
+    SHIFT_PATTERNS: {
+        BASE: BASE_PATHS.SHIFT_PATTERNS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.SHIFT_PATTERNS, id),
+        PICKING: `${BASE_PATHS.SHIFT_PATTERNS}/picking`,
     },
 } as const;
 

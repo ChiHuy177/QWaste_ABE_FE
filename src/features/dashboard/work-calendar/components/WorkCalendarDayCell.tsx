@@ -19,6 +19,8 @@ export interface WorkCalendarDayCellProps {
     isWorkingDay?: boolean;
     isOverride?: boolean;
     plannedTime?: number;
+    patternCode?: string | null;
+    shiftPatternId?: number | null;
     isMobile?: boolean;
     onCellMouseDown?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
     onCellMouseEnter?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
@@ -38,6 +40,7 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         isWorkingDay = true,
         isOverride = false,
         plannedTime = 0,
+        patternCode,
         isMobile = false,
         onCellMouseDown,
         onCellMouseEnter,
@@ -348,8 +351,16 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                             </div>
                         </div>
 
-                        {/* Middle: Day Type Badge */}
-                        <div style={{ marginBottom: 4 }}>
+                        {/* Middle: Day Type Badge & Pattern Tag */}
+                        <div
+                            style={{
+                                marginBottom: 4,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 4,
+                            }}
+                        >
                             <span
                                 style={{
                                     fontSize: 11,
@@ -359,6 +370,23 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                             >
                                 {typeLabel}
                             </span>
+                            {isWorkingDay && patternCode && (
+                                <Tag
+                                    color="default"
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 9,
+                                        lineHeight: '14px',
+                                        padding: '0 3px',
+                                        borderRadius: token.borderRadiusXS,
+                                        maxWidth: 65,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                    }}
+                                >
+                                    {patternCode}
+                                </Tag>
+                            )}
                         </div>
 
                         {/* Bottom: Planned Time */}
@@ -378,7 +406,7 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         );
 
         if (!isEditMode) {
-            const tooltipTitle = `${dateString} (${typeLabel}): ${
+            const tooltipTitle = `${dateString} (${typeLabel}${patternCode && isWorkingDay ? ` - ${patternCode}` : ''}): ${
                 isWorkingDay
                     ? t('workCalendar.grid.plannedHoursLabel', { hours: plannedTime })
                     : t('workCalendar.grid.plannedOffLabel')
@@ -406,6 +434,8 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             prevProps.isWorkingDay === nextProps.isWorkingDay &&
             prevProps.isOverride === nextProps.isOverride &&
             prevProps.plannedTime === nextProps.plannedTime &&
+            prevProps.patternCode === nextProps.patternCode &&
+            prevProps.shiftPatternId === nextProps.shiftPatternId &&
             prevProps.isMobile === nextProps.isMobile
         );
     }

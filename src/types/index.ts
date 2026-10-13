@@ -12,3 +12,5 @@ export * from './Task';
 export * from './Step';
 export * from './FloorMap';
 export * from './ProductionPlan';
+export * from './ShiftPattern';
+export * from './WorkCalendar';

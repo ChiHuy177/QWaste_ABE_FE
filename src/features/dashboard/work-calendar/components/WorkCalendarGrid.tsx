@@ -324,7 +324,9 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                 const isModified = Boolean(
                     dayData &&
                     orig &&
-                    (dayData.dayType !== orig.dayType || dayData.isWorkingDay !== orig.isWorkingDay)
+                    (dayData.dayType !== orig.dayType ||
+                        dayData.isWorkingDay !== orig.isWorkingDay ||
+                        dayData.shiftPatternId !== orig.shiftPatternId)
                 );
                 const isSelected = selectedDatesSet.has(dateStr);
                 const dayIndex = current.date() - 1;
@@ -342,6 +344,8 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         isWorkingDay={dayData?.isWorkingDay}
                         isOverride={dayData?.isOverride}
                         plannedTime={dayData?.plannedTime}
+                        patternCode={dayData?.patternCode}
+                        shiftPatternId={dayData?.shiftPatternId}
                         isMobile={isMobile}
                         onCellMouseDown={handleCellMouseDown}
                         onCellMouseEnter={handleCellMouseEnter}

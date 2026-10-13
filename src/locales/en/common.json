@@ -429,7 +429,14 @@
             "dayTypeLabel": "Day Type",
             "statusWorking": "Working",
             "statusOff": "Off",
+            "shiftPatternLabel": "Shift Pattern",
+            "selectPatternPlaceholder": "Select shift pattern",
+            "defaultPatternTag": "Default",
             "btnApply": "Apply"
+        },
+        "errors": {
+            "patternRequired": "Please select a shift pattern for working day",
+            "patternRequiredDate": "Please select a shift pattern for working day ({{date}})"
         },
         "drawer": {
             "bulkEditTitle": "Edit Selected Date(s)",

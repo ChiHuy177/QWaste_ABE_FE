@@ -1,9 +1,22 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Modal, Form, Switch, Radio, Space, Typography, Tag, Alert, Divider, theme } from 'antd';
+import {
+    Modal,
+    Form,
+    Switch,
+    Radio,
+    Space,
+    Typography,
+    Tag,
+    Alert,
+    Divider,
+    Select,
+    theme,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { WorkCalendarDayResponse, DayType } from '@/types/WorkCalendar';
+import { ShiftPatternForPicking } from '@/types/ShiftPattern';
 import { statusColors } from '@/configs/antdTheme';
 import dayjs from 'dayjs';
 
@@ -13,14 +26,22 @@ interface EditDayModalProps {
     open: boolean;
     selectedDates: string[];
     daysMap: Map<string, WorkCalendarDayResponse>;
+    shiftPatterns?: ShiftPatternForPicking[];
     onClose: () => void;
-    onSave: (selectedDates: string[], dayType: DayType, isWorkingDay: boolean) => void;
+    onSave: (
+        selectedDates: string[],
+        dayType: DayType,
+        isWorkingDay: boolean,
+        shiftPatternId?: number | null,
+        patternCode?: string | null
+    ) => void;
 }
 
 export const EditDayModal: React.FC<EditDayModalProps> = ({
     open,
     selectedDates,
     daysMap,
+    shiftPatterns = [],
     onClose,
     onSave,
 }) => {
@@ -29,10 +50,13 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
     const isDark = token.colorBgContainer !== '#ffffff';
     const sc = isDark ? statusColors.dark : statusColors.light;
     const [form] = Form.useForm();
+    const isWorkingDayWatch = Form.useWatch('isWorkingDay', form);
 
     const isSingle = selectedDates.length === 1;
     const singleDayData = isSingle ? daysMap.get(selectedDates[0]) : null;
     const formattedSingleDate = isSingle ? dayjs(selectedDates[0]).format('DD/MM/YYYY') : '';
+
+    const defaultPattern = shiftPatterns.find((p) => p.default) || shiftPatterns[0];
 
     useEffect(() => {
         if (open) {
@@ -40,32 +64,53 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                 form.setFieldsValue({
                     isWorkingDay: singleDayData.isWorkingDay,
                     dayType: singleDayData.dayType,
+                    shiftPatternId: singleDayData.isWorkingDay
+                        ? singleDayData.shiftPatternId || defaultPattern?.patternId
+                        : undefined,
                 });
             } else {
                 form.setFieldsValue({
                     isWorkingDay: true,
                     dayType: 'WORKING',
+                    shiftPatternId: defaultPattern?.patternId,
                 });
             }
         }
-    }, [open, isSingle, singleDayData, form]);
+    }, [open, isSingle, singleDayData, form, defaultPattern]);
 
     if (!open || selectedDates.length === 0) return null;
 
-    const handleValuesChange = (changedValues: Partial<{ isWorkingDay: boolean; dayType: DayType }>) => {
+    const handleValuesChange = (
+        changedValues: Partial<{ isWorkingDay: boolean; dayType: DayType; shiftPatternId: number }>
+    ) => {
         if ('isWorkingDay' in changedValues) {
             const isWorking = changedValues.isWorkingDay;
-            if (!isWorking && form.getFieldValue('dayType') === 'WORKING') {
-                form.setFieldValue('dayType', 'WEEKEND_OFF');
-            } else if (isWorking && form.getFieldValue('dayType') === 'WEEKEND_OFF') {
-                form.setFieldValue('dayType', 'WORKING');
+            if (!isWorking) {
+                form.setFieldValue('shiftPatternId', undefined);
+                if (form.getFieldValue('dayType') === 'WORKING') {
+                    form.setFieldValue('dayType', 'WEEKEND_OFF');
+                }
+            } else {
+                form.setFieldValue('shiftPatternId', defaultPattern?.patternId);
+                if (form.getFieldValue('dayType') === 'WEEKEND_OFF') {
+                    form.setFieldValue('dayType', 'WORKING');
+                }
             }
         }
     };
 
     const handleOk = () => {
         form.validateFields().then((values) => {
-            onSave(selectedDates, values.dayType, values.isWorkingDay);
+            const selectedPattern = shiftPatterns.find(
+                (p) => p.patternId === values.shiftPatternId
+            );
+            onSave(
+                selectedDates,
+                values.dayType,
+                values.isWorkingDay,
+                values.isWorkingDay ? values.shiftPatternId : null,
+                values.isWorkingDay ? selectedPattern?.patternCode : null
+            );
             onClose();
         });
     };
@@ -162,6 +207,33 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                         </Space>
                     </Radio.Group>
                 </Form.Item>
+
+                {isWorkingDayWatch && (
+                    <Form.Item
+                        name="shiftPatternId"
+                        label={t('workCalendar.modal.shiftPatternLabel', 'Mẫu ca')}
+                        rules={[
+                            {
+                                required: true,
+                                message: t(
+                                    'workCalendar.errors.patternRequired',
+                                    'Vui lòng chọn mẫu ca cho ngày làm việc'
+                                ),
+                            },
+                        ]}
+                    >
+                        <Select
+                            placeholder={t(
+                                'workCalendar.modal.selectPatternPlaceholder',
+                                'Chọn mẫu ca'
+                            )}
+                            options={shiftPatterns.map((p) => ({
+                                value: p.patternId,
+                                label: `${p.patternName} (${p.patternCode})${p.default ? ` - ${t('workCalendar.modal.defaultPatternTag', 'Mặc định')}` : ''}`,
+                            }))}
+                        />
+                    </Form.Item>
+                )}
             </Form>
         </Modal>
     );
