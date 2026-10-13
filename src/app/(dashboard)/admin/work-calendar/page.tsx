@@ -148,7 +148,8 @@ export default function WorkCalendarPage() {
             dayType: DayType,
             isWorkingDay: boolean,
             shiftPatternId?: number | null,
-            patternCode?: string | null
+            patternCode?: string | null,
+            patternName?: string | null
         ) => {
             setDraftDaysMap((prev) => {
                 const next = new Map(prev);
@@ -161,6 +162,7 @@ export default function WorkCalendarPage() {
                             isWorkingDay,
                             shiftPatternId: isWorkingDay ? shiftPatternId : null,
                             patternCode: isWorkingDay ? patternCode : null,
+                            patternName: isWorkingDay ? patternName : null,
                         });
                     }
                 });

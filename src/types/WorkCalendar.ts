@@ -11,6 +11,7 @@ export interface WorkCalendarDayResponse {
     isOverride: boolean;
     shiftPatternId?: number | null;
     patternCode?: string | null;
+    patternName?: string | null;
     auditMetaData?: AuditMetaData;
 }
 

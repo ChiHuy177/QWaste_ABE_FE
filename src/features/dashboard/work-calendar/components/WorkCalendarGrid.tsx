@@ -345,6 +345,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         isOverride={dayData?.isOverride}
                         plannedTime={dayData?.plannedTime}
                         patternCode={dayData?.patternCode}
+                        patternName={dayData?.patternName}
                         shiftPatternId={dayData?.shiftPatternId}
                         isMobile={isMobile}
                         onCellMouseDown={handleCellMouseDown}

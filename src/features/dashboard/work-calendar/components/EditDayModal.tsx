@@ -33,7 +33,8 @@ interface EditDayModalProps {
         dayType: DayType,
         isWorkingDay: boolean,
         shiftPatternId?: number | null,
-        patternCode?: string | null
+        patternCode?: string | null,
+        patternName?: string | null
     ) => void;
 }
 
@@ -92,9 +93,21 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                 }
             } else {
                 form.setFieldValue('shiftPatternId', defaultPattern?.patternId);
-                if (form.getFieldValue('dayType') === 'WEEKEND_OFF') {
+                if (form.getFieldValue('dayType') !== 'WORKING') {
                     form.setFieldValue('dayType', 'WORKING');
                 }
+            }
+        }
+        if ('dayType' in changedValues) {
+            const dt = changedValues.dayType;
+            if (dt === 'WORKING') {
+                form.setFieldValue('isWorkingDay', true);
+                if (!form.getFieldValue('shiftPatternId')) {
+                    form.setFieldValue('shiftPatternId', defaultPattern?.patternId);
+                }
+            } else {
+                form.setFieldValue('isWorkingDay', false);
+                form.setFieldValue('shiftPatternId', undefined);
             }
         }
     };
@@ -109,7 +122,8 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                 values.dayType,
                 values.isWorkingDay,
                 values.isWorkingDay ? values.shiftPatternId : null,
-                values.isWorkingDay ? selectedPattern?.patternCode : null
+                values.isWorkingDay ? selectedPattern?.patternCode : null,
+                values.isWorkingDay ? selectedPattern?.patternName : null
             );
             onClose();
         });
@@ -229,7 +243,7 @@ export const EditDayModal: React.FC<EditDayModalProps> = ({
                             )}
                             options={shiftPatterns.map((p) => ({
                                 value: p.patternId,
-                                label: `${p.patternName} (${p.patternCode})${p.default ? ` - ${t('workCalendar.modal.defaultPatternTag', 'Mặc định')}` : ''}`,
+                                label: `${p.patternName || p.patternCode}${p.default ? ` - ${t('workCalendar.modal.defaultPatternTag', 'Mặc định')}` : ''}`,
                             }))}
                         />
                     </Form.Item>
