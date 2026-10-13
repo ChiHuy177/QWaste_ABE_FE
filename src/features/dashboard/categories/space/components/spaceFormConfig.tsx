@@ -12,6 +12,14 @@ const VALIDATION_CONFIG = Object.freeze({
 
 export interface SpaceFormFieldOptions {
     spaceTreeData?: SpaceTreeSelectOption[];
+    spaceLevelOptions?: { value: number; label: string }[];
+    isLevelDisabled?: boolean;
+    levelExtra?: string;
+    onLevelChange?: (spaceLevelId: number) => void;
+
+    isParentDisabled?: boolean;
+    parentPlaceholder?: string;
+    parentExtra?: string;
     onParentChange?: (parentSpaceId: number | null) => void;
     validateParentSpace?: (parentSpaceId: number | null) => string | null;
 }
@@ -23,25 +31,55 @@ export const getSpaceFormFields = (
 ): FormFieldConfig[] => {
     return [
         {
+            name: 'spaceLevelId',
+            label: t('spaceManagement.form.fields.level', { defaultValue: 'Cấp khu vực' }),
+            type: 'select',
+            placeholder: t('spaceManagement.form.placeholders.level', {
+                defaultValue: 'Chọn cấp khu vực...',
+            }),
+            required: true,
+            span: { xs: 24, sm: 10 },
+            options: options?.spaceLevelOptions || [],
+            disabled: mode === 'edit' ? true : options?.isLevelDisabled,
+            extra:
+                options?.levelExtra ||
+                (mode === 'edit'
+                    ? t('spaceManagement.form.help.levelEditDisabled', {
+                          defaultValue: 'Không thể thay đổi cấp khu vực khi cập nhật.',
+                      })
+                    : undefined),
+            onChange: options?.onLevelChange,
+            rules: [
+                {
+                    required: true,
+                    message: t('spaceManagement.form.validation.required', {
+                        defaultValue: 'This field is required',
+                    }),
+                },
+            ],
+        },
+        {
             name: 'parentSpaceId',
             label: t('spaceManagement.form.fields.parentSpace'),
             type: 'space-tree-select',
-            placeholder: t('spaceManagement.form.placeholders.parentSpace'),
+            placeholder:
+                options?.parentPlaceholder ||
+                t('spaceManagement.form.placeholders.selectParentSpace', {
+                    defaultValue: 'Chọn khu vực cha...',
+                }),
             required: false,
             allowClear: true,
-            disabled: mode === 'edit',
-            span: { xs: 24, sm: 16 },
-            extra:
-                mode === 'edit'
-                    ? t('spaceManagement.form.help.parentSpaceEditDisabled')
-                    : undefined,
+            span: { xs: 24, sm: 14 },
             treeData: options?.spaceTreeData,
+            treeDefaultExpandAll: true,
+            disabled: options?.isParentDisabled,
+            extra: options?.parentExtra,
             onChange: options?.onParentChange,
             rules: [
                 {
                     validator: async (_, value) => {
-                        if (value !== undefined && value !== null && options?.validateParentSpace) {
-                            const errorMsg = options.validateParentSpace(value);
+                        if (options?.validateParentSpace) {
+                            const errorMsg = options.validateParentSpace(value ?? null);
                             if (errorMsg) {
                                 return Promise.reject(new Error(errorMsg));
                             }
@@ -51,30 +89,7 @@ export const getSpaceFormFields = (
                 },
             ],
         },
-        {
-            name: 'displayOrder',
-            label: t('spaceManagement.form.fields.order'),
-            type: 'number',
-            placeholder: '0',
-            maxLength: VALIDATION_CONFIG.DISPLAY_ORDER.maxLength,
-            required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
-            rules: [
-                {
-                    required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
-                    message: t('spaceManagement.form.validation.required', {
-                        defaultValue: 'This field is required',
-                    }),
-                },
-                {
-                    type: 'number',
-                    min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
-                    message: t('spaceManagement.form.validation.minValue', {
-                        min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
-                    }),
-                },
-            ],
-            span: { xs: 24, sm: 8 },
-        },
+
         {
             name: 'spaceCode',
             label: t('spaceManagement.form.fields.code'),
@@ -99,7 +114,7 @@ export const getSpaceFormFields = (
                     message: t('spaceManagement.form.validation.codePattern'),
                 },
             ],
-            span: { xs: 24, sm: 12 },
+            span: { xs: 24, sm: 9 },
         },
         {
             name: 'spaceName',
@@ -122,7 +137,31 @@ export const getSpaceFormFields = (
                     }),
                 },
             ],
-            span: { xs: 24, sm: 12 },
+            span: { xs: 24, sm: 9 },
+        },
+        {
+            name: 'displayOrder',
+            label: t('spaceManagement.form.fields.order'),
+            type: 'number',
+            placeholder: '0',
+            maxLength: VALIDATION_CONFIG.DISPLAY_ORDER.maxLength,
+            required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
+            rules: [
+                {
+                    required: VALIDATION_CONFIG.DISPLAY_ORDER.required,
+                    message: t('spaceManagement.form.validation.required', {
+                        defaultValue: 'This field is required',
+                    }),
+                },
+                {
+                    type: 'number',
+                    min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
+                    message: t('spaceManagement.form.validation.minValue', {
+                        min: VALIDATION_CONFIG.DISPLAY_ORDER.min,
+                    }),
+                },
+            ],
+            span: { xs: 24, sm: 6 },
         },
         {
             name: 'floorPlanImageUrl',

@@ -81,10 +81,12 @@ export interface SpaceUpdationRequest {
     floorPlanImageUrl?: string | null;
     description?: string;
     displayOrder?: number;
+    spaceLevelId?: number;
 }
 
 /** Form values submitted by the create/edit Space modal (see spaceFormConfig.tsx). */
 export interface SpaceFormData {
+    spaceLevelId?: number;
     parentSpaceId?: number | null;
     spaceCode: string;
     spaceName: string;

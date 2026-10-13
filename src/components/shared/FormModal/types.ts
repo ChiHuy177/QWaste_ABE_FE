@@ -1,4 +1,4 @@
-import { Rule } from 'antd/es/form';
+import { Rule, FormInstance } from 'antd/es/form';
 import { AuditMetaData } from '@/types/Metadata';
 import type { SpaceTreeSelectOption } from '@/components/shared/filters/SpaceTreeSelect';
 
@@ -73,10 +73,12 @@ export interface FormFieldConfig {
         supportText?: string;
     };
     treeData?: SpaceTreeSelectOption[] | any;
+    treeDefaultExpandAll?: boolean;
     [key: string]: any;
 }
 
 export interface EntityFormModalProps<TFormData extends Record<string, unknown>> {
+    form?: FormInstance<TFormData>;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (data: TFormData, mode: 'create' | 'edit') => Promise<void>;

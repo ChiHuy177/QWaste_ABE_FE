@@ -31,47 +31,79 @@ export interface SpaceTreeNode {
 
 export interface MapSpaceTreeOptions {
     maxSelectableLevel?: number;
+    targetSelectableLevel?: number;
+    maxDepthLevel?: number;
     disabledSpaceIds?: number[];
     maxBadgeText?: string;
     t?: TFunction;
 }
+
+const extractNodeLevel = (node: SpaceTreeNode): number => {
+    const rawLevel =
+        typeof node.spaceLevel === 'object' && node.spaceLevel !== null
+            ? ((
+                  node.spaceLevel as {
+                      spaceLevel?: number;
+                      space_level?: number;
+                      level?: number;
+                  }
+              ).spaceLevel ??
+              (node.spaceLevel as { space_level?: number }).space_level ??
+              (node.spaceLevel as { level?: number }).level)
+            : node.spaceLevel;
+    return Number(rawLevel ?? 0);
+};
 
 export const mapSpaceTreeToTreeSelect = (
     nodes: SpaceTreeNode[],
     parentPathName: string = '',
     options?: MapSpaceTreeOptions
 ): SpaceTreeSelectOption[] => {
-    return nodes.map((node) => {
+    const hasTargetLevel =
+        options?.targetSelectableLevel !== undefined && options.targetSelectableLevel > 0;
+
+    const hasValidCandidate = (n: SpaceTreeNode): boolean => {
+        const lvl = extractNodeLevel(n);
+        if (lvl === options?.targetSelectableLevel) {
+            return true;
+        }
+        if (n.children && n.children.length > 0) {
+            return n.children.some(hasValidCandidate);
+        }
+        return false;
+    };
+
+    const targetNodes = hasTargetLevel ? nodes.filter(hasValidCandidate) : nodes;
+
+    return targetNodes.map((node) => {
         const currentPathName = parentPathName
             ? `${parentPathName} / ${node.spaceName}`
             : node.spaceName;
 
-        const rawLevel =
-            typeof node.spaceLevel === 'object' && node.spaceLevel !== null
-                ? ((
-                      node.spaceLevel as {
-                          spaceLevel?: number;
-                          space_level?: number;
-                          level?: number;
-                      }
-                  ).spaceLevel ??
-                  (node.spaceLevel as { space_level?: number }).space_level ??
-                  (node.spaceLevel as { level?: number }).level)
-                : node.spaceLevel;
-        const levelNum = Number(rawLevel ?? 0);
+        const levelNum = extractNodeLevel(node);
+
+        const isTargetLevelCandidate = hasTargetLevel && levelNum === options.targetSelectableLevel;
+        const isLevelMismatched = hasTargetLevel && levelNum !== options.targetSelectableLevel;
 
         const isMaxLevelReached =
+            !hasTargetLevel &&
             options?.maxSelectableLevel !== undefined &&
             options.maxSelectableLevel > 0 &&
             levelNum >= options.maxSelectableLevel;
+
         const isExcluded = options?.disabledSpaceIds?.includes(node.spaceId) ?? false;
-        const isDisabled = isMaxLevelReached || isExcluded;
+        const isDisabled = isLevelMismatched || isMaxLevelReached || isExcluded;
 
         const maxBadgeText =
             options?.maxBadgeText ??
             (options?.t
                 ? options.t('spaceManagement.maxLevelBadge', { defaultValue: 'Tối đa' })
                 : 'Tối đa');
+
+        const shouldStopRecursion =
+            options?.maxDepthLevel !== undefined &&
+            options.maxDepthLevel > 0 &&
+            levelNum >= options.maxDepthLevel;
 
         return {
             value: node.spaceId,
@@ -95,7 +127,7 @@ export const mapSpaceTreeToTreeSelect = (
                     {isMaxLevelReached && (
                         <Tag
                             color="error"
-                            bordered={false}
+                            variant="filled"
                             style={{
                                 fontSize: 10,
                                 marginInlineStart: 6,
@@ -107,6 +139,26 @@ export const mapSpaceTreeToTreeSelect = (
                             {maxBadgeText}
                         </Tag>
                     )}
+                    {hasTargetLevel && levelNum > 0 && (
+                        <Tag
+                            color={isTargetLevelCandidate ? 'processing' : 'default'}
+                            variant="filled"
+                            style={{
+                                fontSize: 10,
+                                marginInlineStart: 6,
+                                marginInlineEnd: 0,
+                                paddingInline: 4,
+                                lineHeight: '16px',
+                            }}
+                        >
+                            {options?.t
+                                ? options.t('spaceManagement.levelBadge', {
+                                      level: levelNum,
+                                      defaultValue: `Cấp ${levelNum}`,
+                                  })
+                                : `Cấp ${levelNum}`}
+                        </Tag>
+                    )}
                 </span>
             ),
             label: currentPathName,
@@ -116,7 +168,7 @@ export const mapSpaceTreeToTreeSelect = (
                 </Tooltip>
             ),
             children:
-                node.children && node.children.length > 0
+                !shouldStopRecursion && node.children && node.children.length > 0
                     ? mapSpaceTreeToTreeSelect(node.children, currentPathName, options)
                     : undefined,
         };
@@ -257,7 +309,7 @@ export const SpaceTreeSelect: React.FC<SpaceTreeSelectProps> = ({
             treeData={displayData}
             loading={isActuallyLoading}
             allowClear
-            treeDefaultExpandAll={false}
+            treeDefaultExpandAll={props.treeDefaultExpandAll ?? false}
             showSearch={{ treeNodeFilterProp: 'label' }}
             treeNodeLabelProp="displayLabel"
             styles={mergedStyles}
