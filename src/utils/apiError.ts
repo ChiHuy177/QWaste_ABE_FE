@@ -56,6 +56,15 @@ export const getApiErrorMessage = (error: unknown, fallback = ''): string => {
     return apiMessage || fallback || toMessage(errorObject?.message);
 };
 
+export const getApiErrorCode = (error: unknown): number | undefined => {
+    const errorObject = error as ApiErrorLike;
+    const errorData = errorObject?.response?.data as Record<string, unknown> | undefined;
+    if (typeof errorData?.code === 'number') {
+        return errorData.code;
+    }
+    return undefined;
+};
+
 export const getErrorStatus = (error: unknown): number | undefined => {
     return (error as ApiErrorLike)?.response?.status;
 };

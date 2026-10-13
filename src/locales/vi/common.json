@@ -420,7 +420,14 @@
             "dayTypeLabel": "Loại ngày",
             "statusWorking": "Đi làm",
             "statusOff": "Nghỉ",
+            "shiftPatternLabel": "Mẫu ca",
+            "selectPatternPlaceholder": "Chọn mẫu ca",
+            "defaultPatternTag": "Mặc định",
             "btnApply": "Áp dụng"
+        },
+        "errors": {
+            "patternRequired": "Vui lòng chọn mẫu ca cho ngày làm việc",
+            "patternRequiredDate": "Vui lòng chọn mẫu ca cho ngày làm việc ({{date}})"
         },
         "drawer": {
             "bulkEditTitle": "Chỉnh sửa ngày đã chọn",
