@@ -242,6 +242,12 @@ export const renderSelectField = (field: FormFieldConfig) => {
             disabled={(field.loading || field.disabled) as boolean}
             allowClear={field.allowClear}
             onChange={field.onChange}
+            showSearch={field.showSearch ?? true}
+            filterOption={
+                field.filterOption ??
+                ((input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()))
+            }
             mode={field.mode}
             maxTagCount={field.maxTagCount}
             maxTagPlaceholder={
@@ -309,6 +315,7 @@ export const renderSpaceTreeSelectField = (field: FormFieldConfig) => {
             allowClear={field.allowClear !== false}
             onChange={field.onChange}
             treeData={field.treeData}
+            treeDefaultExpandAll={field.treeDefaultExpandAll ?? true}
         />
     );
 };
