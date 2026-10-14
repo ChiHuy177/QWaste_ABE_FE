@@ -113,10 +113,7 @@ const SpaceListPage = () => {
         queryFn: async () => {
             const response = await SpaceLevelService.getAllSpaceLevels();
             const rawData = response as unknown as
-                | SpaceLevelDTO[]
-                | { content: SpaceLevelDTO[] }
-                | null
-                | undefined;
+                SpaceLevelDTO[] | { content: SpaceLevelDTO[] } | null | undefined;
             const levels = Array.isArray(rawData) ? rawData : (rawData?.content ?? []);
             return [...levels].sort((a, b) => a.spaceLevel - b.spaceLevel);
         },
