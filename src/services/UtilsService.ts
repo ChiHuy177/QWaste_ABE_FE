@@ -1,3 +1,4 @@
+import { IndustryFilter } from '@/types/IndustryFilter';
 import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
@@ -11,5 +12,28 @@ export class UtilsService {
             url: ENDPOINTS.UTILS.SPACE_LEVELS.HIGHEST,
         });
         return response.result as number;
+    }
+
+    /**
+     * GET all PERIOD filters
+     */
+    static async getAllPeriods(): Promise<IndustryFilter[]> {
+        const response = await NetworkService.requestJson<IndustryFilter[]>({
+            method: 'GET',
+            url: ENDPOINTS.UTILS.FILTERS.ALL_PERIODS,
+        });
+        return response.result as IndustryFilter[];
+    }
+
+    /**
+     * GET SHIFT and OT filters for a specific date according to that date's shift pattern
+     * @param date Date in format YYYY-MM-DD
+     */
+    static async getShiftsForDate(date: string): Promise<IndustryFilter[]> {
+        const response = await NetworkService.requestJson<IndustryFilter[]>({
+            method: 'GET',
+            url: `${ENDPOINTS.UTILS.FILTERS.SHIFTS_FOR_DATE}?date=${encodeURIComponent(date)}`,
+        });
+        return response.result as IndustryFilter[];
     }
 }

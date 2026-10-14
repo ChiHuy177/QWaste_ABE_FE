@@ -5,19 +5,18 @@
 // Related: enhance/fe-space-monitoring branch
 
 import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
-import { Button, Grid, Select, Skeleton, Spin, Tooltip, Typography, message } from 'antd';
+import { Button, Grid, Select, Skeleton, Spin, Tooltip, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import {
-    FactoryStatsCards,
-    SpaceOverviewGrid,
-    TimeFilterPopover,
+import { FactoryStatsCards, SpaceOverviewGrid } from '@/features/dashboard/space-monitoring';
+import TimeFilterPopover, {
     type PeriodFilterMode,
     type TimeFilterApplyPayload,
-} from '@/features/dashboard/space-monitoring';
+} from '@/components/shared/filters/TimeFilterPopover';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { factoryOverviewActions } from '@/stores';
@@ -172,22 +171,21 @@ const SpaceMonitoringPage: React.FC = () => {
         fetchIndustryFilters();
     }, [dispatch]);
 
-    // Auto-select active shift on mount — Ca làm việc uses SHIFT as primary when no period chosen
+    // Default filter on mount: TODAY and ALL shifts
     useEffect(() => {
         if (selectedTimePeriod || timeFilterMode !== 'PRESET' || industryFilters.length === 0)
             return;
 
-        const activeShift = industryFilters.find(
-            (filter) => filter.category === 'SHIFT' && isShiftActive(filter)
-        );
+        const todayPeriod =
+            industryFilters.find((f) => f.category === 'PERIOD' && f.periodCode === 'TODAY') ||
+            industryFilters.find((f) => f.category === 'PERIOD') ||
+            industryFilters[0];
 
-        if (activeShift) {
-            dispatch(factoryOverviewActions.setSelectedTimePeriod(activeShift.filterId));
-        } else {
-            dispatch(factoryOverviewActions.setSelectedTimePeriod(industryFilters[0].filterId));
+        if (todayPeriod) {
+            dispatch(factoryOverviewActions.setSelectedTimePeriod(todayPeriod.filterId));
         }
         dispatch(factoryOverviewActions.setSelectedShiftFilterId(null));
-    }, [industryFilters, selectedTimePeriod, timeFilterMode, isShiftActive, dispatch]);
+    }, [industryFilters, selectedTimePeriod, timeFilterMode, dispatch]);
 
     const isCustomRangeMode = timeFilterMode !== 'PRESET';
     const isDateRange = isCustomRangeMode;
@@ -357,20 +355,10 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
-                                | 'RUNTIME'
-                                | 'IDLE'
-                                | 'ERROR'
-                                | 'COMPLETE'
-                                | 'OFFLINE'
-                                | 'UNKNOWN';
+                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
                         };
                         newStatus:
-                            | 'RUNTIME'
-                            | 'IDLE'
-                            | 'ERROR'
-                            | 'COMPLETE'
-                            | 'OFFLINE'
-                            | 'UNKNOWN';
+                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
@@ -459,7 +447,9 @@ const SpaceMonitoringPage: React.FC = () => {
 
     const groupedTimePeriodOptions = useMemo(
         () => ({
-            SHIFT: timePeriodOptions.filter((option) => option.category === 'SHIFT'),
+            SHIFT: timePeriodOptions.filter(
+                (option) => option.category === 'SHIFT' || option.category === 'OT'
+            ),
             PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
         }),
         [timePeriodOptions]
@@ -496,7 +486,7 @@ const SpaceMonitoringPage: React.FC = () => {
             document.body.removeChild(a);
         } catch (error) {
             console.error('[Factory Overview] Excel export failed:', error);
-            message.error(t('errors.download'));
+            toast.error(t('errors.download'));
         } finally {
             setIsExporting(false);
         }
@@ -517,12 +507,14 @@ const SpaceMonitoringPage: React.FC = () => {
             setTimeFilterMode(mode);
             dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
             dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
-            dispatch(
-                factoryOverviewActions.setSelectedDateRange({
-                    startDate,
-                    endDate,
-                })
-            );
+            if (startDate && endDate) {
+                dispatch(
+                    factoryOverviewActions.setSelectedDateRange({
+                        startDate,
+                        endDate,
+                    })
+                );
+            }
 
             if (!activeFactoryId) return;
             setHasSearched(true);
@@ -640,7 +632,9 @@ const SpaceMonitoringPage: React.FC = () => {
     const activeTimePeriodLabel = useMemo(() => {
         const currentLang = i18n.language;
         const shiftFilter =
-            currentShiftId != null ? industryFilters.find((f) => f.filterId === currentShiftId) : null;
+            currentShiftId != null
+                ? industryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
         const shiftLabel = shiftFilter
             ? currentLang === 'vi'
                 ? shiftFilter.displayNameVi

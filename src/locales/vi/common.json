@@ -4896,5 +4896,32 @@
             "refreshData": "Làm mới dữ liệu",
             "apply": "Áp dụng"
         }
+    },
+    "timeFilter": {
+        "title": "Thời gian",
+        "timeRange": "Khoảng thời gian",
+        "quick": "Nhanh",
+        "custom": "Tuỳ chỉnh",
+        "shifts": "Ca làm việc",
+        "allShifts": "Tất cả",
+        "active": "Đang hoạt động",
+        "singleDayShiftOnlyTooltip": "Chỉ hỗ trợ chọn ca cụ thể khi xem trong 1 ngày",
+        "dateRangeAllShiftsWarning": "(*) Khi xem khoảng ngày, mặc định xem tất cả các ca (không chọn ca riêng lẻ).",
+        "noPresetsConfigured": "Chưa có preset nào được cấu hình.",
+        "year": "Năm",
+        "week": "Tuần",
+        "quarter": "Quý",
+        "selectWeek": "Chọn tuần",
+        "selectQuarter": "Chọn quý",
+        "weekOption": "Tuần {{week}}",
+        "quarterOption": "Quý {{quarter}}",
+        "weekRangeChip": "Tuần {{week}}/{{year}}: {{range}}",
+        "quarterRangeChip": "Quý {{quarter}}/{{year}}: {{range}}",
+        "noRangeSelected": "Chưa chọn khoảng thời gian",
+        "optionalAutoFill": "(tuỳ chọn — tự động nếu bỏ qua)",
+        "groupBy": "Nhóm theo",
+        "labelStyle": "Kiểu nhãn",
+        "labelStyleFor": "Kiểu nhãn cho \"{{grain}}\"",
+        "selected": "Đang chọn"
     }
 }
