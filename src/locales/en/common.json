@@ -4852,5 +4852,32 @@
             "refreshData": "Refresh data",
             "apply": "Apply"
         }
+    },
+    "timeFilter": {
+        "title": "Time",
+        "timeRange": "Time range",
+        "quick": "Quick",
+        "custom": "Custom",
+        "shifts": "Shifts",
+        "allShifts": "All",
+        "active": "Active",
+        "singleDayShiftOnlyTooltip": "Shift filtering is only supported when viewing a single day",
+        "dateRangeAllShiftsWarning": "(*) Date range: viewing all shifts by default (individual shift selection disabled).",
+        "noPresetsConfigured": "No presets configured yet.",
+        "year": "Year",
+        "week": "Week",
+        "quarter": "Quarter",
+        "selectWeek": "Select week",
+        "selectQuarter": "Select quarter",
+        "weekOption": "Week {{week}}",
+        "quarterOption": "Quarter {{quarter}}",
+        "weekRangeChip": "Week {{week}}/{{year}}: {{range}}",
+        "quarterRangeChip": "Quarter {{quarter}}/{{year}}: {{range}}",
+        "noRangeSelected": "No time range selected yet",
+        "optionalAutoFill": "(optional — auto-filled if skipped)",
+        "groupBy": "Group by",
+        "labelStyle": "Label style",
+        "labelStyleFor": "Label style for \"{{grain}}\"",
+        "selected": "Selected"
     }
 }

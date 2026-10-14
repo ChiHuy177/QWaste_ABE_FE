@@ -177,6 +177,10 @@ export const ENDPOINTS = {
         SPACE_LEVELS: {
             HIGHEST: `${BASE_PATHS.UTILS}/spaceLevels/highest`,
         },
+        FILTERS: {
+            ALL_PERIODS: `${BASE_PATHS.UTILS}/filters/allPeriods`,
+            SHIFTS_FOR_DATE: `${BASE_PATHS.UTILS}/filters/shiftsForDate`,
+        },
     },
     EXCEL_EXPORT: {
         MACHINE_STATUS_LOG_REPORT_BY_FILTER: `${BASE_PATHS.EXCEL_EXPORT}/machineStatusLogReport/byFilter`,
