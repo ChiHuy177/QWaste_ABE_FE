@@ -24,26 +24,6 @@ export function AbilityProvider({ children }: { children: React.ReactNode }) {
             return defaultAbility;
         }
 
-        const validRoles = user.roles.filter((role) =>
-            [
-                'super_admin',
-                'admin',
-                'director',
-                'manager',
-                'planner',
-                'operator',
-                'qc_staff',
-                'maintenance',
-                'client',
-                'op',
-                'qc',
-            ].includes(role.toLowerCase())
-        );
-
-        if (validRoles.length === 0) {
-            return defaultAbility;
-        }
-
         const normalizeRole = user.roles.map((role) => role.toLowerCase() as AccountRole);
 
         const finalPermissions = user.allTypePermissions?.finalPermissions;
