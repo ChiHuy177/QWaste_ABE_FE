@@ -136,6 +136,22 @@ export const MachineHeroHeader: React.FC<MachineHeroHeaderProps> = React.memo(
                         flexShrink: 0,
                     }}
                 >
+                    {machineInfo.totalIncidents !== undefined && (
+                        <Tag
+                            style={{
+                                padding: '4px 10px',
+                                borderRadius: 12,
+                                fontWeight: 600,
+                                fontSize: 12,
+                                margin: 0,
+                                background: token.colorBgContainer,
+                            }}
+                        >
+                            {t('productionOverview.downtimeModal.incidentCount', {
+                                count: machineInfo.totalIncidents,
+                            })}
+                        </Tag>
+                    )}
                     {hasDowntime ? (
                         <Tag
                             color="error"

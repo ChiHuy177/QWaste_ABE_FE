@@ -7,11 +7,13 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { DowntimeService } from '@/services/DowntimeService';
+import { SpaceService } from '@/services/SpaceService';
 import {
     DowntimeMachineRollupItem,
     DowntimeMachineInfo,
     DowntimeMachineIncidentItem,
 } from '@/types/Downtime';
+import { SpacePickingWithChildren, SpaceWithChildrenResponse } from '@/types/Space';
 import { useAppSelector } from '@/stores/hook';
 import { IFactoryOverviewStoreState } from '@/stores/FactoryOverviewStore';
 import { collectAllMachines } from '@/utils/spaceStatsUtils';
@@ -21,11 +23,13 @@ import {
     IncidentHistoryTable,
     ModalHeader,
 } from './_components';
+import { formatMinutesToDuration } from './errorAnalyticsUtils';
 
 export interface ErrorAnalyticsModalProps {
     isOpen: boolean;
     onClose: () => void;
     spaceId: number | null;
+    spaces?: SpacePickingWithChildren[];
     filterId: number | null;
     startDate: string;
     endDate: string;
@@ -38,6 +42,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
         isOpen,
         onClose,
         spaceId,
+        spaces: propSpaces,
         filterId,
         startDate,
         endDate,
@@ -57,6 +62,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
         const [loadingMachines, setLoadingMachines] = useState(false);
         const [machinesList, setMachinesList] = useState<DowntimeMachineRollupItem[]>([]);
         const [totalAffectedCount, setTotalAffectedCount] = useState(0);
+        const [plantTotalDowntimeMinutes, setPlantTotalDowntimeMinutes] = useState(0);
         const [selectedMachine, setSelectedMachine] = useState<DowntimeMachineRollupItem | null>(
             null
         );
@@ -80,39 +86,157 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
         const reduxState = useAppSelector((state) => state.factoryOverview) as
             IFactoryOverviewStoreState | undefined;
 
+        const effectiveSpaces = useMemo(() => {
+            if (propSpaces && propSpaces.length > 0) return propSpaces;
+            return reduxState?.spaces || [];
+        }, [propSpaces, reduxState?.spaces]);
+
+        const currentSpace = useMemo(() => {
+            if (!spaceId) return null;
+            return effectiveSpaces.find((s) => s.spaceId === spaceId) || null;
+        }, [effectiveSpaces, spaceId]);
+
         const spaceData = useMemo(() => {
             return reduxState?.spaceData || null;
         }, [reduxState]);
+
+        const [fetchedWorkshops, setFetchedWorkshops] = useState<
+            Array<{ spaceId: number; spaceName: string; spaceCode?: string }>
+        >([]);
+        const [fetchedSpaceName, setFetchedSpaceName] = useState<string>('');
+
+        // Fetch children (level 2 spaces) if not present in currentSpace
+        useEffect(() => {
+            if (!isOpen || !spaceId) return;
+
+            // If currentSpace in Redux/props already has children, use them directly
+            if (currentSpace?.children && currentSpace.children.length > 0) {
+                setFetchedWorkshops(currentSpace.children);
+                return;
+            }
+
+            let isMounted = true;
+            const fetchChildrenSpaces = async () => {
+                try {
+                    const level1WithChildren = await SpaceService.getSpacesByLevelWithChildren(1);
+                    if (!isMounted) return;
+                    const target = level1WithChildren.find((s) => s.spaceId === spaceId);
+                    if (target) {
+                        if (target.spaceName) {
+                            setFetchedSpaceName(target.spaceName);
+                        }
+                        if (target.children && target.children.length > 0) {
+                            setFetchedWorkshops(target.children);
+                            return;
+                        }
+                    }
+
+                    // Secondary fallback: full space tree
+                    const tree = await SpaceService.getAllSpacesTree();
+                    if (!isMounted) return;
+                    const findNode = (
+                        nodes: SpaceWithChildrenResponse[]
+                    ): SpaceWithChildrenResponse | null => {
+                        for (const node of nodes) {
+                            if (node.spaceId === spaceId) return node;
+                            if (node.children) {
+                                const found = findNode(node.children);
+                                if (found) return found;
+                            }
+                        }
+                        return null;
+                    };
+                    const treeTarget = findNode(tree);
+                    if (treeTarget) {
+                        if (treeTarget.spaceName) {
+                            setFetchedSpaceName(treeTarget.spaceName);
+                        }
+                        if (treeTarget.children && treeTarget.children.length > 0) {
+                            setFetchedWorkshops(treeTarget.children);
+                        }
+                    }
+                } catch (err) {
+                    console.error(
+                        '[ErrorAnalyticsModal] Error fetching child spaces for spaceId:',
+                        spaceId,
+                        err
+                    );
+                }
+            };
+
+            fetchChildrenSpaces();
+
+            return () => {
+                isMounted = false;
+            };
+        }, [isOpen, spaceId, currentSpace]);
+
+        const workshopsList = useMemo(() => {
+            if (currentSpace?.children && currentSpace.children.length > 0) {
+                return currentSpace.children;
+            }
+            if (fetchedWorkshops.length > 0) {
+                return fetchedWorkshops;
+            }
+            if (spaceData?.children && spaceData.children.length > 0) {
+                return spaceData.children;
+            }
+            return [];
+        }, [currentSpace?.children, fetchedWorkshops, spaceData?.children]);
 
         const workshopOptions = useMemo(() => {
             const allLabel =
                 t('productionOverview.downtimeModal.allWorkshops') ||
                 t('common.all') ||
                 'Tất cả phân xưởng';
-            if (spaceData?.children && spaceData.children.length > 0) {
+            if (workshopsList.length > 0) {
                 return [
                     { label: allLabel, value: 'all' as const },
-                    ...spaceData.children.map((child: any) => ({
+                    ...workshopsList.map((child) => ({
                         label: child.spaceName,
                         value: child.spaceId,
                     })),
                 ];
             }
             return [{ label: allLabel, value: 'all' as const }];
-        }, [spaceData, t]);
+        }, [workshopsList, t]);
+
+        const activeSelectedWorkshop = useMemo(() => {
+            if (selectedWorkshopId === 'all' || selectedWorkshopId === null) return null;
+            return workshopsList.find((w) => w.spaceId === selectedWorkshopId) || null;
+        }, [selectedWorkshopId, workshopsList]);
 
         const machineWorkshopMap = useMemo(() => {
             const map = new Map<string, { id: number; name: string }>();
             if (spaceData?.children && spaceData.children.length > 0) {
-                spaceData.children.forEach((workshop: any) => {
-                    const machines = collectAllMachines(workshop);
-                    machines.forEach((m) =>
-                        map.set(m.machineId, { id: workshop.spaceId, name: workshop.spaceName })
-                    );
+                spaceData.children.forEach((workshop) => {
+                    if (workshop.machineChildren) {
+                        const machines = collectAllMachines(workshop);
+                        machines.forEach((m) =>
+                            map.set(m.machineId, { id: workshop.spaceId, name: workshop.spaceName })
+                        );
+                    }
+                });
+            }
+            if (workshopsList.length > 0 && machinesList.length > 0) {
+                machinesList.forEach((m) => {
+                    if (!map.has(m.machineId) && m.location) {
+                        const matchedWs = workshopsList.find(
+                            (ws) =>
+                                m.location.includes(ws.spaceName) ||
+                                (Boolean(ws.spaceCode) && m.location.includes(ws.spaceCode!))
+                        );
+                        if (matchedWs) {
+                            map.set(m.machineId, {
+                                id: matchedWs.spaceId,
+                                name: matchedWs.spaceName,
+                            });
+                        }
+                    }
                 });
             }
             return map;
-        }, [spaceData]);
+        }, [spaceData, workshopsList, machinesList]);
 
         // Debounce search text input
         useEffect(() => {
@@ -174,6 +298,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
 
                     setMachinesList(items);
                     setTotalAffectedCount(totalAffected);
+                    setPlantTotalDowntimeMinutes(res?.totalDowntimeMinutes ?? 0);
 
                     // Auto-select first machine or keep existing selection
                     setSelectedMachine((prev) => {
@@ -195,11 +320,11 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                         }
                         return items[0];
                     });
-                } catch (error: any) {
+                } catch (error: unknown) {
                     if (!isMounted) return;
                     console.error('Error fetching downtime machine list:', error);
                     toast.error(
-                        error?.message ||
+                        (error as Error)?.message ||
                             t('common.errorOccurred', 'Không thể tải danh sách thiết bị downtime')
                     );
                     setMachinesList([]);
@@ -253,6 +378,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 setSelectedWorkshopId('all');
                 setErrorDateRange(null);
                 setMobileActiveView('list');
+                setPlantTotalDowntimeMinutes(0);
                 return;
             }
 
@@ -260,6 +386,13 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                 setMobileActiveView('detail');
             }
         }, [isOpen, isSingleMachineMode]);
+
+        // Reset workshop filter when spaceId changes
+        useEffect(() => {
+            setSelectedWorkshopId('all');
+            setSelectedMachine(null);
+            setSelectedMachineInfo(null);
+        }, [spaceId]);
 
         // Fetch Machine Details & Incident History (Right Column)
         useEffect(() => {
@@ -318,11 +451,11 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                     }
 
                     setIncidents(res?.page?.content || []);
-                } catch (error: any) {
+                } catch (error: unknown) {
                     if (!isMounted) return;
                     console.error('Error fetching machine incidents:', error);
                     toast.error(
-                        error?.message ||
+                        (error as Error)?.message ||
                             t('common.errorOccurred', 'Không thể tải lịch sử sự cố thiết bị')
                     );
                     setIncidents([]);
@@ -390,11 +523,26 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
             [isDateRange, startDate, endDate]
         );
 
+        const resolvedSpaceName = useMemo(() => {
+            return currentSpace?.spaceName || fetchedSpaceName || spaceData?.spaceName || '';
+        }, [currentSpace?.spaceName, fetchedSpaceName, spaceData?.spaceName]);
+
         const selectedWorkshopName = useMemo(() => {
+            if (activeSelectedWorkshop) {
+                return activeSelectedWorkshop.spaceName;
+            }
             if (!selectedMachine) return '';
             const ws = machineWorkshopMap.get(selectedMachine.machineId);
-            return ws?.name || '';
-        }, [selectedMachine?.machineId, machineWorkshopMap]);
+            if (ws?.name) return ws.name;
+            if (selectedMachine.location) {
+                return selectedMachine.location.split('-')[1]?.trim() || selectedMachine.location;
+            }
+            return '';
+        }, [activeSelectedWorkshop, selectedMachine, machineWorkshopMap]);
+
+        const formattedPlantDowntime = useMemo(() => {
+            return formatMinutesToDuration(plantTotalDowntimeMinutes);
+        }, [plantTotalDowntimeMinutes]);
 
         return (
             <Modal
@@ -409,7 +557,10 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                             selectedMachineInfo?.formattedTotalDowntime ||
                             selectedMachine?.formattedDowntime
                         }
-                        spaceName={spaceData?.spaceName}
+                        plantTotalDowntime={
+                            plantTotalDowntimeMinutes > 0 ? formattedPlantDowntime : undefined
+                        }
+                        spaceName={resolvedSpaceName}
                         workshopName={selectedWorkshopName}
                         isDateRange={isDateRange}
                         startDate={startDate}

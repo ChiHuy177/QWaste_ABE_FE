@@ -411,7 +411,13 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                                     key={machine.machineId}
                                     machine={machine}
                                     isSelected={machine.machineId === selectedMachineId}
-                                    workshopName={machineWorkshopMap.get(machine.machineId)?.name}
+                                    workshopName={
+                                        machineWorkshopMap.get(machine.machineId)?.name ||
+                                        (machine.location
+                                            ? machine.location.split('-')[1]?.trim() ||
+                                              machine.location
+                                            : undefined)
+                                    }
                                     onSelect={onSelectMachine}
                                 />
                             ))

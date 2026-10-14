@@ -47,6 +47,17 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
         const errorColumns: ColumnsType<DowntimeMachineIncidentItem> = useMemo(
             () => [
                 {
+                    title: t('productionOverview.downtimeModal.colIncidentCode', 'Mã sự cố'),
+                    dataIndex: 'incidentCode',
+                    key: 'incidentCode',
+                    width: isMobile ? 115 : 135,
+                    render: (code: string) => (
+                        <Text strong style={{ fontSize: 12.5, color: token.colorPrimary }}>
+                            {code || '—'}
+                        </Text>
+                    ),
+                },
+                {
                     title: t('productionOverview.downtimeModal.colStart'),
                     key: 'startTime',
                     width: isMobile ? 150 : 175,
@@ -330,7 +341,7 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     }
                     size="small"
                     scroll={{
-                        x: isMobile ? 380 : undefined,
+                        x: isMobile ? 500 : undefined,
                         y: isMobile ? 'calc(100vh - 380px)' : 'calc(88vh - 270px)',
                     }}
                     style={{

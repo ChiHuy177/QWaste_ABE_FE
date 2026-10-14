@@ -12,6 +12,7 @@ export interface ModalHeaderProps {
     machineName?: string;
     machineId?: string;
     formattedTotalDowntime?: string;
+    plantTotalDowntime?: string;
     spaceName?: string;
     workshopName?: string;
     isDateRange: boolean;
@@ -27,6 +28,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
         machineName,
         machineId,
         formattedTotalDowntime,
+        plantTotalDowntime,
         spaceName,
         workshopName,
         isDateRange,
@@ -129,20 +131,45 @@ export const ModalHeader: React.FC<ModalHeaderProps> = React.memo(
                         {formattedTotalDowntime || '0m'}
                     </Tag>
                 ) : (
-                    <Tag
-                        color="blue"
+                    <div
                         style={{
-                            borderRadius: 12,
-                            margin: 0,
-                            padding: '2px 10px',
-                            fontWeight: 600,
-                            fontSize: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            flexWrap: 'wrap',
                         }}
                     >
-                        {t('productionOverview.downtimeModal.machinesCount', {
-                            count: totalMachinesCount,
-                        })}
-                    </Tag>
+                        {plantTotalDowntime && (
+                            <Tag
+                                color="error"
+                                style={{
+                                    borderRadius: 12,
+                                    margin: 0,
+                                    padding: '2px 10px',
+                                    fontWeight: 600,
+                                    fontSize: 12,
+                                }}
+                            >
+                                {t('productionOverview.downtimeModal.totalDowntime', {
+                                    time: plantTotalDowntime,
+                                })}
+                            </Tag>
+                        )}
+                        <Tag
+                            color="blue"
+                            style={{
+                                borderRadius: 12,
+                                margin: 0,
+                                padding: '2px 10px',
+                                fontWeight: 600,
+                                fontSize: 12,
+                            }}
+                        >
+                            {t('productionOverview.downtimeModal.machinesCount', {
+                                count: totalMachinesCount,
+                            })}
+                        </Tag>
+                    </div>
                 )}
             </div>
         );
