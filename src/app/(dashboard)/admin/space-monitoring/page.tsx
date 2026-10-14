@@ -355,10 +355,20 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
-                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
+                                | 'RUNTIME'
+                                | 'IDLE'
+                                | 'ERROR'
+                                | 'COMPLETE'
+                                | 'OFFLINE'
+                                | 'UNKNOWN';
                         };
                         newStatus:
-                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
+                            | 'RUNTIME'
+                            | 'IDLE'
+                            | 'ERROR'
+                            | 'COMPLETE'
+                            | 'OFFLINE'
+                            | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
@@ -507,14 +517,12 @@ const SpaceMonitoringPage: React.FC = () => {
             setTimeFilterMode(mode);
             dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
             dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
-            if (startDate && endDate) {
-                dispatch(
-                    factoryOverviewActions.setSelectedDateRange({
-                        startDate,
-                        endDate,
-                    })
-                );
-            }
+            dispatch(
+                factoryOverviewActions.setSelectedDateRange({
+                    startDate,
+                    endDate,
+                })
+            );
 
             if (!activeFactoryId) return;
             setHasSearched(true);
