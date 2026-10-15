@@ -24,8 +24,8 @@ export interface ProductionOverviewHeaderProps {
     startDate: string;
     endDate: string;
     groupedOptions: {
-        SHIFT: { label: string; value: number }[];
-        PERIOD: { label: string; value: number }[];
+        SHIFT: { label: string; value: number; sortOrder?: number }[];
+        PERIOD: { label: string; value: number; sortOrder?: number }[];
     };
     isShiftActive: (filter: IndustryFilter) => boolean;
     onApplyTimeFilter: (payload: TimeFilterApplyPayload) => void;

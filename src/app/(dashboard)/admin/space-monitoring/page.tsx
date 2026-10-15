@@ -444,15 +444,19 @@ const SpaceMonitoringPage: React.FC = () => {
         label: string;
         value: number;
         category: IndustryFilter['category'];
+        sortOrder?: number;
         disabled?: boolean;
     }[] => {
         const currentLang = i18n.language;
 
-        return industryFilters.map((filter: IndustryFilter) => ({
-            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
-            value: filter.filterId,
-            category: filter.category,
-        }));
+        return [...industryFilters]
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .map((filter: IndustryFilter) => ({
+                label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+                value: filter.filterId,
+                category: filter.category,
+                sortOrder: filter.sortOrder,
+            }));
     }, [industryFilters, i18n.language]);
 
     const groupedTimePeriodOptions = useMemo(

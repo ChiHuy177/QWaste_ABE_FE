@@ -113,14 +113,17 @@ const slice = createSlice({
         },
 
         setIndustryFilters: (state, action: PayloadAction<IndustryFilter[]>) => {
-            state.industryFilters = action.payload;
-            if (action.payload.length > 0 && state.selectedTimePeriod === null) {
+            const sorted = [...action.payload].sort(
+                (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+            );
+            state.industryFilters = sorted;
+            if (sorted.length > 0 && state.selectedTimePeriod === null) {
                 const todayFilter =
-                    action.payload.find(
+                    sorted.find(
                         (f) => f.category === 'PERIOD' && f.periodCode === 'TODAY'
                     ) ||
-                    action.payload.find((f) => f.category === 'PERIOD') ||
-                    action.payload[0];
+                    sorted.find((f) => f.category === 'PERIOD') ||
+                    sorted[0];
                 if (todayFilter) {
                     state.selectedTimePeriod = todayFilter.filterId;
                 }

@@ -22,7 +22,8 @@ export class UtilsService {
             method: 'GET',
             url: ENDPOINTS.UTILS.FILTERS.ALL_PERIODS,
         });
-        return response.result as IndustryFilter[];
+        const filters = (response.result as IndustryFilter[]) || [];
+        return [...filters].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }
 
     /**
@@ -34,6 +35,7 @@ export class UtilsService {
             method: 'GET',
             url: `${ENDPOINTS.UTILS.FILTERS.SHIFTS_FOR_DATE}?date=${encodeURIComponent(date)}`,
         });
-        return response.result as IndustryFilter[];
+        const shifts = (response.result as IndustryFilter[]) || [];
+        return [...shifts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }
 }
