@@ -12,7 +12,7 @@ export interface Mold {
     /** Công đoạn khuôn dùng — xác định khuôn tương thích với máy nào (machine.operationTypeId). */
     operationType: OperationType;
     auditMetaData?: AuditMetaData;
-    /** GET /api/molds/v1 trả cả mold đã soft-delete — dùng field này để lọc/hiển thị. */
+    isDeleted?: boolean;
     softDeleteMetaData?: SoftDeleteMetaData;
 }
 
@@ -29,7 +29,8 @@ export interface MoldUpdateFormData extends MoldFormData {
 }
 
 /** Mold khả dụng cho picker/kế hoạch: chưa bị soft-delete. */
-export const isMoldSchedulable = (mold: Mold): boolean => !mold.softDeleteMetaData?.isDeleted;
+export const isMoldSchedulable = (mold: Mold): boolean =>
+    !(mold.isDeleted === true || mold.softDeleteMetaData?.isDeleted === true);
 
 export interface MoldImportRowError {
     rowIndex: number;
@@ -40,4 +41,14 @@ export interface MoldImportRowError {
 export interface MoldImportResult {
     totalInserted: number;
     errors: MoldImportRowError[];
+}
+
+export interface MoldPaginatedParams {
+    page: number;
+    size: number;
+    sort?: string | string[];
+    search?: string;
+    moldCode?: string;
+    moldName?: string;
+    operationTypeId?: number;
 }

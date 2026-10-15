@@ -3163,6 +3163,7 @@
         "updateError": "Không thể cập nhật khuôn. Vui lòng thử lại.",
         "table": {
             "headers": {
+                "index": "STT",
                 "moldCode": "Mã Khuôn",
                 "moldName": "Tên Khuôn",
                 "outputPerShot": "Số Lỗ",

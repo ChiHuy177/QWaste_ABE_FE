@@ -2492,6 +2492,7 @@
         "updateError": "Failed to update mold. Please try again.",
         "table": {
             "headers": {
+                "index": "No.",
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
                 "outputPerShot": "Cavities",
