@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button, Card, Descriptions, Flex, Grid, Modal, Spin, Table, Tag, Typography } from 'antd';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { FilterOutlined, LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -32,9 +34,18 @@ const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
 
 const DEFAULT_PAGE_SIZE = 10;
+const SORT_DEFAULT = 'moldCode,ASC';
 
 const moldQueryKeys = {
     lists: ['molds', 'list'] as const,
+    list: (
+        page: number,
+        size: number,
+        sort?: string | string[],
+        search?: string,
+        moldCode?: string,
+        moldName?: string
+    ) => ['molds', 'list', page, size, sort, search, moldCode, moldName] as const,
     detail: (moldId: string) => ['molds', 'detail', moldId] as const,
 };
 
@@ -69,6 +80,7 @@ const MoldListPage = () => {
 
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+    const [sort, setSort] = useState<string | string[]>(SORT_DEFAULT);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -85,33 +97,87 @@ const MoldListPage = () => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // BE chỉ có GET /v1 không phân trang (đã cache Caffeine) — search/lọc/sort/phân trang client-side.
+    const handleTableChange = (
+        pagination: TablePaginationConfig,
+        _filters: Record<string, FilterValue | null>,
+        sorter: SorterResult<Mold> | SorterResult<Mold>[]
+    ) => {
+        if (pagination) {
+            setPage((pagination.current ?? 1) - 1);
+            setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
+        }
+
+        if (sorter) {
+            const sorters = Array.isArray(sorter) ? sorter : [sorter];
+            const validSorters = sorters
+                .filter((s) => s.field && s.order)
+                .map((s) => {
+                    const field = Array.isArray(s.field) ? s.field.join('.') : String(s.field);
+                    const order = s.order === 'ascend' ? 'ASC' : 'DESC';
+                    return `${field},${order}`;
+                });
+            if (validSorters.length > 0) {
+                setSort(validSorters.length === 1 ? validSorters[0] : validSorters);
+            } else {
+                setSort(SORT_DEFAULT);
+            }
+        } else {
+            setSort(SORT_DEFAULT);
+        }
+    };
+
     const moldsQuery = useQuery({
-        queryKey: moldQueryKeys.lists,
-        queryFn: () => MoldService.getAllMolds(),
+        queryKey: moldQueryKeys.list(
+            page,
+            pageSize,
+            sort,
+            debouncedSearch,
+            moldCodeFilter,
+            moldNameFilter
+        ),
+        queryFn: () =>
+            MoldService.getMoldsPaginated({
+                page,
+                size: pageSize,
+                sort,
+                search: debouncedSearch,
+                moldCode: moldCodeFilter,
+                moldName: moldNameFilter,
+            }),
     });
 
     const moldData = useMemo(() => {
-        const allMolds = moldsQuery.data ?? [];
-        const keyword = debouncedSearch.trim().toLowerCase();
-        const codeFilter = moldCodeFilter?.toLowerCase();
-        const nameFilter = moldNameFilter?.toLowerCase();
-
-        return allMolds.filter((mold) => {
-            if (
-                keyword &&
-                !mold.moldCode.toLowerCase().includes(keyword) &&
-                !mold.moldName.toLowerCase().includes(keyword)
-            ) {
-                return false;
-            }
-            if (codeFilter && !mold.moldCode.toLowerCase().includes(codeFilter)) return false;
-            if (nameFilter && !mold.moldName.toLowerCase().includes(nameFilter)) return false;
-            return true;
-        });
+        const rawData = moldsQuery.data;
+        if (!rawData) return [];
+        if (Array.isArray(rawData)) {
+            const keyword = debouncedSearch.trim().toLowerCase();
+            const codeFilter = moldCodeFilter?.toLowerCase();
+            const nameFilter = moldNameFilter?.toLowerCase();
+            return rawData.filter((mold) => {
+                if (
+                    keyword &&
+                    !mold.moldCode.toLowerCase().includes(keyword) &&
+                    !mold.moldName.toLowerCase().includes(keyword)
+                ) {
+                    return false;
+                }
+                if (codeFilter && !mold.moldCode.toLowerCase().includes(codeFilter)) return false;
+                if (nameFilter && !mold.moldName.toLowerCase().includes(nameFilter)) return false;
+                return true;
+            });
+        }
+        return rawData.content ?? [];
     }, [moldsQuery.data, debouncedSearch, moldCodeFilter, moldNameFilter]);
 
-    const totalElements = moldData.length;
+    const totalElements = useMemo(() => {
+        const rawData = moldsQuery.data;
+        if (!rawData) return 0;
+        if (Array.isArray(rawData)) {
+            return moldData.length;
+        }
+        return rawData.totalElements ?? 0;
+    }, [moldsQuery.data, moldData]);
+
     const isLoading = moldsQuery.isLoading || moldsQuery.isFetching;
 
     useEffect(() => {
@@ -249,8 +315,20 @@ const MoldListPage = () => {
             isMobile,
             t,
             ability,
+            page,
+            pageSize,
         }),
-        [handleViewMold, handleEditMold, handleDeleteMold, handleRestoreMold, isMobile, t, ability]
+        [
+            handleViewMold,
+            handleEditMold,
+            handleDeleteMold,
+            handleRestoreMold,
+            isMobile,
+            t,
+            ability,
+            page,
+            pageSize,
+        ]
     );
 
     const columns = useMemo(() => getMoldTableColumns(columnProps), [columnProps]);
@@ -423,6 +501,7 @@ const MoldListPage = () => {
                                 label={t('moldManagement.table.headers.operationType')}
                             >
                                 <Tag color="blue">
+                                    {viewModalState.data.operationType.operationTypeCode} —{' '}
                                     {viewModalState.data.operationType.operationTypeName}
                                 </Tag>
                             </Descriptions.Item>
@@ -503,15 +582,12 @@ const MoldListPage = () => {
                         columns={columns}
                         dataSource={moldData}
                         loading={isLoading}
+                        onChange={handleTableChange}
                         rowKey="moldId"
                         pagination={{
                             current: page + 1,
                             pageSize,
                             total: totalElements,
-                            onChange: (current, size) => {
-                                setPage(current - 1);
-                                setPageSize(size ?? DEFAULT_PAGE_SIZE);
-                            },
                             hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
