@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import ClientI18nProvider from '../components/ClientI18nProvider';
 import './globals.css';
+import '@/styles/antd-styles.css';
 // import 'antd/dist/reset.css'
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ErrorProvider } from '@/contexts/ErrorContext';
