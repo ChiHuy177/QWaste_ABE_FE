@@ -12,7 +12,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
 } from 'recharts';
 import dayjs from 'dayjs';
@@ -23,8 +22,9 @@ import {
 
 const { Text } = Typography;
 
-interface Machine7DaysEfficiencyChartProps {
+interface MachinePerformanceChartProps {
     machineCode: string;
+    machineName?: string | null;
     performanceData?: SingleMachinePerformanceResponse | null;
     isLoading?: boolean;
     subtitle?: string;
@@ -40,10 +40,21 @@ interface PerformanceChartItem {
     efficiency: number | null;
 }
 
-export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartProps> = React.memo(
-    ({ machineCode, performanceData, isLoading = false, subtitle: customSubtitle }) => {
+export const MachinePerformanceChart: React.FC<MachinePerformanceChartProps> = React.memo(
+    ({
+        machineCode,
+        machineName,
+        performanceData,
+        isLoading = false,
+        subtitle: customSubtitle,
+    }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
+
+        const machineDisplay =
+            machineName && machineName !== machineCode
+                ? `${machineName} (${machineCode})`
+                : machineCode;
 
         const maxCapLabel = t(
             'productionOverview.machineDetail.maxCapacityHoursLabel',
@@ -314,9 +325,73 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
                                 marginTop: 2,
                             }}
                         >
-                            {machineCode} –{' '}
+                            {machineDisplay} –{' '}
                             {customSubtitle || t('productionOverview.filters.dayShift')} –{' '}
                             {avgShortLabel}: {avgEfficiency}%
+                        </div>
+                    </div>
+
+                    {/* Series Legend cố định ở góc trên bên phải */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            fontSize: 11,
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 2,
+                                    backgroundColor: token.colorSuccess,
+                                }}
+                            />
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {actHoursLabel}
+                            </Text>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 2,
+                                    backgroundColor: token.colorPrimary,
+                                }}
+                            />
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {maxCapLabel}
+                            </Text>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 12,
+                                    height: 2,
+                                    backgroundColor: token.colorError,
+                                    borderRadius: 1,
+                                    position: 'relative',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        width: 5,
+                                        height: 5,
+                                        borderRadius: '50%',
+                                        backgroundColor: token.colorError,
+                                    }}
+                                />
+                            </span>
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {opRatioLabel}
+                            </Text>
                         </div>
                     </div>
                 </div>
@@ -411,19 +486,6 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
 
                                     <Tooltip content={renderCustomTooltip} />
 
-                                    <Legend
-                                        verticalAlign="bottom"
-                                        align="center"
-                                        wrapperStyle={{ paddingTop: 8, fontSize: 11 }}
-                                        formatter={(value: string) => {
-                                            if (value === 'maxCapacityHours') return maxCapLabel;
-                                            if (value === 'actualOperatingHours')
-                                                return actHoursLabel;
-                                            if (value === 'efficiency') return opRatioLabel;
-                                            return value;
-                                        }}
-                                    />
-
                                     {/* 1. Planned working hours (Primary Blue Bar) */}
                                     <Bar
                                         yAxisId="left"
@@ -471,4 +533,4 @@ export const Machine7DaysEfficiencyChart: React.FC<Machine7DaysEfficiencyChartPr
     }
 );
 
-Machine7DaysEfficiencyChart.displayName = 'Machine7DaysEfficiencyChart';
+MachinePerformanceChart.displayName = 'MachinePerformanceChart';

@@ -5,6 +5,6 @@ export * from './components/MachinePlanVsActualChartCard';
 export * from './components/ProductPlanVsActualChartCard';
 export * from './components/MachineDetailView';
 export * from './components/MachineDetailHeader';
-export * from './components/Machine7DaysEfficiencyChart';
-export * from './components/MachineHourlyOutputChart';
+export * from './components/MachinePerformanceChart';
+export * from './components/MachineOutputChart';
 export * from './components/ErrorAnalyticsModal';

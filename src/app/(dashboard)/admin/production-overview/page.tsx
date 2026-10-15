@@ -428,6 +428,7 @@ const ProductionOverviewPage: React.FC = () => {
             machineProductionSeries?.machineName ||
             singleMachineKpis?.efficiency?.machineName ||
             singleMachineKpis?.capacity?.machineName ||
+            availableMachineList.find((m) => m.machineCode === selectedMachineCode)?.machineName ||
             selectedMachineCode
         );
     }, [
@@ -435,6 +436,7 @@ const ProductionOverviewPage: React.FC = () => {
         machineProductionSeries?.machineName,
         singleMachineKpis?.efficiency?.machineName,
         singleMachineKpis?.capacity?.machineName,
+        availableMachineList,
         selectedMachineCode,
     ]);
 

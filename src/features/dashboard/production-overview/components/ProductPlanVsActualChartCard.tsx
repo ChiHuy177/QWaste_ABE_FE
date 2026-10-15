@@ -3,23 +3,15 @@
 import React, { useMemo } from 'react';
 import { Card, Typography, theme, Empty } from 'antd';
 import { useTranslation } from 'react-i18next';
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    Cell,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DashboardItemProductionResponse } from '@/types/Dashboard';
 import { ProductOutputData } from '@/types/ProductionOverview';
 
 const { Text } = Typography;
 
 export interface NormalizedItemProductionItem {
+    moldName: string;
+    moldCode?: string;
     productCode: string;
     productName: string;
     planned: number;
@@ -39,9 +31,21 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
         // Normalize incoming data (handles both API response and mock data)
         const chartData = useMemo<NormalizedItemProductionItem[]>(() => {
             if (!data || data.length === 0) return [];
-            return data.map((item) => {
+            return data.map((item: any) => {
                 if ('productionPlanCode' in item) {
+                    const moldName =
+                        item.moldName ||
+                        item.snapshotMoldName ||
+                        item.productionPlanName ||
+                        item.productName ||
+                        item.productionPlanCode;
+
+                    const moldCode =
+                        item.moldCode || item.snapshotMoldCode || item.productionPlanCode;
+
                     return {
+                        moldName,
+                        moldCode,
                         productCode: item.productionPlanCode,
                         productName: item.productionPlanName || item.productionPlanCode,
                         planned: item.plannedQuantity ?? 0,
@@ -49,9 +53,16 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                     };
                 }
                 // Mock data fallback
+                const fallbackMoldName =
+                    item.moldName || item.snapshotMoldName || item.productName || item.productCode;
+
+                const fallbackMoldCode = item.moldCode || item.snapshotMoldCode || item.productCode;
+
                 return {
+                    moldCode: fallbackMoldCode,
+                    moldName: fallbackMoldName,
                     productCode: item.productCode,
-                    productName: item.productCode,
+                    productName: item.productName || item.productCode,
                     planned: item.planned ?? 0,
                     actual: item.actual ?? 0,
                 };
@@ -60,9 +71,12 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
 
         // Calculate minimum container width for smooth horizontal scrolling if many items
         const minChartWidth = useMemo(() => {
-            const itemWidth = 64;
-            return Math.max(600, chartData.length * itemWidth);
+            if (chartData.length <= 8) return undefined;
+            const itemWidth = 75;
+            return Math.max(650, chartData.length * itemWidth);
         }, [chartData.length]);
+
+        const hasRotatedLabels = chartData.length > 5;
 
         return (
             <Card
@@ -76,13 +90,67 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                     marginTop: 16,
                 }}
             >
-                {/* Header */}
-                <div style={{ marginBottom: 16 }}>
-                    <Text style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
-                        {t('productionOverview.charts.planVsActualBySku')}
-                    </Text>
-                    <div style={{ fontSize: 12, color: token.colorTextDescription }}>
-                        {subtitle || t('productionOverview.charts.planVsActualSkuDesc')}
+                {/* Header with Title (Left) & Series Legend (Right) */}
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 12,
+                        flexWrap: 'wrap',
+                        gap: 8,
+                    }}
+                >
+                    <div>
+                        <Text style={{ fontSize: 15, fontWeight: 700, color: token.colorText }}>
+                            {t(
+                                'productionOverview.charts.planVsActualByMold',
+                                'Sản lượng Kế hoạch vs Thực tế theo khuôn'
+                            )}
+                        </Text>
+                        <div
+                            style={{
+                                fontSize: 12,
+                                color: token.colorTextDescription,
+                                marginTop: 2,
+                            }}
+                        >
+                            {subtitle ||
+                                t(
+                                    'productionOverview.charts.planVsActualMoldDesc',
+                                    'So sánh kế hoạch và thực tế theo từng khuôn'
+                                )}
+                        </div>
+                    </div>
+
+                    {/* Series Legend (Kế hoạch & Thực tế) cố định ở góc trên bên phải */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 2,
+                                    backgroundColor: token.colorTextQuaternary,
+                                }}
+                            />
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {t('productionOverview.charts.planned', 'Kế hoạch')}
+                            </Text>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 2,
+                                    backgroundColor: token.colorSuccess,
+                                }}
+                            />
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {t('productionOverview.charts.actual', 'Thực tế')}
+                            </Text>
+                        </div>
                     </div>
                 </div>
 
@@ -107,12 +175,23 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                         />
                     </div>
                 ) : (
-                    <div style={{ width: '100%', overflowX: 'auto', paddingBottom: 8 }}>
-                        <div style={{ width: '100%', minWidth: minChartWidth, height: 280 }}>
+                    <div
+                        style={{
+                            width: '100%',
+                            overflowX: minChartWidth ? 'auto' : 'hidden',
+                            paddingBottom: minChartWidth ? 6 : 0,
+                        }}
+                    >
+                        <div style={{ width: '100%', minWidth: minChartWidth, height: 300 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={chartData}
-                                    margin={{ top: 10, right: 20, left: -10, bottom: 10 }}
+                                    margin={{
+                                        top: 10,
+                                        right: 20,
+                                        left: -10,
+                                        bottom: hasRotatedLabels ? 10 : 0,
+                                    }}
                                 >
                                     <CartesianGrid
                                         strokeDasharray="3 3"
@@ -120,10 +199,19 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                                         opacity={0.5}
                                     />
                                     <XAxis
-                                        dataKey="productCode"
-                                        tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
-                                        axisLine={{ stroke: token.colorBorderSecondary }}
+                                        dataKey="moldName"
                                         interval={0}
+                                        angle={hasRotatedLabels ? -35 : 0}
+                                        textAnchor={hasRotatedLabels ? 'end' : 'middle'}
+                                        height={hasRotatedLabels ? 65 : 30}
+                                        tick={{ fill: token.colorTextSecondary, fontSize: 10.5 }}
+                                        axisLine={{ stroke: token.colorBorderSecondary }}
+                                        tickFormatter={(val) => {
+                                            if (typeof val === 'string' && val.length > 15) {
+                                                return `${val.substring(0, 13)}…`;
+                                            }
+                                            return val;
+                                        }}
                                     />
                                     <YAxis
                                         tick={{ fill: token.colorTextSecondary, fontSize: 11 }}
@@ -149,22 +237,16 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                                         labelFormatter={(label: any, items: readonly any[]) => {
                                             const rawItem = items?.[0]?.payload as
                                                 NormalizedItemProductionItem | undefined;
-                                            if (
-                                                rawItem?.productName &&
-                                                rawItem.productName !== label
-                                            ) {
-                                                return `${rawItem.productName} (${label})`;
+                                            if (rawItem) {
+                                                const code =
+                                                    rawItem.moldCode || rawItem.productCode;
+                                                if (code && code !== rawItem.moldName) {
+                                                    return `${rawItem.moldName} (${code})`;
+                                                }
+                                                return rawItem.moldName;
                                             }
                                             return label;
                                         }}
-                                    />
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: 8, fontSize: 11 }}
-                                        formatter={(value: string) =>
-                                            value === 'planned'
-                                                ? t('productionOverview.charts.planned')
-                                                : t('productionOverview.charts.actual')
-                                        }
                                     />
                                     <Bar
                                         dataKey="planned"
@@ -176,24 +258,10 @@ export const ProductPlanVsActualChartCard: React.FC<ProductPlanVsActualChartCard
                                     <Bar
                                         dataKey="actual"
                                         name="actual"
+                                        fill={token.colorSuccess}
                                         radius={[4, 4, 0, 0]}
                                         maxBarSize={22}
-                                    >
-                                        {chartData.map((entry, index) => {
-                                            const ratio =
-                                                entry.planned > 0
-                                                    ? entry.actual / entry.planned
-                                                    : 1;
-                                            const barColor =
-                                                ratio < 0.7 ? token.colorError : token.colorSuccess;
-                                            return (
-                                                <Cell
-                                                    key={`cell-product-${index}`}
-                                                    fill={barColor}
-                                                />
-                                            );
-                                        })}
-                                    </Bar>
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>

@@ -22,11 +22,12 @@ export const MachineDetailHeader: React.FC<MachineDetailHeaderProps> = React.mem
         const { t } = useTranslation();
         const { token } = theme.useToken();
 
-        const displayName = machineName && machineName !== machineCode ? machineName : null;
+        const primaryTitle = machineName || machineCode;
+        const subCodeTag = machineName && machineName !== machineCode ? machineCode : null;
 
         const selectOptions = useMemo(() => {
             return machineList.map((m) => {
-                const labelText = m.machineCode || m.machineName || 'N/A';
+                const labelText = m.machineName || m.machineCode || 'N/A';
                 return {
                     label: (
                         <Tooltip title={labelText} placement="left">
@@ -117,9 +118,9 @@ export const MachineDetailHeader: React.FC<MachineDetailHeaderProps> = React.mem
                             >
                                 <Tooltip
                                     title={
-                                        displayName
-                                            ? `${machineCode} (${displayName})`
-                                            : machineCode
+                                        subCodeTag
+                                            ? `${primaryTitle} (${subCodeTag})`
+                                            : primaryTitle
                                     }
                                 >
                                     <Title
@@ -127,17 +128,19 @@ export const MachineDetailHeader: React.FC<MachineDetailHeaderProps> = React.mem
                                         style={{
                                             margin: 0,
                                             fontWeight: 800,
-                                            maxWidth: 280,
+                                            maxWidth: 320,
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                         }}
                                     >
-                                        {machineCode}
+                                        {primaryTitle}
                                     </Title>
                                 </Tooltip>
-                                {displayName && (
-                                    <Tooltip title={displayName}>
+                                {subCodeTag && (
+                                    <Tooltip
+                                        title={`${t('productionOverview.machineDetail.machineCode', 'Mã máy')}: ${subCodeTag}`}
+                                    >
                                         <Tag
                                             color="blue"
                                             style={{
@@ -150,7 +153,7 @@ export const MachineDetailHeader: React.FC<MachineDetailHeaderProps> = React.mem
                                                 textOverflow: 'ellipsis',
                                             }}
                                         >
-                                            {displayName}
+                                            {subCodeTag}
                                         </Tag>
                                     </Tooltip>
                                 )}
@@ -174,18 +177,28 @@ export const MachineDetailHeader: React.FC<MachineDetailHeaderProps> = React.mem
                     </div>
                 </div>
 
-                {/* Right: Fast Machine Switcher Dropdown (compact fixed width) */}
+                {/* Right: Fast Machine Switcher Dropdown (with search and machineName prominent) */}
                 <Space size={8} align="center" style={{ flexShrink: 0 }}>
                     <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>
                         {t('productionOverview.machineDetail.selectMachine')}:
                     </Text>
                     <Select
+                        showSearch
                         value={machineCode}
                         onChange={handleSelectChange}
-                        style={{ width: 220, borderRadius: token.borderRadius }}
+                        style={{ width: 260, borderRadius: token.borderRadius }}
                         popupMatchSelectWidth={false}
                         options={selectOptions}
-                        styles={{ popup: { root: { minWidth: 260, maxWidth: 420 } } }}
+                        filterOption={(input, option) => {
+                            const m = machineList.find(
+                                (item) => item.machineCode === option?.value
+                            );
+                            if (!m) return false;
+                            const searchTarget =
+                                `${m.machineName || ''} ${m.machineCode || ''}`.toLowerCase();
+                            return searchTarget.includes(input.toLowerCase());
+                        }}
+                        styles={{ popup: { root: { minWidth: 280, maxWidth: 440 } } }}
                     />
                 </Space>
             </div>

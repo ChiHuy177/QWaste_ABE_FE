@@ -4965,6 +4965,8 @@
             "actual": "Actual",
             "planVsActualBySku": "Plan vs Actual Output by SKU",
             "planVsActualSkuDesc": "Plan vs Actual comparison by product SKU",
+            "planVsActualByMold": "Plan vs Actual Output by Mold",
+            "planVsActualMoldDesc": "Plan vs Actual comparison by mold",
             "notAvailable": "N/A",
             "noData": "No data available",
             "machineName": "Machine Name",

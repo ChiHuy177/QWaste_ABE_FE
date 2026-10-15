@@ -11,8 +11,8 @@ import {
 import { KpiSummaryData } from '@/types/ProductionOverview';
 import { MachineDetailHeader } from './MachineDetailHeader';
 import { KpiCardsSection } from './KpiCardsSection';
-import { MachineHourlyOutputChart } from './MachineHourlyOutputChart';
-import { Machine7DaysEfficiencyChart } from './Machine7DaysEfficiencyChart';
+import { MachineOutputChart } from './MachineOutputChart';
+import { MachinePerformanceChart } from './MachinePerformanceChart';
 
 export interface MachineListItem {
     machineId?: string;
@@ -318,16 +318,18 @@ export const MachineDetailView: React.FC<MachineDetailViewProps> = React.memo(
                 {/* Charts Section: Timeline Output & Performance Operating Hours / Efficiency */}
                 <Row gutter={[16, 16]}>
                     <Col xs={24} lg={12}>
-                        <MachineHourlyOutputChart
+                        <MachineOutputChart
                             machineCode={machineCode}
+                            machineName={machineName}
                             seriesData={productionSeries}
                             isLoading={isLoadingSeries}
                             subtitle={subtitle}
                         />
                     </Col>
                     <Col xs={24} lg={12}>
-                        <Machine7DaysEfficiencyChart
+                        <MachinePerformanceChart
                             machineCode={machineCode}
+                            machineName={machineName}
                             performanceData={performanceSeries}
                             isLoading={isLoadingPerformance}
                             subtitle={subtitle}

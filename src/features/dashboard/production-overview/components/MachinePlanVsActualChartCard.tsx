@@ -380,8 +380,7 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
             const { x, y, width, height, payload, background: bg } = barProps;
             if (!payload) return null;
 
-            const isSuccess = payload.actual >= payload.planned;
-            const barColor = isSuccess ? token.colorSuccess : token.colorWarning;
+            const barColor = token.colorSuccess;
 
             // Full column hit area using background dimensions from Recharts or calculated bounds
             const hitX = bg?.x ?? x - (Math.max(width, 36) - width) / 2;
@@ -503,21 +502,8 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                         {subtitle || t('productionOverview.charts.outputPcs')}
                     </div>
 
-                    {/* Series Legend (Thực tế & Kế hoạch) */}
+                    {/* Series Legend (Kế hoạch & Thực tế) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <span
-                                style={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: 2,
-                                    backgroundColor: token.colorSuccess,
-                                }}
-                            />
-                            <Text type="secondary" style={{ fontSize: 11 }}>
-                                {t('productionOverview.charts.actual', 'Thực tế')}
-                            </Text>
-                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <span
                                 style={{
@@ -529,6 +515,19 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                             />
                             <Text type="secondary" style={{ fontSize: 11 }}>
                                 {t('productionOverview.charts.planned', 'Kế hoạch')}
+                            </Text>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 2,
+                                    backgroundColor: token.colorSuccess,
+                                }}
+                            />
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {t('productionOverview.charts.actual', 'Thực tế')}
                             </Text>
                         </div>
                     </div>

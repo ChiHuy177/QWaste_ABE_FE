@@ -12,7 +12,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
 } from 'recharts';
 import dayjs from 'dayjs';
@@ -23,17 +22,23 @@ import {
 
 const { Text } = Typography;
 
-interface MachineHourlyOutputChartProps {
+interface MachineOutputChartProps {
     machineCode: string;
+    machineName?: string | null;
     seriesData?: DashboardMachineProductionSeriesResponse | null;
     isLoading?: boolean;
     subtitle?: string;
 }
 
-export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> = React.memo(
-    ({ machineCode, seriesData, isLoading = false, subtitle: customSubtitle }) => {
+export const MachineOutputChart: React.FC<MachineOutputChartProps> = React.memo(
+    ({ machineCode, machineName, seriesData, isLoading = false, subtitle: customSubtitle }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
+
+        const machineDisplay =
+            machineName && machineName !== machineCode
+                ? `${machineName} (${machineCode})`
+                : machineCode;
 
         // Determine effective granularity
         const effectiveGranularity: MachineProductionBucketGranularity = useMemo(() => {
@@ -122,7 +127,7 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                 'productionOverview.machineDetail.dailyOutput',
                 'Sản lượng theo ngày'
             );
-            let subText = `${machineCode} – ${t('productionOverview.machineDetail.dailyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo ngày')} (${t('productionOverview.machineDetail.pcsPerDay', 'sp/ngày')})`;
+            let subText = `${machineDisplay} – ${t('productionOverview.machineDetail.dailyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo ngày')} (${t('productionOverview.machineDetail.pcsPerDay', 'sp/ngày')})`;
             let unit = t('productionOverview.machineDetail.pcsPerDay', 'sp/ngày');
 
             switch (effectiveGranularity) {
@@ -135,7 +140,7 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                         'productionOverview.machineDetail.monthlyOutput',
                         'Sản lượng theo tháng'
                     );
-                    subText = `${machineCode} – ${t('productionOverview.machineDetail.monthlyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo tháng')} (${t('productionOverview.machineDetail.pcsPerMonth', 'sp/tháng')})`;
+                    subText = `${machineDisplay} – ${t('productionOverview.machineDetail.monthlyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo tháng')} (${t('productionOverview.machineDetail.pcsPerMonth', 'sp/tháng')})`;
                     unit = t('productionOverview.machineDetail.pcsPerMonth', 'sp/tháng');
                     break;
                 case 'WEEK':
@@ -147,7 +152,7 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                         'productionOverview.machineDetail.weeklyOutput',
                         'Sản lượng theo tuần'
                     );
-                    subText = `${machineCode} – ${t('productionOverview.machineDetail.weeklyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo tuần')} (${t('productionOverview.machineDetail.pcsPerWeek', 'sp/tuần')})`;
+                    subText = `${machineDisplay} – ${t('productionOverview.machineDetail.weeklyOutputDesc', 'Sản lượng kế hoạch vs thực tế theo tuần')} (${t('productionOverview.machineDetail.pcsPerWeek', 'sp/tuần')})`;
                     unit = t('productionOverview.machineDetail.pcsPerWeek', 'sp/tuần');
                     break;
                 case 'HOUR':
@@ -156,7 +161,7 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                         'productionOverview.machineDetail.hourlyOutput',
                         'Sản lượng theo giờ'
                     );
-                    subText = `${machineCode} – ${t('productionOverview.machineDetail.actualOutput', 'Sản lượng thực tế')} (${t('productionOverview.machineDetail.pcsPerHour', 'sp/giờ')})`;
+                    subText = `${machineDisplay} – ${t('productionOverview.machineDetail.actualOutput', 'Sản lượng thực tế')} (${t('productionOverview.machineDetail.pcsPerHour', 'sp/giờ')})`;
                     unit = t('productionOverview.machineDetail.pcsPerHour', 'sp/giờ');
                     break;
                 case 'DAY':
@@ -166,11 +171,11 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
 
             return {
                 title: titleText,
-                subtitle: customSubtitle || subText,
+                subtitle: customSubtitle ? `${machineDisplay} – ${customSubtitle}` : subText,
                 unitLabel: unit,
                 granTagLabel: tagText,
             };
-        }, [effectiveGranularity, machineCode, customSubtitle, t]);
+        }, [effectiveGranularity, machineDisplay, customSubtitle, t]);
 
         // Minimum width for horizontal scrolling if many buckets
         const minChartWidth = useMemo(() => {
@@ -376,6 +381,80 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
                             {subtitle}
                         </div>
                     </div>
+
+                    {/* Series Legend cố định ở góc trên bên phải */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            fontSize: 11,
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span
+                                style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 2,
+                                    backgroundColor: token.colorSuccess,
+                                }}
+                            />
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                                {t('productionOverview.machineDetail.actualOutput', 'Thực tế')}
+                            </Text>
+                        </div>
+                        {hasPlannedData && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span
+                                    style={{
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: 2,
+                                        backgroundColor: token.colorPrimary,
+                                    }}
+                                />
+                                <Text type="secondary" style={{ fontSize: 11 }}>
+                                    {t(
+                                        'productionOverview.machineDetail.plannedOutput',
+                                        'Kế hoạch'
+                                    )}
+                                </Text>
+                            </div>
+                        )}
+                        {showRatioLine && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span
+                                    style={{
+                                        width: 12,
+                                        height: 2,
+                                        backgroundColor: token.colorError,
+                                        borderRadius: 1,
+                                        position: 'relative',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            width: 5,
+                                            height: 5,
+                                            borderRadius: '50%',
+                                            backgroundColor: token.colorError,
+                                        }}
+                                    />
+                                </span>
+                                <Text type="secondary" style={{ fontSize: 11 }}>
+                                    {t(
+                                        'productionOverview.machineDetail.productionRatio',
+                                        'Tỷ lệ sản lượng'
+                                    )}
+                                </Text>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Content Area */}
@@ -472,33 +551,6 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
 
                                     <Tooltip content={renderCustomTooltip} />
 
-                                    <Legend
-                                        verticalAlign="bottom"
-                                        align="center"
-                                        wrapperStyle={{ paddingTop: 8, fontSize: 11 }}
-                                        formatter={(value: string) => {
-                                            if (value === 'planned') {
-                                                return t(
-                                                    'productionOverview.machineDetail.plannedOutput',
-                                                    'Kế hoạch'
-                                                );
-                                            }
-                                            if (value === 'actual') {
-                                                return t(
-                                                    'productionOverview.machineDetail.actualOutput',
-                                                    'Thực tế'
-                                                );
-                                            }
-                                            if (value === 'ratio') {
-                                                return t(
-                                                    'productionOverview.machineDetail.productionRatio',
-                                                    'Tỷ lệ sản lượng'
-                                                );
-                                            }
-                                            return value;
-                                        }}
-                                    />
-
                                     {/* Planned Bar: Rendered when hasPlannedData is true */}
                                     {hasPlannedData && (
                                         <Bar
@@ -550,4 +602,4 @@ export const MachineHourlyOutputChart: React.FC<MachineHourlyOutputChartProps> =
     }
 );
 
-MachineHourlyOutputChart.displayName = 'MachineHourlyOutputChart';
+MachineOutputChart.displayName = 'MachineOutputChart';
