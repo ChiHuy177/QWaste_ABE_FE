@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, Typography, theme, Empty, Select, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -25,11 +25,10 @@ export type PlanVsActualFilterType =
 interface MachinePlanVsActualChartCardProps {
     data: (DashboardMachineProductionResponse | MachineOutputData)[];
     subtitle?: string;
-    onSelectMachine?: (machineCode: string, machineId?: string) => void;
 }
 
 export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCardProps> = React.memo(
-    ({ data, subtitle, onSelectMachine }) => {
+    ({ data, subtitle }) => {
         const { t } = useTranslation();
         const { token } = theme.useToken();
         const [filterType, setFilterType] = useState<PlanVsActualFilterType>('top10_actual');
@@ -138,37 +137,6 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
             },
         ];
 
-        // Handle clicking anywhere in the column space / category band
-        const handleChartClick = useCallback(
-            (state: any) => {
-                if (!onSelectMachine || !state) return;
-
-                // 1. Try activePayload (populated when clicking inside the column/band)
-                if (state.activePayload && state.activePayload.length > 0) {
-                    const rawItem = state.activePayload[0]
-                        .payload as NormalizedMachineProductionItem;
-                    if (rawItem && rawItem.machineCode) {
-                        onSelectMachine(rawItem.machineCode, rawItem.machineId);
-                        return;
-                    }
-                }
-
-                // 2. Try activeTooltipIndex (index of the active column)
-                if (
-                    typeof state.activeTooltipIndex === 'number' &&
-                    state.activeTooltipIndex >= 0 &&
-                    state.activeTooltipIndex < chartData.length
-                ) {
-                    const rawItem = chartData[state.activeTooltipIndex];
-                    if (rawItem && rawItem.machineCode) {
-                        onSelectMachine(rawItem.machineCode, rawItem.machineId);
-                        return;
-                    }
-                }
-            },
-            [chartData, onSelectMachine]
-        );
-
         // Custom Tooltip
         const renderTooltip = (props: any) => {
             const { active, payload } = props;
@@ -178,12 +146,6 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
 
             return (
                 <div
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSelectMachine && rawItem.machineCode) {
-                            onSelectMachine(rawItem.machineCode, rawItem.machineId);
-                        }
-                    }}
                     style={{
                         backgroundColor: token.colorBgElevated,
                         border: `1px solid ${token.colorBorderSecondary}`,
@@ -191,8 +153,6 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                         padding: '8px 12px',
                         boxShadow: token.boxShadowSecondary,
                         minWidth: 180,
-                        cursor: onSelectMachine ? 'pointer' : 'default',
-                        pointerEvents: 'auto',
                     }}
                 >
                     <div
@@ -312,27 +272,6 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                             {t('productionOverview.charts.pieces')}
                         </span>
                     </div>
-
-                    {onSelectMachine && (
-                        <div
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectMachine(rawItem.machineCode, rawItem.machineId);
-                            }}
-                            style={{
-                                marginTop: 6,
-                                paddingTop: 6,
-                                borderTop: `1px dashed ${token.colorBorderSecondary}`,
-                                fontSize: 10,
-                                color: token.colorPrimary,
-                                textAlign: 'center',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                            }}
-                        >
-                            {t('productionOverview.machineDetail.selectMachine')} ➔
-                        </div>
-                    )}
                 </div>
             );
         };
@@ -346,91 +285,38 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
             const barH = Math.max(height || 0, minH);
             const barY = (y || 0) + (height || 0) - barH;
 
-            const handleClick = (e: React.MouseEvent) => {
-                e.stopPropagation();
-                if (onSelectMachine && payload.machineCode) {
-                    onSelectMachine(payload.machineCode, payload.machineId);
-                }
-            };
-
             return (
-                <g
-                    style={{ cursor: onSelectMachine ? 'pointer' : 'default' }}
-                    onClick={handleClick}
-                >
-                    <rect
-                        x={x}
-                        y={barY}
-                        width={width}
-                        height={barH}
-                        rx={3}
-                        ry={3}
-                        fill={token.colorTextQuaternary}
-                        style={{
-                            cursor: onSelectMachine ? 'pointer' : 'default',
-                            pointerEvents: 'all',
-                        }}
-                    />
-                </g>
+                <rect
+                    x={x}
+                    y={barY}
+                    width={width}
+                    height={barH}
+                    rx={3}
+                    ry={3}
+                    fill={token.colorTextQuaternary}
+                />
             );
         };
 
-        // Custom Bar Shape for Actual Bar with dedicated full-column clickable hit area
+        // Custom Bar Shape for Actual Bar with minimum visible height
         const renderActualBar = (barProps: any) => {
-            const { x, y, width, height, payload, background: bg } = barProps;
+            const { x, y, width, height, payload } = barProps;
             if (!payload) return null;
-
-            const barColor = token.colorSuccess;
-
-            // Full column hit area using background dimensions from Recharts or calculated bounds
-            const hitX = bg?.x ?? x - (Math.max(width, 36) - width) / 2;
-            const hitY = bg?.y ?? 10;
-            const hitWidth = bg?.width ?? Math.max(width, 36);
-            const hitHeight = bg?.height ?? Math.max((y ?? 0) + (height ?? 0) - hitY, 200);
 
             const minH = 6;
             const barH = Math.max(height || 0, minH);
             const barY = (y || 0) + (height || 0) - barH;
 
-            const handleClick = (e: React.MouseEvent) => {
-                e.stopPropagation();
-                if (onSelectMachine && payload.machineCode) {
-                    onSelectMachine(payload.machineCode, payload.machineId);
-                }
-            };
-
             return (
-                <g
-                    style={{ cursor: onSelectMachine ? 'pointer' : 'default' }}
-                    onClick={handleClick}
-                >
-                    {/* Full-height column hit area */}
-                    <rect
-                        x={hitX}
-                        y={hitY}
-                        width={hitWidth}
-                        height={hitHeight}
-                        fill="rgba(0, 0, 0, 0.001)"
-                        style={{
-                            cursor: onSelectMachine ? 'pointer' : 'default',
-                            pointerEvents: 'all',
-                        }}
-                    />
-                    {/* The visible colored bar */}
-                    <rect
-                        x={x}
-                        y={barY}
-                        width={width}
-                        height={barH}
-                        rx={3}
-                        ry={3}
-                        fill={barColor}
-                        style={{
-                            cursor: onSelectMachine ? 'pointer' : 'default',
-                            pointerEvents: 'all',
-                        }}
-                    />
-                </g>
+                <rect
+                    x={x}
+                    y={barY}
+                    width={width}
+                    height={barH}
+                    rx={3}
+                    ry={3}
+                    fill={token.colorSuccess}
+                />
             );
         };
 
@@ -566,8 +452,6 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                                 <BarChart
                                     data={chartData}
                                     margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-                                    onClick={handleChartClick}
-                                    style={{ cursor: onSelectMachine ? 'pointer' : 'default' }}
                                 >
                                     <CartesianGrid
                                         strokeDasharray="3 3"
@@ -601,7 +485,6 @@ export const MachinePlanVsActualChartCard: React.FC<MachinePlanVsActualChartCard
                                         cursor={{
                                             fill: token.colorFillTertiary,
                                             opacity: 0.5,
-                                            cursor: onSelectMachine ? 'pointer' : 'default',
                                         }}
                                         wrapperStyle={{
                                             pointerEvents: 'none',

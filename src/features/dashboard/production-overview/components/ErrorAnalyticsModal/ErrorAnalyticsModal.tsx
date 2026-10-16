@@ -589,7 +589,7 @@ export const ErrorAnalyticsModal: React.FC<ErrorAnalyticsModalProps> = React.mem
                         flexDirection: 'column',
                     },
                 }}
-                destroyOnClose
+                destroyOnHidden
             >
                 {loadingMachines && machinesList.length === 0 ? (
                     <div

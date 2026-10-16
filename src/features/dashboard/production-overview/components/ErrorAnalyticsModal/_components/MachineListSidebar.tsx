@@ -322,7 +322,7 @@ export const MachineListSidebar: React.FC<MachineListSidebarProps> = React.memo(
                             </Text>
                             <Tag
                                 color={machinesWithErrorCount > 0 ? 'error' : 'default'}
-                                bordered={false}
+                                variant="filled"
                                 style={{
                                     borderRadius: 10,
                                     fontSize: 11,

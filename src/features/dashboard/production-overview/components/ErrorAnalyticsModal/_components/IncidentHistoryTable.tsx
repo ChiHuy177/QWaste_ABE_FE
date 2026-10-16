@@ -322,7 +322,9 @@ export const IncidentHistoryTable: React.FC<IncidentHistoryTableProps> = React.m
                     loading={loading}
                     columns={errorColumns}
                     dataSource={incidents}
-                    rowKey={(record, index) => record.incidentCode || String(index)}
+                    rowKey={(record) =>
+                        record.incidentCode || `${record.startTime}_${record.durationMinutes}`
+                    }
                     pagination={
                         incidents.length > 10
                             ? {

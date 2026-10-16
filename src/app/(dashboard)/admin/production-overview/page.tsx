@@ -530,7 +530,6 @@ const ProductionOverviewPage: React.FC = () => {
                                 <MachinePlanVsActualChartCard
                                     data={currentMachineProduction}
                                     subtitle={activeFilterLabel}
-                                    onSelectMachine={handleSelectMachine}
                                 />
                             </Col>
                         </Row>

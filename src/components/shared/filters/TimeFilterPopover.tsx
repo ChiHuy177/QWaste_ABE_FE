@@ -116,6 +116,8 @@ interface ShiftSectionProps {
     isLoading?: boolean;
 }
 
+const ALL_SHIFTS_RADIO_VALUE = '';
+
 const ShiftSection = React.memo<ShiftSectionProps>(
     ({
         shiftId,
@@ -134,9 +136,7 @@ const ShiftSection = React.memo<ShiftSectionProps>(
         const { token } = theme.useToken();
 
         const sortedShifts = useMemo(() => {
-            return [...groupedShifts].sort(
-                (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-            );
+            return [...groupedShifts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         }, [groupedShifts]);
 
         return (
@@ -173,13 +173,16 @@ const ShiftSection = React.memo<ShiftSectionProps>(
                     </div>
                 ) : (
                     <Radio.Group
-                        value={shiftId}
-                        onChange={(e) => onChange(e.target.value as number | null)}
+                        value={shiftId ?? ALL_SHIFTS_RADIO_VALUE}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            onChange(val === ALL_SHIFTS_RADIO_VALUE ? null : (val as number));
+                        }}
                         disabled={!isSingleDay}
                         style={{ width: '100%' }}
                     >
                         <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                            <Radio value={null}>{allShiftsLabel}</Radio>
+                            <Radio value={ALL_SHIFTS_RADIO_VALUE}>{allShiftsLabel}</Radio>
                             {isSingleDay && sortedShifts.length === 0 && (
                                 <Typography.Text
                                     type="secondary"
@@ -407,9 +410,7 @@ const PresetGridSection = React.memo<PresetGridSectionProps>(
         colorFillQuaternary,
     }) => {
         const sortedPeriodOptions = useMemo(() => {
-            return [...periodOptions].sort(
-                (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-            );
+            return [...periodOptions].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         }, [periodOptions]);
 
         return (
@@ -643,9 +644,7 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         const map = new Map<number, IndustryFilter>();
         industryFilters.forEach((f) => map.set(f.filterId, f));
         dynamicShifts.forEach((f) => map.set(f.filterId, f));
-        return Array.from(map.values()).sort(
-            (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-        );
+        return Array.from(map.values()).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }, [industryFilters, dynamicShifts]);
 
     const singleDayWarning = useMemo(
