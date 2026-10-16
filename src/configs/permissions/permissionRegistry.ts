@@ -821,6 +821,7 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View machine overview',
         i18nKey: 'sidebar.navigation.machine',
         alternativeAction: 'update',
+        hideFromMenu: true,
     },
     {
         slug: 'machine_overview:update',
