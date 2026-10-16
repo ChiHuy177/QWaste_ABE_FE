@@ -173,8 +173,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                                 <Tag
                                     style={{
                                         margin: 0,
-                                        fontFamily: 'monospace',
-                                        fontWeight: 700,
+                                        fontWeight: 600,
                                         fontSize: 12.5,
                                         padding: '2px 8px',
                                         borderRadius: token.borderRadiusSM,
@@ -239,8 +238,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                                         <Tag
                                             style={{
                                                 margin: 0,
-                                                fontFamily: 'monospace',
-                                                fontSize: 11.5,
+                                                fontSize: 12,
                                                 borderRadius: token.borderRadiusSM,
                                             }}
                                         >
@@ -309,8 +307,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                                     </Text>
                                     <span
                                         style={{
-                                            fontFamily: 'monospace',
-                                            fontSize: 12,
+                                            fontSize: 12.5,
                                             color: token.colorText,
                                             fontWeight: 500,
                                         }}
@@ -328,8 +325,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                                     </Text>
                                     <span
                                         style={{
-                                            fontFamily: 'monospace',
-                                            fontSize: 12,
+                                            fontSize: 12.5,
                                             color: token.colorText,
                                             fontWeight: 500,
                                         }}
@@ -355,8 +351,7 @@ export const CreateOrEditErrorModal: React.FC<CreateOrEditErrorModalProps> = ({
                                         }
                                         style={{
                                             margin: 0,
-                                            fontFamily: 'monospace',
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             fontSize: 12,
                                             borderRadius: token.borderRadiusSM,
                                         }}

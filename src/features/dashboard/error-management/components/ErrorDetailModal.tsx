@@ -234,8 +234,7 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                 <Tag
                                     style={{
                                         margin: 0,
-                                        fontFamily: 'monospace',
-                                        fontWeight: 700,
+                                        fontWeight: 600,
                                         fontSize: 12.5,
                                         padding: '2px 8px',
                                         borderRadius: token.borderRadiusSM,
@@ -312,7 +311,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                     <Tag
                                         style={{
                                             margin: 0,
-                                            fontFamily: 'monospace',
                                             fontSize: 12,
                                             borderRadius: token.borderRadiusSM,
                                         }}
@@ -445,7 +443,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                             style={{
                                                 fontSize: 13,
                                                 fontWeight: 600,
-                                                fontFamily: 'monospace',
                                                 color: token.colorTextHeading,
                                                 display: 'block',
                                                 marginTop: 3,
@@ -503,7 +500,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                                 style={{
                                                     fontSize: 13,
                                                     fontWeight: 600,
-                                                    fontFamily: 'monospace',
                                                     color: token.colorTextHeading,
                                                     display: 'block',
                                                     marginTop: 3,
@@ -562,7 +558,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                             style={{
                                                 fontSize: 15,
                                                 fontWeight: 700,
-                                                fontFamily: 'monospace',
                                                 color: downtimeStyle.text,
                                                 display: 'block',
                                                 marginTop: 2,
@@ -773,7 +768,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                         </Flex>
                                         <span
                                             style={{
-                                                fontFamily: 'monospace',
                                                 fontSize: 12.5,
                                                 color: token.colorText,
                                                 fontWeight: 500,
@@ -851,7 +845,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                         </Flex>
                                         <span
                                             style={{
-                                                fontFamily: 'monospace',
                                                 fontSize: 12.5,
                                                 color: token.colorText,
                                                 fontWeight: 500,

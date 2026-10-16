@@ -3,16 +3,7 @@
 import React from 'react';
 import { Button, Space, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import {
-    ClockCircleOutlined,
-    EditOutlined,
-    EnvironmentOutlined,
-    EyeOutlined,
-    CheckCircleOutlined,
-    SyncOutlined,
-    ExclamationCircleOutlined,
-    HourglassOutlined,
-} from '@ant-design/icons';
+import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { MachineIncidentItem } from '@/types/MachineIncident';
 import { GlobalToken } from 'antd/es/theme/interface';
@@ -28,6 +19,8 @@ export interface ErrorTableColumnProps {
     highlightedMachineCode?: string | null;
     isRowHighlighted?: (record: MachineIncidentItem) => boolean;
     isMobile?: boolean;
+    page?: number;
+    pageSize?: number;
 }
 
 export const getErrorTableColumns = ({
@@ -37,6 +30,8 @@ export const getErrorTableColumns = ({
     onEdit,
     isRowHighlighted,
     isMobile,
+    page = 0,
+    pageSize = 10,
 }: ErrorTableColumnProps): ColumnsType<MachineIncidentItem> => {
     const formatDuration = (minutes: number | null) => {
         if (minutes === null || minutes === undefined || minutes < 0) return '—';
@@ -48,57 +43,33 @@ export const getErrorTableColumns = ({
     };
 
     const formatDateTime = (dateStr: string | null) => {
-        if (!dateStr) return null;
+        if (!dateStr) return '—';
         const d = dayjs(dateStr);
         return d.isValid() ? d.format('YYYY-MM-DD HH:mm:ss') : dateStr;
     };
 
     const getStatusTag = (record: MachineIncidentItem) => {
-        // Rule: endTime == null means active machine error happening right now
+        // Ongoing error happening right now
         if (!record.endTime) {
             return (
-                <Tag
-                    color="error"
-                    style={{
-                        borderRadius: token.borderRadiusSM,
-                        fontWeight: 600,
-                        margin: 0,
-                    }}
-                >
-                    <SyncOutlined spin style={{ marginRight: 4 }} />
+                <Tag color="error" style={{ margin: 0, fontWeight: 500 }}>
                     {t('errorManagement.table.ongoingBadge')}
                 </Tag>
             );
         }
 
-        // Rule: endTime != null but status is still IN_PROGRESS (waiting for technician to input root cause)
+        // Waiting for technician to input root cause
         if (record.status === 'IN_PROGRESS') {
             return (
-                <Tag
-                    color="warning"
-                    style={{
-                        borderRadius: token.borderRadiusSM,
-                        fontWeight: 600,
-                        margin: 0,
-                    }}
-                >
-                    <ExclamationCircleOutlined style={{ marginRight: 4 }} />
+                <Tag color="warning" style={{ margin: 0, fontWeight: 500 }}>
                     {t('errorManagement.table.waitingUpdateBadge')}
                 </Tag>
             );
         }
 
-        // Rule: status is RESOLVED
+        // Resolved
         return (
-            <Tag
-                color="success"
-                style={{
-                    borderRadius: token.borderRadiusSM,
-                    fontWeight: 500,
-                    margin: 0,
-                }}
-            >
-                <CheckCircleOutlined style={{ marginRight: 4 }} />
+            <Tag color="success" style={{ margin: 0, fontWeight: 500 }}>
                 {t('errorManagement.table.resolvedBadge')}
             </Tag>
         );
@@ -106,19 +77,21 @@ export const getErrorTableColumns = ({
 
     const rawColumns: ColumnsType<MachineIncidentItem> = [
         {
+            title: () => t('common.index', { defaultValue: 'STT' }),
+            key: 'index',
+            width: 65,
+            align: 'center',
+            render: (_: any, __: any, index: number) => (
+                <Text type="secondary">{page * pageSize + index + 1}</Text>
+            ),
+        },
+        {
             title: () => t('errorManagement.table.columns.incidentCode'),
             dataIndex: 'incidentCode',
             key: 'incidentCode',
-            width: 140,
+            width: 150,
             render: (incidentCode: string) => (
-                <Text
-                    strong
-                    style={{
-                        color: token.colorPrimary,
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                    }}
-                >
+                <Text strong style={{ fontSize: 14, color: token.colorPrimary }}>
                     {incidentCode}
                 </Text>
             ),
@@ -126,12 +99,13 @@ export const getErrorTableColumns = ({
         {
             title: () => t('errorManagement.table.columns.machine'),
             key: 'machine',
-            width: 190,
+            width: 210,
             render: (_, record) => (
                 <Space direction="vertical" size={2}>
                     <Text
                         strong
                         style={{
+                            fontSize: 14,
                             color: token.colorTextHeading,
                             display: 'block',
                             lineHeight: 1.3,
@@ -140,13 +114,7 @@ export const getErrorTableColumns = ({
                         {record.machineName || '—'}
                     </Text>
                     {record.machineCode && (
-                        <Text
-                            type="secondary"
-                            style={{
-                                fontFamily: 'monospace',
-                                fontSize: 11.5,
-                            }}
-                        >
+                        <Text type="secondary" style={{ fontSize: 12 }}>
                             {record.machineCode}
                         </Text>
                     )}
@@ -157,88 +125,34 @@ export const getErrorTableColumns = ({
             title: () => t('errorManagement.table.columns.location'),
             dataIndex: 'location',
             key: 'location',
-            width: 210,
+            width: 200,
             render: (location: string) => (
-                <Space size={4} align="start">
-                    <EnvironmentOutlined
-                        style={{
-                            color: token.colorTextSecondary,
-                            fontSize: 12,
-                            marginTop: 3,
-                        }}
-                    />
-                    <Text
-                        type="secondary"
-                        style={{
-                            fontSize: 12.5,
-                            lineHeight: 1.4,
-                        }}
-                    >
-                        {location || '—'}
-                    </Text>
-                </Space>
+                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.4 }}>
+                    {location || '—'}
+                </Text>
             ),
         },
         {
             title: () => t('errorManagement.table.columns.startTime'),
             dataIndex: 'startTime',
             key: 'startTime',
-            width: 165,
-            render: (time: string) => (
-                <Space size={6}>
-                    <ClockCircleOutlined
-                        style={{ color: token.colorTextSecondary, fontSize: 13 }}
-                    />
-                    <span
-                        style={{
-                            fontFamily: 'monospace',
-                            fontVariantNumeric: 'tabular-nums',
-                            fontSize: 12.5,
-                            color: token.colorText,
-                        }}
-                    >
-                        {formatDateTime(time)}
-                    </span>
-                </Space>
-            ),
+            width: 160,
+            render: (time: string) => <Text style={{ fontSize: 13 }}>{formatDateTime(time)}</Text>,
         },
         {
             title: () => t('errorManagement.table.columns.endTime'),
             dataIndex: 'endTime',
             key: 'endTime',
-            width: 165,
+            width: 160,
             render: (time: string | null) => {
                 if (!time) {
                     return (
-                        <Tag
-                            color="error"
-                            style={{
-                                borderRadius: token.borderRadiusSM,
-                                fontWeight: 500,
-                            }}
-                        >
-                            <ClockCircleOutlined style={{ marginRight: 4 }} />
+                        <Tag color="error" style={{ margin: 0, fontWeight: 500 }}>
                             {t('errorManagement.table.ongoingBadge')}
                         </Tag>
                     );
                 }
-                return (
-                    <Space size={6}>
-                        <ClockCircleOutlined
-                            style={{ color: token.colorTextSecondary, fontSize: 13 }}
-                        />
-                        <span
-                            style={{
-                                fontFamily: 'monospace',
-                                fontVariantNumeric: 'tabular-nums',
-                                fontSize: 12.5,
-                                color: token.colorText,
-                            }}
-                        >
-                            {formatDateTime(time)}
-                        </span>
-                    </Space>
-                );
+                return <Text style={{ fontSize: 13 }}>{formatDateTime(time)}</Text>;
             },
         },
         {
@@ -249,51 +163,17 @@ export const getErrorTableColumns = ({
             render: (minutes: number | null, record) => {
                 if (!record.endTime || minutes === null) {
                     return (
-                        <Tag
-                            color="error"
-                            style={{
-                                borderRadius: token.borderRadiusSM,
-                                fontWeight: 500,
-                            }}
-                        >
+                        <Tag color="error" style={{ margin: 0, fontWeight: 500 }}>
                             {t('errorManagement.table.ongoingBadge')}
                         </Tag>
                     );
                 }
 
-                let bg = token.colorInfoBg;
-                let text = token.colorInfoText;
-                let border = token.colorInfoBorder;
-
-                if (minutes > 60) {
-                    bg = token.colorErrorBg;
-                    text = token.colorErrorText;
-                    border = token.colorErrorBorder;
-                } else if (minutes >= 30) {
-                    bg = token.colorWarningBg;
-                    text = token.colorWarningText;
-                    border = token.colorWarningBorder;
-                }
-
+                const color = minutes > 60 ? 'error' : minutes >= 30 ? 'warning' : 'blue';
                 return (
-                    <div
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            padding: '3px 8px',
-                            borderRadius: token.borderRadiusSM,
-                            background: bg,
-                            color: text,
-                            border: `1px solid ${border}`,
-                            fontFamily: 'monospace',
-                            fontWeight: 600,
-                            fontSize: 12.5,
-                        }}
-                    >
-                        <HourglassOutlined style={{ fontSize: 11 }} />
+                    <Tag color={color} style={{ margin: 0, fontWeight: 500 }}>
                         {formatDuration(minutes)}
-                    </div>
+                    </Tag>
                 );
             },
         },
@@ -307,7 +187,7 @@ export const getErrorTableColumns = ({
                 const trimmed = text?.trim();
                 if (!trimmed) {
                     return (
-                        <Text type="secondary" italic style={{ fontSize: 12.5 }}>
+                        <Text type="secondary" italic style={{ fontSize: 13 }}>
                             {t('errorManagement.table.noCauseYet')}
                         </Text>
                     );
@@ -317,20 +197,13 @@ export const getErrorTableColumns = ({
                     <Tooltip placement="topLeft" title={trimmed}>
                         <div
                             style={{
-                                maxWidth: 190,
+                                maxWidth: 195,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            <Text
-                                style={{
-                                    fontSize: 13,
-                                    color: token.colorTextHeading,
-                                }}
-                            >
-                                {trimmed}
-                            </Text>
+                            <Text style={{ fontSize: 13 }}>{trimmed}</Text>
                         </div>
                     </Tooltip>
                 );
@@ -346,7 +219,7 @@ export const getErrorTableColumns = ({
                 const trimmed = text?.trim();
                 if (!trimmed) {
                     return (
-                        <Text type="secondary" italic style={{ fontSize: 12.5 }}>
+                        <Text type="secondary" italic style={{ fontSize: 13 }}>
                             {t('errorManagement.table.noResolutionYet')}
                         </Text>
                     );
@@ -356,19 +229,13 @@ export const getErrorTableColumns = ({
                     <Tooltip placement="topLeft" title={trimmed}>
                         <div
                             style={{
-                                maxWidth: 190,
+                                maxWidth: 195,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            <Text
-                                type="secondary"
-                                style={{
-                                    fontSize: 12.5,
-                                    color: token.colorTextSecondary,
-                                }}
-                            >
+                            <Text type="secondary" style={{ fontSize: 13 }}>
                                 {trimmed}
                             </Text>
                         </div>
@@ -379,7 +246,7 @@ export const getErrorTableColumns = ({
         {
             title: () => t('errorManagement.table.columns.status'),
             key: 'status',
-            width: 140,
+            width: 130,
             render: (_, record) => getStatusTag(record),
         },
         {
@@ -402,27 +269,23 @@ export const getErrorTableColumns = ({
                             />
                         </Tooltip>
 
-                        {isOngoing ? (
-                            <Tooltip title={t('errorManagement.table.cannotUpdateOngoing')}>
-                                <span>
-                                    <Button
-                                        type="primary"
-                                        icon={<EditOutlined />}
-                                        disabled
-                                        aria-label={t('errorManagement.table.edit')}
-                                    />
-                                </span>
-                            </Tooltip>
-                        ) : (
-                            <Tooltip title={t('errorManagement.table.edit')}>
+                        <Tooltip
+                            title={
+                                isOngoing
+                                    ? t('errorManagement.table.cannotUpdateOngoing')
+                                    : t('errorManagement.table.edit')
+                            }
+                        >
+                            <span>
                                 <Button
                                     type="primary"
                                     icon={<EditOutlined />}
-                                    onClick={() => onEdit(record)}
+                                    disabled={isOngoing}
+                                    onClick={() => !isOngoing && onEdit(record)}
                                     aria-label={t('errorManagement.table.edit')}
                                 />
-                            </Tooltip>
-                        )}
+                            </span>
+                        </Tooltip>
                     </Space>
                 );
             },

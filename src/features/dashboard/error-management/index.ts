@@ -23,8 +23,3 @@ export {
     getErrorManagementFormFields,
     VALIDATION_CONFIG,
 } from './components/errorManagementFormConfig';
-
-export {
-    formatTimeFilterLabel,
-    type FormatTimeFilterLabelParams,
-} from './utils/formatTimeFilterLabel';

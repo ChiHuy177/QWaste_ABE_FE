@@ -21,14 +21,16 @@ export interface ErrorManagementHeaderProps {
     onStatusFilterChange: (status: MachineIncidentStatus | undefined) => void;
     statusOptions: { value: string; label: React.ReactNode }[];
     timeFilterMode: PeriodFilterMode | null;
-    selectedTimePeriod: number | null;
-    selectedStartDate: string | null;
-    selectedEndDate: string | null;
-    groupedTimePeriodOptions: {
+    currentPeriodId: number | null;
+    currentShiftId: number | null;
+    startDate: string;
+    endDate: string;
+    groupedOptions: {
         SHIFT: { label: string; value: number; sortOrder?: number }[];
         PERIOD: { label: string; value: number; sortOrder?: number }[];
     };
     industryFilters: IndustryFilter[];
+    isShiftActive: (filter: IndustryFilter) => boolean;
     onApplyTimeFilter: (payload: TimeFilterApplyPayload) => void;
     onRefresh: () => void;
     loading: boolean;
@@ -46,11 +48,13 @@ export const ErrorManagementHeader: React.FC<ErrorManagementHeaderProps> = React
         onStatusFilterChange,
         statusOptions,
         timeFilterMode,
-        selectedTimePeriod,
-        selectedStartDate,
-        selectedEndDate,
-        groupedTimePeriodOptions,
+        currentPeriodId,
+        currentShiftId,
+        startDate,
+        endDate,
+        groupedOptions,
         industryFilters,
+        isShiftActive,
         onApplyTimeFilter,
         onRefresh,
         loading,
@@ -112,16 +116,16 @@ export const ErrorManagementHeader: React.FC<ErrorManagementHeaderProps> = React
                             options={statusOptions}
                         />
 
-                        {/* Time Filter Popover */}
+                        {/* Time Filter Popover matching Production Overview standard */}
                         <TimeFilterPopover
                             currentMode={timeFilterMode ?? 'PRESET'}
-                            currentPeriodId={selectedTimePeriod}
-                            currentShiftId={null}
-                            currentStartDate={selectedStartDate ?? ''}
-                            currentEndDate={selectedEndDate ?? ''}
-                            groupedOptions={groupedTimePeriodOptions}
+                            currentPeriodId={currentPeriodId}
+                            currentShiftId={currentShiftId}
+                            currentStartDate={startDate}
+                            currentEndDate={endDate}
+                            groupedOptions={groupedOptions}
                             industryFilters={industryFilters}
-                            isShiftActive={() => false}
+                            isShiftActive={isShiftActive}
                             onApply={onApplyTimeFilter}
                             placement="bottomRight"
                         />

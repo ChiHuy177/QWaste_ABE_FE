@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
@@ -29,7 +30,6 @@ import {
     ErrorDetailModal,
     ErrorInfoBar,
     ErrorManagementHeader,
-    formatTimeFilterLabel,
     getErrorTableColumns,
 } from '@/features/dashboard/error-management';
 
@@ -39,11 +39,21 @@ dayjs.extend(quarterOfYear);
 const { useBreakpoint } = Grid;
 const DEFAULT_PAGE_SIZE = 10;
 
+const isShiftActiveHelper = (filter: IndustryFilter): boolean => {
+    if (filter.category !== 'SHIFT') return false;
+    const currentTime = dayjs().format('HH:mm:ss');
+    if (!filter.crossesMidnight) {
+        return currentTime >= filter.startTime && currentTime < filter.endTime;
+    }
+    return currentTime >= filter.startTime || currentTime < filter.endTime;
+};
+
 function ErrorManagementContent() {
     const { t, i18n } = useTranslation();
     const { token } = theme.useToken();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const queryClient = useQueryClient();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
@@ -53,13 +63,6 @@ function ErrorManagementContent() {
     const openEditParam = searchParams.get('openEdit');
 
     usePageTitle(t('errorManagement.title'));
-
-    // Incident list & pagination
-    const [incidents, setIncidents] = useState<MachineIncidentItem[]>([]);
-    const [totalElements, setTotalElements] = useState<number>(0);
-    const [totalIncidents, setTotalIncidents] = useState<number>(0);
-    const [activeIncidents, setActiveIncidents] = useState<number>(0);
-    const [loading, setLoading] = useState<boolean>(true);
 
     // Highlighting State
     const [highlightedCode, setHighlightedCode] = useState<string | null>(
@@ -75,7 +78,6 @@ function ErrorManagementContent() {
     const [statusFilter, setStatusFilter] = useState<MachineIncidentStatus | undefined>(undefined);
 
     // Time period filter state (default to all time)
-    const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
     const [selectedTimePeriod, setSelectedTimePeriod] = useState<number | null>(null);
     const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode | null>(null);
     const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
@@ -94,63 +96,137 @@ function ErrorManagementContent() {
     const [selectedIncident, setSelectedIncident] = useState<MachineIncidentItem | null>(null);
     const [modalSubmitting, setModalSubmitting] = useState<boolean>(false);
 
-    // Fetch industry filters for quick select
-    useEffect(() => {
-        const fetchIndustryFilters = async () => {
-            try {
-                const filters = await IndustryFilterService.getIndustryFiltersForPicking();
-                setIndustryFilters(filters);
-            } catch (error) {
-                console.error('Failed to fetch industry filters:', error);
-            }
-        };
-        fetchIndustryFilters();
+    // Fetch industry filters for quick select (React Query cache)
+    const { data: industryFilters = [] } = useQuery({
+        queryKey: ['industryFilters', 'picking'],
+        queryFn: () => IndustryFilterService.getIndustryFiltersForPicking(),
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Time period options matching production overview
+    const isShiftActive = useCallback((filter: IndustryFilter): boolean => {
+        return isShiftActiveHelper(filter);
     }, []);
 
-    const timePeriodOptions = useMemo((): {
-        label: string;
-        value: number;
-        category: IndustryFilter['category'];
-    }[] => {
+    const timePeriodOptions = useMemo(() => {
         const currentLang = i18n.language;
-
-        return industryFilters.map((filter: IndustryFilter) => ({
-            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
-            value: filter.filterId,
-            category: filter.category,
-        }));
+        return [...industryFilters]
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .map((filter: IndustryFilter) => ({
+                label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+                value: filter.filterId,
+                category: filter.category,
+                sortOrder: filter.sortOrder,
+            }));
     }, [industryFilters, i18n.language]);
 
     const groupedTimePeriodOptions = useMemo(
         () => ({
-            SHIFT: [],
+            SHIFT: timePeriodOptions.filter(
+                (option) => option.category === 'SHIFT' || option.category === 'OT'
+            ),
             PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
         }),
         [timePeriodOptions]
     );
 
-    // Active time period label formatted using feature helper
-    const activeTimePeriodLabel = useMemo(
-        () =>
-            formatTimeFilterLabel({
-                mode: timeFilterMode,
-                startDate: selectedStartDate,
-                endDate: selectedEndDate,
-                periodId: selectedTimePeriod,
-                industryFilters,
-                lang: i18n.language,
-                t,
-            }),
-        [
-            timeFilterMode,
-            selectedStartDate,
-            selectedEndDate,
-            selectedTimePeriod,
-            industryFilters,
-            i18n.language,
-            t,
-        ]
-    );
+    const currentPeriodId = useMemo(() => {
+        if (timeFilterMode !== 'PRESET') return null;
+        const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+        return primary?.category === 'PERIOD' ? selectedTimePeriod : null;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+
+    const currentShiftId = useMemo(() => {
+        if (timeFilterMode === 'PRESET') {
+            const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
+            return primary?.category === 'PERIOD' ? null : selectedTimePeriod;
+        }
+        return selectedTimePeriod;
+    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+
+    // Active filter label matching production overview calculation directly
+    const activeTimePeriodLabel = useMemo(() => {
+        const currentLang = i18n.language;
+        const shiftFilter =
+            currentShiftId != null
+                ? industryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
+        const shiftLabel = shiftFilter
+            ? currentLang === 'vi'
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
+            : null;
+
+        if (timeFilterMode === 'WEEK') {
+            const startStr = selectedStartDate ? dayjs(selectedStartDate).format('DD/MM') : '';
+            const endStr = selectedEndDate ? dayjs(selectedEndDate).format('DD/MM') : '';
+            const weekNum = selectedStartDate ? dayjs(selectedStartDate).isoWeek() : '';
+            const yearStr = selectedStartDate ? dayjs(selectedStartDate).format('YYYY') : '';
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', {
+                week: weekNum,
+                year: yearStr,
+                defaultValue: `Tuần ${weekNum}, ${yearStr}`,
+            })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'MONTH') {
+            const monthStr = selectedStartDate ? dayjs(selectedStartDate).format('MM') : '';
+            const yearStr = selectedStartDate ? dayjs(selectedStartDate).format('YYYY') : '';
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: monthStr,
+                year: yearStr,
+                defaultValue: `Tháng ${monthStr}/${yearStr}`,
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'QUARTER') {
+            const quarterNum = selectedStartDate ? dayjs(selectedStartDate).quarter() : '';
+            const yearStr = selectedStartDate ? dayjs(selectedStartDate).format('YYYY') : '';
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: yearStr,
+                defaultValue: `Quý ${quarterNum}/${yearStr}`,
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'YEAR') {
+            const yearStr = selectedStartDate ? dayjs(selectedStartDate).format('YYYY') : '';
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: yearStr,
+                defaultValue: `Năm ${yearStr}`,
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (timeFilterMode === 'CUSTOM_RANGE') {
+            const startStr = selectedStartDate ? dayjs(selectedStartDate).format('DD/MM') : '';
+            const endStr = selectedEndDate ? dayjs(selectedEndDate).format('DD/MM') : '';
+            const dateLabel = `${startStr} → ${endStr}`;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
+        }
+
+        const period = industryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
+            ? currentLang === 'vi'
+                ? period.displayNameVi
+                : period.displayNameEn
+            : null;
+
+        if (!periodLabel) return shiftLabel ?? '';
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
+    }, [
+        currentPeriodId,
+        currentShiftId,
+        industryFilters,
+        timeFilterMode,
+        selectedStartDate,
+        selectedEndDate,
+        i18n.language,
+        t,
+    ]);
 
     const handleApplyTimeFilter = useCallback((payload: TimeFilterApplyPayload) => {
         setTimeFilterMode(payload.mode);
@@ -173,55 +249,49 @@ function ErrorManagementContent() {
         setPage(0);
     }, []);
 
-    // Fetch data from backend
-    const loadData = useCallback(async () => {
-        try {
-            setLoading(true);
-            const filterParams: MachineIncidentFilterParams = {
-                search: searchTerm || undefined,
-                status: statusFilter || undefined,
-                startDate: selectedStartDate || undefined,
-                endDate: selectedEndDate || undefined,
-                page,
-                size: pageSize,
-                sort: 'startTime,DESC',
-            };
+    // Primary Data Fetch via React Query (prevents duplicate API calls)
+    const filterParams: MachineIncidentFilterParams = useMemo(
+        () => ({
+            search: searchTerm || undefined,
+            status: statusFilter || undefined,
+            startDate: selectedStartDate || undefined,
+            endDate: selectedEndDate || undefined,
+            page,
+            size: pageSize,
+            sort: 'startTime,DESC',
+        }),
+        [searchTerm, statusFilter, selectedStartDate, selectedEndDate, page, pageSize]
+    );
 
-            const response = await MachineIncidentService.getIncidents(filterParams);
+    const {
+        data: incidentResponse,
+        isLoading: loading,
+        refetch: refetchIncidents,
+    } = useQuery({
+        queryKey: ['machineIncidents', filterParams],
+        queryFn: () => MachineIncidentService.getIncidents(filterParams),
+    });
 
-            if (response?.page) {
-                setIncidents(response.page.content || []);
-                setTotalElements(response.page.totalElements || 0);
-            } else {
-                setIncidents([]);
-                setTotalElements(0);
-            }
-
-            setTotalIncidents(response?.totalIncidents ?? 0);
-            setActiveIncidents(response?.activeIncidents ?? 0);
-        } catch (_err) {
-            toast.error(t('errorManagement.messages.fetchError'));
-        } finally {
-            setLoading(false);
-        }
-    }, [searchTerm, statusFilter, selectedStartDate, selectedEndDate, page, pageSize, t]);
+    const incidents = useMemo(
+        () => incidentResponse?.page?.content || [],
+        [incidentResponse?.page?.content]
+    );
+    const totalElements = incidentResponse?.page?.totalElements || 0;
+    const totalIncidents = incidentResponse?.totalIncidents ?? 0;
+    const activeIncidents = incidentResponse?.activeIncidents ?? 0;
 
     const handleSearchPressEnter = useCallback(
         (value: string) => {
             const trimmed = value.trim();
             if (trimmed === searchTerm) {
-                loadData();
+                refetchIncidents();
             } else {
                 setSearchTerm(trimmed);
                 setPage(0);
             }
         },
-        [searchTerm, loadData]
+        [searchTerm, refetchIncidents]
     );
-
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
 
     // Handle navigation context (incidentCode / machineCode from Machine Status)
     useEffect(() => {
@@ -335,7 +405,7 @@ function ErrorManagementContent() {
             await MachineIncidentService.updateIncident(selectedIncident.machineIncidentId, values);
             toast.success(t('errorManagement.messages.updateSuccess'));
             setIsModalOpen(false);
-            await loadData();
+            await queryClient.invalidateQueries({ queryKey: ['machineIncidents'] });
         } catch (err: any) {
             const errorCode = err?.response?.data?.code || err?.code;
             if (errorCode === 1902) {
@@ -390,14 +460,25 @@ function ErrorManagementContent() {
                 highlightedMachineCode,
                 isRowHighlighted,
                 isMobile,
+                page,
+                pageSize,
             }),
-        [token, t, highlightedCode, highlightedMachineCode, isRowHighlighted, isMobile]
+        [
+            token,
+            t,
+            highlightedCode,
+            highlightedMachineCode,
+            isRowHighlighted,
+            isMobile,
+            page,
+            pageSize,
+        ]
     );
 
     const handleTableChange = (pagination: any) => {
         if (pagination) {
-            setPage(pagination.current - 1);
-            setPageSize(pagination.pageSize);
+            setPage((pagination.current ?? 1) - 1);
+            setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
         }
     };
 
@@ -431,13 +512,15 @@ function ErrorManagementContent() {
                 }}
                 statusOptions={statusOptions}
                 timeFilterMode={timeFilterMode}
-                selectedTimePeriod={selectedTimePeriod}
-                selectedStartDate={selectedStartDate}
-                selectedEndDate={selectedEndDate}
-                groupedTimePeriodOptions={groupedTimePeriodOptions}
+                currentPeriodId={currentPeriodId}
+                currentShiftId={currentShiftId}
+                startDate={selectedStartDate ?? ''}
+                endDate={selectedEndDate ?? ''}
+                groupedOptions={groupedTimePeriodOptions}
                 industryFilters={industryFilters}
+                isShiftActive={isShiftActive}
                 onApplyTimeFilter={handleApplyTimeFilter}
-                onRefresh={loadData}
+                onRefresh={refetchIncidents}
                 loading={loading}
                 fromParam={fromParam}
                 onBack={handleBack}
@@ -475,7 +558,6 @@ function ErrorManagementContent() {
                         overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                        paddingBottom: 0,
                     },
                 }}
             >
@@ -488,6 +570,7 @@ function ErrorManagementContent() {
                     }}
                 >
                     <Table<MachineIncidentItem>
+                        className="qw-table-scroll-fill"
                         columns={columns}
                         dataSource={incidents}
                         loading={loading}
@@ -518,6 +601,7 @@ function ErrorManagementContent() {
                             y: tableScrollY,
                         }}
                         style={{ height: '100%' }}
+                        bordered
                     />
                 </div>
             </Card>
