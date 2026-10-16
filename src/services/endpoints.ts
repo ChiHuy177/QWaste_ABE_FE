@@ -37,6 +37,8 @@ const BASE_PATHS = {
     PRODUCTION_PLANS: `${API}/productionPlans/${V1}`,
     DASHBOARD: `${API}/dashboard/${V1}`,
     WORK_CALENDAR: `${API}/workCalendar/${V1}`,
+    INCIDENTS: `${API}/incidents/${V1}`,
+    MACHINE_INCIDENTS: `${API}/machineIncidents/${V1}`,
     SHIFT_PATTERNS: `${API}/shiftPatterns/${V1}`,
     DOWNTIME: `${API}/downtime/${V1}`,
 } as const;
@@ -238,6 +240,16 @@ export const ENDPOINTS = {
         RESET: `${BASE_PATHS.WORK_CALENDAR}/reset`,
         CHECK_ALARM: `${BASE_PATHS.WORK_CALENDAR}/checkAlarm`,
         CONFIRM_MONTH: `${BASE_PATHS.WORK_CALENDAR}/confirmMonth`,
+    },
+    INCIDENTS: {
+        BASE: BASE_PATHS.INCIDENTS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.INCIDENTS, id),
+        STATS: `${BASE_PATHS.INCIDENTS}/stats`,
+        RESOLVE: (id: PathParam) => `${BASE_PATHS.INCIDENTS}/${id}/resolve`,
+    },
+    MACHINE_INCIDENTS: {
+        BASE: BASE_PATHS.MACHINE_INCIDENTS,
+        DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MACHINE_INCIDENTS, id),
     },
     SHIFT_PATTERNS: {
         BASE: BASE_PATHS.SHIFT_PATTERNS,

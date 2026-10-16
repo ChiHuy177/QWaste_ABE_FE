@@ -45,7 +45,7 @@ export const calculateMachineStats = (machines: MachineOverview[]): MachineStats
         totalRun: 0,
         totalIdle: 0,
         totalError: 0,
-        totalEmpty: 0,
+        totalOffline: 0,
     };
 
     machines.forEach((machine) => {
@@ -56,7 +56,7 @@ export const calculateMachineStats = (machines: MachineOverview[]): MachineStats
             machine.currentStatus
         );
         if (!machine.currentStatus) {
-            stats.totalEmpty++;
+            stats.totalOffline++;
             return;
         }
 
@@ -72,10 +72,10 @@ export const calculateMachineStats = (machines: MachineOverview[]): MachineStats
                 break;
             case 'OFFLINE':
             case 'COMPLETE':
-                stats.totalEmpty++;
+                stats.totalOffline++;
                 break;
             default:
-                stats.totalEmpty++;
+                stats.totalOffline++;
         }
     });
 
