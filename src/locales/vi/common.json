@@ -3228,6 +3228,7 @@
         "updateError": "Không thể cập nhật công đoạn. Vui lòng thử lại.",
         "table": {
             "headers": {
+                "index": "STT",
                 "operationTypeCode": "Mã Công Đoạn",
                 "operationTypeName": "Tên Công Đoạn",
                 "description": "Mô Tả",

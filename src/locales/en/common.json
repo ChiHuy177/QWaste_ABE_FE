@@ -2583,6 +2583,7 @@
         "updateError": "Failed to update operation type. Please try again.",
         "table": {
             "headers": {
+                "index": "No.",
                 "operationTypeCode": "Operation Type Code",
                 "operationTypeName": "Operation Type Name",
                 "description": "Description",
