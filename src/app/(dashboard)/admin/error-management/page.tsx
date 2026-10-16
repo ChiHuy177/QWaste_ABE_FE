@@ -22,7 +22,6 @@ import { IndustryFilter } from '@/types/IndustryFilter';
 import {
     PeriodFilterMode,
     TimeFilterApplyPayload,
-    formatTimeFilterLabel,
 } from '@/components/shared/filters/TimeFilterPopover';
 import {
     CreateOrEditErrorModal,
@@ -30,6 +29,7 @@ import {
     ErrorDetailModal,
     ErrorInfoBar,
     ErrorManagementHeader,
+    formatTimeFilterLabel,
     getErrorTableColumns,
 } from '@/features/dashboard/error-management';
 
@@ -123,12 +123,13 @@ function ErrorManagementContent() {
 
     const groupedTimePeriodOptions = useMemo(
         () => ({
+            SHIFT: [],
             PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
         }),
         [timePeriodOptions]
     );
 
-    // Active time period label formatted using shared helper (showShifts: false)
+    // Active time period label formatted using feature helper
     const activeTimePeriodLabel = useMemo(
         () =>
             formatTimeFilterLabel({
@@ -137,7 +138,6 @@ function ErrorManagementContent() {
                 endDate: selectedEndDate,
                 periodId: selectedTimePeriod,
                 industryFilters,
-                showShifts: false,
                 lang: i18n.language,
                 t,
             }),

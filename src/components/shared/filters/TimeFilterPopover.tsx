@@ -42,109 +42,13 @@ export interface TimeFilterPopoverProps {
     currentStartDate: string;
     currentEndDate: string;
     groupedOptions: {
-        SHIFT?: { label: string; value: number; sortOrder?: number }[];
+        SHIFT: { label: string; value: number; sortOrder?: number }[];
         PERIOD: { label: string; value: number; sortOrder?: number }[];
     };
     industryFilters: IndustryFilter[];
-    isShiftActive?: (filter: IndustryFilter) => boolean;
+    isShiftActive: (filter: IndustryFilter) => boolean;
     onApply: (payload: TimeFilterApplyPayload) => void;
     placement?: 'bottomLeft' | 'bottomRight';
-    showShifts?: boolean;
-}
-
-export function formatTimeFilterLabel({
-    mode,
-    startDate,
-    endDate,
-    periodId,
-    shiftId,
-    industryFilters,
-    showShifts = true,
-    lang = 'vi',
-    t,
-}: {
-    mode: PeriodFilterMode | null;
-    startDate: string | null;
-    endDate: string | null;
-    periodId?: number | null;
-    shiftId?: number | null;
-    industryFilters: IndustryFilter[];
-    showShifts?: boolean;
-    lang?: string;
-    t: (key: string, options?: any) => string;
-}): string | null {
-    if (!mode) {
-        return t('timeFilter.all', { defaultValue: 'Tất cả thời gian' });
-    }
-
-    const shiftFilter =
-        showShifts && shiftId != null ? industryFilters.find((f) => f.filterId === shiftId) : null;
-    const shiftLabel = shiftFilter
-        ? lang === 'vi'
-            ? shiftFilter.displayNameVi
-            : shiftFilter.displayNameEn
-        : null;
-
-    if (mode === 'WEEK') {
-        const startStr = startDate ? dayjs(startDate).format('DD/MM') : '';
-        const endStr = endDate ? dayjs(endDate).format('DD/MM') : '';
-        const weekNum = startDate ? dayjs(startDate).isoWeek() : '';
-        const yearStr = startDate ? dayjs(startDate).format('YYYY') : '';
-        const label = `${t('timeFilter.weekLabel', {
-            week: weekNum,
-            year: yearStr,
-            defaultValue: `Tuần ${weekNum}, ${yearStr}`,
-        })} (${startStr} → ${endStr})`;
-        return shiftLabel ? `${label} • ${shiftLabel}` : label;
-    }
-
-    if (mode === 'MONTH') {
-        const monthStr = startDate ? dayjs(startDate).format('MM') : '';
-        const yearStr = startDate ? dayjs(startDate).format('YYYY') : '';
-        const label = t('timeFilter.monthLabel', {
-            month: monthStr,
-            year: yearStr,
-            defaultValue: `Tháng ${monthStr}/${yearStr}`,
-        });
-        return shiftLabel ? `${label} • ${shiftLabel}` : label;
-    }
-
-    if (mode === 'QUARTER') {
-        const quarterNum = startDate ? dayjs(startDate).quarter() : '';
-        const yearStr = startDate ? dayjs(startDate).format('YYYY') : '';
-        const label = t('timeFilter.quarterLabel', {
-            quarter: quarterNum,
-            year: yearStr,
-            defaultValue: `Quý ${quarterNum}/${yearStr}`,
-        });
-        return shiftLabel ? `${label} • ${shiftLabel}` : label;
-    }
-
-    if (mode === 'YEAR') {
-        const yearStr = startDate ? dayjs(startDate).format('YYYY') : '';
-        const label = t('timeFilter.yearLabel', {
-            year: yearStr,
-            defaultValue: `Năm ${yearStr}`,
-        });
-        return shiftLabel ? `${label} • ${shiftLabel}` : label;
-    }
-
-    if (mode === 'CUSTOM_RANGE') {
-        const startStr = startDate ? dayjs(startDate).format('DD/MM') : '';
-        const endStr = endDate ? dayjs(endDate).format('DD/MM') : '';
-        const dateLabel = `${startStr} → ${endStr}`;
-        return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
-    }
-
-    const period = industryFilters.find((f) => f.filterId === periodId);
-    const periodLabel = period
-        ? lang === 'vi'
-            ? period.displayNameVi
-            : period.displayNameEn
-        : null;
-
-    if (!periodLabel) return shiftLabel;
-    return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
 }
 
 const { useBreakpoint } = Grid;
@@ -597,10 +501,9 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     currentEndDate,
     groupedOptions,
     industryFilters,
-    isShiftActive = () => false,
+    isShiftActive,
     onApply,
     placement = 'bottomRight',
-    showShifts = true,
 }) => {
     const { t, i18n } = useTranslation();
     const { token } = theme.useToken();
@@ -874,16 +777,14 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     );
 
     const isApplyDisabled =
-        draftMode === 'PRESET' &&
-        draftPeriodId === null &&
-        (showShifts ? draftShiftId === null : true);
+        draftMode === 'PRESET' && draftPeriodId === null && draftShiftId === null;
 
     // Trigger-button label, resolved from the committed (applied) filter — not the draft
     // being edited inside the popover. Mirrors the old page-level activeTimePeriodLabel.
     const activeLabel = useMemo(() => {
         const currentLang = i18n.language;
         const shiftFilter =
-            showShifts && currentShiftId != null
+            currentShiftId != null
                 ? allIndustryFilters.find((f) => f.filterId === currentShiftId)
                 : null;
         const shiftLabel = shiftFilter
@@ -1170,27 +1071,23 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                 </div>
             )}
 
-            {showShifts && (
-                <>
-                    <Divider style={{ margin: '10px 0' }} />
+            <Divider style={{ margin: '10px 0' }} />
 
-                    {/* Shift selection (Ca làm việc) - MOVED BELOW */}
-                    <ShiftSection
-                        shiftId={draftShiftId}
-                        onChange={setDraftShiftId}
-                        groupedShifts={currentShiftOptions}
-                        industryFilters={allIndustryFilters}
-                        isShiftActive={isShiftActive}
-                        isMobile={isMobile}
-                        title={t('spaceMonitoring.timeFilter.shifts')}
-                        allShiftsLabel={t('spaceMonitoring.timeFilter.allShifts')}
-                        activeTagLabel={t('spaceMonitoring.timeFilter.active')}
-                        isSingleDay={isSingleDay}
-                        singleDayWarning={singleDayWarning}
-                        isLoading={isLoadingShifts}
-                    />
-                </>
-            )}
+            {/* Shift selection (Ca làm việc) - MOVED BELOW */}
+            <ShiftSection
+                shiftId={draftShiftId}
+                onChange={setDraftShiftId}
+                groupedShifts={currentShiftOptions}
+                industryFilters={allIndustryFilters}
+                isShiftActive={isShiftActive}
+                isMobile={isMobile}
+                title={t('spaceMonitoring.timeFilter.shifts')}
+                allShiftsLabel={t('spaceMonitoring.timeFilter.allShifts')}
+                activeTagLabel={t('spaceMonitoring.timeFilter.active')}
+                isSingleDay={isSingleDay}
+                singleDayWarning={singleDayWarning}
+                isLoading={isLoadingShifts}
+            />
 
             {/* Action buttons */}
             <FooterActions

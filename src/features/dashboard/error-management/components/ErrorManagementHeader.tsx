@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Button, Select, Space, Tooltip, theme } from 'antd';
+import { Button, Select, Tooltip, theme } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
@@ -25,7 +25,8 @@ export interface ErrorManagementHeaderProps {
     selectedStartDate: string | null;
     selectedEndDate: string | null;
     groupedTimePeriodOptions: {
-        PERIOD: { label: string; value: number; category: IndustryFilter['category'] }[];
+        SHIFT: { label: string; value: number; sortOrder?: number }[];
+        PERIOD: { label: string; value: number; sortOrder?: number }[];
     };
     industryFilters: IndustryFilter[];
     onApplyTimeFilter: (payload: TimeFilterApplyPayload) => void;
@@ -120,7 +121,7 @@ export const ErrorManagementHeader: React.FC<ErrorManagementHeaderProps> = React
                             currentEndDate={selectedEndDate ?? ''}
                             groupedOptions={groupedTimePeriodOptions}
                             industryFilters={industryFilters}
-                            showShifts={false}
+                            isShiftActive={() => false}
                             onApply={onApplyTimeFilter}
                             placement="bottomRight"
                         />
