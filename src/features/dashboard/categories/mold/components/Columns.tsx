@@ -5,7 +5,6 @@ import { ColumnsType } from 'antd/es/table';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UndoOutlined } from '@ant-design/icons';
 import { Mold } from '@/types/Mold';
 import { AppAbility } from '@/configs/permissions/caslAbility';
-import dayjs from 'dayjs';
 
 const { Text } = Typography;
 
@@ -17,24 +16,37 @@ export type MoldTableColumnProps = {
     isMobile?: boolean;
     t: (key: string) => string;
     ability?: AppAbility;
+    page?: number;
+    pageSize?: number;
 };
 
-const isDeleted = (mold: Mold) => !!mold.softDeleteMetaData?.isDeleted;
+const isDeleted = (mold: Mold) =>
+    mold.isDeleted === true || mold.softDeleteMetaData?.isDeleted === true;
 
-const compareDate = (a?: string | null, b?: string | null) =>
-    new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
-
-// Danh sách lấy từ GET /v1 không phân trang → sort/lọc chạy client-side.
+// Cấu hình các cột cho bảng danh sách khuôn (Mold).
 export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<Mold> => {
     const t = props?.t || ((key: string) => key);
     const ability = props?.ability;
     const canView = true;
     const canUpdate = ability?.can('update', 'mold') ?? false;
     const canDelete = ability?.can('delete', 'mold') ?? false;
-    const canRestore = ability?.can('restore', 'mold') ?? false;
+    const canRestore = ability
+        ? ability.can('restore', 'mold') || ability.can('update', 'mold')
+        : true;
     const hasAnyAction = canView || canUpdate || canDelete || canRestore;
+    const page = props?.page ?? 0;
+    const pageSize = props?.pageSize ?? 10;
 
     const columns: ColumnsType<Mold> = [
+        {
+            title: () => t('moldManagement.table.headers.index') || 'STT',
+            key: 'index',
+            width: 70,
+            align: 'center',
+            render: (_: any, __: any, index: number) => (
+                <Text type="secondary">{page * pageSize + index + 1}</Text>
+            ),
+        },
         {
             title: () => t('moldManagement.table.headers.moldCode'),
             dataIndex: 'moldCode',
@@ -80,14 +92,31 @@ export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<M
             title: () => t('moldManagement.table.headers.operationType'),
             dataIndex: ['operationType', 'operationTypeName'],
             key: 'operationType',
-            sorter: (a, b) =>
-                a.operationType.operationTypeName.localeCompare(b.operationType.operationTypeName),
-            width: 160,
-            render: (_, record) => (
-                <Tooltip title={record.operationType.description}>
-                    <Tag color="blue">{record.operationType.operationTypeName}</Tag>
-                </Tooltip>
-            ),
+            sorter: (a, b) => {
+                const aVal = `${a.operationType.operationTypeCode} ${a.operationType.operationTypeName}`;
+                const bVal = `${b.operationType.operationTypeCode} ${b.operationType.operationTypeName}`;
+                return aVal.localeCompare(bVal);
+            },
+            width: 200,
+            render: (_, record) => {
+                const op = record.operationType;
+                const displayText = `${op.operationTypeCode} — ${op.operationTypeName}`;
+                return (
+                    <Tooltip title={op.description || displayText}>
+                        <Tag
+                            color="blue"
+                            style={{
+                                maxWidth: 220,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {displayText}
+                        </Tag>
+                    </Tooltip>
+                );
+            },
         },
         {
             title: () => t('moldManagement.table.headers.description'),
@@ -99,39 +128,6 @@ export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<M
                 text ? (
                     <Tooltip placement="topLeft" title={text}>
                         <Text type="secondary">{text}</Text>
-                    </Tooltip>
-                ) : (
-                    <Text type="secondary">-</Text>
-                ),
-        },
-        {
-            title: () => t('moldManagement.table.headers.createdAt'),
-            dataIndex: ['auditMetaData', 'createdAt'],
-            key: 'auditMetaData.createdAt',
-            sorter: (a, b) => compareDate(a.auditMetaData?.createdAt, b.auditMetaData?.createdAt),
-            defaultSortOrder: 'ascend',
-            width: 160,
-            align: 'center',
-            render: (date: string) =>
-                date ? (
-                    <Tooltip title={dayjs(date).format('DD/MM/YYYY HH:mm:ss')}>
-                        <Text>{dayjs(date).format('DD/MM/YYYY HH:mm')}</Text>
-                    </Tooltip>
-                ) : (
-                    <Text type="secondary">-</Text>
-                ),
-        },
-        {
-            title: () => t('moldManagement.table.headers.updatedAt'),
-            dataIndex: ['auditMetaData', 'updatedAt'],
-            key: 'auditMetaData.updatedAt',
-            sorter: (a, b) => compareDate(a.auditMetaData?.updatedAt, b.auditMetaData?.updatedAt),
-            width: 160,
-            align: 'center',
-            render: (date: string) =>
-                date ? (
-                    <Tooltip title={dayjs(date).format('DD/MM/YYYY HH:mm:ss')}>
-                        <Text>{dayjs(date).format('DD/MM/YYYY HH:mm')}</Text>
                     </Tooltip>
                 ) : (
                     <Text type="secondary">-</Text>
@@ -152,7 +148,9 @@ export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<M
                     return (
                         <Popconfirm
                             title={t('moldManagement.dialogs.restoreConfirmation.title')}
-                            description={t('moldManagement.dialogs.restoreConfirmation.description')}
+                            description={t(
+                                'moldManagement.dialogs.restoreConfirmation.description'
+                            )}
                             onConfirm={() => props?.onRestore?.(record)}
                             okText={t('common.yes')}
                             cancelText={t('common.no')}
@@ -160,6 +158,7 @@ export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<M
                         >
                             <Tooltip title={t('common.restore')}>
                                 <Button
+                                    type="primary"
                                     icon={<UndoOutlined />}
                                     aria-label={t('common.restore')}
                                 />

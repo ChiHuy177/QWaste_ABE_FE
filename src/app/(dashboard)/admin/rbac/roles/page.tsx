@@ -14,8 +14,10 @@ import {
 } from '@/features/dashboard/rbac/roles';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { RoleService } from '@/services';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 
 const RoleManagementPage = () => {
     const [modalState, setModalState] = useState<{
@@ -28,15 +30,13 @@ const RoleManagementPage = () => {
     const [loading, setLoading] = useState(false);
     const [roleData, setRoleData] = useState<Role[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [roleNameFilter, setRoleNameFilter] = useState<string | undefined>(undefined);
+    const [roleDescriptionFilter, setRoleDescriptionFilter] = useState<string | undefined>(
+        undefined
+    );
+
+    const activeFilterCount = [roleNameFilter, roleDescriptionFilter].filter(Boolean).length;
     const screens = Grid.useBreakpoint();
     const isMobileResponsive = !screens.md;
 
@@ -70,22 +70,15 @@ const RoleManagementPage = () => {
 
     // Handle Delete Action
     const handleDeleteRole = useCallback(
-        (role: Role) => {
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        await RoleService.deleteRole(role.roleId!);
-                        setRoleData(prev => (prev ?? []).filter(r => r.roleId !== role.roleId));
-                        toast.success(t('roleManagement.messages.deleteSuccess'));
-                    } catch (error) {
-                        console.error('Error deleting role:', error);
-                        toast.error(t('roleManagement.messages.deleteError'));
-                        throw error;
-                    }
-                },
-            });
+        async (role: Role) => {
+            try {
+                await RoleService.deleteRole(role.roleId!);
+                setRoleData(prev => (prev ?? []).filter(r => r.roleId !== role.roleId));
+                toast.success(t('roleManagement.messages.deleteSuccess'));
+            } catch (error) {
+                console.error('Error deleting role:', error);
+                toast.error(t('roleManagement.messages.deleteError'));
+            }
         },
         [t]
     );
@@ -104,26 +97,52 @@ const RoleManagementPage = () => {
 
     const filteredRoleData = useMemo(() => {
         if (!roleData) return [];
-        if (!searchTerm.trim()) {
-            return roleData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const nameFilter = roleNameFilter?.toLowerCase();
+        const descriptionFilter = roleDescriptionFilter?.toLowerCase();
         return roleData.filter((role) => {
             const roleName = role.roleName?.toLowerCase() || '';
             const description = role.description?.toLowerCase() || '';
 
-            return roleName.includes(lowerSearchTerm) || description.includes(lowerSearchTerm);
+            const matchesSearch =
+                !lowerSearchTerm ||
+                roleName.includes(lowerSearchTerm) ||
+                description.includes(lowerSearchTerm);
+            const matchesName = !nameFilter || roleName.includes(nameFilter);
+            const matchesDescription = !descriptionFilter || description.includes(descriptionFilter);
+            return matchesSearch && matchesName && matchesDescription;
         });
-    }, [roleData, searchTerm]);
+    }, [roleData, searchTerm, roleNameFilter, roleDescriptionFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'roleName',
+                label: t('roleManagement.columns.name'),
+                placeholder: t('roleManagement.form.roleName.placeholder'),
+                value: roleNameFilter ?? '',
+                onChange: (val) => setRoleNameFilter(val.trim() || undefined),
+            },
+            {
+                key: 'description',
+                label: t('roleManagement.columns.description'),
+                placeholder: t('roleManagement.form.description.placeholder'),
+                value: roleDescriptionFilter ?? '',
+                onChange: (val) => setRoleDescriptionFilter(val.trim() || undefined),
+            },
+        ],
+        [t, roleNameFilter, roleDescriptionFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setRoleNameFilter(undefined);
+        setRoleDescriptionFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const handleFormSubmit = async (data: RoleFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeFormSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeFormSubmit(data, mode);
     };
 
     const executeFormSubmit = async (data: RoleFormData, mode: 'create' | 'edit') => {
@@ -173,35 +192,6 @@ const RoleManagementPage = () => {
         };
     };
 
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
-    };
-
     return (
         <>
             <ResponsivePageHeader
@@ -217,6 +207,10 @@ const RoleManagementPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Button
                             type="primary"
@@ -241,6 +235,17 @@ const RoleManagementPage = () => {
                     />
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{
@@ -303,14 +308,6 @@ const RoleManagementPage = () => {
                     edit: t('roleManagement.form.editTitle'),
                 }}
                 width={900}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </>

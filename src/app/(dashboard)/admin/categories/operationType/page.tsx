@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button, Card, Descriptions, Grid, Modal, Spin, Table, Typography } from 'antd';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -12,9 +14,9 @@ import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import { Can, useAbility } from '@/contexts/AbilityContext';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { OperationTypeService } from '@/services/OperationTypeService';
 import { OperationType, OperationTypeFormData } from '@/types/OperationType';
@@ -27,8 +29,29 @@ import {
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
 
+const DEFAULT_PAGE_SIZE = 10;
+const SORT_DEFAULT = 'operationTypeCode,ASC';
+
 const operationTypeQueryKeys = {
     lists: ['operationTypes', 'list'] as const,
+    list: (
+        page: number,
+        size: number,
+        sort?: string | string[],
+        search?: string,
+        operationTypeCode?: string,
+        operationTypeName?: string
+    ) =>
+        [
+            'operationTypes',
+            'list',
+            page,
+            size,
+            sort,
+            search,
+            operationTypeCode,
+            operationTypeName,
+        ] as const,
     detail: (operationTypeId: number) => ['operationTypes', 'detail', operationTypeId] as const,
 };
 
@@ -49,36 +72,166 @@ const OperationTypeListPage = () => {
         data: OperationType | null;
     }>({ open: false, mode: 'create', data: null });
 
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({ open: false, type: 'create', pendingAction: null });
-
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
         loading: boolean;
         data: OperationType | null;
     }>({ open: false, loading: false, data: null });
 
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+    const [sort, setSort] = useState<string | string[]>(SORT_DEFAULT);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
-    // BE chỉ có GET /v1 không phân trang — search/sort/phân trang chạy client-side.
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [operationTypeCodeFilter, setOperationTypeCodeFilter] = useState<string | undefined>(
+        undefined
+    );
+    const [operationTypeNameFilter, setOperationTypeNameFilter] = useState<string | undefined>(
+        undefined
+    );
+
+    const activeFilterCount = [operationTypeCodeFilter, operationTypeNameFilter].filter(
+        Boolean
+    ).length;
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(0);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const handleTableChange = (
+        pagination: TablePaginationConfig,
+        _filters: Record<string, FilterValue | null>,
+        sorter: SorterResult<OperationType> | SorterResult<OperationType>[]
+    ) => {
+        if (pagination) {
+            setPage((pagination.current ?? 1) - 1);
+            setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
+        }
+
+        if (sorter) {
+            const sorters = Array.isArray(sorter) ? sorter : [sorter];
+            const validSorters = sorters
+                .filter((s) => s.field && s.order)
+                .map((s) => {
+                    const field = Array.isArray(s.field) ? s.field.join('.') : String(s.field);
+                    const order = s.order === 'ascend' ? 'ASC' : 'DESC';
+                    return `${field},${order}`;
+                });
+            if (validSorters.length > 0) {
+                setSort(validSorters.length === 1 ? validSorters[0] : validSorters);
+            } else {
+                setSort(SORT_DEFAULT);
+            }
+        } else {
+            setSort(SORT_DEFAULT);
+        }
+    };
+
     const operationTypesQuery = useQuery({
-        queryKey: operationTypeQueryKeys.lists,
-        queryFn: () => OperationTypeService.getAllOperationTypes(),
+        queryKey: operationTypeQueryKeys.list(
+            page,
+            pageSize,
+            sort,
+            debouncedSearch,
+            operationTypeCodeFilter,
+            operationTypeNameFilter
+        ),
+        queryFn: () =>
+            OperationTypeService.getOperationTypesPaginated({
+                page,
+                size: pageSize,
+                sort,
+                search: debouncedSearch,
+                operationTypeCode: operationTypeCodeFilter,
+                operationTypeName: operationTypeNameFilter,
+            }),
     });
 
     const operationTypeData = useMemo(() => {
-        const all = operationTypesQuery.data ?? [];
-        const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return all;
-        return all.filter(
-            (operationType) =>
-                operationType.operationTypeCode.toLowerCase().includes(keyword) ||
-                operationType.operationTypeName.toLowerCase().includes(keyword)
-        );
-    }, [operationTypesQuery.data, searchTerm]);
+        const rawData = operationTypesQuery.data;
+        if (!rawData) return [];
+        if (Array.isArray(rawData)) {
+            const keyword = debouncedSearch.trim().toLowerCase();
+            const codeFilter = operationTypeCodeFilter?.toLowerCase();
+            const nameFilter = operationTypeNameFilter?.toLowerCase();
+            return rawData.filter((operationType) => {
+                const matchesSearch =
+                    !keyword ||
+                    operationType.operationTypeCode.toLowerCase().includes(keyword) ||
+                    operationType.operationTypeName.toLowerCase().includes(keyword);
+                const matchesCode =
+                    !codeFilter ||
+                    operationType.operationTypeCode.toLowerCase().includes(codeFilter);
+                const matchesName =
+                    !nameFilter ||
+                    operationType.operationTypeName.toLowerCase().includes(nameFilter);
+                return matchesSearch && matchesCode && matchesName;
+            });
+        }
+        return rawData.content ?? [];
+    }, [
+        operationTypesQuery.data,
+        debouncedSearch,
+        operationTypeCodeFilter,
+        operationTypeNameFilter,
+    ]);
+
+    const totalElements = useMemo(() => {
+        const rawData = operationTypesQuery.data;
+        if (!rawData) return 0;
+        if (Array.isArray(rawData)) {
+            return operationTypeData.length;
+        }
+        return rawData.totalElements ?? 0;
+    }, [operationTypesQuery.data, operationTypeData]);
+
+    useEffect(() => {
+        if (operationTypesQuery.error) {
+            handleError(operationTypesQuery.error, {
+                fallbackKey: 'operationTypeManagement.fetchError',
+            });
+        }
+    }, [operationTypesQuery.error, handleError]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'operationTypeCode',
+                label: t('operationTypeManagement.table.headers.operationTypeCode'),
+                placeholder: t('operationTypeManagement.form.placeholders.operationTypeCode'),
+                value: operationTypeCodeFilter ?? '',
+                onChange: (val) => {
+                    setOperationTypeCodeFilter(val.trim() || undefined);
+                    setPage(0);
+                },
+            },
+            {
+                key: 'operationTypeName',
+                label: t('operationTypeManagement.table.headers.operationTypeName'),
+                placeholder: t('operationTypeManagement.form.placeholders.operationTypeName'),
+                value: operationTypeNameFilter ?? '',
+                onChange: (val) => {
+                    setOperationTypeNameFilter(val.trim() || undefined);
+                    setPage(0);
+                },
+            },
+        ],
+        [t, operationTypeCodeFilter, operationTypeNameFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setOperationTypeCodeFilter(undefined);
+        setOperationTypeNameFilter(undefined);
+        setPage(0);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     const isLoading = operationTypesQuery.isLoading || operationTypesQuery.isFetching;
 
@@ -131,21 +284,14 @@ const OperationTypeListPage = () => {
     );
 
     const handleDeleteOperationType = useCallback(
-        (operationType: OperationType) => {
+        async (operationType: OperationType) => {
             if (!checkPermission('delete', 'operation_type')) return;
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const message = await deleteOperationType(operationType.operationTypeId);
-                        toast.success(message || t('operationTypeManagement.deleteSuccess'));
-                    } catch (error) {
-                        handleError(error, { fallbackKey: 'operationTypeManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const message = await deleteOperationType(operationType.operationTypeId);
+                toast.success(message || t('operationTypeManagement.deleteSuccess'));
+            } catch (error) {
+                handleError(error, { fallbackKey: 'operationTypeManagement.deleteError' });
+            }
         },
         [checkPermission, deleteOperationType, handleError, t]
     );
@@ -174,29 +320,7 @@ const OperationTypeListPage = () => {
     };
 
     const handleSubmit = async (data: OperationTypeFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
-    };
-
-    const handleConfirmAction = async () => {
-        if (!confirmModalState.pendingAction) return;
-        try {
-            setConfirmModalState((prev) => ({ ...prev, open: false }));
-            await confirmModalState.pendingAction();
-            setModalState((prev) => ({ ...prev, open: false }));
-        } catch {
-            // Error already handled in pendingAction
-        } finally {
-            setConfirmModalState({ open: false, type: 'create', pendingAction: null });
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({ open: false, type: 'create', pendingAction: null });
+        await executeSubmit(data, mode);
     };
 
     const columnProps: OperationTypeTableColumnProps = useMemo(
@@ -207,6 +331,8 @@ const OperationTypeListPage = () => {
             isMobile,
             t,
             ability,
+            page,
+            pageSize,
         }),
         [
             handleViewOperationType,
@@ -215,6 +341,8 @@ const OperationTypeListPage = () => {
             isMobile,
             t,
             ability,
+            page,
+            pageSize,
         ]
     );
 
@@ -249,6 +377,10 @@ const OperationTypeListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Can I="create" a="operation_type">
                             <Button
@@ -266,6 +398,17 @@ const OperationTypeListPage = () => {
                     </div>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 title={viewModalState.data?.operationTypeName}
@@ -370,14 +513,17 @@ const OperationTypeListPage = () => {
                         loading={isLoading}
                         rowKey="operationTypeId"
                         pagination={{
+                            current: page + 1,
+                            pageSize,
+                            total: totalElements,
                             hideOnSinglePage: false,
                             showSizeChanger: true,
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            defaultPageSize: 10,
                             placement: ['bottomCenter'],
                         }}
+                        onChange={handleTableChange}
                         scroll={{
                             x: 'max-content',
                             y: tableScrollY,
@@ -411,14 +557,6 @@ const OperationTypeListPage = () => {
                 }}
                 width={{ xs: '90%', sm: 550, md: 650 }}
                 auditMetaData={modalState.data?.auditMetaData}
-                t={t}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
                 t={t}
             />
         </div>

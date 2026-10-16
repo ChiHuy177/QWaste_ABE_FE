@@ -17,6 +17,7 @@ const BASE_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'error_management' },
     { action: 'create', subject: 'error_management' },
     { action: 'update', subject: 'error_management' },
+    { action: 'view', subject: 'production_overview' },
 ];
 
 const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
@@ -43,6 +44,7 @@ const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
 const PLANNER_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'machine' },
     { action: 'view', subject: 'mold' },
+    { action: 'import', subject: 'mold' },
     { action: 'view', subject: 'operation_type' },
     { action: 'view', subject: 'space_level' },
     { action: 'view', subject: 'space' },

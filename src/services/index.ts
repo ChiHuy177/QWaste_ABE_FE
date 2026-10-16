@@ -18,3 +18,8 @@ export * from './ExcelExportService';
 export * from './ProductionPlanService';
 export * from './ErrorManagementService';
 export * from './MachineIncidentService';
+export * from './WorkCalendarService';
+export * from './ShiftPatternService';
+export * from './DashboardService';
+export * from './DowntimeService';
+export * from './IndustryFilterService';

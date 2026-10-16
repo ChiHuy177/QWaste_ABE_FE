@@ -16,9 +16,11 @@ import {
 } from '@/features/dashboard/categories/industryFilter';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
@@ -39,16 +41,12 @@ const IndustryFilterListPage = () => {
     const [industryFilterData, setIndustryFilterData] = useState<IndustryFilter[] | null>(null);
     const [isFormLoading, setIsFormLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+    const [periodCodeFilter, setPeriodCodeFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [categoryFilter, periodCodeFilter].filter(Boolean).length;
     const { handleError } = useApiErrorHandler();
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
 
     const [viewModalState, setViewModalState] = useState<{
         open: boolean;
@@ -109,27 +107,20 @@ const IndustryFilterListPage = () => {
     );
 
     const handleDeleteIndustryFilter = useCallback(
-        (filter: IndustryFilter) => {
+        async (filter: IndustryFilter) => {
             if (!checkPermission('delete', 'industry_filter')) {
                 return;
             }
 
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const filterId = filter.filterId;
-                        await IndustryFilterService.deleteIndustryFilter(filterId);
-                        toast.success(t('industryFilterManagement.deleteSuccess'));
-                        fetchIndustryFilterData();
-                    } catch (error) {
-                        console.error('Error deleting industry filter:', error);
-                        handleError(error, { fallbackKey: 'industryFilterManagement.deleteError' });
-                        throw error;
-                    }
-                },
-            });
+            try {
+                const filterId = filter.filterId;
+                await IndustryFilterService.deleteIndustryFilter(filterId);
+                toast.success(t('industryFilterManagement.deleteSuccess'));
+                fetchIndustryFilterData();
+            } catch (error) {
+                console.error('Error deleting industry filter:', error);
+                handleError(error, { fallbackKey: 'industryFilterManagement.deleteError' });
+            }
         },
         [t, fetchIndustryFilterData, checkPermission, handleError]
     );
@@ -165,11 +156,8 @@ const IndustryFilterListPage = () => {
 
     const filteredIndustryFilterData = useMemo(() => {
         if (!industryFilterData) return [];
-        if (!searchTerm.trim()) {
-            return industryFilterData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const periodFilter = periodCodeFilter?.toLowerCase();
         return industryFilterData.filter((filter) => {
             const displayNameEn = filter.displayNameEn?.toLowerCase() || '';
             const displayNameVi = filter.displayNameVi?.toLowerCase() || '';
@@ -177,27 +165,57 @@ const IndustryFilterListPage = () => {
             const category = filter.category?.toLowerCase() || '';
             const periodCode = filter.periodCode?.toLowerCase() || '';
 
-            return (
+            const matchesSearch =
+                !lowerSearchTerm ||
                 displayNameEn.includes(lowerSearchTerm) ||
                 displayNameVi.includes(lowerSearchTerm) ||
                 shortNameEn.includes(lowerSearchTerm) ||
                 category.includes(lowerSearchTerm) ||
-                periodCode.includes(lowerSearchTerm)
-            );
+                periodCode.includes(lowerSearchTerm);
+            const matchesCategory = !categoryFilter || filter.category === categoryFilter;
+            const matchesPeriodCode = !periodFilter || periodCode.includes(periodFilter);
+            return matchesSearch && matchesCategory && matchesPeriodCode;
         });
-    }, [industryFilterData, searchTerm]);
+    }, [industryFilterData, searchTerm, categoryFilter, periodCodeFilter]);
+
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'category',
+                label: t('industryFilterManagement.table.headers.category', {
+                    defaultValue: 'Category',
+                }),
+                value: categoryFilter ?? '',
+                onChange: (val) => setCategoryFilter(val || undefined),
+                type: 'select',
+                options: [
+                    { value: 'SHIFT', label: t('industryFilterManagement.categories.shift') },
+                    { value: 'PERIOD', label: t('industryFilterManagement.categories.period') },
+                ],
+            },
+            {
+                key: 'periodCode',
+                label: t('industryFilterManagement.table.headers.periodCode'),
+                value: periodCodeFilter ?? '',
+                onChange: (val) => setPeriodCodeFilter(val.trim() || undefined),
+            },
+        ],
+        [t, categoryFilter, periodCodeFilter]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setCategoryFilter(undefined);
+        setPeriodCodeFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
 
     useEffect(() => {
         fetchIndustryFilterData();
     }, [fetchIndustryFilterData]);
 
     const handleSubmit = async (data: IndustryFilterFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: IndustryFilterFormData, mode: 'create' | 'edit') => {
@@ -226,36 +244,6 @@ const IndustryFilterListPage = () => {
             });
             throw error;
         }
-    };
-
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                // Reset state on error
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
     };
 
     const formFields = useMemo(
@@ -291,6 +279,10 @@ const IndustryFilterListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         <Can I="create" a="industry_filter">
                             <Button
@@ -322,6 +314,17 @@ const IndustryFilterListPage = () => {
                     </Can>
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Modal
                 open={viewModalState.open}
@@ -587,14 +590,6 @@ const IndustryFilterListPage = () => {
                         <ShiftBreaksContent filter={modalState.data} t={t} />
                     ) : null
                 }
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

@@ -15,8 +15,9 @@ export type MachineTableColumnProps = {
     isMobile?: boolean;
     t: (key: string) => string;
     ability?: AppAbility;
+    page?: number;
+    pageSize?: number;
 };
-
 
 export const getMachineListTableColumns = (
     props?: MachineTableColumnProps
@@ -28,8 +29,19 @@ export const getMachineListTableColumns = (
     const canUpdate = ability?.can('update', 'machine') ?? false;
     const canDelete = ability?.can('delete', 'machine') ?? false;
     const hasAnyAction = canView || canUpdate || canDelete;
+    const page = props?.page ?? 0;
+    const pageSize = props?.pageSize ?? 10;
 
     const columns: ColumnsType<Machine> = [
+        {
+            title: () => t('machineListManagement.table.headers.index') || 'STT',
+            key: 'index',
+            width: 70,
+            align: 'center',
+            render: (_: any, __: any, index: number) => (
+                <Text type="secondary">{page * pageSize + index + 1}</Text>
+            ),
+        },
         {
             title: () => t('machineListManagement.table.headers.machineImage'),
             dataIndex: 'machineImage',
@@ -63,7 +75,13 @@ export const getMachineListTableColumns = (
             ellipsis: { showTitle: false },
             render: (text: string) => (
                 <Tooltip placement="topLeft" title={text}>
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div
+                        style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
                         <Text strong style={{ fontSize: 14 }}>
                             {text}
                         </Text>
@@ -81,7 +99,13 @@ export const getMachineListTableColumns = (
                 if (!text) return null;
                 return (
                     <Tooltip placement="topLeft" title={text}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div
+                            style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             <Text type="secondary">{text}</Text>
                         </div>
                     </Tooltip>
@@ -104,7 +128,13 @@ export const getMachineListTableColumns = (
                 if (!text) return <Text type="secondary">{t('common.notAvailable')}</Text>;
                 return (
                     <Tooltip placement="topLeft" title={text}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div
+                            style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             <Tag
                                 color="cyan"
                                 style={{
@@ -114,7 +144,7 @@ export const getMachineListTableColumns = (
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
                                     verticalAlign: 'middle',
-                                    marginInlineEnd: 0
+                                    marginInlineEnd: 0,
                                 }}
                             >
                                 {text}
@@ -137,7 +167,13 @@ export const getMachineListTableColumns = (
                     return <Text type="secondary">{t('common.notAvailable')}</Text>;
                 return (
                     <Tooltip placement="topLeft" title={`${power} kW`}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div
+                            style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             <Tag
                                 color="orange"
                                 style={{
@@ -147,7 +183,7 @@ export const getMachineListTableColumns = (
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
                                     verticalAlign: 'middle',
-                                    marginInlineEnd: 0
+                                    marginInlineEnd: 0,
                                 }}
                             >
                                 {power} kW
@@ -169,7 +205,13 @@ export const getMachineListTableColumns = (
                 if (!name) return <Text type="secondary">{t('common.notAvailable')}</Text>;
                 return (
                     <Tooltip placement="topLeft" title={name}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div
+                            style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             <Tag
                                 color="blue"
                                 style={{
@@ -179,7 +221,7 @@ export const getMachineListTableColumns = (
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
                                     verticalAlign: 'middle',
-                                    marginInlineEnd: 0
+                                    marginInlineEnd: 0,
                                 }}
                             >
                                 {name}
@@ -197,10 +239,18 @@ export const getMachineListTableColumns = (
             align: 'center',
             ellipsis: { showTitle: false },
             render: (value) => {
-                const text = value ? t('machineListManagement.status.inactive') : t('machineListManagement.status.active');
+                const text = value
+                    ? t('machineListManagement.status.inactive')
+                    : t('machineListManagement.status.active');
                 return (
                     <Tooltip placement="topLeft" title={text}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div
+                            style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             <Tag
                                 color={value ? 'red' : 'green'}
                                 style={{
@@ -209,7 +259,7 @@ export const getMachineListTableColumns = (
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
                                     verticalAlign: 'middle',
-                                    marginInlineEnd: 0
+                                    marginInlineEnd: 0,
                                 }}
                             >
                                 {text}
@@ -262,47 +312,40 @@ export const getMachineListTableColumns = (
 
                         {isDeleted
                             ? canUpdate && (
-                                <Popconfirm
-                                    title={t(
-                                        'machineListManagement.dialogs.restoreConfirmation.title'
-                                    )}
-                                    description={t(
-                                        'machineListManagement.dialogs.restoreConfirmation.description'
-                                    )}
-                                    onConfirm={() => props?.onRestore?.(record)}
-                                    okText={t('common.yes')}
-                                    cancelText={t('common.no')}
-                                >
-                                    <Tooltip title={t('machineListManagement.actions.restore')}>
-                                        <Button
-                                            type="primary"
-                                            icon={<UndoOutlined />}
-                                            style={{
-                                                backgroundColor: '#52c41a',
-                                                borderColor: '#52c41a',
-                                            }}
-                                        />
-                                    </Tooltip>
-                                </Popconfirm>
-                            )
+                                  <Popconfirm
+                                      title={t(
+                                          'machineListManagement.dialogs.restoreConfirmation.title'
+                                      )}
+                                      description={t(
+                                          'machineListManagement.dialogs.restoreConfirmation.description'
+                                      )}
+                                      onConfirm={() => props?.onRestore?.(record)}
+                                      okText={t('common.yes')}
+                                      cancelText={t('common.no')}
+                                  >
+                                      <Tooltip title={t('machineListManagement.actions.restore')}>
+                                          <Button type="default" icon={<UndoOutlined />} />
+                                      </Tooltip>
+                                  </Popconfirm>
+                              )
                             : canDelete && (
-                                <Popconfirm
-                                    title={t(
-                                        'machineListManagement.dialogs.deleteConfirmation.title'
-                                    )}
-                                    description={t(
-                                        'machineListManagement.dialogs.deleteConfirmation.description'
-                                    )}
-                                    onConfirm={() => props?.onDelete?.(record)}
-                                    okText={t('common.yes')}
-                                    cancelText={t('common.no')}
-                                    okButtonProps={{ danger: true }}
-                                >
-                                    <Tooltip title={t('machineListManagement.actions.delete')}>
-                                        <Button danger type="primary" icon={<DeleteOutlined />} />
-                                    </Tooltip>
-                                </Popconfirm>
-                            )}
+                                  <Popconfirm
+                                      title={t(
+                                          'machineListManagement.dialogs.deleteConfirmation.title'
+                                      )}
+                                      description={t(
+                                          'machineListManagement.dialogs.deleteConfirmation.description'
+                                      )}
+                                      onConfirm={() => props?.onDelete?.(record)}
+                                      okText={t('common.yes')}
+                                      cancelText={t('common.no')}
+                                      okButtonProps={{ danger: true }}
+                                  >
+                                      <Tooltip title={t('machineListManagement.actions.delete')}>
+                                          <Button danger type="primary" icon={<DeleteOutlined />} />
+                                      </Tooltip>
+                                  </Popconfirm>
+                              )}
                     </Space>
                 );
             },

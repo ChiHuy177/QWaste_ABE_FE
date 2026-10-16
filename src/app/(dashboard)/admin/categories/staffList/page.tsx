@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import {
@@ -9,6 +9,7 @@ import {
 } from '@/features/dashboard/categories/staffList';
 import { UserProfile, StaffFormData } from '@/types/User';
 import { UserService } from '@/services/UserService';
+import { SpaceService } from '@/services/SpaceService';
 import { toast } from 'sonner';
 import { Card, Table, Grid, Button } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -24,7 +25,9 @@ import {
 } from '@ant-design/icons';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { ConfirmModal, ConfirmationType } from '@/components/shared/ConfirmModal';
+import AdvancedFilterPanel, {
+    FilterField,
+} from '@/components/shared/filters/AdvancedFilterPanel';
 import { useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { SelectOption } from '@/types/Common';
@@ -53,18 +56,15 @@ const StaffListPage = () => {
     const [loading, setLoading] = useState(true);
     const [staffData, setStaffData] = useState<UserProfile[] | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [factoryOptions, setFactoryOptions] = useState<SelectOption[]>([]);
-    const [factoryLoading, setFactoryLoading] = useState(false);
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+    const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+
+    const activeFilterCount = [roleFilter, statusFilter].filter(Boolean).length;
+    const [spaceOptions, setSpaceOptions] = useState<SelectOption[]>([]);
+    const baseSpaceOptionsRef = useRef<SelectOption[]>([]);
+    const [spaceLoading, setSpaceLoading] = useState(false);
     const [editLoading, setEditLoading] = useState(false);
-    const [confirmModalState, setConfirmModalState] = useState<{
-        open: boolean;
-        type: ConfirmationType;
-        pendingAction: (() => Promise<void>) | null;
-    }>({
-        open: false,
-        type: 'create',
-        pendingAction: null,
-    });
 
     usePageTitle(t('pageTitle.staffList'));
 
@@ -84,13 +84,28 @@ const StaffListPage = () => {
             try {
                 const fullStaffData = await UserService.getStaffById(staff.userId);
 
+                const accessibleIds = fullStaffData.accessibleSpaces?.map((s) => s.spaceId) || [];
+
+                // Supplement spaceOptions with spaces that are already assigned to this staff
+                // but may not be in the base level-1 options (e.g. level-2/3 spaces from old data)
+                const existingIds = new Set(baseSpaceOptionsRef.current.map((o) => o.value));
+                const extraOptions: SelectOption[] = (fullStaffData.accessibleSpaces || [])
+                    .filter((s) => !existingIds.has(s.spaceId))
+                    .map((s) => ({
+                        value: s.spaceId,
+                        label: s.spaceName ? `${s.spaceName} (${s.spaceCode})` : s.spaceCode,
+                    }));
+                if (extraOptions.length > 0) {
+                    setSpaceOptions([...baseSpaceOptionsRef.current, ...extraOptions]);
+                }
+
                 const mappedData = {
                     ...fullStaffData,
                     roles: fullStaffData.roles || [],
                     password: '',
                     gender: fullStaffData.gender || '',
-                    accessibleFactoryIds:
-                        fullStaffData.accessibleFactories?.map((f) => f.factoryId) || [],
+                    spaceIds: accessibleIds,
+                    accessibleSpaceIds: accessibleIds,
                 };
 
                 setModalState({
@@ -115,23 +130,16 @@ const StaffListPage = () => {
     }, []);
 
     const handleDeleteStaff = useCallback(
-        (staff: UserProfile) => {
-            setConfirmModalState({
-                open: true,
-                type: 'delete',
-                pendingAction: async () => {
-                    try {
-                        const userId = staff.userId;
-                        await UserService.deleteStaff(userId!);
-                        toast.success(t('staffManagement.deleteSuccess'));
-                        fetchStaffData();
-                    } catch (error) {
-                        console.error('Error deleting staff:', error);
-                        toast.error(t('staffManagement.deleteError'));
-                        throw error;
-                    }
-                },
-            });
+        async (staff: UserProfile) => {
+            try {
+                const userId = staff.userId;
+                await UserService.deleteStaff(userId!);
+                toast.success(t('staffManagement.deleteSuccess'));
+                fetchStaffData();
+            } catch (error) {
+                console.error('Error deleting staff:', error);
+                toast.error(t('staffManagement.deleteError'));
+            }
         },
         [t]
     );
@@ -174,32 +182,81 @@ const StaffListPage = () => {
 
     const columns = useMemo(() => getStaffTableColumns(columnProps), [columnProps]);
 
+    const roleOptions = useMemo(() => {
+        const roles = new Set((staffData ?? []).flatMap((s) => s.roles ?? []));
+        return Array.from(roles)
+            .sort()
+            .map((role) => ({
+                value: role,
+                label: t(`staffManagement.form.fields.role.${role}`, { defaultValue: role }),
+            }));
+    }, [staffData, t]);
+
+    const statusOptions = useMemo(
+        () => [
+            { value: 'working', label: t('staffManagement.status.working') },
+            { value: 'notWorking', label: t('staffManagement.status.notWorking') },
+        ],
+        [t]
+    );
+
     const filteredStaffData = useMemo(() => {
         if (!staffData) return [];
-        if (!searchTerm.trim()) {
-            return staffData;
-        }
-
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
         return staffData.filter((staff) => {
             const fullname = staff.fullname?.toLowerCase() || '';
             const userCode = staff.userCode?.toLowerCase() || '';
             const email = staff.email?.toLowerCase() || '';
             const phone = staff.phoneNumber?.toLowerCase() || '';
-            const factory =
-                staff.accessibleFactories?.map((factory) => factory.factoryCode.toLowerCase()) ||
-                [];
-            return (
+            const spaces = [
+                ...(staff.accessibleSpaces?.map((s) => s.spaceName.toLowerCase()) || []),
+                ...(staff.accessibleSpaces?.map((s) => s.spaceCode.toLowerCase()) || []),
+            ];
+            const matchesSearch =
+                !lowerSearchTerm ||
                 fullname.includes(lowerSearchTerm) ||
                 userCode.includes(lowerSearchTerm) ||
                 email.includes(lowerSearchTerm) ||
                 phone.includes(lowerSearchTerm) ||
-                factory.some((f) => f.includes(lowerSearchTerm))
-            );
+                spaces.some((s) => s.includes(lowerSearchTerm));
+            const matchesRole = !roleFilter || (staff.roles ?? []).some((r) => r === roleFilter);
+            const isWorking = !staff.softDeleteMetaData?.isDeleted;
+            const matchesStatus =
+                !statusFilter || (statusFilter === 'working' ? isWorking : !isWorking);
+            return matchesSearch && matchesRole && matchesStatus;
         });
-    }, [staffData, searchTerm]);
+    }, [staffData, searchTerm, roleFilter, statusFilter]);
 
-    const fetchStaffData = async () => {
+    const filterFields: FilterField[] = useMemo(
+        () => [
+            {
+                key: 'role',
+                label: t('staffManagement.table.headers.role'),
+                value: roleFilter ?? '',
+                onChange: (val) => setRoleFilter(val || undefined),
+                type: 'select',
+                options: roleOptions,
+            },
+            {
+                key: 'status',
+                label: t('staffManagement.table.headers.status'),
+                value: statusFilter ?? '',
+                onChange: (val) => setStatusFilter(val || undefined),
+                type: 'select',
+                options: statusOptions,
+            },
+        ],
+        [t, roleFilter, statusFilter, roleOptions, statusOptions]
+    );
+
+    const handleResetFilters = useCallback(() => {
+        setRoleFilter(undefined);
+        setStatusFilter(undefined);
+    }, []);
+
+    const handleApplyFilters = useCallback(() => {}, []);
+
+    const fetchStaffData = useCallback(async () => {
         try {
             setLoading(true);
             const response = await UserService.getAllStaff();
@@ -210,26 +267,34 @@ const StaffListPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
-    const fetchFactories = async () => {
-        setFactoryLoading(true);
-        // API call disabled: FactoryService.getFactoriesSimple();
-        setFactoryOptions([]);
-        setFactoryLoading(false);
-    };
+    const fetchSpaces = useCallback(async () => {
+        try {
+            setSpaceLoading(true);
+            const spaces = await SpaceService.getSpacesByLevel(1);
+            const options: SelectOption[] = (spaces || []).map((space) => ({
+                value: space.spaceId,
+                label: space.spaceName
+                    ? `${space.spaceName} (${space.spaceCode})`
+                    : space.spaceCode,
+            }));
+            setSpaceOptions(options);
+            baseSpaceOptionsRef.current = options;
+        } catch (error) {
+            console.error('Error fetching spaces:', error);
+        } finally {
+            setSpaceLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         fetchStaffData();
-    }, []);
+        fetchSpaces();
+    }, [fetchStaffData, fetchSpaces]);
 
     const handleSubmit = async (data: StaffFormData, mode: 'create' | 'edit') => {
-        setConfirmModalState({
-            open: true,
-            type: mode,
-            pendingAction: () => executeSubmit(data, mode),
-        });
-        throw new Error('CONFIRMATION_PENDING');
+        await executeSubmit(data, mode);
     };
 
     const executeSubmit = async (data: StaffFormData, mode: 'create' | 'edit') => {
@@ -241,24 +306,36 @@ const StaffListPage = () => {
                       ? data.roles
                       : [data.roles];
 
-            const { accessibleFactoryIds, ...restData } = data;
-            const submitData: Partial<StaffFormData> & { roles: string[]; factoryIds?: number[] } =
-                {
-                    ...restData,
-                    roles,
-                    factoryIds: accessibleFactoryIds,
-                };
+            const selectedSpaceIds = data.accessibleSpaceIds || data.spaceIds || [];
+            const userId = mode === 'edit' ? modalState.data?.userId || data.userId : undefined;
 
-            if (mode === 'edit' && (!submitData.password || submitData.password.trim() === '')) {
-                delete submitData.password;
+            const submitData: Record<string, unknown> = {
+                address: data.address,
+                email: data.email,
+                fullname: data.fullname,
+                gender: data.gender,
+                phoneNumber: data.phoneNumber,
+                roles,
+                spaceIds: selectedSpaceIds,
+                userCode: data.userCode,
+                username: data.username,
+            };
+
+            if (mode === 'edit') {
+                if (userId) {
+                    submitData.userId = userId;
+                }
+            } else {
+                if (data.password) {
+                    submitData.password = data.password;
+                }
             }
 
             if (mode === 'create') {
                 await UserService.createStaff(submitData as unknown as Partial<UserProfile>);
                 toast.success(t('staffManagement.form.createSuccess'));
             } else {
-                if (modalState.data?.userId) {
-                    submitData.userId = modalState.data.userId;
+                if (userId) {
                     await UserService.updateStaff(submitData as unknown as UserProfile);
                     toast.success(t('staffManagement.form.updateSuccess'));
                 }
@@ -276,42 +353,13 @@ const StaffListPage = () => {
         }
     };
 
-    const handleConfirmAction = async () => {
-        if (confirmModalState.pendingAction) {
-            try {
-                setConfirmModalState((prev) => ({ ...prev, open: false }));
-                await confirmModalState.pendingAction();
-                setModalState((prev) => ({ ...prev, open: false }));
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            } catch (error) {
-                setConfirmModalState({
-                    open: false,
-                    type: 'create',
-                    pendingAction: null,
-                });
-            }
-        }
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmModalState({
-            open: false,
-            type: 'create',
-            pendingAction: null,
-        });
-    };
-
     const formFields = useMemo(
         () =>
             getStaffFormFields(t, modalState.mode, {
-                factoryOptions,
-                factoryLoading,
+                spaceOptions,
+                spaceLoading,
             }),
-        [t, modalState.mode, factoryOptions, factoryLoading]
+        [t, modalState.mode, spaceOptions, spaceLoading]
     );
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
@@ -344,6 +392,10 @@ const StaffListPage = () => {
                             value={searchTerm}
                             onChange={setSearchTerm}
                             width={250}
+                            showFilterIcon
+                            onFilterClick={() => setShowAdvancedFilters((prev) => !prev)}
+                            isFilterActive={showAdvancedFilters}
+                            activeFilterCount={activeFilterCount}
                         />
                         {checkPermissionSilent('create', 'staff') && (
                             <Button
@@ -374,6 +426,17 @@ const StaffListPage = () => {
                     ) : undefined
                 }
             />
+
+            {showAdvancedFilters && (
+                <AdvancedFilterPanel
+                    fields={filterFields}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                    resetLabel={t('common.reset')}
+                    applyLabel={t('common.search')}
+                    title={t('common.advancedFilters')}
+                />
+            )}
 
             <Card
                 style={{
@@ -425,7 +488,11 @@ const StaffListPage = () => {
 
             <EntityFormModal<StaffFormData>
                 open={modalState.open}
-                onOpenChange={(open) => setModalState({ ...modalState, open })}
+                onOpenChange={(open) => {
+                    setModalState({ ...modalState, open });
+                    // Reset spaceOptions to base level-1 list when closing
+                    if (!open) setSpaceOptions(baseSpaceOptionsRef.current);
+                }}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
                 initialData={modalState.data}
@@ -485,12 +552,12 @@ const StaffListPage = () => {
                             : '-',
                     },
                     {
-                        key: 'accessibleFactories',
+                        key: 'accessibleSpaces',
                         icon: <BankOutlined />,
-                        label: t('staffManagement.table.headers.accessibleFactories'),
-                        children: viewModalState.data?.accessibleFactories?.length
-                            ? viewModalState.data.accessibleFactories
-                                  .map((factory) => factory.factoryCode)
+                        label: t('staffManagement.table.headers.accessibleSpaces'),
+                        children: viewModalState.data?.accessibleSpaces?.length
+                            ? viewModalState.data.accessibleSpaces
+                                  .map((space) => space.spaceName || space.spaceCode)
                                   .join(', ')
                             : '-',
                     },
@@ -509,14 +576,6 @@ const StaffListPage = () => {
                             : t('staffManagement.status.working'),
                     },
                 ]}
-            />
-
-            <ConfirmModal
-                open={confirmModalState.open}
-                type={confirmModalState.type}
-                onConfirm={handleConfirmAction}
-                onCancel={handleCancelConfirm}
-                t={t}
             />
         </div>
     );

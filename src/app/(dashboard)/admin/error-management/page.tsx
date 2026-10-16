@@ -46,8 +46,7 @@ import { ErrorDetailModal } from './_components/ErrorDetailModal';
 import { ErrorInfoBar } from './_components/ErrorInfoBar';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import {
-    TimeFilterPopoverContent,
+import TimeFilterPopover, {
     PeriodFilterMode,
     TimeFilterApplyPayload,
     formatTimeFilterLabel,
@@ -98,7 +97,6 @@ function ErrorManagementContent() {
     // Time period filter state (default to all time)
     const [industryFilters, setIndustryFilters] = useState<IndustryFilter[]>([]);
     const [selectedTimePeriod, setSelectedTimePeriod] = useState<number | null>(null);
-    const [isTimeFilterOpen, setIsTimeFilterOpen] = useState<boolean>(false);
     const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode | null>(null);
     const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
     const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
@@ -179,7 +177,6 @@ function ErrorManagementContent() {
         setSelectedTimePeriod(payload.primaryFilterId);
         setSelectedStartDate(payload.startDate);
         setSelectedEndDate(payload.endDate);
-        setIsTimeFilterOpen(false);
         setPage(0);
     }, []);
 
@@ -188,40 +185,8 @@ function ErrorManagementContent() {
         setSelectedTimePeriod(null);
         setSelectedStartDate(null);
         setSelectedEndDate(null);
-        setIsTimeFilterOpen(false);
         setPage(0);
     }, []);
-
-    const timeFilterPopoverContent = useMemo(
-        () => (
-            <TimeFilterPopoverContent
-                currentMode={timeFilterMode}
-                currentPeriodId={selectedTimePeriod}
-                currentStartDate={selectedStartDate}
-                currentEndDate={selectedEndDate}
-                groupedOptions={groupedTimePeriodOptions}
-                industryFilters={industryFilters}
-                showShifts={false}
-                isMobile={isMobile}
-                isOpen={isTimeFilterOpen}
-                onApply={handleApplyTimeFilter}
-                onReset={handleResetTimeFilter}
-                onCancel={() => setIsTimeFilterOpen(false)}
-            />
-        ),
-        [
-            timeFilterMode,
-            selectedTimePeriod,
-            selectedStartDate,
-            selectedEndDate,
-            groupedTimePeriodOptions,
-            industryFilters,
-            isMobile,
-            isTimeFilterOpen,
-            handleApplyTimeFilter,
-            handleResetTimeFilter,
-        ]
-    );
 
     const handleSearchChange = useCallback((value: string) => {
         setSearchTerm(value.trim());
@@ -579,44 +544,18 @@ function ErrorManagementContent() {
                         />
 
                         {/* Time Filter Popover */}
-                        <Popover
-                            open={isTimeFilterOpen}
-                            onOpenChange={setIsTimeFilterOpen}
-                            trigger="click"
+                        <TimeFilterPopover
+                            currentMode={timeFilterMode ?? 'PRESET'}
+                            currentPeriodId={selectedTimePeriod}
+                            currentShiftId={null}
+                            currentStartDate={selectedStartDate ?? ''}
+                            currentEndDate={selectedEndDate ?? ''}
+                            groupedOptions={groupedTimePeriodOptions}
+                            industryFilters={industryFilters}
+                            showShifts={false}
+                            onApply={handleApplyTimeFilter}
                             placement="bottomRight"
-                            content={timeFilterPopoverContent}
-                        >
-                            <Tooltip title={activeTimePeriodLabel}>
-                                <Button
-                                    icon={<CalendarOutlined />}
-                                    style={{
-                                        borderRadius: token.borderRadiusSM,
-                                        width: 220,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'flex-start',
-                                        gap: 6,
-                                    }}
-                                >
-                                    <span
-                                        style={{ flexShrink: 0, color: token.colorTextSecondary }}
-                                    >
-                                        {t('timeFilter.time', { defaultValue: 'Thời gian' })}:
-                                    </span>
-                                    <Typography.Text
-                                        ellipsis
-                                        style={{
-                                            maxWidth: 125,
-                                            color: 'inherit',
-                                            lineHeight: 'inherit',
-                                            fontWeight: 500,
-                                        }}
-                                    >
-                                        {activeTimePeriodLabel ?? t('common.filter')}
-                                    </Typography.Text>
-                                </Button>
-                            </Tooltip>
-                        </Popover>
+                        />
 
                         <Tooltip title={t('errorManagement.header.btnRefresh')}>
                             <Button

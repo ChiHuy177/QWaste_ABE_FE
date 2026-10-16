@@ -49,6 +49,10 @@
         "total": "Total",
         "download": "Download",
         "exportExcel": "Export Excel",
+        "exportSuccess": "Excel exported successfully!",
+        "exportError": "Failed to export Excel file",
+        "noDataToExport": "No data available to export!",
+        "featureUnderDevelopment": "Feature under development",
         "view": "View",
         "details": "Details",
         "settings": "Settings",
@@ -430,7 +434,14 @@
             "dayTypeLabel": "Day Type",
             "statusWorking": "Working",
             "statusOff": "Off",
+            "shiftPatternLabel": "Shift Pattern",
+            "selectPatternPlaceholder": "Select shift pattern",
+            "defaultPatternTag": "Default",
             "btnApply": "Apply"
+        },
+        "errors": {
+            "patternRequired": "Please select a shift pattern for working day",
+            "patternRequiredDate": "Please select a shift pattern for working day ({{date}})"
         },
         "drawer": {
             "bulkEditTitle": "Edit Selected Date(s)",
@@ -2483,6 +2494,7 @@
         "updateError": "Failed to update mold. Please try again.",
         "table": {
             "headers": {
+                "index": "No.",
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
                 "outputPerShot": "Cavities",
@@ -2535,6 +2547,35 @@
                 "save": "Save Changes",
                 "saving": "Saving..."
             }
+        },
+        "import": {
+            "button": "Import Excel",
+            "modalTitle": "Import Mold Catalog from Excel",
+            "dragText": "Click or drag Excel file to this area to upload",
+            "hint": "Only .xlsx files are supported, maximum size 10 MB.",
+            "fileInvalidType": "Only .xlsx files are accepted",
+            "fileTooLarge": "File size exceeds the 10 MB limit",
+            "downloadTemplate": "Download Template",
+            "templateGuide": "Excel file format guidelines:",
+            "guideRow13": "Rows 1 – 3: Freeform notes/title — ignored by the system.",
+            "guideRow4": "Row 4: Required headers: Mã khuôn, Tên khuôn, CAV, Loại.",
+            "guideRow5": "Rows 5+: Consecutive data rows, do not leave empty rows in between.",
+            "guideAllOrNothing": "All-or-Nothing policy: If any row fails validation, 0 molds are saved. Please fix all errors and re-upload.",
+            "selectOtherFile": "Choose another file",
+            "uploading": "Importing data...",
+            "submitButton": "Upload & Import",
+            "emptyDataWarning": "The file contains no data rows",
+            "errorsTitle": "Data validation errors detected",
+            "errorsDescription": "No molds were saved. Please fix the {{count}} errors below and re-upload the file.",
+            "errorTable": {
+                "rowIndex": "Row",
+                "column": "Column",
+                "message": "Error Details",
+                "errorCountUnit": "errors"
+            },
+            "moldsCountUnit": "molds",
+            "success": "Successfully imported {{count}} molds.",
+            "failed": "Failed to import mold catalog"
         }
     },
     "operationTypeManagement": {
@@ -2548,6 +2589,7 @@
         "updateError": "Failed to update operation type. Please try again.",
         "table": {
             "headers": {
+                "index": "No.",
                 "operationTypeCode": "Operation Type Code",
                 "operationTypeName": "Operation Type Name",
                 "description": "Description",
@@ -2628,6 +2670,7 @@
         },
         "table": {
             "headers": {
+                "index": "No.",
                 "machineImage": "Machine Image",
                 "machineName": "Machine Name",
                 "machineType": "Machine Type",
@@ -3154,7 +3197,11 @@
             "middleGroup": "Middle Group",
             "noMatch": "No factories match your filter",
             "searchPlaceholder": "Search factories...",
-            "selectPlaceholder": "Select factory"
+            "selectPlaceholder": "Select factory",
+            "highestError": "Highest Error",
+            "defaultOrder": "Default",
+            "startDate": "Start date",
+            "endDate": "End date"
         },
         "table": {
             "title": {
@@ -3175,7 +3222,8 @@
                 "duration": "Duration",
                 "machine": "Machine",
                 "errorName": "Error Name",
-                "status": "Status"
+                "status": "Status",
+                "errorReason": "Error Cause"
             },
             "noErrorData": "No error data available"
         },
@@ -3236,14 +3284,35 @@
         "modal": {
             "title": "Time Analytics",
             "timeAnalytics": "Time Analytics",
-            "back": "Back"
+            "back": "Back",
+            "backToList": "Back to machine list",
+            "machineListTab": "Machine List ({{count}})",
+            "machineListTabTitle": "Machine List",
+            "incidentDetailTab": "Incident Details",
+            "incidentDetailTabTitle": "Incident Details",
+            "allPlant": "Entire Plant",
+            "allWorkshops": "All Workshops",
+            "machinesWithError": "{{count}} with error",
+            "totalMachines": "{{count}} machines",
+            "totalErrorTime": "Total error time: {{time}}",
+            "operatingNormally": "Operating normally (0h error)",
+            "errorBadge": "{{time}} error",
+            "errorHistoryTitle": "Incident & Error History",
+            "incidentCount": "{{count}} incidents",
+            "noIncidentsInRange": "No incidents in selected date range",
+            "noErrorData": "No error incidents occurred",
+            "stableOperationDesc": "Device operated stably during selected period",
+            "selectMachinePrompt": "Please select a machine to view details",
+            "unknownIncident": "Unknown machine stop incident",
+            "unrecordedReason": "Unrecorded"
         },
         "allFactories": "All factories",
         "emptyState": "No space monitoring data available. Please select filters and try again.",
         "factoryLabel": "Factory",
         "offlineTime": "Offline time",
         "onlineTime": "Online time",
-        "viewZones": "View zones in this factory"
+        "viewZones": "View zones in this factory",
+        "machines": "Machine List"
     },
     "taskBoard": {
         "title": "CNC Task Management",
@@ -4051,6 +4120,7 @@
         "table": {
             "headers": {
                 "machineName": "Machine Name",
+                "machineCode": "Machine Code",
                 "factoryName": "Factory Name",
                 "operatorCount": "Operator Count",
                 "notes": "Notes",
@@ -4788,7 +4858,8 @@
         "floor_map": "Floor Map",
         "error_management": "Error & Incident Management",
         "all": "All",
-        "other": "Other"
+        "other": "Other",
+        "production_overview": "Production Overview"
     },
     "stepTemplates": "Step templates",
     "timeFilter": {
@@ -4990,6 +5061,203 @@
             "yearLabel": "Year {{year}}",
             "refreshData": "Refresh data",
             "apply": "Apply"
+        }
+    },
+    "timeFilter": {
+        "title": "Time",
+        "timeRange": "Time range",
+        "quick": "Quick",
+        "custom": "Custom",
+        "shifts": "Shifts",
+        "allShifts": "All",
+        "active": "Active",
+        "singleDayShiftOnlyTooltip": "Shift filtering is only supported when viewing a single day",
+        "dateRangeAllShiftsWarning": "(*) Date range: viewing all shifts by default (individual shift selection disabled).",
+        "noPresetsConfigured": "No presets configured yet.",
+        "year": "Year",
+        "week": "Week",
+        "quarter": "Quarter",
+        "selectWeek": "Select week",
+        "selectQuarter": "Select quarter",
+        "weekOption": "Week {{week}}",
+        "quarterOption": "Quarter {{quarter}}",
+        "weekRangeChip": "Week {{week}}/{{year}}: {{range}}",
+        "quarterRangeChip": "Quarter {{quarter}}/{{year}}: {{range}}",
+        "noRangeSelected": "No time range selected yet",
+        "optionalAutoFill": "(optional — auto-filled if skipped)",
+        "groupBy": "Group by",
+        "labelStyle": "Label style",
+        "labelStyleFor": "Label style for \"{{grain}}\"",
+        "selected": "Selected"
+    },
+    "productionOverview": {
+        "title": "Production Overview",
+        "header": {
+            "activeMachines": "machines active",
+            "updatedAt": "Updated at"
+        },
+        "filters": {
+            "selectFactory": "Select factory",
+            "time": "Time",
+            "selectShiftPeriod": "SELECT SHIFT / PERIOD",
+            "customDateRange": "Custom Date Range",
+            "dayShift": "Day shift"
+        },
+        "actions": {
+            "refreshData": "Refresh data",
+            "refreshSuccess": "Data refreshed successfully",
+            "exportReport": "Export Report",
+            "preparingReport": "Preparing overview report...",
+            "exportSuccess": "Report exported successfully!",
+            "exportError": "Failed to export report"
+        },
+        "kpi": {
+            "overallPlantOee": "PLANT OVERALL EFFICIENCY",
+            "operatingRate": "OPERATING RATE",
+            "maxCapacity": "MAX CAPACITY",
+            "actualCapacity": "ACTUAL CAPACITY",
+            "actualOperating": "ACTUAL OPERATING",
+            "downtimeDuration": "DOWNTIME DURATION",
+            "target": "Target",
+            "vsYesterday": "vs yesterday",
+            "totalDowntime": "DOWNTIME DURATION",
+            "runtimeDesc": "Cumulative machine runtime",
+            "minutes": "mins",
+            "minutesOverTarget": "mins over target",
+            "hours": "hours",
+            "hoursOverTarget": "hours over target",
+            "overTarget": "over target",
+            "yieldRate": "YIELD RATE",
+            "vsPlan": "vs planned target",
+            "actualProduction": "ACTUAL OUTPUT",
+            "planShort": "Plan",
+            "vsMaxCapacity": "vs max capacity",
+            "withinLimit": "Within allowable limit",
+            "designBenchmark": "100% design benchmark",
+            "viewErrorAnalytics": "Click to view detailed error analytics"
+        },
+        "charts": {
+            "oeeByMachine": "Machine Efficiency",
+            "planVsActualByMachine": "Plan vs Actual by Machine",
+            "outputPcs": "Production Output (pcs)",
+            "planned": "Planned",
+            "actual": "Actual",
+            "planVsActualBySku": "Plan vs Actual Output by SKU",
+            "planVsActualSkuDesc": "Plan vs Actual comparison by product SKU",
+            "planVsActualByMold": "Plan vs Actual Output by Mold",
+            "planVsActualMoldDesc": "Plan vs Actual comparison by mold",
+            "notAvailable": "N/A",
+            "noData": "No data available",
+            "machineName": "Machine Name",
+            "machineCode": "Machine Code",
+            "productName": "Product Name",
+            "productCode": "Product Code",
+            "efficiency": "Efficiency",
+            "quantity": "Quantity",
+            "pieces": "pcs",
+            "completionRate": "Completion Rate",
+            "deficit": "Deficit",
+            "surplus": "Exceeded",
+            "rank": "Rank",
+            "showingCount": "Showing {{count}}/{{total}} machines",
+            "filterOptions": {
+                "all": "All Machines",
+                "top10High": "Top 10 Highest Efficiency",
+                "top10Low": "Top 10 Lowest Efficiency",
+                "targetMet": "Target Met (≥85%)",
+                "needsImprove": "Needs Improvement (<70%)",
+                "top10Output": "Top 10 Highest Output",
+                "top10LowOutput": "Top 10 Lowest Output",
+                "top10Deficit": "Top 10 Largest Deficit",
+                "top10Rate": "Top 10 Completion Rate"
+            }
+        },
+        "machineDetail": {
+            "backToOverview": "Overview",
+            "selectMachine": "Select Machine",
+            "runningSku": "Running SKU",
+            "operator": "Operator",
+            "shift": "Shift",
+            "statusRunning": "Running",
+            "statusStopped": "Stopped",
+            "hourlyOutput": "Hourly Production Output",
+            "hourlyOutputDesc": "Actual output per hour during shift",
+            "dailyOutput": "Daily Production Output",
+            "dailyOutputDesc": "Plan vs Actual comparison by day",
+            "weeklyOutput": "Weekly Production Output",
+            "weeklyOutputDesc": "Plan vs Actual comparison by week",
+            "monthlyOutput": "Monthly Production Output",
+            "monthlyOutputDesc": "Plan vs Actual comparison by month",
+            "recent7DaysEfficiency": "7-Day Efficiency Trend",
+            "recent7DaysEfficiencyDesc": "Efficiency trend and target achievement rate",
+            "actualOutput": "Actual",
+            "plannedOutput": "Planned",
+            "efficiency": "Efficiency",
+            "pcsPerHour": "pcs/h",
+            "pcsPerDay": "pcs/day",
+            "pcsPerWeek": "pcs/week",
+            "pcsPerMonth": "pcs/month",
+            "maxCapacityHoursLabel": "Planned (h)",
+            "actualOperatingHoursLabel": "Actual runtime (h)",
+            "operatingRatioLabel": "Efficiency (%)",
+            "productionRatio": "Production Ratio",
+            "averageShort": "Avg",
+            "machineEfficiencyTitle": "Machine Operating Efficiency",
+            "actualOnlyNotice": "Actual output only",
+            "pcs": "pcs"
+        },
+        "performanceReport": {
+            "title": "Machine Performance Timeline Report",
+            "subtitle": "Compare planned working hours, actual runtime, and efficiency percentage per machine",
+            "viewChart": "Chart",
+            "viewMatrix": "Matrix",
+            "allMachines": "All Machines (Aggregated)",
+            "selectMachine": "Filter by Machine",
+            "plannedHours": "Planned",
+            "runtimeHours": "Actual",
+            "downtimeHours": "Downtime",
+            "efficiency": "Efficiency",
+            "notApplicable": "N/A",
+            "hoursUnit": "h",
+            "granularityHour": "Hourly",
+            "granularityDay": "Daily",
+            "granularityWeek": "Weekly",
+            "granularityMonth": "Monthly",
+            "targetMet": "Target Met (≥85%)",
+            "improveArea": "Improvement Area (70–84%)",
+            "needImprove": "Needs Improvement (<70%)",
+            "noSchedule": "N/A (Off-shift / No Plan)",
+            "noData": "No machine performance data available for this period"
+        },
+        "downtimeModal": {
+            "title": "Time Analytics",
+            "allWorkshops": "All Workshops",
+            "searchPlaceholder": "Search machines...",
+            "deviceList": "Device List",
+            "errorMachinesBadge": "{{count}} machines with error",
+            "totalMachinesBadge": "{{count}} machines",
+            "mostErrors": "Most Errors",
+            "defaultOrder": "Default",
+            "workshopTag": "Workshop",
+            "totalErrorTime": "Total downtime: {{time}}",
+            "incidentHistory": "Incident History & Alerts",
+            "incidentCount": "{{count}} incidents",
+            "startDate": "From Date",
+            "endDate": "To Date",
+            "colIncidentCode": "Incident Code",
+            "colStart": "Start Time",
+            "colErrorName": "Error Name",
+            "colRootCause": "Root Cause",
+            "colDuration": "Duration",
+            "totalDowntime": "Total downtime: {{time}}",
+            "ongoing": "Ongoing",
+            "unrecordedReason": "Unrecorded",
+            "noIncidents": "No incidents found in the selected period",
+            "noMachinesFound": "No matching machines found",
+            "selectMachinePrompt": "Please select a machine to view details",
+            "machinesCount": "{{count}} Machines",
+            "operatingNormally": "Operating normally (0h downtime)",
+            "backToList": "Back to machine list"
         }
     }
 }

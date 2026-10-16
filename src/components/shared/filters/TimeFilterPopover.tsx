@@ -1,19 +1,29 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Button, DatePicker, Divider, Radio, Space, Tag, Typography, theme } from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    Button,
+    DatePicker,
+    Divider,
+    Grid,
+    Popover,
+    Radio,
+    Space,
+    Tag,
+    theme,
+    Tooltip,
+    Typography,
+    Spin,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import dayjs, { Dayjs } from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { IndustryFilter } from '@/types/IndustryFilter';
+import { UtilsService } from '@/services/UtilsService';
 
 dayjs.extend(isoWeek);
 dayjs.extend(quarterOfYear);
-dayjs.extend(isSameOrBefore);
-dayjs.extend(isSameOrAfter);
 
 export type PeriodFilterMode = 'PRESET' | 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR' | 'CUSTOM_RANGE';
 
@@ -25,136 +35,23 @@ export interface TimeFilterApplyPayload {
     endDate: string;
 }
 
-export interface TimeFilterPopoverContentProps {
-    currentMode: PeriodFilterMode | null;
-    currentPeriodId?: number | null;
-    currentShiftId?: number | null;
-    currentStartDate: string | null;
-    currentEndDate: string | null;
+export interface TimeFilterPopoverProps {
+    currentMode: PeriodFilterMode;
+    currentPeriodId: number | null;
+    currentShiftId: number | null;
+    currentStartDate: string;
+    currentEndDate: string;
     groupedOptions: {
-        SHIFT?: { label: string; value: number }[];
-        PERIOD?: { label: string; value: number }[];
+        SHIFT?: { label: string; value: number; sortOrder?: number }[];
+        PERIOD: { label: string; value: number; sortOrder?: number }[];
     };
     industryFilters: IndustryFilter[];
     isShiftActive?: (filter: IndustryFilter) => boolean;
-
-    // Feature toggles for flexibility across different modules
-    showShifts?: boolean;
-    showPresets?: boolean;
-    allowedModes?: PeriodFilterMode[];
-    title?: string;
-
-    isMobile?: boolean;
-    isOpen: boolean;
     onApply: (payload: TimeFilterApplyPayload) => void;
-    onReset?: () => void;
-    onCancel: () => void;
-    defaultDate?: string;
+    placement?: 'bottomLeft' | 'bottomRight';
+    showShifts?: boolean;
 }
 
-/**
- * Computes start and end dates formatted as YYYY-MM-DD for a given mode.
- */
-export function computeDateRangeForMode(
-    mode: PeriodFilterMode,
-    values: {
-        dateRange: [Dayjs, Dayjs];
-        week: Dayjs;
-        month: Dayjs;
-        quarter: Dayjs;
-        year: Dayjs;
-    },
-    selectedPeriodFilter?: IndustryFilter | null
-): [string, string] {
-    switch (mode) {
-        case 'PRESET': {
-            const today = dayjs();
-            const code = selectedPeriodFilter?.periodCode?.toUpperCase();
-            if (code === 'TODAY') {
-                return [today.format('YYYY-MM-DD'), today.format('YYYY-MM-DD')];
-            }
-            if (code === 'YESTERDAY') {
-                const yest = today.subtract(1, 'day');
-                return [yest.format('YYYY-MM-DD'), yest.format('YYYY-MM-DD')];
-            }
-            if (code === 'THIS_WEEK' || code === 'WEEK') {
-                return [
-                    today.startOf('isoWeek').format('YYYY-MM-DD'),
-                    today.endOf('isoWeek').format('YYYY-MM-DD'),
-                ];
-            }
-            if (code === 'LAST_WEEK') {
-                const lastW = today.subtract(1, 'week');
-                return [
-                    lastW.startOf('isoWeek').format('YYYY-MM-DD'),
-                    lastW.endOf('isoWeek').format('YYYY-MM-DD'),
-                ];
-            }
-            if (code === 'THIS_MONTH' || code === 'MONTH') {
-                return [
-                    today.startOf('month').format('YYYY-MM-DD'),
-                    today.endOf('month').format('YYYY-MM-DD'),
-                ];
-            }
-            if (code === 'LAST_MONTH') {
-                const lastM = today.subtract(1, 'month');
-                return [
-                    lastM.startOf('month').format('YYYY-MM-DD'),
-                    lastM.endOf('month').format('YYYY-MM-DD'),
-                ];
-            }
-            if (code === 'LAST_7_DAYS') {
-                return [today.subtract(6, 'day').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')];
-            }
-            if (code === 'LAST_30_DAYS') {
-                return [today.subtract(29, 'day').format('YYYY-MM-DD'), today.format('YYYY-MM-DD')];
-            }
-            if (code === 'THIS_QUARTER' || code === 'QUARTER') {
-                return [
-                    today.startOf('quarter').format('YYYY-MM-DD'),
-                    today.endOf('quarter').format('YYYY-MM-DD'),
-                ];
-            }
-            if (code === 'THIS_YEAR' || code === 'YEAR') {
-                return [
-                    today.startOf('year').format('YYYY-MM-DD'),
-                    today.endOf('year').format('YYYY-MM-DD'),
-                ];
-            }
-            return [today.format('YYYY-MM-DD'), today.format('YYYY-MM-DD')];
-        }
-        case 'WEEK':
-            return [
-                values.week.startOf('isoWeek').format('YYYY-MM-DD'),
-                values.week.endOf('isoWeek').format('YYYY-MM-DD'),
-            ];
-        case 'MONTH':
-            return [
-                values.month.startOf('month').format('YYYY-MM-DD'),
-                values.month.endOf('month').format('YYYY-MM-DD'),
-            ];
-        case 'QUARTER':
-            return [
-                values.quarter.startOf('quarter').format('YYYY-MM-DD'),
-                values.quarter.endOf('quarter').format('YYYY-MM-DD'),
-            ];
-        case 'YEAR':
-            return [
-                values.year.startOf('year').format('YYYY-MM-DD'),
-                values.year.endOf('year').format('YYYY-MM-DD'),
-            ];
-        case 'CUSTOM_RANGE':
-        default:
-            return [
-                values.dateRange[0].format('YYYY-MM-DD'),
-                values.dateRange[1].format('YYYY-MM-DD'),
-            ];
-    }
-}
-
-/**
- * Formats a clean human-readable label for the time filter button.
- */
 export function formatTimeFilterLabel({
     mode,
     startDate,
@@ -233,42 +130,89 @@ export function formatTimeFilterLabel({
     }
 
     if (mode === 'CUSTOM_RANGE') {
-        const rangeLabel =
-            startDate && endDate
-                ? `${dayjs(startDate).format('DD/MM')} → ${dayjs(endDate).format('DD/MM')}`
-                : '';
-        return shiftLabel ? `${rangeLabel} • ${shiftLabel}` : rangeLabel;
+        const startStr = startDate ? dayjs(startDate).format('DD/MM') : '';
+        const endStr = endDate ? dayjs(endDate).format('DD/MM') : '';
+        const dateLabel = `${startStr} → ${endStr}`;
+        return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
     }
 
-    if (mode === 'PRESET') {
-        const primaryFilter = industryFilters.find((f) => f.filterId === periodId);
-        const primaryLabel = primaryFilter
-            ? lang === 'vi'
-                ? primaryFilter.displayNameVi
-                : primaryFilter.displayNameEn
-            : null;
+    const period = industryFilters.find((f) => f.filterId === periodId);
+    const periodLabel = period
+        ? lang === 'vi'
+            ? period.displayNameVi
+            : period.displayNameEn
+        : null;
 
-        if (primaryLabel && shiftLabel) {
-            return `${primaryLabel} • ${shiftLabel}`;
-        }
-        return primaryLabel ?? shiftLabel ?? null;
-    }
-
-    return t('timeFilter.all', { defaultValue: 'Tất cả thời gian' });
+    if (!periodLabel) return shiftLabel;
+    return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
 }
 
-// 1. Shift Section
+const { useBreakpoint } = Grid;
+
+function safeDayjs(date?: string | Dayjs | null): Dayjs {
+    if (!date) return dayjs();
+    const d = dayjs(date);
+    return d.isValid() ? d : dayjs();
+}
+
+function computeDateRangeForMode(
+    mode: PeriodFilterMode,
+    values: {
+        dateRange: [Dayjs, Dayjs];
+        week: Dayjs;
+        month: Dayjs;
+        quarter: Dayjs;
+        year: Dayjs;
+    }
+): [string, string] {
+    switch (mode) {
+        case 'WEEK':
+            return [
+                values.week.startOf('isoWeek').format('YYYY-MM-DD'),
+                values.week.endOf('isoWeek').format('YYYY-MM-DD'),
+            ];
+        case 'MONTH':
+            return [
+                values.month.startOf('month').format('YYYY-MM-DD'),
+                values.month.endOf('month').format('YYYY-MM-DD'),
+            ];
+        case 'QUARTER':
+            return [
+                values.quarter.startOf('quarter').format('YYYY-MM-DD'),
+                values.quarter.endOf('quarter').format('YYYY-MM-DD'),
+            ];
+        case 'YEAR':
+            return [
+                values.year.startOf('year').format('YYYY-MM-DD'),
+                values.year.endOf('year').format('YYYY-MM-DD'),
+            ];
+        case 'CUSTOM_RANGE':
+        case 'PRESET':
+        default:
+            return [
+                values.dateRange[0].format('YYYY-MM-DD'),
+                values.dateRange[1].format('YYYY-MM-DD'),
+            ];
+    }
+}
+
+// 1. Memoized Shift Section
 interface ShiftSectionProps {
     shiftId: number | null;
     onChange: (id: number | null) => void;
-    groupedShifts: { label: string; value: number }[];
+    groupedShifts: { label: string; value: number; sortOrder?: number }[];
     industryFilters: IndustryFilter[];
-    isShiftActive?: (filter: IndustryFilter) => boolean;
+    isShiftActive: (filter: IndustryFilter) => boolean;
     isMobile: boolean;
     title: string;
     allShiftsLabel: string;
     activeTagLabel: string;
+    isSingleDay?: boolean;
+    singleDayWarning?: string;
+    isLoading?: boolean;
 }
+
+const ALL_SHIFTS_RADIO_VALUE = '';
 
 const ShiftSection = React.memo<ShiftSectionProps>(
     ({
@@ -281,11 +225,18 @@ const ShiftSection = React.memo<ShiftSectionProps>(
         title,
         allShiftsLabel,
         activeTagLabel,
+        isSingleDay = true,
+        singleDayWarning,
+        isLoading = false,
     }) => {
-        if (groupedShifts.length === 0) return null;
+        const { token } = theme.useToken();
+
+        const sortedShifts = useMemo(() => {
+            return [...groupedShifts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        }, [groupedShifts]);
 
         return (
-            <>
+            <div>
                 <Typography.Text
                     type="secondary"
                     style={{
@@ -299,56 +250,96 @@ const ShiftSection = React.memo<ShiftSectionProps>(
                 >
                     {title}
                 </Typography.Text>
-                <Radio.Group
-                    value={shiftId}
-                    onChange={(e) => onChange(e.target.value as number | null)}
-                    style={{ width: '100%' }}
-                >
-                    <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                        <Radio value={null}>{allShiftsLabel}</Radio>
-                        {groupedShifts.map((option) => {
-                            const filter = industryFilters.find((f) => f.filterId === option.value);
-                            const isActive = Boolean(filter && isShiftActive?.(filter));
+                {!isSingleDay && singleDayWarning && (
+                    <Typography.Text
+                        type="secondary"
+                        style={{
+                            fontSize: 11,
+                            display: 'block',
+                            marginBottom: 6,
+                            color: token.colorWarning,
+                        }}
+                    >
+                        {singleDayWarning}
+                    </Typography.Text>
+                )}
+                {isLoading ? (
+                    <div style={{ padding: '8px 0', textAlign: 'center' }}>
+                        <Spin size="small" />
+                    </div>
+                ) : (
+                    <Radio.Group
+                        value={shiftId ?? ALL_SHIFTS_RADIO_VALUE}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            onChange(val === ALL_SHIFTS_RADIO_VALUE ? null : (val as number));
+                        }}
+                        disabled={!isSingleDay}
+                        style={{ width: '100%' }}
+                    >
+                        <Space orientation="vertical" size={6} style={{ width: '100%' }}>
+                            <Radio value={ALL_SHIFTS_RADIO_VALUE}>{allShiftsLabel}</Radio>
+                            {isSingleDay && sortedShifts.length === 0 && (
+                                <Typography.Text
+                                    type="secondary"
+                                    style={{ fontSize: 12, paddingLeft: 24, display: 'block' }}
+                                >
+                                    {/* helper note */}
+                                </Typography.Text>
+                            )}
+                            {sortedShifts.map((option) => {
+                                const filter = industryFilters.find(
+                                    (f) => f.filterId === option.value
+                                );
+                                const isActive = filter && isShiftActive(filter);
 
-                            return (
-                                <Radio key={option.value} value={option.value}>
-                                    <Space size={4}>
-                                        <Typography.Text
-                                            ellipsis
-                                            style={{
-                                                maxWidth: isMobile ? 'calc(100vw - 160px)' : 200,
-                                                verticalAlign: 'middle',
-                                            }}
-                                        >
-                                            {option.label}
-                                        </Typography.Text>
-                                        {isActive && (
-                                            <Tag
-                                                color="green"
-                                                style={{
-                                                    margin: 0,
-                                                    fontSize: 10,
-                                                    lineHeight: '16px',
-                                                    padding: '0 5px',
-                                                }}
-                                            >
-                                                {activeTagLabel}
-                                            </Tag>
-                                        )}
-                                    </Space>
-                                </Radio>
-                            );
-                        })}
-                    </Space>
-                </Radio.Group>
-                <Divider style={{ margin: '10px 0' }} />
-            </>
+                                return (
+                                    <Tooltip
+                                        key={option.value}
+                                        title={!isSingleDay ? singleDayWarning : undefined}
+                                    >
+                                        <Radio value={option.value} disabled={!isSingleDay}>
+                                            <Space size={4}>
+                                                <Typography.Text
+                                                    ellipsis
+                                                    style={{
+                                                        maxWidth: isMobile
+                                                            ? 'calc(100vw - 160px)'
+                                                            : 200,
+                                                        verticalAlign: 'middle',
+                                                        color: !isSingleDay ? 'inherit' : undefined,
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </Typography.Text>
+                                                {isActive && (
+                                                    <Tag
+                                                        color="green"
+                                                        style={{
+                                                            margin: 0,
+                                                            fontSize: 10,
+                                                            lineHeight: '16px',
+                                                            padding: '0 5px',
+                                                        }}
+                                                    >
+                                                        {activeTagLabel}
+                                                    </Tag>
+                                                )}
+                                            </Space>
+                                        </Radio>
+                                    </Tooltip>
+                                );
+                            })}
+                        </Space>
+                    </Radio.Group>
+                )}
+            </div>
         );
     }
 );
 ShiftSection.displayName = 'ShiftSection';
 
-// 2. Mode Button Item
+// 2. Memoized Mode Button Item
 interface ModeButtonItemProps {
     label: string;
     value: PeriodFilterMode;
@@ -379,7 +370,7 @@ const ModeButtonItem = React.memo<ModeButtonItemProps>(({ label, value, isSelect
 });
 ModeButtonItem.displayName = 'ModeButtonItem';
 
-// 3. Mode Selection Section
+// 3. Memoized Mode Selection Section
 interface ModeSelectionSectionProps {
     currentMode: PeriodFilterMode;
     onSelectMode: (mode: PeriodFilterMode) => void;
@@ -428,7 +419,7 @@ const ModeSelectionSection = React.memo<ModeSelectionSectionProps>(
 );
 ModeSelectionSection.displayName = 'ModeSelectionSection';
 
-// 4. Preset Pill Item
+// 4. Memoized Preset Pill Item
 interface PresetPillItemProps {
     label: string;
     value: number;
@@ -487,11 +478,11 @@ const PresetPillItem = React.memo<PresetPillItemProps>(
 );
 PresetPillItem.displayName = 'PresetPillItem';
 
-// 5. Preset Grid Section
+// 5. Memoized Preset Grid Section
 interface PresetGridSectionProps {
     selectedPeriodId: number | null;
     onSelectPeriod: (id: number) => void;
-    periodOptions: { label: string; value: number }[];
+    periodOptions: { label: string; value: number; sortOrder?: number }[];
     title: string;
     colorPrimary: string;
     colorPrimaryBg: string;
@@ -514,6 +505,10 @@ const PresetGridSection = React.memo<PresetGridSectionProps>(
         colorBorderSecondary,
         colorFillQuaternary,
     }) => {
+        const sortedPeriodOptions = useMemo(() => {
+            return [...periodOptions].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        }, [periodOptions]);
+
         return (
             <div
                 style={{
@@ -537,7 +532,7 @@ const PresetGridSection = React.memo<PresetGridSectionProps>(
                     {title}
                 </Typography.Text>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                    {periodOptions.map((option) => (
+                    {sortedPeriodOptions.map((option) => (
                         <PresetPillItem
                             key={option.value}
                             label={option.label}
@@ -558,9 +553,9 @@ const PresetGridSection = React.memo<PresetGridSectionProps>(
 );
 PresetGridSection.displayName = 'PresetGridSection';
 
-// 6. Footer Actions
+// 6. Memoized Footer Actions
 interface FooterActionsProps {
-    onReset?: () => void;
+    onReset: () => void;
     onCancel: () => void;
     onApply: () => void;
     isApplyDisabled: boolean;
@@ -575,7 +570,7 @@ const FooterActions = React.memo<FooterActionsProps>(
             <>
                 <Divider style={{ margin: '12px 0' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    {onReset ? <Button onClick={onReset}>{resetLabel}</Button> : <div />}
+                    <Button onClick={onReset}>{resetLabel}</Button>
                     <div style={{ display: 'flex', gap: 8 }}>
                         <Button onClick={onCancel}>{cancelLabel}</Button>
                         <Button type="primary" onClick={onApply} disabled={isApplyDisabled}>
@@ -589,188 +584,253 @@ const FooterActions = React.memo<FooterActionsProps>(
 );
 FooterActions.displayName = 'FooterActions';
 
-/**
- * Shared TimeFilterPopoverContent component.
- * Supports configurable sections (showShifts, showPresets, allowedModes).
- */
-export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> = ({
+// Self-contained Popover: owns the trigger Button and open state itself, unlike the
+// previous split (page.tsx wired Popover + trigger + isOpen, this file only rendered
+// the inner content). One instantiation per breakpoint still needed for the differing
+// trigger layout (block+no-tooltip on mobile vs fixed-width+Tooltip on desktop) — the
+// caller picks that via `placement`, everything else adapts internally via isMobile.
+const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     currentMode,
-    currentPeriodId = null,
-    currentShiftId = null,
+    currentPeriodId,
+    currentShiftId,
     currentStartDate,
     currentEndDate,
     groupedOptions,
     industryFilters,
-    isShiftActive,
-    showShifts = true,
-    showPresets = true,
-    allowedModes,
-    title,
-    isMobile = false,
-    isOpen,
+    isShiftActive = () => false,
     onApply,
-    onReset,
-    onCancel,
-    defaultDate = '2025-08-25',
+    placement = 'bottomRight',
+    showShifts = true,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { token } = theme.useToken();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
-    const periodOptions = groupedOptions.PERIOD || [];
-    const shiftOptions = groupedOptions.SHIFT || [];
-    const canShowShifts = showShifts && shiftOptions.length > 0;
-    const canShowPresets = showPresets && periodOptions.length > 0;
-
-    const baseDate = useMemo(() => {
-        if (currentStartDate) return dayjs(currentStartDate);
-        return dayjs(defaultDate);
-    }, [currentStartDate, defaultDate]);
-
-    // Available mode list filtered by allowedModes and availability
-    const modeButtons = useMemo((): { label: string; value: PeriodFilterMode }[] => {
-        const allCandidates: { label: string; value: PeriodFilterMode; condition: boolean }[] = [
-            {
-                label: t('timeFilter.quickSelect', { defaultValue: 'Chọn nhanh' }),
-                value: 'PRESET',
-                condition: canShowPresets,
-            },
-            {
-                label: t('timeFilter.week', { defaultValue: 'Theo tuần' }),
-                value: 'WEEK',
-                condition: true,
-            },
-            {
-                label: t('timeFilter.month', { defaultValue: 'Theo tháng' }),
-                value: 'MONTH',
-                condition: true,
-            },
-            {
-                label: t('timeFilter.quarter', { defaultValue: 'Theo quý' }),
-                value: 'QUARTER',
-                condition: true,
-            },
-            {
-                label: t('timeFilter.year', { defaultValue: 'Theo năm' }),
-                value: 'YEAR',
-                condition: true,
-            },
-            {
-                label: t('timeFilter.customRange', { defaultValue: 'Khoảng ngày' }),
-                value: 'CUSTOM_RANGE',
-                condition: true,
-            },
-        ];
-
-        return allCandidates
-            .filter((c) => c.condition && (!allowedModes || allowedModes.includes(c.value)))
-            .map(({ label, value }) => ({ label, value }));
-    }, [canShowPresets, allowedModes, t]);
-
-    const fallbackMode = modeButtons[0]?.value || 'MONTH';
-
-    const [draftMode, setDraftMode] = useState<PeriodFilterMode>(currentMode || fallbackMode);
-    const [draftPeriodId, setDraftPeriodId] = useState<number | null>(
-        currentPeriodId ?? periodOptions[0]?.value ?? null
-    );
-    const [draftShiftId, setDraftShiftId] = useState<number | null>(
-        canShowShifts ? (currentShiftId ?? null) : null
-    );
-    const [draftWeek, setDraftWeek] = useState<Dayjs>(baseDate);
-    const [draftMonth, setDraftMonth] = useState<Dayjs>(baseDate);
-    const [draftQuarter, setDraftQuarter] = useState<Dayjs>(baseDate);
-    const [draftYear, setDraftYear] = useState<Dayjs>(baseDate);
+    const [open, setOpen] = useState(false);
+    const [draftMode, setDraftMode] = useState<PeriodFilterMode>(currentMode);
+    const [draftPeriodId, setDraftPeriodId] = useState<number | null>(currentPeriodId);
+    const [draftShiftId, setDraftShiftId] = useState<number | null>(currentShiftId);
+    const [draftWeek, setDraftWeek] = useState<Dayjs>(() => safeDayjs(currentStartDate));
+    const [draftMonth, setDraftMonth] = useState<Dayjs>(() => safeDayjs(currentStartDate));
+    const [draftQuarter, setDraftQuarter] = useState<Dayjs>(() => safeDayjs(currentStartDate));
+    const [draftYear, setDraftYear] = useState<Dayjs>(() => safeDayjs(currentStartDate));
     const [draftDateRange, setDraftDateRange] = useState<[Dayjs, Dayjs]>([
-        currentStartDate ? dayjs(currentStartDate) : baseDate.startOf('month'),
-        currentEndDate ? dayjs(currentEndDate) : baseDate.endOf('month'),
+        safeDayjs(currentStartDate),
+        safeDayjs(currentEndDate),
     ]);
+
+    const syncDraft = useCallback(() => {
+        setDraftMode(currentMode);
+        setDraftPeriodId(currentPeriodId);
+        setDraftShiftId(currentShiftId);
+        const s = safeDayjs(currentStartDate);
+        const e = safeDayjs(currentEndDate);
+        setDraftWeek(s);
+        setDraftMonth(s);
+        setDraftQuarter(s);
+        setDraftYear(s);
+        setDraftDateRange([s, e]);
+    }, [currentMode, currentPeriodId, currentShiftId, currentStartDate, currentEndDate]);
+
+    // Backend rule (Error 915): Single shift filtering is only supported when viewing a single specific day
+    const isSingleDay = useMemo(() => {
+        if (draftMode === 'CUSTOM_RANGE') {
+            return (
+                draftDateRange[0].format('YYYY-MM-DD') === draftDateRange[1].format('YYYY-MM-DD')
+            );
+        }
+        if (draftMode === 'PRESET') {
+            const selectedPeriod = industryFilters.find((f) => f.filterId === draftPeriodId);
+            if (!selectedPeriod) return false;
+            return (
+                selectedPeriod.periodCode === 'TODAY' || selectedPeriod.periodCode === 'YESTERDAY'
+            );
+        }
+        return false;
+    }, [draftMode, draftDateRange, industryFilters, draftPeriodId]);
+
+    // Compute the single date string if currently picking/viewing a single day
+    const pickedDate = useMemo(() => {
+        if (!isSingleDay) return null;
+        if (draftMode === 'CUSTOM_RANGE') {
+            return draftDateRange[0].format('YYYY-MM-DD');
+        }
+        if (draftMode === 'PRESET') {
+            const selectedPeriod = industryFilters.find((f) => f.filterId === draftPeriodId);
+            if (selectedPeriod?.periodCode === 'TODAY') {
+                return dayjs().format('YYYY-MM-DD');
+            }
+            if (selectedPeriod?.periodCode === 'YESTERDAY') {
+                return dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+            }
+        }
+        return null;
+    }, [isSingleDay, draftMode, draftDateRange, industryFilters, draftPeriodId]);
+
+    // Automatically clear specific shift filter if period spans more than 1 day (default to all shifts)
+    useEffect(() => {
+        if (!isSingleDay && draftShiftId !== null) {
+            setDraftShiftId(null);
+        }
+    }, [isSingleDay, draftShiftId]);
+
+    // Fetch available shifts dynamically from backend API when picking a single date
+    const [dynamicShifts, setDynamicShifts] = useState<IndustryFilter[]>([]);
+    const [isLoadingShifts, setIsLoadingShifts] = useState<boolean>(false);
 
     useEffect(() => {
-        if (isOpen) {
-            setDraftMode(currentMode || fallbackMode);
-            setDraftPeriodId(currentPeriodId ?? periodOptions[0]?.value ?? null);
-            setDraftShiftId(canShowShifts ? (currentShiftId ?? null) : null);
-            const initialDate = currentStartDate ? dayjs(currentStartDate) : dayjs(defaultDate);
-            setDraftWeek(initialDate);
-            setDraftMonth(initialDate);
-            setDraftQuarter(initialDate);
-            setDraftYear(initialDate);
-            setDraftDateRange([
-                currentStartDate ? dayjs(currentStartDate) : initialDate.startOf('month'),
-                currentEndDate ? dayjs(currentEndDate) : initialDate.endOf('month'),
-            ]);
+        if (!isSingleDay || !pickedDate) {
+            setDynamicShifts([]);
+            setIsLoadingShifts(false);
+            return;
         }
-    }, [
-        isOpen,
-        currentMode,
-        fallbackMode,
-        currentPeriodId,
-        currentShiftId,
-        currentStartDate,
-        currentEndDate,
-        defaultDate,
-        canShowShifts,
-        periodOptions,
-    ]);
+
+        let isCancelled = false;
+
+        const fetchShifts = async () => {
+            setIsLoadingShifts(true);
+            try {
+                const shifts = await UtilsService.getShiftsForDate(pickedDate);
+                if (!isCancelled) {
+                    const validShifts = shifts || [];
+                    setDynamicShifts(validShifts);
+                    if (
+                        draftShiftId !== null &&
+                        !validShifts.some((s) => s.filterId === draftShiftId)
+                    ) {
+                        setDraftShiftId(null);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch shifts for date:', pickedDate, err);
+                if (!isCancelled) {
+                    setDynamicShifts([]);
+                }
+            } finally {
+                if (!isCancelled) {
+                    setIsLoadingShifts(false);
+                }
+            }
+        };
+
+        fetchShifts();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [pickedDate, isSingleDay]);
+
+    // Grouped shift options for ShiftSection
+    const currentShiftOptions = useMemo(() => {
+        if (!isSingleDay) {
+            return [];
+        }
+        const currentLang = i18n.language;
+        return [...dynamicShifts]
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .map((f) => ({
+                label: currentLang === 'vi' ? f.displayNameVi : f.displayNameEn,
+                value: f.filterId,
+                sortOrder: f.sortOrder,
+            }));
+    }, [isSingleDay, dynamicShifts, i18n.language]);
+
+    // Merged filters to resolve labels and active states for both global and dynamic shifts
+    const allIndustryFilters = useMemo(() => {
+        const map = new Map<number, IndustryFilter>();
+        industryFilters.forEach((f) => map.set(f.filterId, f));
+        dynamicShifts.forEach((f) => map.set(f.filterId, f));
+        return Array.from(map.values()).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    }, [industryFilters, dynamicShifts]);
+
+    const singleDayWarning = useMemo(
+        () =>
+            i18n.language === 'vi'
+                ? '(*) Khi xem khoảng ngày, mặc định xem tất cả các ca (không chọn ca riêng lẻ).'
+                : '(*) Date range: viewing all shifts by default (individual shift selection disabled).',
+        [i18n.language]
+    );
+
+    const todayPeriod = useMemo(
+        () =>
+            industryFilters.find((f) => f.category === 'PERIOD' && f.periodCode === 'TODAY') ||
+            industryFilters.find((f) => f.category === 'PERIOD'),
+        [industryFilters]
+    );
+
+    const handleOpenChange = useCallback(
+        (nextOpen: boolean) => {
+            if (nextOpen) syncDraft();
+            setOpen(nextOpen);
+        },
+        [syncDraft]
+    );
+
+    const handleReset = useCallback(() => {
+        setDraftMode('PRESET');
+        setDraftPeriodId(todayPeriod?.filterId ?? null);
+        setDraftShiftId(null);
+        setDraftDateRange([dayjs(), dayjs()]);
+        setDraftWeek(dayjs());
+        setDraftMonth(dayjs());
+        setDraftQuarter(dayjs());
+        setDraftYear(dayjs());
+    }, [todayPeriod]);
 
     const handleSelectMode = useCallback(
         (mode: PeriodFilterMode) => {
             setDraftMode(mode);
-            if (mode === 'PRESET' && periodOptions.length > 0) {
-                setDraftPeriodId((prev) => prev ?? periodOptions[0].value);
+            if (mode === 'PRESET' && groupedOptions.PERIOD.length > 0) {
+                setDraftPeriodId((prev) => prev ?? groupedOptions.PERIOD[0].value);
             }
+            setDraftWeek((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftMonth((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftQuarter((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftYear((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftDateRange((prev) =>
+                prev && prev[0]?.isValid() && prev[1]?.isValid() ? prev : [dayjs(), dayjs()]
+            );
         },
-        [periodOptions]
+        [groupedOptions.PERIOD]
     );
 
     const handleSelectPeriod = useCallback((id: number) => {
         setDraftPeriodId(id);
     }, []);
 
-    const handleApply = useCallback(() => {
-        let primaryFilterId: number | null = null;
-        let secondaryShiftId: number | null = null;
-        let startDate: string;
-        let endDate: string;
+    const handleApplyClick = useCallback(() => {
+        let primaryFilterId: number | null;
+        let secondaryShiftId: number | null;
+        let startDate = draftDateRange[0]?.isValid()
+            ? draftDateRange[0].format('YYYY-MM-DD')
+            : dayjs().format('YYYY-MM-DD');
+        let endDate = draftDateRange[1]?.isValid()
+            ? draftDateRange[1].format('YYYY-MM-DD')
+            : dayjs().format('YYYY-MM-DD');
 
         if (draftMode === 'PRESET') {
             if (draftPeriodId !== null) {
                 primaryFilterId = draftPeriodId;
-                secondaryShiftId = canShowShifts ? draftShiftId : null;
-                const selectedFilter = industryFilters.find((f) => f.filterId === draftPeriodId);
-                const [s, e] = computeDateRangeForMode(
-                    'PRESET',
-                    {
-                        dateRange: draftDateRange,
-                        week: draftWeek,
-                        month: draftMonth,
-                        quarter: draftQuarter,
-                        year: draftYear,
-                    },
-                    selectedFilter
-                );
-                startDate = s;
-                endDate = e;
-            } else if (canShowShifts && draftShiftId !== null) {
+                secondaryShiftId = draftShiftId;
+            } else if (draftShiftId !== null) {
                 primaryFilterId = draftShiftId;
                 secondaryShiftId = null;
-                const todayStr = dayjs().format('YYYY-MM-DD');
-                startDate = todayStr;
-                endDate = todayStr;
             } else {
                 return;
             }
         } else {
-            primaryFilterId = canShowShifts ? draftShiftId : null;
-            secondaryShiftId = null;
-            const [s, e] = computeDateRangeForMode(draftMode, {
+            const computedDates = computeDateRangeForMode(draftMode, {
                 dateRange: draftDateRange,
                 week: draftWeek,
                 month: draftMonth,
                 quarter: draftQuarter,
                 year: draftYear,
             });
-            startDate = s;
-            endDate = e;
+            startDate = computedDates[0];
+            endDate = computedDates[1];
+            primaryFilterId = draftShiftId;
+            secondaryShiftId = null;
         }
 
         onApply({
@@ -780,12 +840,11 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
             startDate,
             endDate,
         });
+        setOpen(false);
     }, [
         draftMode,
         draftPeriodId,
         draftShiftId,
-        canShowShifts,
-        industryFilters,
         draftDateRange,
         draftWeek,
         draftMonth,
@@ -794,91 +853,126 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
         onApply,
     ]);
 
+    const modeButtons = useMemo(
+        (): { label: string; value: PeriodFilterMode }[] => [
+            ...(groupedOptions.PERIOD.length > 0
+                ? [{ label: t('spaceMonitoring.timeFilter.quickSelect'), value: 'PRESET' as const }]
+                : []),
+            { label: t('spaceMonitoring.timeFilter.week'), value: 'WEEK' as const },
+            { label: t('spaceMonitoring.timeFilter.month'), value: 'MONTH' as const },
+            { label: t('spaceMonitoring.timeFilter.quarter'), value: 'QUARTER' as const },
+            { label: t('spaceMonitoring.timeFilter.year'), value: 'YEAR' as const },
+            { label: t('spaceMonitoring.timeFilter.customRange'), value: 'CUSTOM_RANGE' as const },
+        ],
+        [groupedOptions.PERIOD.length, t]
+    );
+
     const renderDatePreview = (start: Dayjs, end: Dayjs) => (
-        <Typography.Text
-            type="secondary"
-            style={{
-                fontSize: 11,
-                display: 'block',
-                marginTop: 6,
-                textAlign: 'center',
-            }}
-        >
-            {start.format('DD/MM/YYYY')} &rarr; {end.format('DD/MM/YYYY')}
+        <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 6 }}>
+            {start.format('DD/MM/YYYY')} → {end.format('DD/MM/YYYY')}
         </Typography.Text>
     );
 
     const isApplyDisabled =
         draftMode === 'PRESET' &&
         draftPeriodId === null &&
-        (!canShowShifts || draftShiftId === null);
+        (showShifts ? draftShiftId === null : true);
 
-    const handleReset = useCallback(() => {
-        if (onReset) {
-            onReset();
-            return;
+    // Trigger-button label, resolved from the committed (applied) filter — not the draft
+    // being edited inside the popover. Mirrors the old page-level activeTimePeriodLabel.
+    const activeLabel = useMemo(() => {
+        const currentLang = i18n.language;
+        const shiftFilter =
+            showShifts && currentShiftId != null
+                ? allIndustryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
+        const shiftLabel = shiftFilter
+            ? currentLang === 'vi'
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
+            : null;
+
+        if (currentMode === 'WEEK') {
+            const startStr = dayjs(currentStartDate).format('DD/MM');
+            const endStr = dayjs(currentEndDate).format('DD/MM');
+            const weekNum = dayjs(currentStartDate).isoWeek();
+            const yearStr = dayjs(currentStartDate).format('YYYY');
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', { week: weekNum, year: yearStr })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
         }
-        const activeShift = industryFilters.find(
-            (filter) => filter.category === 'SHIFT' && isShiftActive?.(filter)
-        );
-        setDraftMode(fallbackMode);
-        setDraftPeriodId(periodOptions[0]?.value ?? null);
-        setDraftShiftId(
-            canShowShifts ? (activeShift?.filterId ?? shiftOptions[0]?.value ?? null) : null
-        );
-        setDraftDateRange([dayjs(), dayjs()]);
-        setDraftWeek(dayjs());
-        setDraftMonth(dayjs());
-        setDraftQuarter(dayjs());
-        setDraftYear(dayjs());
+
+        if (currentMode === 'MONTH') {
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: dayjs(currentStartDate).format('MM'),
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'QUARTER') {
+            const quarterNum = dayjs(currentStartDate).quarter();
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'YEAR') {
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'CUSTOM_RANGE') {
+            const dateLabel = `${dayjs(currentStartDate).format('DD/MM')} → ${dayjs(currentEndDate).format('DD/MM')}`;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
+        }
+
+        const period = allIndustryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
+            ? currentLang === 'vi'
+                ? period.displayNameVi
+                : period.displayNameEn
+            : null;
+
+        if (!periodLabel) return shiftLabel;
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
     }, [
-        onReset,
-        industryFilters,
-        isShiftActive,
-        fallbackMode,
-        periodOptions,
-        canShowShifts,
-        shiftOptions,
+        currentMode,
+        currentPeriodId,
+        currentShiftId,
+        currentStartDate,
+        currentEndDate,
+        allIndustryFilters,
+        i18n.language,
+        t,
     ]);
 
-    return (
+    const content = (
         <div style={{ width: isMobile ? 'calc(100vw - 48px)' : 340, maxWidth: 340 }}>
             <Typography.Text strong style={{ fontSize: 14 }}>
-                {title || t('timeFilter.title', { defaultValue: 'Thời gian' })}
+                {t('spaceMonitoring.timeFilter.title')}
             </Typography.Text>
 
             <Divider style={{ margin: '10px 0' }} />
-
-            {/* Shift selection (Ca làm việc) — only displayed when enabled */}
-            {canShowShifts && (
-                <ShiftSection
-                    shiftId={draftShiftId}
-                    onChange={setDraftShiftId}
-                    groupedShifts={shiftOptions}
-                    industryFilters={industryFilters}
-                    isShiftActive={isShiftActive}
-                    isMobile={isMobile}
-                    title={t('timeFilter.shifts', { defaultValue: 'Ca làm việc' })}
-                    allShiftsLabel={t('timeFilter.allShifts', { defaultValue: 'Tất cả' })}
-                    activeTagLabel={t('timeFilter.active', { defaultValue: 'Đang hoạt động' })}
-                />
-            )}
 
             {/* Mode selection buttons */}
             <ModeSelectionSection
                 currentMode={draftMode}
                 onSelectMode={handleSelectMode}
                 modeButtons={modeButtons}
-                title={t('timeFilter.periodType', { defaultValue: 'Chế độ chọn thời gian' })}
+                title={t('spaceMonitoring.timeFilter.periodType')}
             />
 
             {/* Context-aware Picker & Sub-container */}
-            {draftMode === 'PRESET' && canShowPresets && (
+            {draftMode === 'PRESET' && groupedOptions.PERIOD.length > 0 && (
                 <PresetGridSection
                     selectedPeriodId={draftPeriodId}
                     onSelectPeriod={handleSelectPeriod}
-                    periodOptions={periodOptions}
-                    title={t('timeFilter.presetOptions', { defaultValue: 'Tùy chọn có sẵn' })}
+                    periodOptions={groupedOptions.PERIOD}
+                    title={t('spaceMonitoring.timeFilter.presetOptions')}
                     colorPrimary={token.colorPrimary}
                     colorPrimaryBg={token.colorPrimaryBg}
                     colorBgContainer={token.colorBgContainer}
@@ -905,17 +999,22 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                             marginBottom: 6,
                         }}
                     >
-                        {t('timeFilter.selectWeek', { defaultValue: 'Chọn tuần' })}
+                        {t('spaceMonitoring.timeFilter.selectWeek')}
                     </Typography.Text>
                     <DatePicker
                         picker="week"
-                        value={draftWeek}
-                        onChange={(date) => date && setDraftWeek(date)}
+                        showWeek={false}
+                        value={draftWeek && draftWeek.isValid() ? draftWeek : dayjs()}
+                        onChange={(date) => setDraftWeek(date && date.isValid() ? date : dayjs())}
+                        format={(date) =>
+                            date && date.isValid()
+                                ? `${date.startOf('isoWeek').format('DD/MM')} - ${date.endOf('isoWeek').format('DD/MM/YYYY')}`
+                                : ''
+                        }
                         style={{ width: '100%', borderRadius: 6 }}
-                        placeholder={t('timeFilter.selectWeek', { defaultValue: 'Chọn tuần' })}
+                        placeholder={t('spaceMonitoring.timeFilter.selectWeek')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {renderDatePreview(draftWeek.startOf('isoWeek'), draftWeek.endOf('isoWeek'))}
                 </div>
             )}
 
@@ -936,18 +1035,23 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                             marginBottom: 6,
                         }}
                     >
-                        {t('timeFilter.selectMonth', { defaultValue: 'Chọn tháng' })}
+                        {t('spaceMonitoring.timeFilter.selectMonth')}
                     </Typography.Text>
                     <DatePicker
                         picker="month"
                         format="MM/YYYY"
-                        value={draftMonth}
-                        onChange={(date) => date && setDraftMonth(date)}
+                        value={draftMonth && draftMonth.isValid() ? draftMonth : dayjs()}
+                        onChange={(date) => setDraftMonth(date && date.isValid() ? date : dayjs())}
                         style={{ width: '100%', borderRadius: 6 }}
-                        placeholder={t('timeFilter.selectMonth', { defaultValue: 'Chọn tháng' })}
+                        placeholder={t('spaceMonitoring.timeFilter.selectMonth')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {renderDatePreview(draftMonth.startOf('month'), draftMonth.endOf('month'))}
+                    {renderDatePreview(
+                        (draftMonth && draftMonth.isValid() ? draftMonth : dayjs()).startOf(
+                            'month'
+                        ),
+                        (draftMonth && draftMonth.isValid() ? draftMonth : dayjs()).endOf('month')
+                    )}
                 </div>
             )}
 
@@ -968,20 +1072,26 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                             marginBottom: 6,
                         }}
                     >
-                        {t('timeFilter.selectQuarter', { defaultValue: 'Chọn quý' })}
+                        {t('spaceMonitoring.timeFilter.selectQuarter')}
                     </Typography.Text>
                     <DatePicker
                         picker="quarter"
                         format="[Q]Q/YYYY"
-                        value={draftQuarter}
-                        onChange={(date) => date && setDraftQuarter(date)}
+                        value={draftQuarter && draftQuarter.isValid() ? draftQuarter : dayjs()}
+                        onChange={(date) =>
+                            setDraftQuarter(date && date.isValid() ? date : dayjs())
+                        }
                         style={{ width: '100%', borderRadius: 6 }}
-                        placeholder={t('timeFilter.selectQuarter', { defaultValue: 'Chọn quý' })}
+                        placeholder={t('spaceMonitoring.timeFilter.selectQuarter')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
                     {renderDatePreview(
-                        draftQuarter.startOf('quarter'),
-                        draftQuarter.endOf('quarter')
+                        (draftQuarter && draftQuarter.isValid() ? draftQuarter : dayjs()).startOf(
+                            'quarter'
+                        ),
+                        (draftQuarter && draftQuarter.isValid() ? draftQuarter : dayjs()).endOf(
+                            'quarter'
+                        )
                     )}
                 </div>
             )}
@@ -1003,18 +1113,21 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                             marginBottom: 6,
                         }}
                     >
-                        {t('timeFilter.selectYear', { defaultValue: 'Chọn năm' })}
+                        {t('spaceMonitoring.timeFilter.selectYear')}
                     </Typography.Text>
                     <DatePicker
                         picker="year"
                         format="YYYY"
-                        value={draftYear}
-                        onChange={(date) => date && setDraftYear(date)}
+                        value={draftYear && draftYear.isValid() ? draftYear : dayjs()}
+                        onChange={(date) => setDraftYear(date && date.isValid() ? date : dayjs())}
                         style={{ width: '100%', borderRadius: 6 }}
-                        placeholder={t('timeFilter.selectYear', { defaultValue: 'Chọn năm' })}
+                        placeholder={t('spaceMonitoring.timeFilter.selectYear')}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {renderDatePreview(draftYear.startOf('year'), draftYear.endOf('year'))}
+                    {renderDatePreview(
+                        (draftYear && draftYear.isValid() ? draftYear : dayjs()).startOf('year'),
+                        (draftYear && draftYear.isValid() ? draftYear : dayjs()).endOf('year')
+                    )}
                 </div>
             )}
 
@@ -1035,39 +1148,120 @@ export const TimeFilterPopoverContent: React.FC<TimeFilterPopoverContentProps> =
                             marginBottom: 6,
                         }}
                     >
-                        {t('timeFilter.selectDateRange', { defaultValue: 'Chọn khoảng ngày' })}
+                        {t('spaceMonitoring.timeFilter.selectDateRange')}
                     </Typography.Text>
                     <DatePicker.RangePicker
-                        format="DD/MM/YYYY"
-                        value={draftDateRange}
+                        value={
+                            draftDateRange &&
+                            draftDateRange[0]?.isValid() &&
+                            draftDateRange[1]?.isValid()
+                                ? draftDateRange
+                                : [dayjs(), dayjs()]
+                        }
                         onChange={(dates) => {
-                            if (dates && dates[0] && dates[1]) {
+                            if (dates?.[0] && dates?.[1]) {
                                 setDraftDateRange([dates[0], dates[1]]);
                             }
                         }}
+                        format="DD/MM/YYYY"
                         style={{ width: '100%', borderRadius: 6 }}
                         disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
-                    {draftDateRange[0] &&
-                        draftDateRange[1] &&
-                        renderDatePreview(draftDateRange[0], draftDateRange[1])}
                 </div>
             )}
 
-            {/* Footer actions */}
+            {showShifts && (
+                <>
+                    <Divider style={{ margin: '10px 0' }} />
+
+                    {/* Shift selection (Ca làm việc) - MOVED BELOW */}
+                    <ShiftSection
+                        shiftId={draftShiftId}
+                        onChange={setDraftShiftId}
+                        groupedShifts={currentShiftOptions}
+                        industryFilters={allIndustryFilters}
+                        isShiftActive={isShiftActive}
+                        isMobile={isMobile}
+                        title={t('spaceMonitoring.timeFilter.shifts')}
+                        allShiftsLabel={t('spaceMonitoring.timeFilter.allShifts')}
+                        activeTagLabel={t('spaceMonitoring.timeFilter.active')}
+                        isSingleDay={isSingleDay}
+                        singleDayWarning={singleDayWarning}
+                        isLoading={isLoadingShifts}
+                    />
+                </>
+            )}
+
+            {/* Action buttons */}
             <FooterActions
                 onReset={handleReset}
-                onCancel={onCancel}
-                onApply={handleApply}
+                onCancel={() => setOpen(false)}
+                onApply={handleApplyClick}
                 isApplyDisabled={isApplyDisabled}
-                resetLabel={t('timeFilter.reset', { defaultValue: 'Đặt lại' })}
-                cancelLabel={t('common.cancel', { defaultValue: 'Hủy' })}
-                applyLabel={t('timeFilter.apply', { defaultValue: 'Áp dụng' })}
+                resetLabel={t('common.reset')}
+                cancelLabel={t('common.cancel')}
+                applyLabel={t('spaceMonitoring.timeFilter.apply')}
             />
         </div>
     );
+
+    return (
+        <Popover
+            open={open}
+            onOpenChange={handleOpenChange}
+            trigger="click"
+            placement={placement}
+            content={content}
+        >
+            {isMobile ? (
+                <Button
+                    block
+                    style={{
+                        borderRadius: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: 4,
+                    }}
+                >
+                    <span style={{ flexShrink: 0 }}>{t('spaceMonitoring.timeFilter.time')}:</span>
+                    <Typography.Text
+                        ellipsis
+                        style={{
+                            maxWidth: 'calc(100% - 76px)',
+                            color: 'inherit',
+                            lineHeight: 'inherit',
+                        }}
+                    >
+                        {activeLabel ?? t('common.filter')}
+                    </Typography.Text>
+                </Button>
+            ) : (
+                <Tooltip title={activeLabel}>
+                    <Button
+                        style={{
+                            borderRadius: 8,
+                            width: 220,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start',
+                            gap: 4,
+                        }}
+                    >
+                        <span style={{ flexShrink: 0 }}>
+                            {t('spaceMonitoring.timeFilter.time')}:
+                        </span>
+                        <Typography.Text
+                            ellipsis
+                            style={{ maxWidth: 135, color: 'inherit', lineHeight: 'inherit' }}
+                        >
+                            {activeLabel ?? t('common.filter')}
+                        </Typography.Text>
+                    </Button>
+                </Tooltip>
+            )}
+        </Popover>
+    );
 };
 
-export const TimeFilterPopover = TimeFilterPopoverContent;
-export type TimeFilterPopoverProps = TimeFilterPopoverContentProps;
-export default React.memo(TimeFilterPopoverContent);
+export default TimeFilterPopover;

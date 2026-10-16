@@ -3,8 +3,8 @@ import { SelectOption } from '@/types/Common';
 import { TFunction } from 'i18next';
 
 interface StaffFormFieldsOptions {
-    factoryOptions?: SelectOption[];
-    factoryLoading?: boolean;
+    spaceOptions?: SelectOption[];
+    spaceLoading?: boolean;
 }
 const VALIDATION_CONFIG = Object.freeze({
     FULL_NAME_LENGHT: { min: 6, max: 255, required: true },
@@ -16,7 +16,7 @@ const VALIDATION_CONFIG = Object.freeze({
     PHONE_NUMBER: { pattern: /^[0-9]{10}$/, max: 10, required: true },
     ROLE: { required: true },
     GENDER: { required: true },
-    ACCESSIBLE_FACTORIES: { required: false },
+    ACCESSIBLE_SPACES: { required: true },
 });
 
 export const getStaffFormFields = (
@@ -24,7 +24,8 @@ export const getStaffFormFields = (
     mode: 'create' | 'edit',
     options?: StaffFormFieldsOptions
 ): FormFieldConfig[] => {
-    const { factoryOptions = [], factoryLoading = false } = options || {};
+    const spaceOptions = options?.spaceOptions ?? [];
+    const spaceLoading = options?.spaceLoading ?? false;
     const roleOptions = [
         { value: 1, label: t('staffManagement.form.fields.role.admin') },
         { value: 2, label: t('staffManagement.form.fields.role.director') },
@@ -260,17 +261,24 @@ export const getStaffFormFields = (
             span: { xs: 24, md: 12 },
         },
 
-        // Accessible Factories
+        // Accessible Spaces
         {
-            name: 'accessibleFactoryIds',
-            label: t('staffManagement.form.fields.accessibleFactories'),
+            name: 'accessibleSpaceIds',
+            label: t('staffManagement.form.fields.accessibleSpaces'),
             type: 'select',
             mode: 'multiple',
-            placeholder: t('staffManagement.form.placeholders.accessibleFactories'),
-            required: VALIDATION_CONFIG.ACCESSIBLE_FACTORIES.required,
-            options: factoryOptions,
-            loading: factoryLoading,
+            placeholder: t('staffManagement.form.placeholders.accessibleSpaces'),
+            required: VALIDATION_CONFIG.ACCESSIBLE_SPACES.required,
+            options: spaceOptions,
+            loading: spaceLoading,
             allowClear: true,
+            maxTagCount: 5,
+            rules: [
+                {
+                    required: VALIDATION_CONFIG.ACCESSIBLE_SPACES.required,
+                    message: t('staffManagement.form.validation.required'),
+                },
+            ],
             span: { xs: 24, md: 12 },
         },
     ];

@@ -137,6 +137,16 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View space monitoring',
         i18nKey: 'permissionSubjects.space_monitoring',
     },
+    // Production Overview
+    {
+        slug: 'production_overview:view',
+        subject: 'production_overview',
+        action: 'view',
+        routes: ['/admin/production-overview'],
+        menuKey: 'production-overview',
+        description: 'View production overview',
+        i18nKey: 'permissionSubjects.production_overview',
+    },
     // Production Monitor
     {
         slug: 'production_monitor:view',
@@ -322,6 +332,13 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         action: 'restore',
         routes: [],
         description: 'Restore deleted mold',
+    },
+    {
+        slug: 'mold:import',
+        subject: 'mold',
+        action: 'import',
+        routes: [],
+        description: 'Import mold catalog from Excel',
     },
 
     // Operation Type
@@ -836,6 +853,7 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View machine overview',
         i18nKey: 'sidebar.navigation.machine',
         alternativeAction: 'update',
+        hideFromMenu: true,
     },
     {
         slug: 'machine_overview:update',
