@@ -10,6 +10,8 @@ import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
+import { usePermissionCheck } from '@/hooks/usePermissionCheck';
+import { useAbility } from '@/contexts/AbilityContext';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { errorManagementActions } from '@/stores';
 import {
@@ -55,6 +57,9 @@ function ErrorManagementContent() {
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
+    const { checkPermission } = usePermissionCheck();
+    const ability = useAbility();
+
     const dispatch = useAppDispatch();
     const {
         searchTerm,
@@ -99,11 +104,14 @@ function ErrorManagementContent() {
     const [selectedIncident, setSelectedIncident] = useState<MachineIncidentItem | null>(null);
     const [modalSubmitting, setModalSubmitting] = useState<boolean>(false);
 
-    // Initial data fetch on mount: industry filters & incidents via Redux thunks
+    // Initial data fetch on mount: check view permission, then load industry filters & incidents via Redux thunks
     useEffect(() => {
+        if (!checkPermission('view', 'error_management')) {
+            return;
+        }
         dispatch(errorManagementActions.fetchIndustryFilters());
         dispatch(errorManagementActions.fetchIncidents());
-    }, [dispatch]);
+    }, [dispatch, checkPermission]);
 
     // Time period options matching production overview
     const isShiftActive = useCallback((filter: IndustryFilter): boolean => {
@@ -324,7 +332,11 @@ function ErrorManagementContent() {
                     }
                 }, 350);
 
-                if (openEditParam === 'true' && target.endTime) {
+                if (
+                    openEditParam === 'true' &&
+                    target.endTime &&
+                    ability.can('update', 'error_management')
+                ) {
                     setSelectedIncident(target);
                     setIsModalOpen(true);
                 }
@@ -340,6 +352,7 @@ function ErrorManagementContent() {
         pageSize,
         page,
         dispatch,
+        ability,
     ]);
 
     // Status filter options for direct header Select
@@ -375,6 +388,9 @@ function ErrorManagementContent() {
 
     // Actions
     const handleOpenEditModal = (record: MachineIncidentItem) => {
+        if (!checkPermission('update', 'error_management')) {
+            return;
+        }
         if (!record.endTime) {
             toast.warning(t('errorManagement.table.cannotUpdateOngoing'));
             return;
@@ -390,6 +406,7 @@ function ErrorManagementContent() {
 
     const handleModalSubmit = async (values: MachineIncidentUpdateRequest) => {
         if (!selectedIncident) return;
+        if (!checkPermission('update', 'error_management')) return;
         try {
             setModalSubmitting(true);
             await MachineIncidentService.updateIncident(selectedIncident.machineIncidentId, values);
@@ -452,6 +469,7 @@ function ErrorManagementContent() {
                 isMobile,
                 page,
                 pageSize,
+                ability,
             }),
         [
             token,
@@ -462,6 +480,7 @@ function ErrorManagementContent() {
             isMobile,
             page,
             pageSize,
+            ability,
         ]
     );
 

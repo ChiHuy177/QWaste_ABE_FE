@@ -7,6 +7,7 @@ import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { MachineIncidentItem } from '@/types/MachineIncident';
 import { GlobalToken } from 'antd/es/theme/interface';
+import { AppAbility } from '@/configs/permissions/caslAbility';
 
 const { Text } = Typography;
 
@@ -21,6 +22,7 @@ export interface ErrorTableColumnProps {
     isMobile?: boolean;
     page?: number;
     pageSize?: number;
+    ability?: AppAbility;
 }
 
 export const getErrorTableColumns = ({
@@ -32,7 +34,9 @@ export const getErrorTableColumns = ({
     isMobile,
     page = 0,
     pageSize = 10,
+    ability,
 }: ErrorTableColumnProps): ColumnsType<MachineIncidentItem> => {
+    const canUpdate = ability ? ability.can('update', 'error_management') : true;
     const formatDuration = (minutes: number | null) => {
         if (minutes === null || minutes === undefined || minutes < 0) return '—';
         if (minutes === 0) return '0m';
@@ -252,7 +256,7 @@ export const getErrorTableColumns = ({
         {
             title: () => t('errorManagement.table.columns.actions'),
             key: 'actions',
-            width: 110,
+            width: canUpdate ? 110 : 70,
             align: 'center',
             fixed: isMobile ? undefined : 'right',
             render: (_, record) => {
@@ -269,23 +273,25 @@ export const getErrorTableColumns = ({
                             />
                         </Tooltip>
 
-                        <Tooltip
-                            title={
-                                isOngoing
-                                    ? t('errorManagement.table.cannotUpdateOngoing')
-                                    : t('errorManagement.table.edit')
-                            }
-                        >
-                            <span>
-                                <Button
-                                    type="primary"
-                                    icon={<EditOutlined />}
-                                    disabled={isOngoing}
-                                    onClick={() => !isOngoing && onEdit(record)}
-                                    aria-label={t('errorManagement.table.edit')}
-                                />
-                            </span>
-                        </Tooltip>
+                        {canUpdate && (
+                            <Tooltip
+                                title={
+                                    isOngoing
+                                        ? t('errorManagement.table.cannotUpdateOngoing')
+                                        : t('errorManagement.table.edit')
+                                }
+                            >
+                                <span>
+                                    <Button
+                                        type="primary"
+                                        icon={<EditOutlined />}
+                                        disabled={isOngoing}
+                                        onClick={() => !isOngoing && onEdit(record)}
+                                        aria-label={t('errorManagement.table.edit')}
+                                    />
+                                </span>
+                            </Tooltip>
+                        )}
                     </Space>
                 );
             },
