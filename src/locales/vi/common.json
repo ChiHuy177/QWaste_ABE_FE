@@ -3299,6 +3299,7 @@
         },
         "table": {
             "headers": {
+                "index": "STT",
                 "machineName": "Tên máy",
                 "zone": "Khu vực",
                 "productionTime": "Thời gian sản xuất",

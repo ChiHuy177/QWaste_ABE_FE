@@ -192,13 +192,44 @@ const MachineListPageContent = () => {
     });
     const machineData = useMemo(() => {
         const rawData = machinesQuery.data;
-        return Array.isArray(rawData) ? rawData : (rawData?.content ?? []);
-    }, [machinesQuery.data]);
+        if (!rawData) return [];
+        if (Array.isArray(rawData)) {
+            const keyword = debouncedSearch.trim().toLowerCase();
+            const nameFilter = machineNameFilter?.toLowerCase();
+            const codeFilter = machineCodeFilter?.toLowerCase();
+            const topicFilter = mqttTopicFilter?.toLowerCase();
+            return rawData.filter((machine) => {
+                const matchesSearch =
+                    !keyword ||
+                    machine.machineName.toLowerCase().includes(keyword) ||
+                    (machine.machineCode && machine.machineCode.toLowerCase().includes(keyword));
+                const matchesName =
+                    !nameFilter || machine.machineName.toLowerCase().includes(nameFilter);
+                const matchesCode =
+                    !codeFilter ||
+                    (machine.machineCode && machine.machineCode.toLowerCase().includes(codeFilter));
+                const matchesTopic =
+                    !topicFilter || machine.topic.toLowerCase().includes(topicFilter);
+                return matchesSearch && matchesName && matchesCode && matchesTopic;
+            });
+        }
+        return rawData.content ?? [];
+    }, [
+        machinesQuery.data,
+        debouncedSearch,
+        machineNameFilter,
+        machineCodeFilter,
+        mqttTopicFilter,
+    ]);
 
     const totalElements = useMemo(() => {
         const rawData = machinesQuery.data;
-        return Array.isArray(rawData) ? rawData.length : (rawData?.totalElements ?? 0);
-    }, [machinesQuery.data]);
+        if (!rawData) return 0;
+        if (Array.isArray(rawData)) {
+            return machineData.length;
+        }
+        return rawData.totalElements ?? 0;
+    }, [machinesQuery.data, machineData]);
     const loading = machinesQuery.isLoading;
 
     usePageTitle(t('pageTitle.machineList'));
@@ -420,6 +451,8 @@ const MachineListPageContent = () => {
             isMobile,
             t,
             ability,
+            page,
+            pageSize,
         }),
         [
             handleEditMachine,
@@ -429,6 +462,8 @@ const MachineListPageContent = () => {
             isMobile,
             t,
             ability,
+            page,
+            pageSize,
         ]
     );
 
@@ -542,21 +577,30 @@ const MachineListPageContent = () => {
                 label: t('machineListManagement.table.headers.machineName'),
                 placeholder: t('machineListManagement.filters.namePlaceholder'),
                 value: machineNameFilter ?? '',
-                onChange: (val) => setMachineNameFilter(val.trim() || undefined),
+                onChange: (val) => {
+                    setMachineNameFilter(val.trim() || undefined);
+                    setPage(0);
+                },
             },
             {
                 key: 'machineCode',
                 label: t('machineListManagement.table.headers.machineCode'),
                 placeholder: t('machineListManagement.filters.machineCodePlaceholder'),
                 value: machineCodeFilter ?? '',
-                onChange: (val) => setMachineCodeFilter(val.trim() || undefined),
+                onChange: (val) => {
+                    setMachineCodeFilter(val.trim() || undefined);
+                    setPage(0);
+                },
             },
             {
                 key: 'mqttTopic',
                 label: t('machineListManagement.form.fields.topic'),
                 placeholder: t('machineListManagement.filters.topicPlaceholder'),
                 value: mqttTopicFilter ?? '',
-                onChange: (val) => setMqttTopicFilter(val.trim() || undefined),
+                onChange: (val) => {
+                    setMqttTopicFilter(val.trim() || undefined);
+                    setPage(0);
+                },
             },
         ],
         [t, machineNameFilter, machineCodeFilter, mqttTopicFilter]
@@ -900,7 +944,7 @@ const MachineListPageContent = () => {
                             placement: ['bottomCenter'],
                         }}
                         scroll={{
-                            x: 1670,
+                            x: 'max-content',
                             y: tableScrollY,
                         }}
                         style={{ height: '100%' }}
