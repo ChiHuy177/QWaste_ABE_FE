@@ -2664,6 +2664,7 @@
         },
         "table": {
             "headers": {
+                "index": "No.",
                 "machineImage": "Machine Image",
                 "machineName": "Machine Name",
                 "machineType": "Machine Type",
