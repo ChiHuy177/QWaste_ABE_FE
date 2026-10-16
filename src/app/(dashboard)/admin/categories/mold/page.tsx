@@ -361,7 +361,10 @@ const MoldListPage = () => {
                 label: t('moldManagement.table.headers.moldCode'),
                 placeholder: t('moldManagement.form.placeholders.moldCode'),
                 value: moldCodeFilter ?? '',
-                onChange: (val) => setMoldCodeFilter(val.trim() || undefined),
+                onChange: (val) => {
+                    setMoldCodeFilter(val.trim() || undefined);
+                    setPage(0);
+                },
                 colProps: { xs: 24, sm: 12 },
             },
             {
@@ -369,7 +372,10 @@ const MoldListPage = () => {
                 label: t('moldManagement.table.headers.moldName'),
                 placeholder: t('moldManagement.form.placeholders.moldName'),
                 value: moldNameFilter ?? '',
-                onChange: (val) => setMoldNameFilter(val.trim() || undefined),
+                onChange: (val) => {
+                    setMoldNameFilter(val.trim() || undefined);
+                    setPage(0);
+                },
                 colProps: { xs: 24, sm: 12 },
             },
         ],

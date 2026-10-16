@@ -14,6 +14,7 @@ const BASE_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'staff' },
     { action: 'view', subject: 'tasks' },
     { action: 'view', subject: 'production_monitor' },
+    { action: 'view', subject: 'production_overview' },
 ];
 
 const MANAGEMENT_PERMISSIONS: PermissionRule[] = [

@@ -14,3 +14,6 @@ export * from './FloorMap';
 export * from './ProductionPlan';
 export * from './ShiftPattern';
 export * from './WorkCalendar';
+export * from './Dashboard';
+export * from './Downtime';
+export * from './ProductionOverview';

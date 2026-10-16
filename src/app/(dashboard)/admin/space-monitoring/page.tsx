@@ -355,10 +355,20 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
-                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
+                                | 'RUNTIME'
+                                | 'IDLE'
+                                | 'ERROR'
+                                | 'COMPLETE'
+                                | 'OFFLINE'
+                                | 'UNKNOWN';
                         };
                         newStatus:
-                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
+                            | 'RUNTIME'
+                            | 'IDLE'
+                            | 'ERROR'
+                            | 'COMPLETE'
+                            | 'OFFLINE'
+                            | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
@@ -434,15 +444,19 @@ const SpaceMonitoringPage: React.FC = () => {
         label: string;
         value: number;
         category: IndustryFilter['category'];
+        sortOrder?: number;
         disabled?: boolean;
     }[] => {
         const currentLang = i18n.language;
 
-        return industryFilters.map((filter: IndustryFilter) => ({
-            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
-            value: filter.filterId,
-            category: filter.category,
-        }));
+        return [...industryFilters]
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .map((filter: IndustryFilter) => ({
+                label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+                value: filter.filterId,
+                category: filter.category,
+                sortOrder: filter.sortOrder,
+            }));
     }, [industryFilters, i18n.language]);
 
     const groupedTimePeriodOptions = useMemo(
@@ -507,14 +521,12 @@ const SpaceMonitoringPage: React.FC = () => {
             setTimeFilterMode(mode);
             dispatch(factoryOverviewActions.setSelectedTimePeriod(primaryFilterId));
             dispatch(factoryOverviewActions.setSelectedShiftFilterId(secondaryShiftId));
-            if (startDate && endDate) {
-                dispatch(
-                    factoryOverviewActions.setSelectedDateRange({
-                        startDate,
-                        endDate,
-                    })
-                );
-            }
+            dispatch(
+                factoryOverviewActions.setSelectedDateRange({
+                    startDate,
+                    endDate,
+                })
+            );
 
             if (!activeFactoryId) return;
             setHasSearched(true);
