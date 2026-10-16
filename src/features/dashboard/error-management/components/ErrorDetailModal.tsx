@@ -37,7 +37,7 @@ import { MachineIncidentService } from '@/services/MachineIncidentService';
 
 const { Text, Paragraph } = Typography;
 
-interface ErrorDetailModalProps {
+export interface ErrorDetailModalProps {
     open: boolean;
     incident: MachineIncidentItem | null;
     onClose: () => void;
@@ -100,11 +100,13 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
 
     const formatDuration = (minutes?: number | null) => {
         if (minutes === null || minutes === undefined || minutes < 0) return '—';
-        if (minutes === 0) return '0 phút';
+        if (minutes === 0) return `0 ${t('common.minutes', { defaultValue: 'phút' })}`;
         const h = Math.floor(minutes / 60);
         const m = minutes % 60;
-        if (h === 0) return `${m} phút`;
-        return `${h} giờ ${m > 0 ? `${m} phút` : ''}`.trim();
+        const minutesUnit = t('common.minutes', { defaultValue: 'phút' });
+        const hoursUnit = t('common.hours', { defaultValue: 'giờ' });
+        if (h === 0) return `${m} ${minutesUnit}`;
+        return `${h} ${hoursUnit} ${m > 0 ? `${m} ${minutesUnit}` : ''}`.trim();
     };
 
     const getDowntimeStyle = (minutes?: number | null) => {
@@ -362,7 +364,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
 
                         <Space size={6} wrap>
                             <Tag
-                                variant="filled"
                                 style={{
                                     margin: 0,
                                     fontSize: 11.5,
@@ -376,7 +377,11 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                 }}
                             >
                                 <ToolOutlined style={{ color: token.colorPrimary, fontSize: 12 }} />
-                                <span>Tín hiệu MQTT từ máy</span>
+                                <span>
+                                    {t('errorManagement.drawer.mqttSignal', {
+                                        defaultValue: 'Tín hiệu MQTT từ máy',
+                                    })}
+                                </span>
                             </Tag>
                             {currentIncident.errorMessage && (
                                 <Tag
@@ -750,7 +755,6 @@ export const ErrorDetailModal: React.FC<ErrorDetailModalProps> = ({
                                                 {t('errorManagement.drawer.createdAt')}
                                             </Text>
                                             <Tag
-                                                variant="filled"
                                                 style={{
                                                     margin: 0,
                                                     fontSize: 11,

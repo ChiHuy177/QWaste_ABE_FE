@@ -4998,7 +4998,8 @@
             "updatedBy": "Updated By",
             "preventivePlan": "Preventive Action Plan",
             "personnel": "Assigned Personnel",
-            "timeline": "Incident Timeline"
+            "timeline": "Incident Timeline",
+            "mqttSignal": "MQTT signal from machine"
         },
         "categories": {
             "mechanical": "Mechanical",

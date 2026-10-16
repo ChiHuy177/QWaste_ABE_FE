@@ -18,7 +18,7 @@ import { getErrorManagementFormFields } from './errorManagementFormConfig';
 
 const { Text } = Typography;
 
-interface CreateOrEditErrorModalProps {
+export interface CreateOrEditErrorModalProps {
     open: boolean;
     incident: MachineIncidentItem | null;
     onCancel: () => void;

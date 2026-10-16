@@ -1,28 +1,7 @@
 'use client';
 
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-    Badge,
-    Button,
-    Card,
-    Flex,
-    Grid,
-    Popover,
-    Select,
-    Space,
-    Spin,
-    Table,
-    Tag,
-    Tooltip,
-    Typography,
-    theme,
-} from 'antd';
-import {
-    CalendarOutlined,
-    FileExcelOutlined,
-    FilterOutlined,
-    ReloadOutlined,
-} from '@ant-design/icons';
+import { Badge, Card, Grid, Space, Spin, Table, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
@@ -30,8 +9,6 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
-import { SearchInput } from '@/components/shared/SearchInput';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import {
     MachineIncidentFilterParams,
@@ -40,17 +17,21 @@ import {
     MachineIncidentUpdateRequest,
 } from '@/types/MachineIncident';
 import { MachineIncidentService } from '@/services/MachineIncidentService';
-import { getErrorTableColumns } from './_components/Column';
-import { CreateOrEditErrorModal } from './_components/CreateOrEditErrorModal';
-import { ErrorDetailModal } from './_components/ErrorDetailModal';
-import { ErrorInfoBar } from './_components/ErrorInfoBar';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import TimeFilterPopover, {
+import {
     PeriodFilterMode,
     TimeFilterApplyPayload,
     formatTimeFilterLabel,
 } from '@/components/shared/filters/TimeFilterPopover';
+import {
+    CreateOrEditErrorModal,
+    ErrorActiveFilterTags,
+    ErrorDetailModal,
+    ErrorInfoBar,
+    ErrorManagementHeader,
+    getErrorTableColumns,
+} from '@/features/dashboard/error-management';
 
 dayjs.extend(isoWeek);
 dayjs.extend(quarterOfYear);
@@ -79,7 +60,6 @@ function ErrorManagementContent() {
     const [totalIncidents, setTotalIncidents] = useState<number>(0);
     const [activeIncidents, setActiveIncidents] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
-    const [isExporting, setIsExporting] = useState<boolean>(false);
 
     // Highlighting State
     const [highlightedCode, setHighlightedCode] = useState<string | null>(
@@ -333,8 +313,6 @@ function ErrorManagementContent() {
         [t]
     );
 
-    const activeFilterCount = [statusFilter, timeFilterMode].filter(Boolean).length;
-
     // Actions
     const handleOpenEditModal = (record: MachineIncidentItem) => {
         if (!record.endTime) {
@@ -372,58 +350,6 @@ function ErrorManagementContent() {
             }
         } finally {
             setModalSubmitting(false);
-        }
-    };
-
-    // Export incidents to CSV format with UTF-8 BOM
-    const handleExport = () => {
-        try {
-            setIsExporting(true);
-            const headers = [
-                t('errorManagement.table.columns.incidentCode'),
-                t('errorManagement.table.columns.machine'),
-                'Mã Thiết Bị',
-                t('errorManagement.table.columns.location'),
-                t('errorManagement.table.columns.status'),
-                t('errorManagement.table.columns.startTime'),
-                t('errorManagement.table.columns.endTime'),
-                `${t('errorManagement.table.columns.duration')} (phút)`,
-                t('errorManagement.table.columns.cause'),
-                t('errorManagement.table.columns.resolution'),
-            ];
-
-            const rows = incidents.map((item) => [
-                `"${item.incidentCode}"`,
-                `"${item.machineName || ''}"`,
-                `"${item.machineCode || ''}"`,
-                `"${(item.location || '').replace(/"/g, '""')}"`,
-                `"${item.status}"`,
-                `"${item.startTime}"`,
-                `"${item.endTime || t('errorManagement.table.ongoingBadge')}"`,
-                item.durationMinutes ?? '',
-                `"${(item.rootCause || '').replace(/"/g, '""')}"`,
-                `"${(item.resolution || '').replace(/"/g, '""')}"`,
-            ]);
-
-            const csvContent =
-                '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute(
-                'download',
-                `QWaste_Machine_Incidents_${new Date().toISOString().substring(0, 10)}.csv`
-            );
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            toast.success(t('errorManagement.messages.exportSuccess'));
-        } catch (_err) {
-            toast.error(t('common.errorOccurred', { defaultValue: 'Không thể xuất dữ liệu' }));
-        } finally {
-            setIsExporting(false);
         }
     };
 
@@ -493,127 +419,47 @@ function ErrorManagementContent() {
                 flexDirection: 'column',
             }}
         >
-            {/* Header with Search, FilterDrawer, Refresh and Export (No Create Button) */}
-            <ResponsivePageHeader
-                title={t('errorManagement.title')}
-                onBack={fromParam ? handleBack : undefined}
-                backLabel={
-                    fromParam
-                        ? isMobile
-                            ? undefined
-                            : t('common.back', { defaultValue: 'Quay lại' })
-                        : undefined
-                }
-                backTooltip={
-                    fromParam === 'machines'
-                        ? t('errorManagement.navigation.backToMachineStatus', {
-                              defaultValue: 'Quay lại Trạng thái máy',
-                          })
-                        : t('common.back', { defaultValue: 'Quay lại' })
-                }
-                rightContent={
-                    <div
-                        style={{
-                            display: 'flex',
-                            gap: 12,
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                        }}
-                    >
-                        {/* Search by incident code, machine name or code */}
-                        <SearchInput
-                            placeholder={t('errorManagement.filters.searchPlaceholder', {
-                                defaultValue: 'Tìm theo mã sự cố, tên máy, mã thiết bị...',
-                            })}
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                            onPressEnter={handleSearchPressEnter}
-                            debounceMs={500}
-                            width={260}
-                        />
-
-                        {/* Quick Status Filter Dropdown directly on header */}
-                        <Select
-                            value={statusFilter ?? ''}
-                            onChange={(val) => {
-                                setStatusFilter(val ? (val as MachineIncidentStatus) : undefined);
-                                setPage(0);
-                            }}
-                            style={{ width: 175 }}
-                            options={statusOptions}
-                        />
-
-                        {/* Time Filter Popover */}
-                        <TimeFilterPopover
-                            currentMode={timeFilterMode ?? 'PRESET'}
-                            currentPeriodId={selectedTimePeriod}
-                            currentShiftId={null}
-                            currentStartDate={selectedStartDate ?? ''}
-                            currentEndDate={selectedEndDate ?? ''}
-                            groupedOptions={groupedTimePeriodOptions}
-                            industryFilters={industryFilters}
-                            showShifts={false}
-                            onApply={handleApplyTimeFilter}
-                            placement="bottomRight"
-                        />
-
-                        <Tooltip title={t('errorManagement.header.btnRefresh')}>
-                            <Button
-                                icon={<ReloadOutlined />}
-                                onClick={loadData}
-                                loading={loading}
-                                style={{ borderRadius: token.borderRadiusSM }}
-                                type="primary"
-                            >
-                                {isMobile ? t('errorManagement.header.btnRefresh') : null}
-                            </Button>
-                        </Tooltip>
-                        {/* 
-                        <Button
-                            type="primary"
-                            icon={<FileExcelOutlined />}
-                            onClick={handleExport}
-                            loading={isExporting}
-                            style={{ borderRadius: token.borderRadiusSM }}
-                        >
-                            {t('common.exportExcel')}
-                        </Button> */}
-                    </div>
-                }
+            {/* Header with Search, Status, TimeFilter, Refresh */}
+            <ErrorManagementHeader
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
+                onSearchPressEnter={handleSearchPressEnter}
+                statusFilter={statusFilter}
+                onStatusFilterChange={(val) => {
+                    setStatusFilter(val);
+                    setPage(0);
+                }}
+                statusOptions={statusOptions}
+                timeFilterMode={timeFilterMode}
+                selectedTimePeriod={selectedTimePeriod}
+                selectedStartDate={selectedStartDate}
+                selectedEndDate={selectedEndDate}
+                groupedTimePeriodOptions={groupedTimePeriodOptions}
+                industryFilters={industryFilters}
+                onApplyTimeFilter={handleApplyTimeFilter}
+                onRefresh={loadData}
+                loading={loading}
+                fromParam={fromParam}
+                onBack={handleBack}
+                isMobile={isMobile}
             />
 
             {/* KPI Summary Bar */}
             <ErrorInfoBar totalIncidents={totalIncidents} activeIncidents={activeIncidents} />
 
             {/* Active Filter Tags */}
-            {activeFilterCount > 0 && (
-                <Flex gap={8} align="center" wrap style={{ marginBottom: 12 }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        <FilterOutlined style={{ marginRight: 4 }} />
-                        {t('common.activeFilters')}:
-                    </Typography.Text>
-                    {timeFilterMode && (
-                        <Tag closable onClose={handleResetTimeFilter} color="blue">
-                            <CalendarOutlined style={{ marginRight: 4 }} />
-                            {activeTimePeriodLabel}
-                        </Tag>
-                    )}
-                    {statusFilter && (
-                        <Tag
-                            closable
-                            onClose={() => {
-                                setStatusFilter(undefined);
-                                setPage(0);
-                            }}
-                        >
-                            {t('errorManagement.table.columns.status')}:{' '}
-                            {t(`errorManagement.statuses.${statusFilter}`)}
-                        </Tag>
-                    )}
-                </Flex>
-            )}
+            <ErrorActiveFilterTags
+                timeFilterMode={timeFilterMode}
+                activeTimePeriodLabel={activeTimePeriodLabel}
+                onResetTimeFilter={handleResetTimeFilter}
+                statusFilter={statusFilter}
+                onResetStatusFilter={() => {
+                    setStatusFilter(undefined);
+                    setPage(0);
+                }}
+            />
 
-            {/* Main Table Card filling flex: 1 */}
+            {/* Main Table Card */}
             <Card
                 style={{
                     flex: 1,

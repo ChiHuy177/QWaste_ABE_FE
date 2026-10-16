@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 const { Text } = Typography;
 
-interface ErrorInfoBarProps {
+export interface ErrorInfoBarProps {
     totalIncidents: number;
     activeIncidents: number;
 }

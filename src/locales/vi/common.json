@@ -5042,7 +5042,8 @@
             "updatedBy": "Người cập nhật",
             "preventivePlan": "Kế hoạch phòng ngừa tái diễn",
             "personnel": "Nhân sự liên quan",
-            "timeline": "Dòng thời gian sự cố"
+            "timeline": "Dòng thời gian sự cố",
+            "mqttSignal": "Tín hiệu MQTT từ máy"
         },
         "categories": {
             "mechanical": "Cơ khí",

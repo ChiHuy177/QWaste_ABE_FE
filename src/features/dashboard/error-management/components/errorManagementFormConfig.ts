@@ -8,7 +8,7 @@ export const VALIDATION_CONFIG = Object.freeze({
 
 export const getErrorManagementFormFields = (
     t: TFunction,
-    mode: 'create' | 'edit' = 'edit'
+    _mode: 'create' | 'edit' = 'edit'
 ): FormFieldConfig[] => {
     return [
         {

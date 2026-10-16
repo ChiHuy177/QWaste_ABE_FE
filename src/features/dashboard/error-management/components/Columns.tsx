@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Badge, Button, Space, Tag, Tooltip, Typography } from 'antd';
+import { Button, Space, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
     ClockCircleOutlined,
@@ -128,7 +128,7 @@ export const getErrorTableColumns = ({
             key: 'machine',
             width: 190,
             render: (_, record) => (
-                <Space orientation="vertical" size={2}>
+                <Space direction="vertical" size={2}>
                     <Text
                         strong
                         style={{
