@@ -7,18 +7,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
+import { useAppDispatch, useAppSelector } from '@/stores/hook';
+import { errorManagementActions } from '@/stores';
 import {
-    MachineIncidentFilterParams,
     MachineIncidentItem,
     MachineIncidentStatus,
     MachineIncidentUpdateRequest,
 } from '@/types/MachineIncident';
 import { MachineIncidentService } from '@/services/MachineIncidentService';
-import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import {
     PeriodFilterMode,
@@ -53,9 +52,27 @@ function ErrorManagementContent() {
     const { token } = theme.useToken();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const queryClient = useQueryClient();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
+
+    const dispatch = useAppDispatch();
+    const {
+        searchTerm,
+        statusFilter,
+        timeFilterMode,
+        selectedTimePeriod,
+        selectedShiftFilterId,
+        selectedStartDate,
+        selectedEndDate,
+        page,
+        pageSize,
+        industryFilters,
+        incidents,
+        totalElements,
+        totalIncidents,
+        activeIncidents,
+        isLoadingData: loading,
+    } = useAppSelector((state) => state.errorManagement);
 
     const incidentCodeParam = searchParams.get('incidentCode');
     const machineCodeParam = searchParams.get('machineCode');
@@ -73,20 +90,6 @@ function ErrorManagementContent() {
     );
     const hasHandledNavigationRef = useRef<boolean>(false);
 
-    // Search and filters
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<MachineIncidentStatus | undefined>(undefined);
-
-    // Time period filter state (default to all time)
-    const [selectedTimePeriod, setSelectedTimePeriod] = useState<number | null>(null);
-    const [timeFilterMode, setTimeFilterMode] = useState<PeriodFilterMode | null>(null);
-    const [selectedStartDate, setSelectedStartDate] = useState<string | null>(null);
-    const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null);
-
-    // Pagination
-    const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
     // Dynamic table height hook
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
@@ -96,12 +99,11 @@ function ErrorManagementContent() {
     const [selectedIncident, setSelectedIncident] = useState<MachineIncidentItem | null>(null);
     const [modalSubmitting, setModalSubmitting] = useState<boolean>(false);
 
-    // Fetch industry filters for quick select (React Query cache)
-    const { data: industryFilters = [] } = useQuery({
-        queryKey: ['industryFilters', 'picking'],
-        queryFn: () => IndustryFilterService.getIndustryFiltersForPicking(),
-        staleTime: 5 * 60 * 1000,
-    });
+    // Initial data fetch on mount: industry filters & incidents via Redux thunks
+    useEffect(() => {
+        dispatch(errorManagementActions.fetchIndustryFilters());
+        dispatch(errorManagementActions.fetchIncidents());
+    }, [dispatch]);
 
     // Time period options matching production overview
     const isShiftActive = useCallback((filter: IndustryFilter): boolean => {
@@ -139,10 +141,10 @@ function ErrorManagementContent() {
     const currentShiftId = useMemo(() => {
         if (timeFilterMode === 'PRESET') {
             const primary = industryFilters.find((f) => f.filterId === selectedTimePeriod);
-            return primary?.category === 'PERIOD' ? null : selectedTimePeriod;
+            return primary?.category === 'PERIOD' ? selectedShiftFilterId : selectedTimePeriod;
         }
         return selectedTimePeriod;
-    }, [timeFilterMode, industryFilters, selectedTimePeriod]);
+    }, [timeFilterMode, industryFilters, selectedTimePeriod, selectedShiftFilterId]);
 
     // Active filter label matching production overview calculation directly
     const activeTimePeriodLabel = useMemo(() => {
@@ -228,69 +230,48 @@ function ErrorManagementContent() {
         t,
     ]);
 
-    const handleApplyTimeFilter = useCallback((payload: TimeFilterApplyPayload) => {
-        setTimeFilterMode(payload.mode);
-        setSelectedTimePeriod(payload.primaryFilterId);
-        setSelectedStartDate(payload.startDate);
-        setSelectedEndDate(payload.endDate);
-        setPage(0);
-    }, []);
+    const handleApplyTimeFilter = useCallback(
+        (payload: TimeFilterApplyPayload) => {
+            dispatch(errorManagementActions.applyTimeFilterAndFetch(payload));
+        },
+        [dispatch]
+    );
 
     const handleResetTimeFilter = useCallback(() => {
-        setTimeFilterMode(null);
-        setSelectedTimePeriod(null);
-        setSelectedStartDate(null);
-        setSelectedEndDate(null);
-        setPage(0);
-    }, []);
+        dispatch(errorManagementActions.resetTimeFilterAndFetch());
+    }, [dispatch]);
 
-    const handleSearchChange = useCallback((value: string) => {
-        setSearchTerm(value.trim());
-        setPage(0);
-    }, []);
-
-    // Primary Data Fetch via React Query (prevents duplicate API calls)
-    const filterParams: MachineIncidentFilterParams = useMemo(
-        () => ({
-            search: searchTerm || undefined,
-            status: statusFilter || undefined,
-            startDate: selectedStartDate || undefined,
-            endDate: selectedEndDate || undefined,
-            page,
-            size: pageSize,
-            sort: 'startTime,DESC',
-        }),
-        [searchTerm, statusFilter, selectedStartDate, selectedEndDate, page, pageSize]
+    const handleSearchChange = useCallback(
+        (value: string) => {
+            dispatch(errorManagementActions.searchAndFetch(value.trim()));
+        },
+        [dispatch]
     );
-
-    const {
-        data: incidentResponse,
-        isLoading: loading,
-        refetch: refetchIncidents,
-    } = useQuery({
-        queryKey: ['machineIncidents', filterParams],
-        queryFn: () => MachineIncidentService.getIncidents(filterParams),
-    });
-
-    const incidents = useMemo(
-        () => incidentResponse?.page?.content || [],
-        [incidentResponse?.page?.content]
-    );
-    const totalElements = incidentResponse?.page?.totalElements || 0;
-    const totalIncidents = incidentResponse?.totalIncidents ?? 0;
-    const activeIncidents = incidentResponse?.activeIncidents ?? 0;
 
     const handleSearchPressEnter = useCallback(
         (value: string) => {
             const trimmed = value.trim();
             if (trimmed === searchTerm) {
-                refetchIncidents();
+                dispatch(errorManagementActions.refresh());
             } else {
-                setSearchTerm(trimmed);
-                setPage(0);
+                dispatch(errorManagementActions.searchAndFetch(trimmed));
             }
         },
-        [searchTerm, refetchIncidents]
+        [dispatch, searchTerm]
+    );
+
+    const handleRefresh = useCallback(() => {
+        dispatch(errorManagementActions.refresh());
+        toast.success(
+            t('errorManagement.messages.refreshSuccess', { defaultValue: 'Đã làm mới dữ liệu' })
+        );
+    }, [dispatch, t]);
+
+    const handleStatusFilterChange = useCallback(
+        (val: MachineIncidentStatus | undefined) => {
+            dispatch(errorManagementActions.updateStatusFilterAndFetch(val));
+        },
+        [dispatch]
     );
 
     // Handle navigation context (incidentCode / machineCode from Machine Status)
@@ -331,7 +312,7 @@ function ErrorManagementContent() {
                 if (targetIndex !== -1) {
                     const targetPage = Math.floor(targetIndex / pageSize);
                     if (targetPage !== page) {
-                        setPage(targetPage);
+                        dispatch(errorManagementActions.changePageAndFetch(targetPage, pageSize));
                     }
                 }
 
@@ -350,7 +331,16 @@ function ErrorManagementContent() {
             }
             hasHandledNavigationRef.current = true;
         }
-    }, [loading, incidents, incidentCodeParam, machineCodeParam, openEditParam, pageSize, page]);
+    }, [
+        loading,
+        incidents,
+        incidentCodeParam,
+        machineCodeParam,
+        openEditParam,
+        pageSize,
+        page,
+        dispatch,
+    ]);
 
     // Status filter options for direct header Select
     const statusOptions = useMemo(
@@ -405,7 +395,7 @@ function ErrorManagementContent() {
             await MachineIncidentService.updateIncident(selectedIncident.machineIncidentId, values);
             toast.success(t('errorManagement.messages.updateSuccess'));
             setIsModalOpen(false);
-            await queryClient.invalidateQueries({ queryKey: ['machineIncidents'] });
+            dispatch(errorManagementActions.refresh());
         } catch (err: any) {
             const errorCode = err?.response?.data?.code || err?.code;
             if (errorCode === 1902) {
@@ -477,8 +467,9 @@ function ErrorManagementContent() {
 
     const handleTableChange = (pagination: any) => {
         if (pagination) {
-            setPage((pagination.current ?? 1) - 1);
-            setPageSize(pagination.pageSize ?? DEFAULT_PAGE_SIZE);
+            const newPage = (pagination.current ?? 1) - 1;
+            const newSize = pagination.pageSize ?? DEFAULT_PAGE_SIZE;
+            dispatch(errorManagementActions.changePageAndFetch(newPage, newSize));
         }
     };
 
@@ -506,10 +497,7 @@ function ErrorManagementContent() {
                 onSearchChange={handleSearchChange}
                 onSearchPressEnter={handleSearchPressEnter}
                 statusFilter={statusFilter}
-                onStatusFilterChange={(val) => {
-                    setStatusFilter(val);
-                    setPage(0);
-                }}
+                onStatusFilterChange={handleStatusFilterChange}
                 statusOptions={statusOptions}
                 timeFilterMode={timeFilterMode}
                 currentPeriodId={currentPeriodId}
@@ -520,7 +508,7 @@ function ErrorManagementContent() {
                 industryFilters={industryFilters}
                 isShiftActive={isShiftActive}
                 onApplyTimeFilter={handleApplyTimeFilter}
-                onRefresh={refetchIncidents}
+                onRefresh={handleRefresh}
                 loading={loading}
                 fromParam={fromParam}
                 onBack={handleBack}
@@ -536,10 +524,7 @@ function ErrorManagementContent() {
                 activeTimePeriodLabel={activeTimePeriodLabel}
                 onResetTimeFilter={handleResetTimeFilter}
                 statusFilter={statusFilter}
-                onResetStatusFilter={() => {
-                    setStatusFilter(undefined);
-                    setPage(0);
-                }}
+                onResetStatusFilter={() => handleStatusFilterChange(undefined)}
             />
 
             {/* Main Table Card */}

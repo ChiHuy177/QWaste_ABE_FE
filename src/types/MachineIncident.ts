@@ -38,6 +38,8 @@ export interface MachineIncidentFilterParams {
     resolution?: string;
     status?: MachineIncidentStatus;
     machineId?: string;
+    filterId?: number;
+    shiftFilterId?: number;
     startDate?: string;
     endDate?: string;
     page?: number;
