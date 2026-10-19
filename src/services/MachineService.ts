@@ -58,31 +58,43 @@ export class MachineService {
     }
 
     static async getAllMachines(): Promise<Machine[]> {
-        const response = await NetworkService.requestJson<Machine[]>({
+        const response = await NetworkService.requestJson<Machine[] | PaginatedResult<Machine>>({
             method: 'GET',
-            url: ENDPOINTS.MACHINE.BASE,
+            url: `${ENDPOINTS.MACHINE.BASE}?page=0&size=1000`,
         });
-        return response.result as Machine[];
+        const result = response.result;
+        if (Array.isArray(result)) {
+            return result;
+        }
+        return (result as PaginatedResult<Machine>)?.content ?? [];
     }
 
     static async getMachinesPickingByOperationType(operationTypeId: number): Promise<Machine[]> {
-        const response = await NetworkService.requestJson<Machine[]>({
+        const response = await NetworkService.requestJson<Machine[] | PaginatedResult<Machine>>({
             method: 'GET',
             url: `${ENDPOINTS.MACHINE.PICKING_BY_OPERATION_TYPE}?operationTypeId=${operationTypeId}`,
         });
 
-        return response.result as Machine[];
+        const result = response.result;
+        if (Array.isArray(result)) {
+            return result;
+        }
+        return (result as PaginatedResult<Machine>)?.content ?? [];
     }
 
     static async getAllMachinesInList(spaceId: number): Promise<Machine[]> {
         const url = `${ENDPOINTS.MACHINE.MACHINE_LIST}?spaceId=${spaceId}`;
 
-        const response = await NetworkService.requestJson<Machine[]>({
+        const response = await NetworkService.requestJson<Machine[] | PaginatedResult<Machine>>({
             method: 'GET',
             url,
         });
 
-        return response.result as Machine[];
+        const result = response.result;
+        if (Array.isArray(result)) {
+            return result;
+        }
+        return (result as PaginatedResult<Machine>)?.content ?? [];
     }
 
     static async getMachineById(machineId: string): Promise<Machine> {
@@ -97,12 +109,18 @@ export class MachineService {
         spaceId: number,
         filterId: number
     ): Promise<MachineOverview[]> {
-        const response = await NetworkService.requestJson<MachineOverview[]>({
+        const response = await NetworkService.requestJson<
+            MachineOverview[] | PaginatedResult<MachineOverview>
+        >({
             method: 'GET',
             url: `${ENDPOINTS.MACHINE.WITH_LOGS}?spaceId=${spaceId}&filterId=${filterId}`,
         });
 
-        return response.result as MachineOverview[];
+        const result = response.result;
+        if (Array.isArray(result)) {
+            return result;
+        }
+        return (result as PaginatedResult<MachineOverview>)?.content ?? [];
     }
 
     static async getMachineOverviewByCurrentShift(machineId: string): Promise<MachineOverview> {
