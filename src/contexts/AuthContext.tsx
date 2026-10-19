@@ -2,6 +2,7 @@
 
 import { AuthService } from '@/services/AuthService';
 import { UserService } from '@/services/UserService';
+import { AuthStore } from '@/stores/AuthStore';
 
 import { UserProfile, UserSettings } from '@/types/User';
 import { useRouter, usePathname } from 'next/navigation';
@@ -134,6 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log('[AUTH CONTEXT] Login attempt for:', username);
         try {
             await AuthService.login(username, password);
+            AuthStore.clearCalendarAlarmState();
             const user = await UserService.getMe();
             console.log('[AUTH CONTEXT] User fetched:', user);
             console.log('[AUTH CONTEXT] Setting user state with roles:', user?.roles);
@@ -164,6 +166,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } catch (err: unknown) {
             console.error('[AUTH CONTEXT] Logout failed:', getApiErrorMessage(err));
         } finally {
+            AuthStore.clear();
             console.log('[AUTH CONTEXT] Logout completed');
             setIsLoading(false);
             setIsAuthenticating(false);

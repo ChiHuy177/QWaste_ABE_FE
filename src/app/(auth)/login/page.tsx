@@ -16,6 +16,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         setIsClient(true);
+        AuthStore.clear();
     }, []);
 
     usePageTitle(t('common.login'));
@@ -25,7 +26,9 @@ export default function LoginPage() {
             AuthStore.clear();
             // Preserve returnUrl when clearing logout param
             const returnUrl = searchParams.get('returnUrl');
-            const newUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login';
+            const newUrl = returnUrl
+                ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+                : '/login';
             router.replace(newUrl);
         }
     }, [searchParams, router]);
