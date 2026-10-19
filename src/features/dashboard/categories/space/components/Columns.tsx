@@ -209,7 +209,8 @@ const SpaceActionCell = ({
     t,
 }: SpaceActionCellProps) => {
     const [popconfirmOpen, setPopconfirmOpen] = useState(false);
-    const isMaxLevel = (record.spaceLevel?.spaceLevel ?? 0) >= maxSpaceLevel;
+    const isMaxLevel =
+        maxSpaceLevel > 0 && Number(record.spaceLevel?.spaceLevel ?? 0) >= maxSpaceLevel;
     const hasChildren = !!record.children && record.children.length > 0;
 
     const overflowItems: MenuProps['items'] = [

@@ -1,5 +1,7 @@
 import { IndustryFilter } from '@/types/IndustryFilter';
+import { SpaceLevelDTO } from '@/types/SpaceLevel';
 import { NetworkService } from './NetworkService';
+import { SpaceLevelService } from './SpaceLevelService';
 import { ENDPOINTS } from './endpoints';
 
 export class UtilsService {
@@ -7,11 +9,34 @@ export class UtilsService {
      * GET Highest Space Level
      */
     static async getHighestSpaceLevel(): Promise<number> {
-        const response = await NetworkService.requestJson<number>({
-            method: 'GET',
-            url: ENDPOINTS.UTILS.SPACE_LEVELS.HIGHEST,
-        });
-        return response.result as number;
+        try {
+            const response = await NetworkService.requestJson<number>({
+                method: 'GET',
+                url: ENDPOINTS.UTILS.SPACE_LEVELS.HIGHEST,
+            });
+            const raw = response?.result ?? (response as unknown as { data?: number })?.data;
+            if (raw !== undefined && raw !== null) {
+                const parsed = Number(raw);
+                if (!Number.isNaN(parsed) && parsed > 0) {
+                    return parsed;
+                }
+            }
+        } catch {}
+
+        try {
+            const levels = await SpaceLevelService.getAllSpaceLevels();
+            const list = Array.isArray(levels)
+                ? levels
+                : ((levels as unknown as { content?: SpaceLevelDTO[] })?.content ?? []);
+            if (list.length > 0) {
+                const maxLevel = Math.max(...list.map((l) => Number(l.spaceLevel ?? 0)));
+                if (maxLevel > 0) {
+                    return maxLevel;
+                }
+            }
+        } catch {}
+
+        return 0;
     }
 
     /**

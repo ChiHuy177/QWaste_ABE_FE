@@ -1894,6 +1894,9 @@
                 "description": "Are you sure you want to delete this space?"
             }
         },
+        "maxLevelBadge": "Max",
+        "levelBadge": "Level {{level}}",
+        "levelOption": "Level {{level}}: {{name}}",
         "form": {
             "createTitle": "Create New Space",
             "createDescription": "Assign to parent: {{parentName}} ({{spaceLevelName}})",
@@ -1906,6 +1909,8 @@
             "updateSuccess": "Space updated successfully",
             "updateError": "Failed to update space",
             "fields": {
+                "level": "Space Level",
+                "parentSpace": "Parent Space",
                 "code": "Space Code",
                 "name": "Space Name",
                 "order": "Display Order",
@@ -1913,6 +1918,11 @@
                 "description": "Description"
             },
             "placeholders": {
+                "level": "Select space level...",
+                "rootNoParent": "Level 1 space has no parent (Root)",
+                "selectParentSpace": "Select parent space...",
+                "selectLevelFirst": "Please select a space level first...",
+                "parentSpace": "Select parent space (leave empty for root space)...",
                 "code": "Enter space code",
                 "name": "Enter space name",
                 "order": "Enter display order",
@@ -1920,6 +1930,11 @@
                 "description": "Enter detailed description of the space"
             },
             "help": {
+                "noticePrefix": "Note:",
+                "levelSelectionHint": "Select a space level first to load valid parent spaces.",
+                "parentLevelHint": "Parent space must belong to Level {{level}}.",
+                "parentSpaceHint": "Select space level first. Level 1 is root (no parent). Level > 1 requires a parent from the tier above.",
+                "levelEditDisabled": "Space level cannot be changed when updating.",
                 "floorPlanImageUrl": "Upload the floor plan image used by the Floor Map page."
             },
             "upload": {
@@ -1932,7 +1947,11 @@
                 "noWhitespaceOnly": "Cannot contain only whitespace characters",
                 "codePattern": "Format invalid (A-Z0-9_-)",
                 "url": "Invalid URL",
-                "minValue": "Minimum value is {{min}}"
+                "minValue": "Minimum value is {{min}}",
+                "cannotAddChildToMaxLevel": "Cannot create child space because this space is already at the maximum level (Level {{maxLevel}}).",
+                "cannotSelectSelfAsParent": "Cannot select this space as its own parent.",
+                "cannotSelectDescendantAsParent": "Cannot select a descendant space as parent.",
+                "parentRequiredForNonRoot": "Level {{level}} space must have a parent space at Level {{parentLevel}}."
             },
             "buttons": {
                 "cancel": "Cancel",

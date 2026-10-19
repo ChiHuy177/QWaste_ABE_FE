@@ -172,23 +172,35 @@ const SpaceLevelListPage = () => {
     const handleCreateLevel = useCallback(async () => {
         try {
             setIsFormLoading(true);
-            const highestLevel = await queryClient.fetchQuery({
-                queryKey: spaceLevelQueryKeys.highest,
-                queryFn: () => UtilsService.getHighestSpaceLevel(),
-            });
+            let highestLevel = 0;
+            try {
+                highestLevel = await queryClient.fetchQuery({
+                    queryKey: spaceLevelQueryKeys.highest,
+                    queryFn: () => UtilsService.getHighestSpaceLevel(),
+                });
+            } catch {
+                highestLevel = 0;
+            }
+
+            if (!highestLevel || highestLevel <= 0) {
+                const maxFromList =
+                    levelData.length > 0
+                        ? Math.max(...levelData.map((l) => Number(l.spaceLevel) || 0))
+                        : 0;
+                highestLevel = maxFromList;
+            }
 
             setModalState({
                 open: true,
                 mode: 'create',
-                data: { spaceLevel: highestLevel + 1 },
+                data: { spaceLevel: (highestLevel || 0) + 1 },
             });
         } catch (error) {
-            console.error('Failed to fetch highest level', error);
             handleError(error, { fallbackKey: 'spaceLevelManagement.fetchError' });
         } finally {
             setIsFormLoading(false);
         }
-    }, [handleError, queryClient]);
+    }, [handleError, levelData, queryClient]);
 
     const handleEditLevel = useCallback(
         async (level: SpaceLevelDTO) => {

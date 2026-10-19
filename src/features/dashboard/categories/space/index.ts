@@ -1,2 +1,2 @@
 export { getSpaceTableColumns, type SpaceTableColumnProps } from './components/Columns';
-export { getSpaceFormFields } from './components/spaceFormConfig';
+export { getSpaceFormFields, type SpaceFormFieldOptions } from './components/spaceFormConfig';

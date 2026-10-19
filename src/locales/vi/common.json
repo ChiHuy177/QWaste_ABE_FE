@@ -1852,6 +1852,9 @@
                 "description": "Bạn có chắc chắn muốn xóa khu vực này không?"
             }
         },
+        "maxLevelBadge": "Tối đa",
+        "levelBadge": "Cấp {{level}}",
+        "levelOption": "Cấp {{level}}: {{name}}",
         "form": {
             "createTitle": "Tạo khu vực mới",
             "createDescription": "Gán vào cấp cha: {{parentName}} ({{spaceLevelName}})",
@@ -1864,6 +1867,8 @@
             "updateSuccess": "Cập nhật khu vực thành công",
             "updateError": "Cập nhật khu vực thất bại",
             "fields": {
+                "level": "Cấp khu vực",
+                "parentSpace": "Khu vực cha",
                 "code": "Mã khu vực",
                 "name": "Tên khu vực",
                 "order": "Thứ tự hiển thị",
@@ -1871,6 +1876,11 @@
                 "description": "Mô tả"
             },
             "placeholders": {
+                "level": "Chọn cấp khu vực...",
+                "rootNoParent": "Khu vực cấp 1 không có cấp cha (Khu vực gốc)",
+                "selectParentSpace": "Chọn khu vực cha...",
+                "selectLevelFirst": "Vui lòng chọn cấp khu vực trước...",
+                "parentSpace": "Chọn khu vực cha (để trống nếu là khu vực gốc)...",
                 "code": "Nhập mã khu vực",
                 "name": "Nhập tên khu vực",
                 "order": "Nhập thứ tự hiển thị",
@@ -1878,6 +1888,11 @@
                 "description": "Nhập mô tả chi tiết về khu vực"
             },
             "help": {
+                "noticePrefix": "Lưu ý:",
+                "levelSelectionHint": "Chọn cấp độ trước để tải danh sách các khu vực cha hợp lệ.",
+                "parentLevelHint": "Khu vực cha phải thuộc Cấp {{level}}.",
+                "parentSpaceHint": "Chọn cấp khu vực trước. Nếu là Cấp 1, đây là khu vực gốc (không có cha). Cấp > 1 sẽ chọn khu vực cha thuộc cấp trên.",
+                "levelEditDisabled": "Không thể thay đổi cấp khu vực khi cập nhật.",
                 "floorPlanImageUrl": "Tải lên ảnh sơ đồ mặt bằng cho trang Floor Map."
             },
             "upload": {
@@ -1890,7 +1905,11 @@
                 "noWhitespaceOnly": "Không được chỉ chứa khoảng trắng",
                 "codePattern": "Định dạng không hợp lệ (A-Z0-9_-)",
                 "url": "URL không hợp lệ",
-                "minValue": "Giá trị tối thiểu là {{min}}"
+                "minValue": "Giá trị tối thiểu là {{min}}",
+                "cannotAddChildToMaxLevel": "Không thể tạo khu vực con vì khu vực này đã đạt cấp tối đa (Cấp {{maxLevel}}).",
+                "cannotSelectSelfAsParent": "Không thể chọn chính khu vực này làm khu vực cha.",
+                "cannotSelectDescendantAsParent": "Không thể chọn khu vực con cháu làm khu vực cha.",
+                "parentRequiredForNonRoot": "Khu vực cấp {{level}} bắt buộc phải chọn khu vực cha thuộc Cấp {{parentLevel}}."
             },
             "buttons": {
                 "cancel": "Hủy",

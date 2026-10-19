@@ -242,18 +242,24 @@ export const renderSelectField = (field: FormFieldConfig) => {
             disabled={(field.loading || field.disabled) as boolean}
             allowClear={field.allowClear}
             onChange={field.onChange}
+            showSearch={field.showSearch ?? true}
+            filterOption={
+                field.filterOption ??
+                ((input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()))
+            }
             mode={field.mode}
             maxTagCount={field.maxTagCount}
             maxTagPlaceholder={
                 showTooltipOnOverflow
                     ? (omittedValues) => {
-                        const titles = omittedValues.map((v) => v.label).join(', ');
-                        return (
-                            <Tooltip title={titles} overlayStyle={{ maxWidth: 400 }}>
-                                <span>+{omittedValues.length} ...</span>
-                            </Tooltip>
-                        );
-                    }
+                          const titles = omittedValues.map((v) => v.label).join(', ');
+                          return (
+                              <Tooltip title={titles} overlayStyle={{ maxWidth: 400 }}>
+                                  <span>+{omittedValues.length} ...</span>
+                              </Tooltip>
+                          );
+                      }
                     : undefined
             }
         />
@@ -308,6 +314,8 @@ export const renderSpaceTreeSelectField = (field: FormFieldConfig) => {
             disabled={field.disabled as boolean}
             allowClear={field.allowClear !== false}
             onChange={field.onChange}
+            treeData={field.treeData}
+            treeDefaultExpandAll={field.treeDefaultExpandAll ?? true}
         />
     );
 };
@@ -385,9 +393,7 @@ const ImageUploader = ({
             const fileMaxSizeMB = isSvg ? (svgMaxFileSizeMB ?? maxFileSizeMB) : maxFileSizeMB;
             const isLtMaxSize = file.size / 1024 / 1024 < fileMaxSizeMB;
             if (!isLtMaxSize) {
-                toast.error(
-                    `${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`
-                );
+                toast.error(`${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`);
                 return Upload.LIST_IGNORE;
             }
             onChange?.(file);

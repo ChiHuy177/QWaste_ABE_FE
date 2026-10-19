@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Modal,
     Form,
@@ -12,6 +12,7 @@ import {
     Typography,
     Skeleton,
     Tabs,
+    theme,
 } from 'antd';
 import { toast } from 'sonner';
 import { EntityFormModalProps, FormFieldConfig } from './types';
@@ -37,6 +38,7 @@ const { Text, Title } = Typography;
  * ```
  */
 export function EntityFormModal<TFormData extends Record<string, any>>({
+    form: externalForm,
     open,
     onOpenChange,
     onSubmit: handleFormSubmit,
@@ -45,6 +47,7 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
     fields,
     title,
     description,
+    topContent,
     width = 450,
     buttonLabels,
     auditMetaData,
@@ -53,10 +56,13 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
     children,
     layout = 'default',
 }: EntityFormModalProps<TFormData>) {
-    const [form] = Form.useForm<TFormData>();
+    const [internalForm] = Form.useForm<TFormData>();
+    const form = externalForm || internalForm;
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { token } = theme.useToken();
     const isEditMode = mode === 'edit';
     const useTabbedLayout = layout === 'tabs' && children;
+    const prevOpenRef = useRef(false);
 
     // Get current title and description based on mode
     const currentTitle = isEditMode ? title?.edit : title?.create;
@@ -96,25 +102,31 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
      */
     useEffect(() => {
         if (open) {
-            if (isEditMode && initialData) {
-                form.setFieldsValue(initialData);
-            } else {
-                form.resetFields();
-                // Set default values for create mode
-                const defaultValues: Record<string, unknown> = {};
-                fields.forEach((field) => {
-                    if (field.defaultValue !== undefined) {
-                        defaultValues[field.name] = field.defaultValue;
+            const isJustOpened = !prevOpenRef.current;
+            if (isJustOpened) {
+                if (isEditMode && initialData) {
+                    form.setFieldsValue(initialData);
+                } else if (!isEditMode) {
+                    form.resetFields();
+                    // Set default values for create mode
+                    const defaultValues: Record<string, unknown> = {};
+                    fields.forEach((field) => {
+                        if (field.defaultValue !== undefined) {
+                            defaultValues[field.name] = field.defaultValue;
+                        }
+                    });
+                    if (initialData) {
+                        Object.assign(defaultValues, initialData);
                     }
-                });
-                if (initialData) {
-                    Object.assign(defaultValues, initialData);
+                    if (Object.keys(defaultValues).length > 0) {
+                        form.setFieldsValue(defaultValues as Partial<TFormData>);
+                    }
                 }
-                if (Object.keys(defaultValues).length > 0) {
-                    form.setFieldsValue(defaultValues as Partial<TFormData>);
-                }
+            } else if (isEditMode && initialData) {
+                form.setFieldsValue(initialData);
             }
         }
+        prevOpenRef.current = open;
     }, [open, mode, initialData, form, isEditMode, fields]);
 
     /**
@@ -224,7 +236,12 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
             destroyOnHidden
             mask={{ closable: !isSubmitting }}
         >
-            {currentDescription && <p style={{ color: '#6b7280', marginBottom: 24 }}>{currentDescription}</p>}
+            {currentDescription && (
+                <p style={{ color: token.colorTextSecondary, marginBottom: 24 }}>
+                    {currentDescription}
+                </p>
+            )}
+            {topContent && <div style={{ marginBottom: 18 }}>{topContent}</div>}
 
             {loading ? (
                 <div style={{ padding: '16px 0' }}>
@@ -335,8 +352,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                     <Text type="secondary">
                                         {auditMetaData.createdAt
                                             ? dayjs(auditMetaData.createdAt).format(
-                                                'DD/MM/YYYY HH:mm:ss'
-                                            )
+                                                  'DD/MM/YYYY HH:mm:ss'
+                                              )
                                             : '-'}
                                     </Text>
                                 </Descriptions.Item>
@@ -347,8 +364,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                     <Text type="secondary">
                                         {auditMetaData.updatedAt
                                             ? dayjs(auditMetaData.updatedAt).format(
-                                                'DD/MM/YYYY HH:mm:ss'
-                                            )
+                                                  'DD/MM/YYYY HH:mm:ss'
+                                              )
                                             : '-'}
                                     </Text>
                                 </Descriptions.Item>
@@ -369,8 +386,8 @@ export function EntityFormModal<TFormData extends Record<string, any>>({
                                 {isSubmitting
                                     ? labels.saving
                                     : isEditMode
-                                        ? labels.edit
-                                        : labels.create}
+                                      ? labels.edit
+                                      : labels.create}
                             </Button>
                         </div>
                     </Form.Item>
