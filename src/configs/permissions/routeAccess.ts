@@ -33,6 +33,7 @@ export const ROUTE_ACCESS: Record<string, RouteConfig> = Object.fromEntries(
 
 const DEFAULT_ROUTE_PRIORITY: string[] = [
     '/admin/space-monitoring',
+    '/admin/production-plan/monitor',
     '/admin/machines',
     '/qc',
     '/admin/categories/machineList',

@@ -191,6 +191,7 @@ export type AccountRole =
     | 'director'
     | 'manager'
     | 'planner'
+    | 'inventory_manager'
     | 'operator'
     | 'qc_staff'
     | 'maintenance'
