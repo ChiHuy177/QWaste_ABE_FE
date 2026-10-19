@@ -14,9 +14,6 @@ const BASE_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'staff' },
     { action: 'view', subject: 'tasks' },
     { action: 'view', subject: 'production_monitor' },
-    { action: 'view', subject: 'error_management' },
-    { action: 'create', subject: 'error_management' },
-    { action: 'update', subject: 'error_management' },
     { action: 'view', subject: 'production_overview' },
 ];
 
@@ -39,6 +36,9 @@ const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'work_calendar' },
     { action: 'view', subject: 'production_plan' },
     { action: 'view', subject: 'machine_overview' },
+    { action: 'view', subject: 'error_management' },
+    { action: 'create', subject: 'error_management' },
+    { action: 'update', subject: 'error_management' },
 ];
 
 const PLANNER_PERMISSIONS: PermissionRule[] = [
