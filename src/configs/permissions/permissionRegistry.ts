@@ -785,7 +785,6 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         menuKey: 'error-management',
         description: 'View error and incident management',
         i18nKey: 'sidebar.navigation.errorManagement',
-        alwaysShowInMenu: true,
     },
     {
         slug: 'error_management:create',
