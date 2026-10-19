@@ -414,7 +414,8 @@
             "overrideTooltip": "Date modified differently from default rule",
             "pastDayTooltip": "Cannot edit schedule for past dates",
             "plannedHoursLabel": "{{hours}}h planned",
-            "plannedOffLabel": "0h (Off)"
+            "plannedOffLabel": "0h (Off)",
+            "monthPickerFormat": "MMMM, YYYY"
         },
         "dayType": {
             "working": "Working",
@@ -437,6 +438,9 @@
             "shiftPatternLabel": "Shift Pattern",
             "selectPatternPlaceholder": "Select shift pattern",
             "defaultPatternTag": "Default",
+            "hoursPreviewLabel": "Expected Working Hours:",
+            "hoursUnitPerDay": "{{hours}}h / day",
+            "hoursZeroOff": "0h (Off)",
             "btnApply": "Apply"
         },
         "errors": {
@@ -453,8 +457,12 @@
             "eyebrow": "SYSTEM WARNING",
             "modalTitle": "Work Calendar Alert",
             "targetNotice": "Month {{month}}/{{year}} unconfirmed",
+            "targetNoticeMultiple": "{{count}} month(s) work schedule unconfirmed",
             "targetSub": "Please review and lock schedule promptly",
             "modalDesc": "Month {{month}} work schedule has not been confirmed. Please review and confirm to ensure accurate performance calculations.",
+            "modalDescMultiple": "Work schedules for ({{months}}) have not been confirmed. Please review and confirm to ensure accurate performance calculations.",
+            "monthYearFormat": "Month {{month}}/{{year}}",
+            "btnGoToConfigure": "Configure",
             "btnConfigureNow": "Configure Now",
             "btnCloseLater": "Later"
         },

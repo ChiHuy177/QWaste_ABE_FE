@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { workCalendarActions } from '@/stores';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -13,13 +13,21 @@ import {
     WorkCalendarGrid,
     EditDayModal,
 } from '@/features/dashboard/work-calendar';
-import { DayType, WorkCalendarDayResponse } from '@/types/WorkCalendar';
+import {
+    DayType,
+    WorkCalendarDayResponse,
+    WorkCalendarSummaryResponse,
+} from '@/types/WorkCalendar';
 
 export default function WorkCalendarPage() {
     const { t } = useTranslation('common');
     usePageTitle(t('pageTitle.workCalendar', t('workCalendar.header.title')));
     const searchParams = useSearchParams();
+    const router = useRouter();
     const dispatch = useAppDispatch();
+
+    const urlYear = searchParams.get('year') ? Number(searchParams.get('year')) : undefined;
+    const urlMonth = searchParams.get('month') ? Number(searchParams.get('month')) : undefined;
 
     const {
         year,
@@ -36,37 +44,30 @@ export default function WorkCalendarPage() {
         isConfirming,
     } = useAppSelector((state) => state.workCalendar);
 
-    // Sync URL params on initial mount
     useEffect(() => {
-        const paramYear = searchParams.get('year') ? Number(searchParams.get('year')) : undefined;
-        const paramMonth = searchParams.get('month')
-            ? Number(searchParams.get('month'))
-            : undefined;
-        if (paramYear || paramMonth) {
-            dispatch(
-                workCalendarActions.setYearMonth({
-                    year: paramYear || dayjs().year(),
-                    month: paramMonth || dayjs().month() + 1,
-                })
-            );
+        if (urlYear && urlMonth) {
+            if (urlYear !== year || urlMonth !== month) {
+                dispatch(
+                    workCalendarActions.setYearMonth({
+                        year: urlYear,
+                        month: urlMonth,
+                    })
+                );
+            }
         }
-    }, [searchParams, dispatch]);
+    }, [urlYear, urlMonth, year, month, dispatch]);
 
-    // Fetch shift patterns once
     useEffect(() => {
         dispatch(workCalendarActions.fetchShiftPatterns());
     }, [dispatch]);
 
-    // Fetch month calendar data whenever year/month changes
     useEffect(() => {
-        dispatch(
-            workCalendarActions.fetchMonthCalendar(
-                year,
-                month,
-                t('workCalendar.notifications.fetchError')
-            )
-        );
-    }, [year, month, dispatch, t]);
+        if (urlYear && urlMonth && (urlYear !== year || urlMonth !== month)) {
+            return;
+        }
+
+        dispatch(workCalendarActions.fetchMonthCalendar(year, month));
+    }, [year, month, urlYear, urlMonth, dispatch]);
 
     // Construct Map for Grid and Modal lookups
     const draftDaysMap = useMemo(() => {
@@ -102,12 +103,41 @@ export default function WorkCalendarPage() {
 
     const isConfirmed = useMemo(() => Boolean(monthData?.isConfirmed), [monthData]);
 
+    // Compute active summary in real time (recalculating working/off days and total hours in edit mode)
+    const activeSummary = useMemo<WorkCalendarSummaryResponse | undefined>(() => {
+        if (!monthData) return undefined;
+        if (!isEditMode) return monthData.summary;
+
+        const days = Object.values(draftDays);
+        if (days.length === 0) return monthData.summary;
+
+        let workingDays = 0;
+        let offDays = 0;
+        let totalHours = 0;
+
+        for (const day of days) {
+            if (day.isWorkingDay) {
+                workingDays++;
+                totalHours += day.plannedTime || 0;
+            } else {
+                offDays++;
+            }
+        }
+
+        return {
+            totalWorkingDays: workingDays,
+            totalOffDays: offDays,
+            totalPlannedHours: Number(totalHours.toFixed(2)),
+        };
+    }, [isEditMode, monthData, draftDays]);
+
     // Handlers
     const handleMonthChange = useCallback(
         (newYear: number, newMonth: number) => {
+            router.replace(`/admin/work-calendar?year=${newYear}&month=${newMonth}`);
             dispatch(workCalendarActions.setYearMonth({ year: newYear, month: newMonth }));
         },
-        [dispatch]
+        [dispatch, router]
     );
 
     const handleEnterEditMode = useCallback(() => {
@@ -125,7 +155,8 @@ export default function WorkCalendarPage() {
             isWorkingDay: boolean,
             shiftPatternId?: number | null,
             patternCode?: string | null,
-            patternName?: string | null
+            patternName?: string | null,
+            plannedTime?: number
         ) => {
             dispatch(
                 workCalendarActions.updateDraftDays({
@@ -135,6 +166,7 @@ export default function WorkCalendarPage() {
                     shiftPatternId,
                     patternCode,
                     patternName,
+                    plannedTime,
                 })
             );
         },
@@ -219,15 +251,16 @@ export default function WorkCalendarPage() {
                 onConfirmMonth={handleConfirmMonth}
             />
 
-            <WorkCalendarSummary summary={monthData?.summary} loading={isLoading} />
+            <WorkCalendarSummary summary={activeSummary} loading={isLoading || !monthData} />
 
             <WorkCalendarGrid
                 year={year}
                 month={month}
                 daysMap={draftDaysMap}
                 originalDaysMap={originalDaysMap}
+                shiftPatterns={shiftPatterns}
                 isEditMode={isEditMode}
-                loading={isLoading}
+                loading={isLoading || !monthData}
                 selectedDates={selectedDates}
                 onMonthChange={handleMonthChange}
                 onSelectDates={handleSelectDates}

@@ -6,6 +6,7 @@ import { CalendarOutlined, ClockCircleOutlined, CoffeeOutlined } from '@ant-desi
 import { useTranslation } from 'react-i18next';
 import { WorkCalendarSummaryResponse } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
+import { useTheme } from '@/hooks/useTheme';
 
 const { useBreakpoint } = Grid;
 
@@ -18,9 +19,10 @@ export const WorkCalendarSummary = React.memo<WorkCalendarSummaryProps>(
     ({ summary, loading = false }) => {
         const { t } = useTranslation('common');
         const { token } = theme.useToken();
+        const { resolvedTheme } = useTheme();
         const screens = useBreakpoint();
         const isMobile = !screens.md;
-        const isDark = token.colorBgContainer !== '#ffffff';
+        const isDark = resolvedTheme === 'dark';
         const sc = isDark ? statusColors.dark : statusColors.light;
 
         const workingDays = summary?.totalWorkingDays ?? 0;
@@ -194,9 +196,7 @@ export const WorkCalendarSummary = React.memo<WorkCalendarSummaryProps>(
                         style={{
                             borderRadius: token.borderRadiusLG,
                             height: isMobile ? 76 : 104,
-                            background: isDark
-                                ? 'rgba(61, 125, 210, 0.14)'
-                                : 'rgba(7, 70, 149, 0.08)',
+                            background: token.colorPrimaryBg,
                             border: `1px solid ${token.colorPrimaryBorder}`,
                             boxShadow: token.boxShadow,
                         }}

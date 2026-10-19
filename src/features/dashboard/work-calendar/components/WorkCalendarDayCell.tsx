@@ -6,6 +6,8 @@ import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { DayType } from '@/types/WorkCalendar';
 import { statusColors } from '@/configs/antdTheme';
+import { getShiftPatternColor } from '@/utils';
+import { useTheme } from '@/hooks/useTheme';
 
 export interface WorkCalendarDayCellProps {
     dateString: string;
@@ -22,6 +24,7 @@ export interface WorkCalendarDayCellProps {
     patternCode?: string | null;
     patternName?: string | null;
     shiftPatternId?: number | null;
+    patternIndex?: number;
     isMobile?: boolean;
     onCellMouseDown?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
     onCellMouseEnter?: (dateString: string, dayIndex: number, e: React.MouseEvent) => void;
@@ -43,6 +46,8 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         plannedTime = 0,
         patternCode,
         patternName,
+        shiftPatternId,
+        patternIndex,
         isMobile = false,
         onCellMouseDown,
         onCellMouseEnter,
@@ -51,7 +56,8 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
         const { t } = useTranslation('common');
         const { token } = theme.useToken();
 
-        const isDark = token.colorBgContainer !== '#ffffff';
+        const { resolvedTheme } = useTheme();
+        const isDark = resolvedTheme === 'dark';
         const sc = isDark ? statusColors.dark : statusColors.light;
         const isToday = dayjs().format('YYYY-MM-DD') === dateString;
         const patternDisplayName = patternName || patternCode;
@@ -110,6 +116,9 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             );
         }
 
+        const shiftColor = getShiftPatternColor(shiftPatternId, patternIndex, isDark);
+
+        // Keep 2 standard colors for calendar cards: Green for working days, Red for holidays
         let cellBg = sc.runtime.bg;
         let cellBorder = sc.runtime.border;
         let typeLabel = t('workCalendar.dayType.working');
@@ -243,22 +252,43 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                             </div>
                         </div>
 
-                        {/* Middle row: Status label */}
+                        {/* Middle row: Status label / pattern name */}
                         <div style={{ textAlign: 'center', margin: '2px 0' }}>
-                            <span
-                                style={{
-                                    fontSize: 10,
-                                    fontWeight: 600,
-                                    color: typeColor,
-                                    display: 'block',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    lineHeight: 1.2,
-                                }}
-                            >
-                                {typeShortLabel}
-                            </span>
+                            {isWorkingDay && patternDisplayName ? (
+                                <Tag
+                                    color={shiftColor.tagColor}
+                                    title={patternDisplayName}
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 9,
+                                        lineHeight: '14px',
+                                        padding: '0 3px',
+                                        borderRadius: token.borderRadiusXS,
+                                        maxWidth: '100%',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        display: 'inline-block',
+                                    }}
+                                >
+                                    {patternDisplayName}
+                                </Tag>
+                            ) : (
+                                <span
+                                    style={{
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                        color: typeColor,
+                                        display: 'block',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        lineHeight: 1.2,
+                                    }}
+                                >
+                                    {typeShortLabel}
+                                </span>
+                            )}
                         </div>
 
                         {/* Bottom row: Planned hours */}
@@ -368,7 +398,7 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
                         >
                             {isWorkingDay && patternDisplayName ? (
                                 <Tag
-                                    color="default"
+                                    color={shiftColor.tagColor}
                                     title={patternDisplayName}
                                     style={{
                                         margin: 0,
@@ -463,6 +493,7 @@ export const WorkCalendarDayCell = React.memo<WorkCalendarDayCellProps>(
             prevProps.patternCode === nextProps.patternCode &&
             prevProps.patternName === nextProps.patternName &&
             prevProps.shiftPatternId === nextProps.shiftPatternId &&
+            prevProps.patternIndex === nextProps.patternIndex &&
             prevProps.isMobile === nextProps.isMobile
         );
     }

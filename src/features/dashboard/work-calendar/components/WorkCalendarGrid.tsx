@@ -14,6 +14,7 @@ import {
 import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { WorkCalendarDayResponse } from '@/types/WorkCalendar';
+import { ShiftPatternForPicking } from '@/types/ShiftPattern';
 import { WorkCalendarDayCell } from './WorkCalendarDayCell';
 
 const { Text } = Typography;
@@ -24,6 +25,7 @@ interface WorkCalendarGridProps {
     month: number;
     daysMap: Map<string, WorkCalendarDayResponse>;
     originalDaysMap: Map<string, WorkCalendarDayResponse>;
+    shiftPatterns?: ShiftPatternForPicking[];
     isEditMode: boolean;
     loading?: boolean;
     selectedDates: string[];
@@ -39,6 +41,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
         month,
         daysMap,
         originalDaysMap,
+        shiftPatterns = [],
         isEditMode,
         loading = false,
         selectedDates,
@@ -47,11 +50,11 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
         onOpenEditModal,
         onClearSelection,
     }) => {
-        const { t, i18n } = useTranslation('common');
+        const { t } = useTranslation('common');
         const { token } = theme.useToken();
         const screens = useBreakpoint();
         const isMobile = !screens.md;
-        const datePickerFormat = i18n.language === 'en' ? 'MMMM, YYYY' : '[Tháng] MM, YYYY';
+        const datePickerFormat = t('workCalendar.grid.monthPickerFormat', '[Tháng] MM, YYYY');
 
         // Drag-select & Shift-select state
         const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
@@ -108,6 +111,15 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
 
         // Fast O(1) Set lookup for selection
         const selectedDatesSet = useMemo(() => new Set(selectedDates), [selectedDates]);
+
+        // Pattern index map for dynamic coloring
+        const patternIndexMap = useMemo(() => {
+            const map = new Map<number, number>();
+            shiftPatterns.forEach((p, idx) => {
+                map.set(p.patternId, idx);
+            });
+            return map;
+        }, [shiftPatterns]);
 
         // Editable dates in current month
         const editableMonthDates = useMemo(() => {
@@ -347,6 +359,11 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                         patternCode={dayData?.patternCode}
                         patternName={dayData?.patternName}
                         shiftPatternId={dayData?.shiftPatternId}
+                        patternIndex={
+                            dayData?.shiftPatternId
+                                ? patternIndexMap.get(dayData.shiftPatternId)
+                                : undefined
+                        }
                         isMobile={isMobile}
                         onCellMouseDown={handleCellMouseDown}
                         onCellMouseEnter={handleCellMouseEnter}
@@ -360,6 +377,7 @@ export const WorkCalendarGrid: React.FC<WorkCalendarGridProps> = React.memo(
                 daysMap,
                 originalDaysMap,
                 selectedDatesSet,
+                patternIndexMap,
                 isEditMode,
                 isMobile,
                 handleCellMouseDown,
