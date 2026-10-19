@@ -182,9 +182,7 @@ const SpaceListPage = () => {
                 if (Array.isArray(content) && content.length > 0) {
                     return [...content].sort((a, b) => getNumericLevel(a) - getNumericLevel(b));
                 }
-            } catch {
-                // Fallback to getAllSpaceLevels if paginated request fails
-            }
+            } catch {}
 
             const response = (await SpaceLevelService.getAllSpaceLevels()) as unknown;
             const levels = Array.isArray(response)

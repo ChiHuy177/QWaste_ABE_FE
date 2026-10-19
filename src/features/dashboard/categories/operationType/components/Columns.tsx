@@ -16,6 +16,8 @@ export type OperationTypeTableColumnProps = {
     isMobile?: boolean;
     t: (key: string) => string;
     ability?: AppAbility;
+    page?: number;
+    pageSize?: number;
 };
 
 const compareDate = (a?: string | null, b?: string | null) =>
@@ -30,8 +32,19 @@ export const getOperationTypeTableColumns = (
     const canUpdate = ability?.can('update', 'operation_type') ?? false;
     const canDelete = ability?.can('delete', 'operation_type') ?? false;
     const hasAnyAction = canView || canUpdate || canDelete;
+    const page = props?.page ?? 0;
+    const pageSize = props?.pageSize ?? 10;
 
     const columns: ColumnsType<OperationType> = [
+        {
+            title: () => t('operationTypeManagement.table.headers.index') || 'STT',
+            key: 'index',
+            width: 70,
+            align: 'center',
+            render: (_: any, __: any, index: number) => (
+                <Text type="secondary">{page * pageSize + index + 1}</Text>
+            ),
+        },
         {
             title: () => t('operationTypeManagement.table.headers.operationTypeCode'),
             dataIndex: 'operationTypeCode',
@@ -69,39 +82,6 @@ export const getOperationTypeTableColumns = (
                 text ? (
                     <Tooltip placement="topLeft" title={text}>
                         <Text type="secondary">{text}</Text>
-                    </Tooltip>
-                ) : (
-                    <Text type="secondary">-</Text>
-                ),
-        },
-        {
-            title: () => t('operationTypeManagement.table.headers.createdAt'),
-            dataIndex: ['auditMetaData', 'createdAt'],
-            key: 'auditMetaData.createdAt',
-            sorter: (a, b) => compareDate(a.auditMetaData?.createdAt, b.auditMetaData?.createdAt),
-            defaultSortOrder: 'ascend',
-            width: 160,
-            align: 'center',
-            render: (date: string) =>
-                date ? (
-                    <Tooltip title={dayjs(date).format('DD/MM/YYYY HH:mm:ss')}>
-                        <Text>{dayjs(date).format('DD/MM/YYYY HH:mm')}</Text>
-                    </Tooltip>
-                ) : (
-                    <Text type="secondary">-</Text>
-                ),
-        },
-        {
-            title: () => t('operationTypeManagement.table.headers.updatedAt'),
-            dataIndex: ['auditMetaData', 'updatedAt'],
-            key: 'auditMetaData.updatedAt',
-            sorter: (a, b) => compareDate(a.auditMetaData?.updatedAt, b.auditMetaData?.updatedAt),
-            width: 160,
-            align: 'center',
-            render: (date: string) =>
-                date ? (
-                    <Tooltip title={dayjs(date).format('DD/MM/YYYY HH:mm:ss')}>
-                        <Text>{dayjs(date).format('DD/MM/YYYY HH:mm')}</Text>
                     </Tooltip>
                 ) : (
                     <Text type="secondary">-</Text>

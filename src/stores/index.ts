@@ -5,6 +5,9 @@ import * as notificationStore from './NotificationStore';
 import * as factoryOverviewStore from './FactoryOverviewStore';
 import * as productionPlanStore from './ProductionPlanStore';
 import * as productionPlanMonitorStore from './ProductionPlanMonitorStore';
+import * as workCalendarStore from './WorkCalendarStore';
+import * as productionOverviewStore from './ProductionOverviewStore';
+import * as errorManagementStore from './ErrorManagementStore';
 
 export interface AppState {
     machine: machineStore.IMachineStoreState;
@@ -13,6 +16,9 @@ export interface AppState {
     factoryOverview: factoryOverviewStore.IFactoryOverviewStoreState;
     productionPlan: productionPlanStore.IProductionPlanStoreState;
     productionPlanMonitor: productionPlanMonitorStore.IProductionPlanMonitorStoreState;
+    workCalendar: workCalendarStore.IWorkCalendarStoreState;
+    productionOverview: productionOverviewStore.IProductionOverviewStoreState;
+    errorManagement: errorManagementStore.IErrorManagementStoreState;
 }
 
 export const reducers: ReducersMapObject<AppState> = {
@@ -22,6 +28,9 @@ export const reducers: ReducersMapObject<AppState> = {
     factoryOverview: factoryOverviewStore.reducer,
     productionPlan: productionPlanStore.reducer,
     productionPlanMonitor: productionPlanMonitorStore.reducer,
+    workCalendar: workCalendarStore.reducer,
+    productionOverview: productionOverviewStore.reducer,
+    errorManagement: errorManagementStore.reducer,
 };
 
 export { machineActions } from './MachineStore';
@@ -30,3 +39,6 @@ export { notificationActions } from './NotificationStore';
 export { factoryOverviewActions } from './FactoryOverviewStore';
 export { productionPlanActions } from './ProductionPlanStore';
 export { productionPlanMonitorActions } from './ProductionPlanMonitorStore';
+export { workCalendarActions } from './WorkCalendarStore';
+export { productionOverviewActions } from './ProductionOverviewStore';
+export { errorManagementActions } from './ErrorManagementStore';

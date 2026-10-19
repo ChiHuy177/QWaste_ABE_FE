@@ -287,11 +287,6 @@ export default function ProductionMonitorPage() {
 
     const tabItems = [
         {
-            key: 'list',
-            label: t('productionPlan.monitor.tabs.list'),
-            children: listTabContent,
-        },
-        {
             key: 'kanban',
             label: t('productionPlan.monitor.tabs.kanban'),
             children: (
@@ -303,6 +298,11 @@ export default function ProductionMonitorPage() {
                     onSelectRow={selectRow}
                 />
             ),
+        },
+        {
+            key: 'list',
+            label: t('productionPlan.monitor.tabs.list'),
+            children: listTabContent,
         },
         {
             key: 'timeline',

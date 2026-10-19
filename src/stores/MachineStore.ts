@@ -4,10 +4,7 @@ import { SpaceOverview, SpacePickingWithChildren, SpaceWithChildrenResponse } fr
 import { MachineService } from '@services/MachineService';
 import { calculateMachineStats } from '@/utils/machineUtils';
 import { SpaceService } from '@/services/SpaceService';
-import {
-    DemoFactoryOverviewService,
-    USE_MOCK_FACTORY_OVERVIEW,
-} from '@/mockData/admin/factory';
+import { DemoFactoryOverviewService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 
 const adaptSpacePicking = (s: SpacePickingWithChildren): SpaceWithChildrenResponse => ({
     spaceId: s.spaceId,
@@ -39,10 +36,10 @@ const adaptMachine = (m: MachineWithStatusLogsSummary): MachineOverview => ({
         m.currentStatus === 'RUNTIME'
             ? 'running'
             : m.currentStatus === 'IDLE' || m.currentStatus === 'TEMPORARY_STOP'
-            ? 'idle'
-            : m.currentStatus === 'ERROR' || m.currentStatus === 'WARNING'
-            ? 'error'
-            : 'empty',
+              ? 'idle'
+              : m.currentStatus === 'ERROR' || m.currentStatus === 'WARNING'
+                ? 'error'
+                : 'empty',
     logs: [],
     currentEnergyConsumption: 0,
     currentStatus: m.currentStatus,
@@ -90,7 +87,7 @@ const initialState: IMachineStoreState = {
         totalRun: 0,
         totalIdle: 0,
         totalError: 0,
-        totalEmpty: 0,
+        totalOffline: 0,
     },
     error: null,
 };
@@ -124,8 +121,6 @@ const slice = createSlice({
             state.machines = action.payload;
             state.stats = calculateMachineStats(action.payload);
         },
-
-
 
         setSelectedTimePeriod: (state, action: PayloadAction<number | null>) => {
             state.selectedTimePeriod = action.payload;
@@ -226,30 +221,25 @@ export const machineActions = {
         }
     },
 
-    fetchMachines:
-        (spaceId: number, filterId: number) =>
-            async (dispatch: Dispatch) => {
-                dispatch(slice.actions.setFetching(true));
+    fetchMachines: (spaceId: number, filterId: number) => async (dispatch: Dispatch) => {
+        dispatch(slice.actions.setFetching(true));
 
-                try {
-                    if (USE_MOCK_FACTORY_OVERVIEW) {
-                        const overview = await DemoFactoryOverviewService.getSpaceOverview();
-                        const machines = extractMachines(overview).map(adaptMachine);
-                        dispatch(slice.actions.setMachines(machines));
-                    } else {
-                        const machines = await MachineService.getMachinesWithLogs(
-                            spaceId,
-                            filterId
-                        );
-                        dispatch(slice.actions.setMachines(machines));
-                    }
-                } catch (error) {
-                    console.error('Error fetching machines:', error);
-                    dispatch(slice.actions.setError('Failed to load machines'));
-                } finally {
-                    dispatch(slice.actions.setFetching(false));
-                }
-            },
+        try {
+            if (USE_MOCK_FACTORY_OVERVIEW) {
+                const overview = await DemoFactoryOverviewService.getSpaceOverview();
+                const machines = extractMachines(overview).map(adaptMachine);
+                dispatch(slice.actions.setMachines(machines));
+            } else {
+                const machines = await MachineService.getMachinesWithLogs(spaceId, filterId);
+                dispatch(slice.actions.setMachines(machines));
+            }
+        } catch (error) {
+            console.error('Error fetching machines:', error);
+            dispatch(slice.actions.setError('Failed to load machines'));
+        } finally {
+            dispatch(slice.actions.setFetching(false));
+        }
+    },
 
     openMachineModal: (machine: MachineOverview) => (dispatch: Dispatch) => {
         dispatch(slice.actions.setSelectedMachine(machine));
@@ -270,16 +260,16 @@ export const machineActions = {
             logStatus: MachineOverview['currentStatus'],
             productionCounter: number
         ) =>
-            (dispatch: Dispatch) => {
-                dispatch(
-                    slice.actions.updateMachine({
-                        machineId,
-                        currentStatus: logStatus,
-                        productionCounter,
-                        lastStatusUpdate: new Date().toISOString(),
-                    })
-                );
-            },
+        (dispatch: Dispatch) => {
+            dispatch(
+                slice.actions.updateMachine({
+                    machineId,
+                    currentStatus: logStatus,
+                    productionCounter,
+                    lastStatusUpdate: new Date().toISOString(),
+                })
+            );
+        },
 
     updateMachinesPower: (powerData: Record<string, number>) => (dispatch: Dispatch) => {
         dispatch(slice.actions.updateMachinesPower(powerData));

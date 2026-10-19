@@ -3,246 +3,664 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Button,
-    Collapse,
     DatePicker,
     Divider,
     Grid,
     Popover,
-    Select,
+    Radio,
     Space,
-    Tabs,
     Tag,
     theme,
     Tooltip,
     Typography,
+    Spin,
 } from 'antd';
+import { useTranslation } from 'react-i18next';
 import dayjs, { Dayjs } from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
-import { useTranslation } from 'react-i18next';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import {
-    ALL_LABEL_STYLES,
-    ALL_TIME_GRAINS,
-    CUSTOM_RANGE_DEFAULT_GRAIN,
-    LabelStyle,
-    TimeGrain,
-    TimeGrainOption,
-} from '@/types/Chart';
-import { getLabelStyleLabel } from '@/utils/enumMappers';
+import { UtilsService } from '@/services/UtilsService';
 
 dayjs.extend(isoWeek);
 dayjs.extend(quarterOfYear);
 
-// ISO 8601: a year has 53 weeks iff Jan 1 falls on a Thursday, or it's a leap
-// year and Jan 1 falls on a Wednesday — captured by this day-of-week congruence.
-function isoWeeksInYear(year: number): number {
-    const p = (y: number) =>
-        (y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400)) % 7;
-    return p(year) === 4 || p(year - 1) === 3 ? 53 : 52;
-}
+export type PeriodFilterMode = 'PRESET' | 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR' | 'CUSTOM_RANGE';
 
-function startOfIsoWeek(year: number, week: number): Dayjs {
-    // Jan 4th always falls in ISO week 1 of its year, regardless of weekday.
-    const week1Start = dayjs().year(year).month(0).date(4).startOf('isoWeek');
-    return week1Start.add((week - 1) * 7, 'day');
-}
-
-function capToToday(d: Dayjs): Dayjs {
-    const today = dayjs().endOf('day');
-    return d.isAfter(today) ? today : d;
-}
-
-export type TimeFilterMode = 'PRESET' | 'CUSTOM_RANGE';
-
-export interface TimeFilterValue {
-    mode: TimeFilterMode;
-    periodId: number | null;
-    shiftId: number | null;
+export interface TimeFilterApplyPayload {
+    mode: PeriodFilterMode;
+    primaryFilterId: number | null;
+    secondaryShiftId: number | null;
     startDate: string;
     endDate: string;
-    // Only meaningful when the caller passes grainOptions (see TimeFilterPopoverProps).
-    grain?: TimeGrain | null;
-    labelStyle?: LabelStyle | null;
 }
 
-interface TimeFilterPopoverProps {
+export interface TimeFilterPopoverProps {
+    currentMode: PeriodFilterMode;
+    currentPeriodId: number | null;
+    currentShiftId: number | null;
+    currentStartDate: string;
+    currentEndDate: string;
+    groupedOptions: {
+        SHIFT: { label: string; value: number; sortOrder?: number }[];
+        PERIOD: { label: string; value: number; sortOrder?: number }[];
+    };
     industryFilters: IndustryFilter[];
-    value: TimeFilterValue;
-    onApply: (value: TimeFilterValue) => void;
+    isShiftActive: (filter: IndustryFilter) => boolean;
+    onApply: (payload: TimeFilterApplyPayload) => void;
     placement?: 'bottomLeft' | 'bottomRight';
-    // Presence of this prop turns on the "Group by" (grain) + advanced label-style
-    // UI. Callers that don't pass it (OEE, Factory Pulse, Space Monitoring) render
-    // exactly as before — their chart endpoints don't support grain/labelStyle yet.
-    grainOptions?: TimeGrainOption[];
 }
 
 const { useBreakpoint } = Grid;
 
-// Sentinel for the CheckableTagGroup "All shifts" option — group values must be string | number, not null.
-const SHIFT_ALL = '__ALL__';
-
-function checkShiftActive(filter: IndustryFilter): boolean {
-    if (filter.category !== 'SHIFT') return false;
-    const currentTime = dayjs().format('HH:mm:ss');
-    if (!filter.crossesMidnight) {
-        return currentTime >= filter.startTime && currentTime < filter.endTime;
-    }
-    return currentTime >= filter.startTime || currentTime < filter.endTime;
+function safeDayjs(date?: string | Dayjs | null): Dayjs {
+    if (!date) return dayjs();
+    const d = dayjs(date);
+    return d.isValid() ? d : dayjs();
 }
 
+function computeDateRangeForMode(
+    mode: PeriodFilterMode,
+    values: {
+        dateRange: [Dayjs, Dayjs];
+        week: Dayjs;
+        month: Dayjs;
+        quarter: Dayjs;
+        year: Dayjs;
+    }
+): [string, string] {
+    switch (mode) {
+        case 'WEEK':
+            return [
+                values.week.startOf('isoWeek').format('YYYY-MM-DD'),
+                values.week.endOf('isoWeek').format('YYYY-MM-DD'),
+            ];
+        case 'MONTH':
+            return [
+                values.month.startOf('month').format('YYYY-MM-DD'),
+                values.month.endOf('month').format('YYYY-MM-DD'),
+            ];
+        case 'QUARTER':
+            return [
+                values.quarter.startOf('quarter').format('YYYY-MM-DD'),
+                values.quarter.endOf('quarter').format('YYYY-MM-DD'),
+            ];
+        case 'YEAR':
+            return [
+                values.year.startOf('year').format('YYYY-MM-DD'),
+                values.year.endOf('year').format('YYYY-MM-DD'),
+            ];
+        case 'CUSTOM_RANGE':
+        case 'PRESET':
+        default:
+            return [
+                values.dateRange[0].format('YYYY-MM-DD'),
+                values.dateRange[1].format('YYYY-MM-DD'),
+            ];
+    }
+}
+
+// 1. Memoized Shift Section
+interface ShiftSectionProps {
+    shiftId: number | null;
+    onChange: (id: number | null) => void;
+    groupedShifts: { label: string; value: number; sortOrder?: number }[];
+    industryFilters: IndustryFilter[];
+    isShiftActive: (filter: IndustryFilter) => boolean;
+    isMobile: boolean;
+    title: string;
+    allShiftsLabel: string;
+    activeTagLabel: string;
+    isSingleDay?: boolean;
+    singleDayWarning?: string;
+    isLoading?: boolean;
+}
+
+const ALL_SHIFTS_RADIO_VALUE = '';
+
+const ShiftSection = React.memo<ShiftSectionProps>(
+    ({
+        shiftId,
+        onChange,
+        groupedShifts,
+        industryFilters,
+        isShiftActive,
+        isMobile,
+        title,
+        allShiftsLabel,
+        activeTagLabel,
+        isSingleDay = true,
+        singleDayWarning,
+        isLoading = false,
+    }) => {
+        const { token } = theme.useToken();
+
+        const sortedShifts = useMemo(() => {
+            return [...groupedShifts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        }, [groupedShifts]);
+
+        return (
+            <div>
+                <Typography.Text
+                    type="secondary"
+                    style={{
+                        display: 'block',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        marginBottom: 8,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                    }}
+                >
+                    {title}
+                </Typography.Text>
+                {!isSingleDay && singleDayWarning && (
+                    <Typography.Text
+                        type="secondary"
+                        style={{
+                            fontSize: 11,
+                            display: 'block',
+                            marginBottom: 6,
+                            color: token.colorWarning,
+                        }}
+                    >
+                        {singleDayWarning}
+                    </Typography.Text>
+                )}
+                {isLoading ? (
+                    <div style={{ padding: '8px 0', textAlign: 'center' }}>
+                        <Spin size="small" />
+                    </div>
+                ) : (
+                    <Radio.Group
+                        value={shiftId ?? ALL_SHIFTS_RADIO_VALUE}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            onChange(val === ALL_SHIFTS_RADIO_VALUE ? null : (val as number));
+                        }}
+                        disabled={!isSingleDay}
+                        style={{ width: '100%' }}
+                    >
+                        <Space orientation="vertical" size={6} style={{ width: '100%' }}>
+                            <Radio value={ALL_SHIFTS_RADIO_VALUE}>{allShiftsLabel}</Radio>
+                            {isSingleDay && sortedShifts.length === 0 && (
+                                <Typography.Text
+                                    type="secondary"
+                                    style={{ fontSize: 12, paddingLeft: 24, display: 'block' }}
+                                >
+                                    {/* helper note */}
+                                </Typography.Text>
+                            )}
+                            {sortedShifts.map((option) => {
+                                const filter = industryFilters.find(
+                                    (f) => f.filterId === option.value
+                                );
+                                const isActive = filter && isShiftActive(filter);
+
+                                return (
+                                    <Tooltip
+                                        key={option.value}
+                                        title={!isSingleDay ? singleDayWarning : undefined}
+                                    >
+                                        <Radio value={option.value} disabled={!isSingleDay}>
+                                            <Space size={4}>
+                                                <Typography.Text
+                                                    ellipsis
+                                                    style={{
+                                                        maxWidth: isMobile
+                                                            ? 'calc(100vw - 160px)'
+                                                            : 200,
+                                                        verticalAlign: 'middle',
+                                                        color: !isSingleDay ? 'inherit' : undefined,
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </Typography.Text>
+                                                {isActive && (
+                                                    <Tag
+                                                        color="green"
+                                                        style={{
+                                                            margin: 0,
+                                                            fontSize: 10,
+                                                            lineHeight: '16px',
+                                                            padding: '0 5px',
+                                                        }}
+                                                    >
+                                                        {activeTagLabel}
+                                                    </Tag>
+                                                )}
+                                            </Space>
+                                        </Radio>
+                                    </Tooltip>
+                                );
+                            })}
+                        </Space>
+                    </Radio.Group>
+                )}
+            </div>
+        );
+    }
+);
+ShiftSection.displayName = 'ShiftSection';
+
+// 2. Memoized Mode Button Item
+interface ModeButtonItemProps {
+    label: string;
+    value: PeriodFilterMode;
+    isSelected: boolean;
+    onClick: (value: PeriodFilterMode) => void;
+}
+
+const ModeButtonItem = React.memo<ModeButtonItemProps>(({ label, value, isSelected, onClick }) => {
+    return (
+        <Button
+            size="small"
+            type={isSelected ? 'primary' : 'default'}
+            onClick={() => onClick(value)}
+            style={{
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: isSelected ? 600 : 400,
+                height: 30,
+                padding: '0 2px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+            }}
+        >
+            {label}
+        </Button>
+    );
+});
+ModeButtonItem.displayName = 'ModeButtonItem';
+
+// 3. Memoized Mode Selection Section
+interface ModeSelectionSectionProps {
+    currentMode: PeriodFilterMode;
+    onSelectMode: (mode: PeriodFilterMode) => void;
+    modeButtons: { label: string; value: PeriodFilterMode }[];
+    title: string;
+}
+
+const ModeSelectionSection = React.memo<ModeSelectionSectionProps>(
+    ({ currentMode, onSelectMode, modeButtons, title }) => {
+        return (
+            <>
+                <Typography.Text
+                    type="secondary"
+                    style={{
+                        display: 'block',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        marginBottom: 8,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                    }}
+                >
+                    {title}
+                </Typography.Text>
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: 6,
+                        marginBottom: 10,
+                    }}
+                >
+                    {modeButtons.map((btn) => (
+                        <ModeButtonItem
+                            key={btn.value}
+                            label={btn.label}
+                            value={btn.value}
+                            isSelected={currentMode === btn.value}
+                            onClick={onSelectMode}
+                        />
+                    ))}
+                </div>
+            </>
+        );
+    }
+);
+ModeSelectionSection.displayName = 'ModeSelectionSection';
+
+// 4. Memoized Preset Pill Item
+interface PresetPillItemProps {
+    label: string;
+    value: number;
+    isSelected: boolean;
+    onClick: (value: number) => void;
+    colorPrimary: string;
+    colorPrimaryBg: string;
+    colorBgContainer: string;
+    colorText: string;
+    colorBorderSecondary: string;
+}
+
+const PresetPillItem = React.memo<PresetPillItemProps>(
+    ({
+        label,
+        value,
+        isSelected,
+        onClick,
+        colorPrimary,
+        colorPrimaryBg,
+        colorBgContainer,
+        colorText,
+        colorBorderSecondary,
+    }) => {
+        return (
+            <div
+                onClick={() => onClick(value)}
+                style={{
+                    padding: '6px 8px',
+                    borderRadius: 6,
+                    textAlign: 'center',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    fontWeight: isSelected ? 600 : 400,
+                    backgroundColor: isSelected ? colorPrimaryBg : colorBgContainer,
+                    color: isSelected ? colorPrimary : colorText,
+                    border: `1px solid ${isSelected ? colorPrimary : colorBorderSecondary}`,
+                    boxShadow: isSelected ? `0 0 0 1px ${colorPrimary}` : 'none',
+                    transition: 'all 0.15s ease-in-out',
+                    userSelect: 'none',
+                }}
+            >
+                <Typography.Text
+                    ellipsis
+                    style={{
+                        color: 'inherit',
+                        fontSize: 'inherit',
+                        fontWeight: 'inherit',
+                    }}
+                >
+                    {label}
+                </Typography.Text>
+            </div>
+        );
+    }
+);
+PresetPillItem.displayName = 'PresetPillItem';
+
+// 5. Memoized Preset Grid Section
+interface PresetGridSectionProps {
+    selectedPeriodId: number | null;
+    onSelectPeriod: (id: number) => void;
+    periodOptions: { label: string; value: number; sortOrder?: number }[];
+    title: string;
+    colorPrimary: string;
+    colorPrimaryBg: string;
+    colorBgContainer: string;
+    colorText: string;
+    colorBorderSecondary: string;
+    colorFillQuaternary: string;
+}
+
+const PresetGridSection = React.memo<PresetGridSectionProps>(
+    ({
+        selectedPeriodId,
+        onSelectPeriod,
+        periodOptions,
+        title,
+        colorPrimary,
+        colorPrimaryBg,
+        colorBgContainer,
+        colorText,
+        colorBorderSecondary,
+        colorFillQuaternary,
+    }) => {
+        const sortedPeriodOptions = useMemo(() => {
+            return [...periodOptions].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        }, [periodOptions]);
+
+        return (
+            <div
+                style={{
+                    background: colorFillQuaternary,
+                    borderRadius: 8,
+                    padding: '10px 10px',
+                    border: `1px solid ${colorBorderSecondary}`,
+                }}
+            >
+                <Typography.Text
+                    type="secondary"
+                    style={{
+                        display: 'block',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        marginBottom: 8,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.3px',
+                    }}
+                >
+                    {title}
+                </Typography.Text>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                    {sortedPeriodOptions.map((option) => (
+                        <PresetPillItem
+                            key={option.value}
+                            label={option.label}
+                            value={option.value}
+                            isSelected={selectedPeriodId === option.value}
+                            onClick={onSelectPeriod}
+                            colorPrimary={colorPrimary}
+                            colorPrimaryBg={colorPrimaryBg}
+                            colorBgContainer={colorBgContainer}
+                            colorText={colorText}
+                            colorBorderSecondary={colorBorderSecondary}
+                        />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+);
+PresetGridSection.displayName = 'PresetGridSection';
+
+// 6. Memoized Footer Actions
+interface FooterActionsProps {
+    onReset: () => void;
+    onCancel: () => void;
+    onApply: () => void;
+    isApplyDisabled: boolean;
+    resetLabel: string;
+    cancelLabel: string;
+    applyLabel: string;
+}
+
+const FooterActions = React.memo<FooterActionsProps>(
+    ({ onReset, onCancel, onApply, isApplyDisabled, resetLabel, cancelLabel, applyLabel }) => {
+        return (
+            <>
+                <Divider style={{ margin: '12px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <Button onClick={onReset}>{resetLabel}</Button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <Button onClick={onCancel}>{cancelLabel}</Button>
+                        <Button type="primary" onClick={onApply} disabled={isApplyDisabled}>
+                            {applyLabel}
+                        </Button>
+                    </div>
+                </div>
+            </>
+        );
+    }
+);
+FooterActions.displayName = 'FooterActions';
+
+// Self-contained Popover: owns the trigger Button and open state itself, unlike the
+// previous split (page.tsx wired Popover + trigger + isOpen, this file only rendered
+// the inner content). One instantiation per breakpoint still needed for the differing
+// trigger layout (block+no-tooltip on mobile vs fixed-width+Tooltip on desktop) — the
+// caller picks that via `placement`, everything else adapts internally via isMobile.
 const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
+    currentMode,
+    currentPeriodId,
+    currentShiftId,
+    currentStartDate,
+    currentEndDate,
+    groupedOptions,
     industryFilters,
-    value,
+    isShiftActive,
     onApply,
     placement = 'bottomRight',
-    grainOptions,
 }) => {
     const { t, i18n } = useTranslation();
     const { token } = theme.useToken();
     const screens = useBreakpoint();
     const isMobile = !screens.md;
-    const lang = i18n.language;
-    const grainEnabled = grainOptions !== undefined;
 
     const [open, setOpen] = useState(false);
-    const [draftMode, setDraftMode] = useState<TimeFilterMode>(value.mode);
-    const [draftPeriodId, setDraftPeriodId] = useState<number | null>(value.periodId);
-    const [draftShiftId, setDraftShiftId] = useState<number | null>(value.shiftId);
+    const [draftMode, setDraftMode] = useState<PeriodFilterMode>(currentMode);
+    const [draftPeriodId, setDraftPeriodId] = useState<number | null>(currentPeriodId);
+    const [draftShiftId, setDraftShiftId] = useState<number | null>(currentShiftId);
+    const [draftWeek, setDraftWeek] = useState<Dayjs>(() => safeDayjs(currentStartDate));
+    const [draftMonth, setDraftMonth] = useState<Dayjs>(() => safeDayjs(currentStartDate));
+    const [draftQuarter, setDraftQuarter] = useState<Dayjs>(() => safeDayjs(currentStartDate));
+    const [draftYear, setDraftYear] = useState<Dayjs>(() => safeDayjs(currentStartDate));
     const [draftDateRange, setDraftDateRange] = useState<[Dayjs, Dayjs]>([
-        dayjs(value.startDate),
-        dayjs(value.endDate),
+        safeDayjs(currentStartDate),
+        safeDayjs(currentEndDate),
     ]);
-    const [draftYear, setDraftYear] = useState(() => dayjs().year());
-    const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
-    const [selectedQuarter, setSelectedQuarter] = useState<number | null>(null);
-    const [draftGrain, setDraftGrain] = useState<TimeGrain | null>(value.grain ?? null);
-    const [draftLabelStyle, setDraftLabelStyle] = useState<LabelStyle | null>(
-        value.labelStyle ?? null
-    );
-    // Shift/grain apply regardless of PRESET vs CUSTOM_RANGE, so only the preset-vs-range
-    // choice itself is tabbed — this key is a view toggle, not part of the applied filter.
-    const [activeTabKey, setActiveTabKey] = useState<'quick' | 'custom'>(
-        value.mode === 'CUSTOM_RANGE' ? 'custom' : 'quick'
-    );
-
-    const yearOptions = useMemo(() => {
-        const currentYear = dayjs().year();
-        return Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => ({
-            label: String(y),
-            value: y,
-        }));
-    }, []);
-
-    // Only weeks/quarters that have already started are selectable — a future
-    // period would force startDate after the today-capped endDate, inverting the range.
-    const weekOptions = useMemo(() => {
-        const today = dayjs().endOf('day');
-        return Array.from({ length: isoWeeksInYear(draftYear) }, (_, i) => i + 1)
-            .filter((w) => !startOfIsoWeek(draftYear, w).isAfter(today))
-            .map((w) => ({
-                label: `${lang === 'vi' ? 'Tuần' : 'Week'} ${w}`,
-                value: w,
-            }));
-    }, [draftYear, lang]);
-
-    const quarterOptions = useMemo(() => {
-        const today = dayjs().endOf('day');
-        return [1, 2, 3, 4]
-            .filter((q) => !dayjs().year(draftYear).quarter(q).startOf('quarter').isAfter(today))
-            .map((q) => ({
-                label: `${lang === 'vi' ? 'Quý' : 'Quarter'} ${q}`,
-                value: q,
-            }));
-    }, [draftYear, lang]);
-
-    const shiftFilters = useMemo(
-        () => industryFilters.filter((f) => f.category === 'SHIFT'),
-        [industryFilters]
-    );
-    const periodFilters = useMemo(
-        () => industryFilters.filter((f) => f.category === 'PERIOD'),
-        [industryFilters]
-    );
-
-    // Shift chips include a synthetic "All" option; the active shift also gets a small
-    // dot indicator (not a nested pill) so the currently-running shift stays visible
-    // without the chip looking like a tag stuffed inside another tag.
-    const shiftChipOptions = useMemo<
-        Array<{ value: number | typeof SHIFT_ALL; label: React.ReactNode }>
-    >(
-        () => [
-            { value: SHIFT_ALL, label: lang === 'vi' ? 'Tất cả' : 'All' },
-            ...shiftFilters.map((filter) => ({
-                value: filter.filterId,
-                label: (
-                    <Space size={5} align="center">
-                        <span>{lang === 'vi' ? filter.displayNameVi : filter.displayNameEn}</span>
-                        {checkShiftActive(filter) && (
-                            <Tooltip title={lang === 'vi' ? 'Đang hoạt động' : 'Active'}>
-                                <span
-                                    style={{
-                                        width: 6,
-                                        height: 6,
-                                        borderRadius: '50%',
-                                        background: token.colorSuccess,
-                                        display: 'inline-block',
-                                        flexShrink: 0,
-                                    }}
-                                />
-                            </Tooltip>
-                        )}
-                    </Space>
-                ),
-            })),
-        ],
-        [shiftFilters, lang, token.colorSuccess]
-    );
-
-    const periodChipOptions = useMemo(
-        () =>
-            periodFilters.map((filter) => ({
-                value: filter.filterId,
-                label: lang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
-            })),
-        [periodFilters, lang]
-    );
-
-    // byDateRange has no allow-list (all 8 grains, default DAY); byFilter is
-    // restricted to the selected period's allowedGrains/defaultGrain.
-    const activeAllowedGrains = useMemo<TimeGrain[]>(() => {
-        if (!grainEnabled) return [];
-        if (draftMode === 'CUSTOM_RANGE') return ALL_TIME_GRAINS;
-        const period = periodFilters.find((f) => f.filterId === draftPeriodId);
-        return period?.allowedGrains ?? ALL_TIME_GRAINS;
-    }, [grainEnabled, draftMode, draftPeriodId, periodFilters]);
-
-    const activeDefaultGrain = useMemo<TimeGrain | null>(() => {
-        if (draftMode === 'CUSTOM_RANGE') return CUSTOM_RANGE_DEFAULT_GRAIN;
-        const period = periodFilters.find((f) => f.filterId === draftPeriodId);
-        return period?.defaultGrain ?? activeAllowedGrains[0] ?? null;
-    }, [draftMode, draftPeriodId, periodFilters, activeAllowedGrains]);
-
-    // Silently fall back to the new default when switching period/mode leaves the
-    // current grain outside the newly allowed set — no error shown to the user.
-    useEffect(() => {
-        if (!grainEnabled) return;
-        if (draftGrain !== null && activeAllowedGrains.includes(draftGrain)) return;
-        setDraftGrain(activeDefaultGrain);
-    }, [grainEnabled, activeAllowedGrains, activeDefaultGrain, draftGrain]);
 
     const syncDraft = useCallback(() => {
-        setDraftMode(value.mode);
-        setDraftPeriodId(value.periodId);
-        setDraftShiftId(value.shiftId);
-        setDraftDateRange([dayjs(value.startDate), dayjs(value.endDate)]);
-        setDraftYear(dayjs().year());
-        setSelectedWeek(null);
-        setSelectedQuarter(null);
-        setDraftGrain(value.grain ?? null);
-        setDraftLabelStyle(value.labelStyle ?? null);
-        setActiveTabKey(value.mode === 'CUSTOM_RANGE' ? 'custom' : 'quick');
-    }, [value]);
+        setDraftMode(currentMode);
+        setDraftPeriodId(currentPeriodId);
+        setDraftShiftId(currentShiftId);
+        const s = safeDayjs(currentStartDate);
+        const e = safeDayjs(currentEndDate);
+        setDraftWeek(s);
+        setDraftMonth(s);
+        setDraftQuarter(s);
+        setDraftYear(s);
+        setDraftDateRange([s, e]);
+    }, [currentMode, currentPeriodId, currentShiftId, currentStartDate, currentEndDate]);
+
+    // Backend rule (Error 915): Single shift filtering is only supported when viewing a single specific day
+    const isSingleDay = useMemo(() => {
+        if (draftMode === 'CUSTOM_RANGE') {
+            return (
+                draftDateRange[0].format('YYYY-MM-DD') === draftDateRange[1].format('YYYY-MM-DD')
+            );
+        }
+        if (draftMode === 'PRESET') {
+            const selectedPeriod = industryFilters.find((f) => f.filterId === draftPeriodId);
+            if (!selectedPeriod) return false;
+            return (
+                selectedPeriod.periodCode === 'TODAY' || selectedPeriod.periodCode === 'YESTERDAY'
+            );
+        }
+        return false;
+    }, [draftMode, draftDateRange, industryFilters, draftPeriodId]);
+
+    // Compute the single date string if currently picking/viewing a single day
+    const pickedDate = useMemo(() => {
+        if (!isSingleDay) return null;
+        if (draftMode === 'CUSTOM_RANGE') {
+            return draftDateRange[0].format('YYYY-MM-DD');
+        }
+        if (draftMode === 'PRESET') {
+            const selectedPeriod = industryFilters.find((f) => f.filterId === draftPeriodId);
+            if (selectedPeriod?.periodCode === 'TODAY') {
+                return dayjs().format('YYYY-MM-DD');
+            }
+            if (selectedPeriod?.periodCode === 'YESTERDAY') {
+                return dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+            }
+        }
+        return null;
+    }, [isSingleDay, draftMode, draftDateRange, industryFilters, draftPeriodId]);
+
+    // Automatically clear specific shift filter if period spans more than 1 day (default to all shifts)
+    useEffect(() => {
+        if (!isSingleDay && draftShiftId !== null) {
+            setDraftShiftId(null);
+        }
+    }, [isSingleDay, draftShiftId]);
+
+    // Fetch available shifts dynamically from backend API when picking a single date
+    const [dynamicShifts, setDynamicShifts] = useState<IndustryFilter[]>([]);
+    const [isLoadingShifts, setIsLoadingShifts] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (!isSingleDay || !pickedDate) {
+            setDynamicShifts([]);
+            setIsLoadingShifts(false);
+            return;
+        }
+
+        let isCancelled = false;
+
+        const fetchShifts = async () => {
+            setIsLoadingShifts(true);
+            try {
+                const shifts = await UtilsService.getShiftsForDate(pickedDate);
+                if (!isCancelled) {
+                    const validShifts = shifts || [];
+                    setDynamicShifts(validShifts);
+                    if (
+                        draftShiftId !== null &&
+                        !validShifts.some((s) => s.filterId === draftShiftId)
+                    ) {
+                        setDraftShiftId(null);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch shifts for date:', pickedDate, err);
+                if (!isCancelled) {
+                    setDynamicShifts([]);
+                }
+            } finally {
+                if (!isCancelled) {
+                    setIsLoadingShifts(false);
+                }
+            }
+        };
+
+        fetchShifts();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [pickedDate, isSingleDay]);
+
+    // Grouped shift options for ShiftSection
+    const currentShiftOptions = useMemo(() => {
+        if (!isSingleDay) {
+            return [];
+        }
+        const currentLang = i18n.language;
+        return [...dynamicShifts]
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .map((f) => ({
+                label: currentLang === 'vi' ? f.displayNameVi : f.displayNameEn,
+                value: f.filterId,
+                sortOrder: f.sortOrder,
+            }));
+    }, [isSingleDay, dynamicShifts, i18n.language]);
+
+    // Merged filters to resolve labels and active states for both global and dynamic shifts
+    const allIndustryFilters = useMemo(() => {
+        const map = new Map<number, IndustryFilter>();
+        industryFilters.forEach((f) => map.set(f.filterId, f));
+        dynamicShifts.forEach((f) => map.set(f.filterId, f));
+        return Array.from(map.values()).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    }, [industryFilters, dynamicShifts]);
+
+    const singleDayWarning = useMemo(
+        () =>
+            i18n.language === 'vi'
+                ? '(*) Khi xem khoảng ngày, mặc định xem tất cả các ca (không chọn ca riêng lẻ).'
+                : '(*) Date range: viewing all shifts by default (individual shift selection disabled).',
+        [i18n.language]
+    );
+
+    const todayPeriod = useMemo(
+        () =>
+            industryFilters.find((f) => f.category === 'PERIOD' && f.periodCode === 'TODAY') ||
+            industryFilters.find((f) => f.category === 'PERIOD'),
+        [industryFilters]
+    );
 
     const handleOpenChange = useCallback(
         (nextOpen: boolean) => {
@@ -253,110 +671,77 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
     );
 
     const handleReset = useCallback(() => {
-        const activeShift = shiftFilters.find(checkShiftActive);
         setDraftMode('PRESET');
-        setDraftPeriodId(null);
-        setDraftShiftId(activeShift?.filterId ?? shiftFilters[0]?.filterId ?? null);
+        setDraftPeriodId(todayPeriod?.filterId ?? null);
+        setDraftShiftId(null);
         setDraftDateRange([dayjs(), dayjs()]);
-        setDraftYear(dayjs().year());
-        setSelectedWeek(null);
-        setSelectedQuarter(null);
-        setDraftGrain(null);
-        setDraftLabelStyle(null);
-        setActiveTabKey('quick');
-    }, [shiftFilters]);
+        setDraftWeek(dayjs());
+        setDraftMonth(dayjs());
+        setDraftQuarter(dayjs());
+        setDraftYear(dayjs());
+    }, [todayPeriod]);
 
-    const handleYearChange = useCallback((year: number) => {
-        setDraftYear(year);
-        // Week/quarter numbers are only meaningful for the year they were picked in.
-        setSelectedWeek(null);
-        setSelectedQuarter(null);
+    const handleSelectMode = useCallback(
+        (mode: PeriodFilterMode) => {
+            setDraftMode(mode);
+            if (mode === 'PRESET' && groupedOptions.PERIOD.length > 0) {
+                setDraftPeriodId((prev) => prev ?? groupedOptions.PERIOD[0].value);
+            }
+            setDraftWeek((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftMonth((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftQuarter((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftYear((prev) => (prev && prev.isValid() ? prev : dayjs()));
+            setDraftDateRange((prev) =>
+                prev && prev[0]?.isValid() && prev[1]?.isValid() ? prev : [dayjs(), dayjs()]
+            );
+        },
+        [groupedOptions.PERIOD]
+    );
+
+    const handleSelectPeriod = useCallback((id: number) => {
+        setDraftPeriodId(id);
     }, []);
 
-    const handleSelectWeek = useCallback(
-        (week: number | undefined) => {
-            setSelectedWeek(week ?? null);
-            if (week == null) return;
+    const handleApplyClick = useCallback(() => {
+        let primaryFilterId: number | null;
+        let secondaryShiftId: number | null;
+        let startDate = draftDateRange[0]?.isValid()
+            ? draftDateRange[0].format('YYYY-MM-DD')
+            : dayjs().format('YYYY-MM-DD');
+        let endDate = draftDateRange[1]?.isValid()
+            ? draftDateRange[1].format('YYYY-MM-DD')
+            : dayjs().format('YYYY-MM-DD');
 
-            const start = startOfIsoWeek(draftYear, week);
-            setDraftDateRange([start, capToToday(start.endOf('isoWeek'))]);
-            setDraftMode('CUSTOM_RANGE');
-            setDraftPeriodId(null);
-            setSelectedQuarter(null);
-        },
-        [draftYear]
-    );
-
-    const handleSelectQuarter = useCallback(
-        (quarter: number | undefined) => {
-            setSelectedQuarter(quarter ?? null);
-            if (quarter == null) return;
-
-            const start = dayjs().year(draftYear).quarter(quarter).startOf('quarter');
-            setDraftDateRange([start, capToToday(start.endOf('quarter'))]);
-            setDraftMode('CUSTOM_RANGE');
-            setDraftPeriodId(null);
-            setSelectedWeek(null);
-        },
-        [draftYear]
-    );
-
-    // Small confirmation chip so the user can see exactly what week/quarter
-    // resolved to before hitting Apply — Select's own value only shows the number.
-    const quickRangeLabel = useMemo(() => {
-        const rangeText = `${draftDateRange[0].format('DD/MM')} → ${draftDateRange[1].format('DD/MM/YYYY')}`;
-        if (selectedWeek != null) {
-            return `${lang === 'vi' ? 'Tuần' : 'Week'} ${selectedWeek}/${draftYear}: ${rangeText}`;
+        if (draftMode === 'PRESET') {
+            if (draftPeriodId !== null) {
+                primaryFilterId = draftPeriodId;
+                secondaryShiftId = draftShiftId;
+            } else if (draftShiftId !== null) {
+                primaryFilterId = draftShiftId;
+                secondaryShiftId = null;
+            } else {
+                return;
+            }
+        } else {
+            const computedDates = computeDateRangeForMode(draftMode, {
+                dateRange: draftDateRange,
+                week: draftWeek,
+                month: draftMonth,
+                quarter: draftQuarter,
+                year: draftYear,
+            });
+            startDate = computedDates[0];
+            endDate = computedDates[1];
+            primaryFilterId = draftShiftId;
+            secondaryShiftId = null;
         }
-        if (selectedQuarter != null) {
-            return `${lang === 'vi' ? 'Quý' : 'Quarter'} ${selectedQuarter}/${draftYear}: ${rangeText}`;
-        }
-        return null;
-    }, [selectedWeek, selectedQuarter, draftYear, draftDateRange, lang]);
 
-    // Live "what will Apply do" summary — shift/period/grain are edited from different
-    // tabs, so this is the one place that always reflects the combined draft state.
-    const draftShiftLabel = useMemo(() => {
-        if (draftShiftId == null) return null;
-        const shift = shiftFilters.find((f) => f.filterId === draftShiftId);
-        return shift ? (lang === 'vi' ? shift.displayNameVi : shift.displayNameEn) : null;
-    }, [draftShiftId, shiftFilters, lang]);
-
-    const draftRangeLabel = useMemo(() => {
-        if (draftMode === 'CUSTOM_RANGE') {
-            return (
-                quickRangeLabel ??
-                `${draftDateRange[0].format('DD/MM/YYYY')} → ${draftDateRange[1].format('DD/MM/YYYY')}`
-            );
-        }
-        const period = periodFilters.find((f) => f.filterId === draftPeriodId);
-        return period ? (lang === 'vi' ? period.displayNameVi : period.displayNameEn) : null;
-    }, [draftMode, draftPeriodId, periodFilters, quickRangeLabel, draftDateRange, lang]);
-
-    const draftGrainLabel = useMemo(() => {
-        if (!grainEnabled || !draftGrain) return null;
-        const option = grainOptions?.find((o) => o.name === draftGrain);
-        return option ? (lang === 'vi' ? option.nameVi : option.nameEn) : draftGrain;
-    }, [grainEnabled, draftGrain, grainOptions, lang]);
-
-    const draftSummaryText = useMemo(() => {
-        const parts = [draftShiftLabel, draftRangeLabel, draftGrainLabel].filter(Boolean);
-        return parts.length > 0
-            ? parts.join(' • ')
-            : lang === 'vi'
-              ? 'Chưa chọn khoảng thời gian'
-              : 'No time range selected yet';
-    }, [draftShiftLabel, draftRangeLabel, draftGrainLabel, lang]);
-
-    const handleApply = useCallback(() => {
         onApply({
             mode: draftMode,
-            periodId: draftMode === 'PRESET' ? draftPeriodId : null,
-            shiftId: draftShiftId,
-            startDate: draftDateRange[0].format('YYYY-MM-DD'),
-            endDate: draftDateRange[1].format('YYYY-MM-DD'),
-            grain: grainEnabled ? draftGrain : undefined,
-            labelStyle: grainEnabled ? draftLabelStyle : undefined,
+            primaryFilterId,
+            secondaryShiftId,
+            startDate,
+            endDate,
         });
         setOpen(false);
     }, [
@@ -364,413 +749,356 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
         draftPeriodId,
         draftShiftId,
         draftDateRange,
-        grainEnabled,
-        draftGrain,
-        draftLabelStyle,
+        draftWeek,
+        draftMonth,
+        draftQuarter,
+        draftYear,
         onApply,
     ]);
 
-    const activeLabel = useMemo(() => {
-        if (value.mode === 'CUSTOM_RANGE') {
-            const dateLabel = `${dayjs(value.startDate).format('DD/MM')} → ${dayjs(value.endDate).format('DD/MM')}`;
-            if (value.shiftId != null) {
-                const shift = industryFilters.find((f) => f.filterId === value.shiftId);
-                const shiftLabel = shift
-                    ? lang === 'vi'
-                        ? shift.displayNameVi
-                        : shift.displayNameEn
-                    : null;
-                if (shiftLabel) return `${dateLabel} • ${shiftLabel}`;
-            }
-            return dateLabel;
-        }
+    const modeButtons = useMemo(
+        (): { label: string; value: PeriodFilterMode }[] => [
+            ...(groupedOptions.PERIOD.length > 0
+                ? [{ label: t('spaceMonitoring.timeFilter.quickSelect'), value: 'PRESET' as const }]
+                : []),
+            { label: t('spaceMonitoring.timeFilter.week'), value: 'WEEK' as const },
+            { label: t('spaceMonitoring.timeFilter.month'), value: 'MONTH' as const },
+            { label: t('spaceMonitoring.timeFilter.quarter'), value: 'QUARTER' as const },
+            { label: t('spaceMonitoring.timeFilter.year'), value: 'YEAR' as const },
+            { label: t('spaceMonitoring.timeFilter.customRange'), value: 'CUSTOM_RANGE' as const },
+        ],
+        [groupedOptions.PERIOD.length, t]
+    );
 
-        const period = industryFilters.find((f) => f.filterId === value.periodId);
-        const periodLabel = period
-            ? lang === 'vi'
-                ? period.displayNameVi
-                : period.displayNameEn
-            : null;
-
-        if (!periodLabel && value.shiftId != null) {
-            const shift = industryFilters.find((f) => f.filterId === value.shiftId);
-            return shift ? (lang === 'vi' ? shift.displayNameVi : shift.displayNameEn) : null;
-        }
-
-        if (periodLabel && value.shiftId != null) {
-            const shift = industryFilters.find((f) => f.filterId === value.shiftId);
-            const shiftLabel = shift
-                ? lang === 'vi'
-                    ? shift.displayNameVi
-                    : shift.displayNameEn
-                : null;
-            return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
-        }
-
-        return periodLabel;
-    }, [value, industryFilters, lang]);
+    const renderDatePreview = (start: Dayjs, end: Dayjs) => (
+        <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 6 }}>
+            {start.format('DD/MM/YYYY')} → {end.format('DD/MM/YYYY')}
+        </Typography.Text>
+    );
 
     const isApplyDisabled =
         draftMode === 'PRESET' && draftPeriodId === null && draftShiftId === null;
 
-    const sectionLabelStyle: React.CSSProperties = {
-        display: 'block',
-        fontSize: 12,
-        fontWeight: 600,
-        marginBottom: 8,
-        textTransform: 'uppercase',
-    };
+    // Trigger-button label, resolved from the committed (applied) filter — not the draft
+    // being edited inside the popover. Mirrors the old page-level activeTimePeriodLabel.
+    const activeLabel = useMemo(() => {
+        const currentLang = i18n.language;
+        const shiftFilter =
+            currentShiftId != null
+                ? allIndustryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
+        const shiftLabel = shiftFilter
+            ? currentLang === 'vi'
+                ? shiftFilter.displayNameVi
+                : shiftFilter.displayNameEn
+            : null;
 
-    // Shift + the Quick/Custom choice always resolve to a real value (Apply is gated on
-    // them below) — Grain never blocks Apply and silently auto-fills, so it's the one
-    // truly optional section. Marking both ends makes that contrast legible at a glance.
-    const requiredMark = <span style={{ color: token.colorError, marginLeft: 4 }}>*</span>;
-    const optionalMark = (
-        <span
-            style={{
-                marginLeft: 6,
-                fontWeight: 400,
-                textTransform: 'none',
-                letterSpacing: 0,
-                color: token.colorTextTertiary,
-                fontSize: 11,
-            }}
-        >
-            {lang === 'vi'
-                ? '(tuỳ chọn — tự động nếu bỏ qua)'
-                : '(optional — auto-filled if skipped)'}
-        </span>
-    );
+        if (currentMode === 'WEEK') {
+            const startStr = dayjs(currentStartDate).format('DD/MM');
+            const endStr = dayjs(currentEndDate).format('DD/MM');
+            const weekNum = dayjs(currentStartDate).isoWeek();
+            const yearStr = dayjs(currentStartDate).format('YYYY');
+            const label = `${t('spaceMonitoring.timeFilter.weekLabel', { week: weekNum, year: yearStr })} (${startStr} → ${endStr})`;
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
 
-    const quickTabContent =
-        periodFilters.length > 0 ? (
-            <Tag.CheckableTagGroup
-                className="qw-time-filter-chips qw-preset-grid"
-                style={{ gap: 6 }}
-                options={periodChipOptions}
-                value={draftMode === 'PRESET' ? draftPeriodId : null}
-                onChange={(nextValue) => {
-                    setDraftPeriodId(nextValue == null ? null : Number(nextValue));
-                    setDraftMode('PRESET');
-                    setSelectedWeek(null);
-                    setSelectedQuarter(null);
-                }}
-            />
-        ) : (
-            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                {lang === 'vi' ? 'Chưa có preset nào được cấu hình.' : 'No presets configured yet.'}
-            </Typography.Text>
-        );
+        if (currentMode === 'MONTH') {
+            const label = t('spaceMonitoring.timeFilter.monthLabel', {
+                month: dayjs(currentStartDate).format('MM'),
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
 
-    const customTabContent = (
-        <Space direction="vertical" size={8} style={{ width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                <Typography.Text type="secondary" style={{ flexShrink: 0 }}>
-                    {lang === 'vi' ? 'Năm' : 'Year'}
-                </Typography.Text>
-                <Select
-                    size="small"
-                    style={{ flex: 1 }}
-                    value={draftYear}
-                    options={yearOptions}
-                    onChange={handleYearChange}
-                />
-            </div>
-            <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-                <Select
-                    size="small"
-                    style={{ flex: 1, minWidth: 0 }}
-                    placeholder={lang === 'vi' ? 'Chọn tuần' : 'Select week'}
-                    options={weekOptions}
-                    value={selectedWeek}
-                    onChange={handleSelectWeek}
-                    disabled={selectedQuarter !== null}
-                    allowClear
-                />
-                <Select
-                    size="small"
-                    style={{ flex: 1, minWidth: 0 }}
-                    placeholder={lang === 'vi' ? 'Chọn quý' : 'Select quarter'}
-                    options={quarterOptions}
-                    value={selectedQuarter}
-                    onChange={handleSelectQuarter}
-                    disabled={selectedWeek !== null}
-                    allowClear
-                />
-            </div>
-            {quickRangeLabel && (
-                <Tag color="blue" style={{ margin: 0 }}>
-                    {quickRangeLabel}
-                </Tag>
-            )}
-            <DatePicker.RangePicker
-                value={draftDateRange}
-                onChange={(dates) => {
-                    if (dates?.[0] && dates?.[1]) {
-                        setDraftDateRange([dates[0], dates[1]]);
-                        setDraftMode('CUSTOM_RANGE');
-                        setDraftPeriodId(null);
-                    }
-                }}
-                format="DD/MM/YYYY"
-                style={{ width: '100%', borderRadius: 8 }}
-                disabledDate={(current) => current && current > dayjs().endOf('day')}
-                // No longer gated on draftMode === 'CUSTOM_RANGE': picking a date here is
-                // itself what switches the mode, now that there's no separate mode radio.
-                disabled={selectedWeek !== null || selectedQuarter !== null}
-            />
-        </Space>
-    );
+        if (currentMode === 'QUARTER') {
+            const quarterNum = dayjs(currentStartDate).quarter();
+            const label = t('spaceMonitoring.timeFilter.quarterLabel', {
+                quarter: quarterNum,
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'YEAR') {
+            const label = t('spaceMonitoring.timeFilter.yearLabel', {
+                year: dayjs(currentStartDate).format('YYYY'),
+            });
+            return shiftLabel ? `${label} • ${shiftLabel}` : label;
+        }
+
+        if (currentMode === 'CUSTOM_RANGE') {
+            const dateLabel = `${dayjs(currentStartDate).format('DD/MM')} → ${dayjs(currentEndDate).format('DD/MM')}`;
+            return shiftLabel ? `${dateLabel} • ${shiftLabel}` : dateLabel;
+        }
+
+        const period = allIndustryFilters.find((f) => f.filterId === currentPeriodId);
+        const periodLabel = period
+            ? currentLang === 'vi'
+                ? period.displayNameVi
+                : period.displayNameEn
+            : null;
+
+        if (!periodLabel) return shiftLabel;
+        return shiftLabel ? `${periodLabel} • ${shiftLabel}` : periodLabel;
+    }, [
+        currentMode,
+        currentPeriodId,
+        currentShiftId,
+        currentStartDate,
+        currentEndDate,
+        allIndustryFilters,
+        i18n.language,
+        t,
+    ]);
 
     const content = (
-        <div
-            style={{
-                width: isMobile ? 'calc(100vw - 48px)' : 360,
-                maxWidth: 360,
-                maxHeight: 'min(560px, calc(100vh - 96px))',
-                display: 'flex',
-                flexDirection: 'column',
-            }}
-        >
-            {/* Unchecked CheckableTags render with a transparent border/background by
-                antd default, so they read as plain links rather than tappable chips.
-                Scoped to this popover so it doesn't affect CheckableTag usage elsewhere. */}
-            <style jsx global>{`
-                .qw-time-filter-chips .ant-tag-checkable:not(.ant-tag-checkable-checked) {
-                    background-color: ${token.colorBgContainer};
-                    border-color: ${token.colorBorder};
-                }
-                .qw-time-filter-chips .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-                    border-color: ${token.colorPrimary};
-                }
-                /* Presets vary in label length (Hôm nay vs. Tháng trước) — a plain flex-wrap
-                   sizes each chip to its own text, so columns drift out of alignment as the
-                   popover width changes. A fixed 2-column grid keeps them aligned always. */
-                .qw-preset-grid.ant-tag-checkable-group {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                }
-                .qw-preset-grid .ant-tag-checkable {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 100%;
-                    height: ${token.controlHeightSM}px;
-                    box-sizing: border-box;
-                }
-            `}</style>
-            <div
-                style={{
-                    overflowY: 'auto',
-                    flex: '1 1 auto',
-                    minHeight: 0,
-                    paddingRight: 2,
-                    paddingTop: 4,
-                }}
-            >
-                {/* Shift is independent of PRESET vs CUSTOM_RANGE, so it sits above the
-                    tabs — otherwise switching tabs would appear to drop the selection. */}
-                {shiftFilters.length > 0 && (
-                    <>
-                        <Typography.Text type="secondary" style={sectionLabelStyle}>
-                            {lang === 'vi' ? 'Ca làm việc' : 'Shifts'}
-                            {requiredMark}
-                        </Typography.Text>
-                        <div
-                            className="qw-time-filter-chips"
-                            style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
-                        >
-                            <Tag.CheckableTagGroup
-                                options={shiftChipOptions}
-                                value={draftShiftId ?? SHIFT_ALL}
-                                onChange={(nextValue) =>
-                                    setDraftShiftId(
-                                        nextValue == null || nextValue === SHIFT_ALL
-                                            ? null
-                                            : Number(nextValue)
-                                    )
-                                }
-                            />
-                        </div>
-                    </>
-                )}
+        <div style={{ width: isMobile ? 'calc(100vw - 48px)' : 340, maxWidth: 340 }}>
+            <Typography.Text strong style={{ fontSize: 14 }}>
+                {t('spaceMonitoring.timeFilter.title')}
+            </Typography.Text>
 
-                <Typography.Text
-                    type="secondary"
-                    style={{
-                        ...sectionLabelStyle,
-                        marginTop: shiftFilters.length > 0 ? 16 : 0,
-                        marginBottom: 4,
-                    }}
-                >
-                    {lang === 'vi' ? 'Khoảng thời gian' : 'Time range'}
-                    {requiredMark}
-                </Typography.Text>
-                <Tabs
-                    size="small"
-                    activeKey={activeTabKey}
-                    onChange={(key) => setActiveTabKey(key as 'quick' | 'custom')}
-                    items={[
-                        {
-                            key: 'quick',
-                            label: lang === 'vi' ? 'Nhanh' : 'Quick',
-                            children: quickTabContent,
-                        },
-                        {
-                            key: 'custom',
-                            label: lang === 'vi' ? 'Tuỳ chỉnh' : 'Custom',
-                            children: customTabContent,
-                        },
-                    ]}
+            <Divider style={{ margin: '10px 0' }} />
+
+            {/* Mode selection buttons */}
+            <ModeSelectionSection
+                currentMode={draftMode}
+                onSelectMode={handleSelectMode}
+                modeButtons={modeButtons}
+                title={t('spaceMonitoring.timeFilter.periodType')}
+            />
+
+            {/* Context-aware Picker & Sub-container */}
+            {draftMode === 'PRESET' && groupedOptions.PERIOD.length > 0 && (
+                <PresetGridSection
+                    selectedPeriodId={draftPeriodId}
+                    onSelectPeriod={handleSelectPeriod}
+                    periodOptions={groupedOptions.PERIOD}
+                    title={t('spaceMonitoring.timeFilter.presetOptions')}
+                    colorPrimary={token.colorPrimary}
+                    colorPrimaryBg={token.colorPrimaryBg}
+                    colorBgContainer={token.colorBgContainer}
+                    colorText={token.colorText}
+                    colorBorderSecondary={token.colorBorderSecondary}
+                    colorFillQuaternary={token.colorFillQuaternary}
                 />
+            )}
 
-                {grainEnabled && (
-                    <>
-                        {/* The whole Grain section is now behind one collapsed-by-default
-                            panel — not just the label-style sub-option — since it's the one
-                            control that never blocks Apply and always has a working default. */}
-                        <Collapse
-                            ghost
-                            size="small"
-                            style={{ marginTop: 8 }}
-                            items={[
-                                {
-                                    key: 'grain',
-                                    label: (
-                                        <Typography.Text
-                                            type="secondary"
-                                            style={{
-                                                ...sectionLabelStyle,
-                                                display: 'inline',
-                                                marginBottom: 0,
-                                            }}
-                                        >
-                                            {lang === 'vi' ? 'Nhóm theo' : 'Group by'}
-                                            {optionalMark}
-                                        </Typography.Text>
-                                    ),
-                                    children: (
-                                        <Space
-                                            direction="vertical"
-                                            size={10}
-                                            style={{ width: '100%' }}
-                                        >
-                                            <Select
-                                                size="small"
-                                                style={{ width: '100%' }}
-                                                value={draftGrain}
-                                                onChange={(nextGrain: TimeGrain) =>
-                                                    setDraftGrain(nextGrain)
-                                                }
-                                                options={activeAllowedGrains.map((grainName) => {
-                                                    const option = grainOptions?.find(
-                                                        (o) => o.name === grainName
-                                                    );
-                                                    const label = option
-                                                        ? lang === 'vi'
-                                                            ? option.nameVi
-                                                            : option.nameEn
-                                                        : grainName;
-                                                    return { value: grainName, label };
-                                                })}
-                                            />
-                                            <div>
-                                                <Typography.Text
-                                                    type="secondary"
-                                                    style={{
-                                                        fontSize: 11,
-                                                        display: 'block',
-                                                        marginBottom: 4,
-                                                    }}
-                                                >
-                                                    {draftGrainLabel
-                                                        ? lang === 'vi'
-                                                            ? `Kiểu nhãn cho "${draftGrainLabel}"`
-                                                            : `Label style for "${draftGrainLabel}"`
-                                                        : lang === 'vi'
-                                                          ? 'Kiểu nhãn'
-                                                          : 'Label style'}
-                                                </Typography.Text>
-                                                <Select
-                                                    size="small"
-                                                    style={{ width: '100%' }}
-                                                    allowClear
-                                                    placeholder="Auto"
-                                                    value={draftLabelStyle}
-                                                    onChange={(nextStyle: LabelStyle | undefined) =>
-                                                        setDraftLabelStyle(nextStyle ?? null)
-                                                    }
-                                                    options={ALL_LABEL_STYLES.map((style) => ({
-                                                        value: style,
-                                                        label: getLabelStyleLabel(style, lang),
-                                                    }))}
-                                                />
-                                            </div>
-                                        </Space>
-                                    ),
-                                },
-                            ]}
-                        />
-                    </>
-                )}
-            </div>
-
-            {/* Always-visible resolved summary — the one place that reflects the combined
-                draft state regardless of which tab is active. */}
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 8,
-                    background: token.colorPrimaryBg,
-                    border: `1px solid ${token.colorPrimaryBorder}`,
-                    borderRadius: token.borderRadius,
-                    padding: '8px 10px',
-                    margin: '12px 0',
-                    flexShrink: 0,
-                }}
-            >
-                <Typography.Text
+            {draftMode === 'WEEK' && (
+                <div
                     style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.4,
-                        color: token.colorPrimary,
-                        opacity: 0.75,
-                        flexShrink: 0,
+                        background: token.colorFillQuaternary,
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: `1px solid ${token.colorBorderSecondary}`,
                     }}
                 >
-                    {lang === 'vi' ? 'Đang chọn' : 'Selected'}
-                </Typography.Text>
-                <Typography.Text
-                    ellipsis
-                    style={{ fontSize: 12.5, fontWeight: 600, color: token.colorPrimary }}
-                >
-                    {draftSummaryText}
-                </Typography.Text>
-            </div>
-
-            <Divider style={{ margin: '0 0 12px', flexShrink: 0 }} />
-
-            <div
-                style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexShrink: 0 }}
-            >
-                <Button onClick={handleReset}>{t('common.reset')}</Button>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <Button
-                        onClick={() => {
-                            syncDraft();
-                            setOpen(false);
+                    <Typography.Text
+                        style={{
+                            display: 'block',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            marginBottom: 6,
                         }}
                     >
-                        {t('common.cancel')}
-                    </Button>
-                    <Button type="primary" onClick={handleApply} disabled={isApplyDisabled}>
-                        {lang === 'vi' ? 'Áp dụng' : 'Apply'}
-                    </Button>
+                        {t('spaceMonitoring.timeFilter.selectWeek')}
+                    </Typography.Text>
+                    <DatePicker
+                        picker="week"
+                        showWeek={false}
+                        value={draftWeek && draftWeek.isValid() ? draftWeek : dayjs()}
+                        onChange={(date) => setDraftWeek(date && date.isValid() ? date : dayjs())}
+                        format={(date) =>
+                            date && date.isValid()
+                                ? `${date.startOf('isoWeek').format('DD/MM')} - ${date.endOf('isoWeek').format('DD/MM/YYYY')}`
+                                : ''
+                        }
+                        style={{ width: '100%', borderRadius: 6 }}
+                        placeholder={t('spaceMonitoring.timeFilter.selectWeek')}
+                        disabledDate={(current) => current && current > dayjs().endOf('day')}
+                    />
                 </div>
-            </div>
+            )}
+
+            {draftMode === 'MONTH' && (
+                <div
+                    style={{
+                        background: token.colorFillQuaternary,
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: `1px solid ${token.colorBorderSecondary}`,
+                    }}
+                >
+                    <Typography.Text
+                        style={{
+                            display: 'block',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            marginBottom: 6,
+                        }}
+                    >
+                        {t('spaceMonitoring.timeFilter.selectMonth')}
+                    </Typography.Text>
+                    <DatePicker
+                        picker="month"
+                        format="MM/YYYY"
+                        value={draftMonth && draftMonth.isValid() ? draftMonth : dayjs()}
+                        onChange={(date) => setDraftMonth(date && date.isValid() ? date : dayjs())}
+                        style={{ width: '100%', borderRadius: 6 }}
+                        placeholder={t('spaceMonitoring.timeFilter.selectMonth')}
+                        disabledDate={(current) => current && current > dayjs().endOf('day')}
+                    />
+                    {renderDatePreview(
+                        (draftMonth && draftMonth.isValid() ? draftMonth : dayjs()).startOf(
+                            'month'
+                        ),
+                        (draftMonth && draftMonth.isValid() ? draftMonth : dayjs()).endOf('month')
+                    )}
+                </div>
+            )}
+
+            {draftMode === 'QUARTER' && (
+                <div
+                    style={{
+                        background: token.colorFillQuaternary,
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: `1px solid ${token.colorBorderSecondary}`,
+                    }}
+                >
+                    <Typography.Text
+                        style={{
+                            display: 'block',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            marginBottom: 6,
+                        }}
+                    >
+                        {t('spaceMonitoring.timeFilter.selectQuarter')}
+                    </Typography.Text>
+                    <DatePicker
+                        picker="quarter"
+                        format="[Q]Q/YYYY"
+                        value={draftQuarter && draftQuarter.isValid() ? draftQuarter : dayjs()}
+                        onChange={(date) =>
+                            setDraftQuarter(date && date.isValid() ? date : dayjs())
+                        }
+                        style={{ width: '100%', borderRadius: 6 }}
+                        placeholder={t('spaceMonitoring.timeFilter.selectQuarter')}
+                        disabledDate={(current) => current && current > dayjs().endOf('day')}
+                    />
+                    {renderDatePreview(
+                        (draftQuarter && draftQuarter.isValid() ? draftQuarter : dayjs()).startOf(
+                            'quarter'
+                        ),
+                        (draftQuarter && draftQuarter.isValid() ? draftQuarter : dayjs()).endOf(
+                            'quarter'
+                        )
+                    )}
+                </div>
+            )}
+
+            {draftMode === 'YEAR' && (
+                <div
+                    style={{
+                        background: token.colorFillQuaternary,
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: `1px solid ${token.colorBorderSecondary}`,
+                    }}
+                >
+                    <Typography.Text
+                        style={{
+                            display: 'block',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            marginBottom: 6,
+                        }}
+                    >
+                        {t('spaceMonitoring.timeFilter.selectYear')}
+                    </Typography.Text>
+                    <DatePicker
+                        picker="year"
+                        format="YYYY"
+                        value={draftYear && draftYear.isValid() ? draftYear : dayjs()}
+                        onChange={(date) => setDraftYear(date && date.isValid() ? date : dayjs())}
+                        style={{ width: '100%', borderRadius: 6 }}
+                        placeholder={t('spaceMonitoring.timeFilter.selectYear')}
+                        disabledDate={(current) => current && current > dayjs().endOf('day')}
+                    />
+                    {renderDatePreview(
+                        (draftYear && draftYear.isValid() ? draftYear : dayjs()).startOf('year'),
+                        (draftYear && draftYear.isValid() ? draftYear : dayjs()).endOf('year')
+                    )}
+                </div>
+            )}
+
+            {draftMode === 'CUSTOM_RANGE' && (
+                <div
+                    style={{
+                        background: token.colorFillQuaternary,
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        border: `1px solid ${token.colorBorderSecondary}`,
+                    }}
+                >
+                    <Typography.Text
+                        style={{
+                            display: 'block',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            marginBottom: 6,
+                        }}
+                    >
+                        {t('spaceMonitoring.timeFilter.selectDateRange')}
+                    </Typography.Text>
+                    <DatePicker.RangePicker
+                        value={
+                            draftDateRange &&
+                            draftDateRange[0]?.isValid() &&
+                            draftDateRange[1]?.isValid()
+                                ? draftDateRange
+                                : [dayjs(), dayjs()]
+                        }
+                        onChange={(dates) => {
+                            if (dates?.[0] && dates?.[1]) {
+                                setDraftDateRange([dates[0], dates[1]]);
+                            }
+                        }}
+                        format="DD/MM/YYYY"
+                        style={{ width: '100%', borderRadius: 6 }}
+                        disabledDate={(current) => current && current > dayjs().endOf('day')}
+                    />
+                </div>
+            )}
+
+            <Divider style={{ margin: '10px 0' }} />
+
+            {/* Shift selection (Ca làm việc) - MOVED BELOW */}
+            <ShiftSection
+                shiftId={draftShiftId}
+                onChange={setDraftShiftId}
+                groupedShifts={currentShiftOptions}
+                industryFilters={allIndustryFilters}
+                isShiftActive={isShiftActive}
+                isMobile={isMobile}
+                title={t('spaceMonitoring.timeFilter.shifts')}
+                allShiftsLabel={t('spaceMonitoring.timeFilter.allShifts')}
+                activeTagLabel={t('spaceMonitoring.timeFilter.active')}
+                isSingleDay={isSingleDay}
+                singleDayWarning={singleDayWarning}
+                isLoading={isLoadingShifts}
+            />
+
+            {/* Action buttons */}
+            <FooterActions
+                onReset={handleReset}
+                onCancel={() => setOpen(false)}
+                onApply={handleApplyClick}
+                isApplyDisabled={isApplyDisabled}
+                resetLabel={t('common.reset')}
+                cancelLabel={t('common.cancel')}
+                applyLabel={t('spaceMonitoring.timeFilter.apply')}
+            />
         </div>
     );
 
@@ -782,22 +1110,22 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
             placement={placement}
             content={content}
         >
-            <Tooltip title={activeLabel}>
+            {isMobile ? (
                 <Button
+                    block
                     style={{
                         borderRadius: 8,
-                        width: isMobile ? '100%' : 220,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'flex-start',
                         gap: 4,
                     }}
                 >
-                    <span style={{ flexShrink: 0 }}>{lang === 'vi' ? 'Thời gian' : 'Time'}:</span>
+                    <span style={{ flexShrink: 0 }}>{t('spaceMonitoring.timeFilter.time')}:</span>
                     <Typography.Text
                         ellipsis
                         style={{
-                            maxWidth: isMobile ? 'calc(100% - 76px)' : 135,
+                            maxWidth: 'calc(100% - 76px)',
                             color: 'inherit',
                             lineHeight: 'inherit',
                         }}
@@ -805,7 +1133,30 @@ const TimeFilterPopover: React.FC<TimeFilterPopoverProps> = ({
                         {activeLabel ?? t('common.filter')}
                     </Typography.Text>
                 </Button>
-            </Tooltip>
+            ) : (
+                <Tooltip title={activeLabel}>
+                    <Button
+                        style={{
+                            borderRadius: 8,
+                            width: 220,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start',
+                            gap: 4,
+                        }}
+                    >
+                        <span style={{ flexShrink: 0 }}>
+                            {t('spaceMonitoring.timeFilter.time')}:
+                        </span>
+                        <Typography.Text
+                            ellipsis
+                            style={{ maxWidth: 135, color: 'inherit', lineHeight: 'inherit' }}
+                        >
+                            {activeLabel ?? t('common.filter')}
+                        </Typography.Text>
+                    </Button>
+                </Tooltip>
+            )}
         </Popover>
     );
 };

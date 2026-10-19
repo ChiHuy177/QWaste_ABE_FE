@@ -57,7 +57,8 @@ export const useWeeklyMachineGrid = ({
             ).forEach((group) => groupsByMachineId.set(group.machineId, group));
         }
 
-        return machines.map((machine): MachineGroupVM => {
+        const safeMachines = Array.isArray(machines) ? machines : [];
+        return safeMachines.map((machine): MachineGroupVM => {
             const machineId = String(machine.machineId);
             return (
                 groupsByMachineId.get(machineId) ?? {

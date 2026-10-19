@@ -16,7 +16,8 @@ export class IndustryFilterService {
             url: ENDPOINTS.INDUSTRY_FILTER.BASE,
         });
         const result = response.result;
-        return Array.isArray(result) ? result : (result?.content ?? []);
+        const list = Array.isArray(result) ? result : (result?.content ?? []);
+        return [...list].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }
 
     static async getIndustryFiltersForPicking(): Promise<IndustryFilter[]> {
@@ -24,7 +25,8 @@ export class IndustryFilterService {
             method: 'GET',
             url: ENDPOINTS.INDUSTRY_FILTER.PICKING,
         });
-        return response.result as IndustryFilter[];
+        const filters = (response.result as IndustryFilter[]) || [];
+        return [...filters].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }
 
     static async getIndustryFilterById(filterId: number): Promise<IndustryFilter> {
@@ -40,7 +42,8 @@ export class IndustryFilterService {
             method: 'GET',
             url: ENDPOINTS.INDUSTRY_FILTER.PRIMARY,
         });
-        return response.result as IndustryFilter[];
+        const filters = (response.result as IndustryFilter[]) || [];
+        return [...filters].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }
 
     static async getShiftFilters(): Promise<IndustryFilter[]> {
@@ -48,7 +51,8 @@ export class IndustryFilterService {
             method: 'GET',
             url: ENDPOINTS.INDUSTRY_FILTER.SHIFTS,
         });
-        return response.result as IndustryFilter[];
+        const filters = (response.result as IndustryFilter[]) || [];
+        return [...filters].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     }
 
     static async createIndustryFilter(filterData: IndustryFilterFormData): Promise<IndustryFilter> {

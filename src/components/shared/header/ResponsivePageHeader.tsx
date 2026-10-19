@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, ReactNode } from 'react';
-import { Grid, Button, Tooltip } from 'antd';
-import { FilterOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons';
+import { Grid, Button, Tooltip, theme } from 'antd';
+import {
+    FilterOutlined,
+    SearchOutlined,
+    CloseOutlined,
+    ArrowLeftOutlined,
+} from '@ant-design/icons';
 import { Input, Typography } from 'antd';
 import PageHeader from './PageHeader';
 import { useTheme } from '@/hooks/useTheme';
@@ -20,6 +25,9 @@ interface MobileSearchConfig {
 interface ResponsivePageHeaderProps {
     title: ReactNode;
     icon?: ReactNode;
+    onBack?: () => void;
+    backTooltip?: string;
+    backLabel?: ReactNode;
     loading?: boolean;
     className?: string;
 
@@ -36,6 +44,9 @@ interface ResponsivePageHeaderProps {
 export default function ResponsivePageHeader({
     title,
     icon,
+    onBack,
+    backTooltip,
+    backLabel,
     loading = false,
     className,
     rightContent,
@@ -45,6 +56,7 @@ export default function ResponsivePageHeader({
     desktopOnly = false,
 }: ResponsivePageHeaderProps) {
     const screens = useBreakpoint();
+    const { token } = theme.useToken();
     const isMobile = !screens.md;
     const [searchExpanded, setSearchExpanded] = useState(false);
     const [filterExpanded, setFilterExpanded] = useState(false);
@@ -56,6 +68,9 @@ export default function ResponsivePageHeader({
             <PageHeader
                 title={title}
                 icon={icon}
+                onBack={onBack}
+                backTooltip={backTooltip}
+                backLabel={backLabel}
                 loading={loading}
                 rightContent={rightContent}
                 rightContentMobile={rightContentMobile}
@@ -130,10 +145,33 @@ export default function ResponsivePageHeader({
                         padding: '10px 16px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 6,
+                        gap: 8,
                         flexWrap: 'wrap',
                     }}
                 >
+                    {onBack && (
+                        <Tooltip title={backTooltip}>
+                            <Button
+                                type="default"
+                                icon={<ArrowLeftOutlined style={{ fontSize: 15 }} />}
+                                onClick={onBack}
+                                style={{
+                                    height: 34,
+                                    width: backLabel ? undefined : 34,
+                                    padding: backLabel ? '0 10px' : 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0,
+                                    borderRadius: token.borderRadius,
+                                    fontWeight: 500,
+                                }}
+                                aria-label="Back"
+                            >
+                                {backLabel}
+                            </Button>
+                        </Tooltip>
+                    )}
                     <Title
                         level={4}
                         style={{

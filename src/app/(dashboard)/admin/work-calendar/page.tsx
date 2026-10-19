@@ -1,243 +1,229 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Grid } from 'antd';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
-import {
-    WorkCalendarMonthResponse,
-    WorkCalendarDayResponse,
-    WorkCalendarDayUpdationRequest,
-    DayType,
-} from '@/types/WorkCalendar';
-import { WorkCalendarService } from '@/services/WorkCalendarService';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/stores/hook';
+import { workCalendarActions } from '@/stores';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { getApiErrorMessage } from '@/utils/apiError';
 import {
     WorkCalendarHeader,
     WorkCalendarSummary,
     WorkCalendarGrid,
     EditDayModal,
 } from '@/features/dashboard/work-calendar';
-
-const { useBreakpoint } = Grid;
-
-/**
- * Helper to construct Map<string, WorkCalendarDayResponse> from array
- */
-const createDaysMap = (days: WorkCalendarDayResponse[]): Map<string, WorkCalendarDayResponse> => {
-    const map = new Map<string, WorkCalendarDayResponse>();
-    days.forEach((day) => map.set(day.date, { ...day }));
-    return map;
-};
+import {
+    DayType,
+    WorkCalendarDayResponse,
+    WorkCalendarSummaryResponse,
+} from '@/types/WorkCalendar';
 
 export default function WorkCalendarPage() {
     const { t } = useTranslation('common');
     usePageTitle(t('pageTitle.workCalendar', t('workCalendar.header.title')));
     const searchParams = useSearchParams();
-    const screens = useBreakpoint();
-    const isMobile = !screens.md;
+    const router = useRouter();
+    const dispatch = useAppDispatch();
 
-    const now = useMemo(() => dayjs(), []);
-    const initialYear = searchParams.get('year') ? Number(searchParams.get('year')) : now.year();
-    const initialMonth = searchParams.get('month')
-        ? Number(searchParams.get('month'))
-        : now.month() + 1;
+    const urlYear = searchParams.get('year') ? Number(searchParams.get('year')) : undefined;
+    const urlMonth = searchParams.get('month') ? Number(searchParams.get('month')) : undefined;
 
-    const [year, setYear] = useState<number>(initialYear);
-    const [month, setMonth] = useState<number>(initialMonth);
-
-    const [loading, setLoading] = useState<boolean>(true);
-    const [isSaving, setIsSaving] = useState<boolean>(false);
-    const [isResetting, setIsResetting] = useState<boolean>(false);
-    const [isConfirming, setIsConfirming] = useState<boolean>(false);
-    const [isEditMode, setIsEditMode] = useState<boolean>(false);
-
-    const [monthData, setMonthData] = useState<WorkCalendarMonthResponse | null>(null);
-    const [draftDaysMap, setDraftDaysMap] = useState<Map<string, WorkCalendarDayResponse>>(
-        new Map()
-    );
-
-    // Bulk selection state & Modal state
-    const [selectedDates, setSelectedDates] = useState<string[]>([]);
-    const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-
-    // Fetch month calendar data
-    const fetchCalendar = useCallback(
-        async (targetYear: number, targetMonth: number) => {
-            setLoading(true);
-            try {
-                const data = await WorkCalendarService.getMonthCalendar(targetYear, targetMonth);
-                setMonthData(data);
-                setDraftDaysMap(createDaysMap(data.days));
-            } catch (err: unknown) {
-                toast.error(getApiErrorMessage(err, t('workCalendar.notifications.fetchError')));
-            } finally {
-                setLoading(false);
-            }
-        },
-        [t]
-    );
+    const {
+        year,
+        month,
+        monthData,
+        draftDays,
+        shiftPatterns,
+        selectedDates,
+        isEditMode,
+        isEditModalOpen,
+        isLoading,
+        isSaving,
+        isResetting,
+        isConfirming,
+    } = useAppSelector((state) => state.workCalendar);
 
     useEffect(() => {
-        fetchCalendar(year, month);
-    }, [year, month, fetchCalendar]);
+        if (urlYear && urlMonth) {
+            if (urlYear !== year || urlMonth !== month) {
+                dispatch(
+                    workCalendarActions.setYearMonth({
+                        year: urlYear,
+                        month: urlMonth,
+                    })
+                );
+            }
+        }
+    }, [urlYear, urlMonth, year, month, dispatch]);
 
-    // Original days map for diffing
+    useEffect(() => {
+        dispatch(workCalendarActions.fetchShiftPatterns());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (urlYear && urlMonth && (urlYear !== year || urlMonth !== month)) {
+            return;
+        }
+
+        dispatch(workCalendarActions.fetchMonthCalendar(year, month));
+    }, [year, month, urlYear, urlMonth, dispatch]);
+
+    // Construct Map for Grid and Modal lookups
+    const draftDaysMap = useMemo(() => {
+        const map = new Map<string, WorkCalendarDayResponse>();
+        Object.values(draftDays).forEach((day) => map.set(day.date, day));
+        return map;
+    }, [draftDays]);
+
     const originalDaysMap = useMemo(() => {
-        if (!monthData) return new Map<string, WorkCalendarDayResponse>();
-        return createDaysMap(monthData.days);
+        const map = new Map<string, WorkCalendarDayResponse>();
+        if (monthData?.days) {
+            monthData.days.forEach((day) => map.set(day.date, day));
+        }
+        return map;
     }, [monthData]);
 
     // Check if user made any draft changes
     const hasDraftChanges = useMemo(() => {
         if (!isEditMode || !monthData) return false;
         for (const orig of monthData.days) {
-            const draft = draftDaysMap.get(orig.date);
+            const draft = draftDays[orig.date];
             if (
                 draft &&
-                (draft.dayType !== orig.dayType || draft.isWorkingDay !== orig.isWorkingDay)
+                (draft.dayType !== orig.dayType ||
+                    draft.isWorkingDay !== orig.isWorkingDay ||
+                    draft.shiftPatternId !== orig.shiftPatternId)
             ) {
                 return true;
             }
         }
         return false;
-    }, [isEditMode, monthData, draftDaysMap]);
+    }, [isEditMode, monthData, draftDays]);
 
-    // Check confirmation status from API response
     const isConfirmed = useMemo(() => Boolean(monthData?.isConfirmed), [monthData]);
 
-    // Handlers
-    const handleMonthChange = useCallback((newYear: number, newMonth: number) => {
-        setIsEditMode(false);
-        setSelectedDates([]);
-        setYear(newYear);
-        setMonth(newMonth);
-    }, []);
+    // Compute active summary in real time (recalculating working/off days and total hours in edit mode)
+    const activeSummary = useMemo<WorkCalendarSummaryResponse | undefined>(() => {
+        if (!monthData) return undefined;
+        if (!isEditMode) return monthData.summary;
 
-    const handleEnterEditMode = useCallback(() => {
-        setIsEditMode(true);
-    }, []);
+        const days = Object.values(draftDays);
+        if (days.length === 0) return monthData.summary;
 
-    const handleCancelEditMode = useCallback(() => {
-        setIsEditMode(false);
-        setSelectedDates([]);
-        if (monthData) {
-            setDraftDaysMap(createDaysMap(monthData.days));
+        let workingDays = 0;
+        let offDays = 0;
+        let totalHours = 0;
+
+        for (const day of days) {
+            if (day.isWorkingDay) {
+                workingDays++;
+                totalHours += day.plannedTime || 0;
+            } else {
+                offDays++;
+            }
         }
-    }, [monthData]);
 
-    const handleEditModalSave = useCallback(
-        (dates: string[], dayType: DayType, isWorkingDay: boolean) => {
-            setDraftDaysMap((prev) => {
-                const next = new Map(prev);
-                dates.forEach((date) => {
-                    const current = next.get(date);
-                    if (current) {
-                        next.set(date, {
-                            ...current,
-                            dayType,
-                            isWorkingDay,
-                            plannedTime: isWorkingDay ? current.plannedTime || 22.5 : 0.0,
-                        });
-                    }
-                });
-                return next;
-            });
-            setSelectedDates([]);
-            toast.success(
-                t('workCalendar.notifications.bulkUpdateSuccess', { count: dates.length })
-            );
+        return {
+            totalWorkingDays: workingDays,
+            totalOffDays: offDays,
+            totalPlannedHours: Number(totalHours.toFixed(2)),
+        };
+    }, [isEditMode, monthData, draftDays]);
+
+    // Handlers
+    const handleMonthChange = useCallback(
+        (newYear: number, newMonth: number) => {
+            router.replace(`/admin/work-calendar?year=${newYear}&month=${newMonth}`);
+            dispatch(workCalendarActions.setYearMonth({ year: newYear, month: newMonth }));
         },
-        [t]
+        [dispatch, router]
     );
 
-    const handleSaveChanges = useCallback(async () => {
-        if (!monthData) return;
+    const handleEnterEditMode = useCallback(() => {
+        dispatch(workCalendarActions.setIsEditMode(true));
+    }, [dispatch]);
 
-        // Client-side validation: Ensure payload has ALL 28-31 days of the month
-        const payload: WorkCalendarDayUpdationRequest[] = [];
-        const daysInMonthCount = dayjs(
-            `${year}-${String(month).padStart(2, '0')}-01`
-        ).daysInMonth();
+    const handleCancelEditMode = useCallback(() => {
+        dispatch(workCalendarActions.cancelDraftChanges());
+    }, [dispatch]);
 
-        for (let d = 1; d <= daysInMonthCount; d++) {
-            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const dayDraft = draftDaysMap.get(dateStr);
-            if (!dayDraft) {
-                toast.error(t('workCalendar.notifications.missingDataError', { date: dateStr }));
-                return;
-            }
-            payload.push({
-                date: dayDraft.date,
-                dayType: dayDraft.dayType,
-                isWorkingDay: dayDraft.isWorkingDay,
-            });
-        }
+    const handleEditModalSave = useCallback(
+        (
+            dates: string[],
+            dayType: DayType,
+            isWorkingDay: boolean,
+            shiftPatternId?: number | null,
+            patternCode?: string | null,
+            patternName?: string | null,
+            plannedTime?: number
+        ) => {
+            dispatch(
+                workCalendarActions.updateDraftDays({
+                    dates,
+                    dayType,
+                    isWorkingDay,
+                    shiftPatternId,
+                    patternCode,
+                    patternName,
+                    plannedTime,
+                })
+            );
+        },
+        [dispatch]
+    );
 
-        setIsSaving(true);
-        try {
-            const updated = await WorkCalendarService.batchUpdateCalendar(payload);
-            setMonthData(updated);
-            setDraftDaysMap(createDaysMap(updated.days));
+    const handleSaveChanges = useCallback(() => {
+        dispatch(
+            workCalendarActions.saveChanges({
+                missingDay: (date) => t('workCalendar.notifications.missingDataError', { date }),
+                patternRequired: (date) =>
+                    t('workCalendar.errors.patternRequiredDate', {
+                        date,
+                        defaultValue: `Vui lòng chọn mẫu ca cho ngày làm việc (${date})`,
+                    }),
+                success: t('workCalendar.notifications.saveSuccess'),
+                fallbackError: t('workCalendar.notifications.saveError'),
+            })
+        );
+    }, [dispatch, t]);
 
-            setIsEditMode(false);
-            setSelectedDates([]);
-            toast.success(t('workCalendar.notifications.saveSuccess'));
-        } catch (err: unknown) {
-            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.saveError')));
-        } finally {
-            setIsSaving(false);
-        }
-    }, [monthData, year, month, draftDaysMap, t]);
+    const handleResetToDefault = useCallback(() => {
+        dispatch(
+            workCalendarActions.resetToDefault({
+                success: t('workCalendar.notifications.resetSuccess'),
+                fallbackError: t('workCalendar.notifications.resetError'),
+            })
+        );
+    }, [dispatch, t]);
 
-    const handleResetToDefault = useCallback(async () => {
-        setIsResetting(true);
-        try {
-            const resetData = await WorkCalendarService.resetMonthCalendar(year, month);
-            setMonthData(resetData);
-            setDraftDaysMap(createDaysMap(resetData.days));
+    const handleConfirmMonth = useCallback(() => {
+        dispatch(
+            workCalendarActions.confirmMonthSchedule({
+                success: t('workCalendar.notifications.confirmMonthSuccess', { month, year }),
+                fallbackError: t('workCalendar.notifications.confirmMonthError'),
+            })
+        );
+    }, [dispatch, month, year, t]);
 
-            setIsEditMode(false);
-            setSelectedDates([]);
-            toast.success(t('workCalendar.notifications.resetSuccess'));
-        } catch (err: unknown) {
-            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.resetError')));
-        } finally {
-            setIsResetting(false);
-        }
-    }, [year, month, t]);
-
-    const handleConfirmMonth = useCallback(async () => {
-        setIsConfirming(true);
-        try {
-            const confirmedData = await WorkCalendarService.confirmMonth(year, month);
-            setMonthData(confirmedData);
-            toast.success(t('workCalendar.notifications.confirmMonthSuccess', { month, year }));
-        } catch (err: unknown) {
-            toast.error(getApiErrorMessage(err, t('workCalendar.notifications.confirmMonthError')));
-        } finally {
-            setIsConfirming(false);
-        }
-    }, [year, month, t]);
-
-    const handleSelectDates = useCallback((dates: string[]) => {
-        setSelectedDates(dates);
-    }, []);
+    const handleSelectDates = useCallback(
+        (dates: string[]) => {
+            dispatch(workCalendarActions.setSelectedDates(dates));
+        },
+        [dispatch]
+    );
 
     const handleOpenEditModal = useCallback(() => {
-        setIsEditModalOpen(true);
-    }, []);
+        dispatch(workCalendarActions.setIsEditModalOpen(true));
+    }, [dispatch]);
 
     const handleCloseEditModal = useCallback(() => {
-        setIsEditModalOpen(false);
-    }, []);
+        dispatch(workCalendarActions.setIsEditModalOpen(false));
+    }, [dispatch]);
 
     const handleClearSelection = useCallback(() => {
-        setSelectedDates([]);
-    }, []);
+        dispatch(workCalendarActions.setSelectedDates([]));
+    }, [dispatch]);
 
     return (
         <div
@@ -265,15 +251,16 @@ export default function WorkCalendarPage() {
                 onConfirmMonth={handleConfirmMonth}
             />
 
-            <WorkCalendarSummary summary={monthData?.summary} loading={loading} />
+            <WorkCalendarSummary summary={activeSummary} loading={isLoading || !monthData} />
 
             <WorkCalendarGrid
                 year={year}
                 month={month}
                 daysMap={draftDaysMap}
                 originalDaysMap={originalDaysMap}
+                shiftPatterns={shiftPatterns}
                 isEditMode={isEditMode}
-                loading={loading}
+                loading={isLoading || !monthData}
                 selectedDates={selectedDates}
                 onMonthChange={handleMonthChange}
                 onSelectDates={handleSelectDates}
@@ -281,11 +268,11 @@ export default function WorkCalendarPage() {
                 onClearSelection={handleClearSelection}
             />
 
-            {/* Single Unified Edit Modal */}
             <EditDayModal
                 open={isEditModalOpen}
                 selectedDates={selectedDates}
                 daysMap={draftDaysMap}
+                shiftPatterns={shiftPatterns}
                 onClose={handleCloseEditModal}
                 onSave={handleEditModalSave}
             />

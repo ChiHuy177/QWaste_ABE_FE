@@ -1,10 +1,12 @@
 import {
     LaptopOutlined,
     ApartmentOutlined,
+    BarChartOutlined,
     SettingOutlined,
     SafetyOutlined,
     AppstoreOutlined,
     CalendarOutlined,
+    WarningOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { TFunction } from 'i18next';
@@ -21,7 +23,9 @@ type MenuItem = Required<MenuProps>['items'][number];
  */
 const TOP_LEVEL_ICONS: Record<string, React.ReactNode> = {
     'space-monitoring': <ApartmentOutlined />,
+    'production-overview': <BarChartOutlined />,
     machines: <LaptopOutlined />,
+    'error-management': <WarningOutlined />,
     settings: <SettingOutlined />,
 };
 
@@ -43,7 +47,12 @@ const SUB_GROUP_I18N_KEYS: Record<string, string> = {
     staff_others: 'sidebar.navigation.staffOthers',
 };
 
-const TOP_LEVEL_BEFORE_GROUPS = ['space-monitoring', 'machines'];
+const TOP_LEVEL_BEFORE_GROUPS = [
+    'space-monitoring',
+    'production-overview',
+    'machines',
+    'error-management',
+];
 const PRODUCTION_PLAN_MENU_KEYS = ['production-plan', 'work-calendar', 'production-plan-monitor'];
 const SUB_GROUP_ORDER = ['machine_management', 'space_configuration', 'staff_others'] as const;
 const RBAC_SUBJECT_ORDER = ['permission', 'role', 'user'] as const;

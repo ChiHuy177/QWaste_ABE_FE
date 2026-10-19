@@ -53,6 +53,76 @@ export const statusColors = {
     },
 };
 
+export interface ShiftPatternColorConfig {
+    base: string;
+    bg: string;
+    border: string;
+    tagColor: string;
+}
+
+export const shiftPatternPalettes = {
+    light: [
+        // Palette 0: Emerald Forest Green (Standard / Shift 1)
+        {
+            base: statusColors.light.runtime.base,
+            bg: statusColors.light.runtime.bg,
+            border: statusColors.light.runtime.border,
+            tagColor: 'success',
+        },
+        // Palette 1: Ocean / Sapphire Blue (Shift 2 / Day Shift)
+        {
+            base: '#0958d9',
+            bg: 'rgba(9, 88, 217, 0.12)',
+            border: 'rgba(9, 88, 217, 0.35)',
+            tagColor: 'blue',
+        },
+        // Palette 2: Royal Purple (Shift 3 / Night Shift)
+        {
+            base: '#722ed1',
+            bg: 'rgba(114, 46, 209, 0.12)',
+            border: 'rgba(114, 46, 209, 0.35)',
+            tagColor: 'purple',
+        },
+        // Palette 3: Amber / Bronze Orange (OT / Special Shift)
+        {
+            base: '#d46b08',
+            bg: 'rgba(212, 107, 8, 0.12)',
+            border: 'rgba(212, 107, 8, 0.35)',
+            tagColor: 'warning',
+        },
+    ],
+    dark: [
+        // Palette 0: Emerald Forest Green (Standard / Shift 1)
+        {
+            base: statusColors.dark.runtime.base,
+            bg: statusColors.dark.runtime.bg,
+            border: statusColors.dark.runtime.border,
+            tagColor: 'success',
+        },
+        // Palette 1: Ocean / Sapphire Blue (Shift 2 / Day Shift)
+        {
+            base: '#4096ff',
+            bg: 'rgba(64, 150, 255, 0.22)',
+            border: 'rgba(64, 150, 255, 0.42)',
+            tagColor: 'blue',
+        },
+        // Palette 2: Royal Purple (Shift 3 / Night Shift)
+        {
+            base: '#9254de',
+            bg: 'rgba(146, 84, 222, 0.22)',
+            border: 'rgba(146, 84, 222, 0.42)',
+            tagColor: 'purple',
+        },
+        // Palette 3: Amber / Bronze Orange (OT / Special Shift)
+        {
+            base: '#d48806',
+            bg: 'rgba(212, 136, 6, 0.22)',
+            border: 'rgba(212, 136, 6, 0.42)',
+            tagColor: 'warning',
+        },
+    ],
+};
+
 const sc = statusColors;
 
 const L_SUCCESS = sc.light.runtime.base;

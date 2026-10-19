@@ -353,9 +353,7 @@ export const MoldImportModal = ({ open, onCancel, onSuccess }: MoldImportModalPr
                         <Table<MoldImportRowError>
                             size="small"
                             dataSource={rowErrors}
-                            rowKey={(record, index) =>
-                                `${record.rowIndex}-${record.column}-${index}`
-                            }
+                            rowKey={(record) => `${record.rowIndex}-${record.column}`}
                             columns={errorColumns}
                             pagination={{
                                 pageSize: 5,

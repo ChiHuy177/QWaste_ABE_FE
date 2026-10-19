@@ -93,7 +93,7 @@ export const factoryOverviewActions = {
         dispatch(slice.actions.setError(null));
 
         try {
-            const data = await SpaceService.getSpacesByLevel(1);
+            const data = await SpaceService.getSpacesByLevelWithChildren(1);
             dispatch(slice.actions.setSpaces(data));
             return { success: true, data };
         } catch (error) {
