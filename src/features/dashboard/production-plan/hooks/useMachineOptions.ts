@@ -30,7 +30,21 @@ export const useMachineOptions = (): UseMachineOptionsResult => {
         staleTime: STALE_TIME,
     });
 
-    const machines = query.data ?? [];
+    const machines = useMemo<Machine[]>(() => {
+        const data = query.data;
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (
+            data &&
+            typeof data === 'object' &&
+            'content' in data &&
+            Array.isArray((data as { content?: unknown[] }).content)
+        ) {
+            return (data as { content: Machine[] }).content;
+        }
+        return [];
+    }, [query.data]);
 
     const machineInfoMap = useMemo(() => buildMachineInfoMap(machines), [machines]);
 
