@@ -45,7 +45,7 @@ const { Search } = Input;
 
 const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
-export default function ProductionMonitorPage() {
+export default function ProductionMonitoringPage() {
     const { t } = useTranslation();
     const { token } = theme.useToken();
     const { checkPermission } = usePermissionCheck();
