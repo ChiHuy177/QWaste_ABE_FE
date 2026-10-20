@@ -2246,10 +2246,12 @@
     },
     "sidebar": {
         "navigation": {
-            "productionMonitor": "生产监控"
+            "productionMonitor": "生产监控",
+            "productionMonitoring": "生产监控"
         }
     },
     "permissionSubjects": {
-        "production_monitor": "生产监控"
+        "production_monitor": "生产监控",
+        "production_monitoring": "生产监控"
     }
 }

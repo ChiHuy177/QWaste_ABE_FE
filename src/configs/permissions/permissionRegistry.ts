@@ -147,16 +147,15 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View production overview',
         i18nKey: 'permissionSubjects.production_overview',
     },
-    // Production Monitor
+    // Production Monitoring
     {
-        slug: 'production_monitor:view',
-        subject: 'production_monitor',
+        slug: 'production_monitoring:view',
+        subject: 'production_monitoring',
         action: 'view',
-        routes: ['/admin/production-plan/monitor'],
-        menuKey: 'production-plan-monitor',
-        description: 'View production plan monitor',
-        i18nKey: 'sidebar.navigation.productionMonitor',
-        group: 'production_plan',
+        routes: ['/admin/production-monitoring'],
+        menuKey: 'production-monitoring',
+        description: 'View production monitoring',
+        i18nKey: 'sidebar.navigation.productionMonitoring',
     },
 
     // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
