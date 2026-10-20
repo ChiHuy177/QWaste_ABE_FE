@@ -355,20 +355,10 @@ const SpaceMonitoringPage: React.FC = () => {
                             startTime: string;
                             endTime: string;
                             logStatus:
-                                | 'RUNTIME'
-                                | 'IDLE'
-                                | 'ERROR'
-                                | 'COMPLETE'
-                                | 'OFFLINE'
-                                | 'UNKNOWN';
+                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
                         };
                         newStatus:
-                            | 'RUNTIME'
-                            | 'IDLE'
-                            | 'ERROR'
-                            | 'COMPLETE'
-                            | 'OFFLINE'
-                            | 'UNKNOWN';
+                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
                         productionCounter: number;
                     };
                 };
@@ -762,7 +752,8 @@ const SpaceMonitoringPage: React.FC = () => {
                         {t('spaceMonitoring.timeFilter.refreshData')}
                     </Button>
 
-                    <Button
+                    {/* Tạm ẩn nút Xuất Excel theo yêu cầu (không xóa code) */}
+                    {/* <Button
                         block
                         type="primary"
                         icon={<FileExcelOutlined />}
@@ -774,7 +765,7 @@ const SpaceMonitoringPage: React.FC = () => {
                         style={{ borderRadius: 8 }}
                     >
                         {t('common.exportExcel')}
-                    </Button>
+                    </Button> */}
                 </div>
             ) : (
                 <div
@@ -833,7 +824,8 @@ const SpaceMonitoringPage: React.FC = () => {
                         />
                     </Tooltip>
 
-                    <Button
+                    {/* Tạm ẩn nút Xuất Excel theo yêu cầu (không xóa code) */}
+                    {/* <Button
                         type="primary"
                         icon={<FileExcelOutlined />}
                         onClick={handleExportExcel}
@@ -844,7 +836,7 @@ const SpaceMonitoringPage: React.FC = () => {
                         style={{ borderRadius: 8 }}
                     >
                         {t('common.exportExcel')}
-                    </Button>
+                    </Button> */}
                 </div>
             ),
         [
