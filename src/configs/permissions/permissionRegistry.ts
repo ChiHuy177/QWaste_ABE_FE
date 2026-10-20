@@ -220,6 +220,13 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Reorder production plans',
     },
     {
+        slug: 'production_plan:complete',
+        subject: 'production_plan',
+        action: 'complete',
+        routes: [],
+        description: 'Complete production plans',
+    },
+    {
         slug: 'product:import',
         subject: 'product',
         action: 'import',

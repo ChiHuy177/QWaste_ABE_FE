@@ -21,6 +21,7 @@ export const ACTIONS = [
     'incident',
     'move',
     'reset',
+    'complete',
 ] as const;
 
 export type Action = (typeof ACTIONS)[number];

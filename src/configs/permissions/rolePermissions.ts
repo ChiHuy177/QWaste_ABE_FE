@@ -34,6 +34,7 @@ const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'production_plan' },
     { action: 'view', subject: 'machine_overview' },
     { action: 'view', subject: 'production_overview' },
+    { action: 'complete', subject: 'production_plan' },
     { action: 'view', subject: 'error_management' },
     { action: 'create', subject: 'error_management' },
     { action: 'update', subject: 'error_management' },
@@ -65,10 +66,12 @@ const PLANNER_PERMISSIONS: PermissionRule[] = [
     { action: 'update', subject: 'work_calendar' },
     { action: 'delete', subject: 'work_calendar' },
     { action: 'manage', subject: 'work_calendar' },
+    { action: 'complete', subject: 'production_plan' },
 ];
 
 const INVENTORY_MANAGER_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'production_monitoring' },
+    { action: 'complete', subject: 'production_plan' },
 ];
 
 const CLIENT_PERMISSIONS: PermissionRule[] = [{ action: 'view', subject: 'space_monitoring' }];
