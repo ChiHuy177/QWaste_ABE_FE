@@ -437,16 +437,6 @@ const SpaceListPage = () => {
         }
 
         setSelectedLevelId(rootLevel.spaceLevelId);
-        form.setFieldsValue({
-            spaceLevelId: rootLevel.spaceLevelId,
-            parentSpaceId: null,
-            displayOrder: 1,
-            spaceCode: '',
-            spaceName: '',
-            description: '',
-            floorPlanImageUrl: null,
-        });
-
         setModalState({
             open: true,
             mode: 'create',
@@ -491,16 +481,6 @@ const SpaceListPage = () => {
             );
 
             setSelectedLevelId(targetConfig.spaceLevelId);
-            form.setFieldsValue({
-                spaceLevelId: targetConfig.spaceLevelId,
-                parentSpaceId: parentSpace.spaceId,
-                displayOrder: 1,
-                spaceCode: '',
-                spaceName: '',
-                description: '',
-                floorPlanImageUrl: null,
-            });
-
             setModalState({
                 open: true,
                 mode: 'create',
@@ -513,7 +493,7 @@ const SpaceListPage = () => {
                 },
             });
         },
-        [checkPermission, spaceLevels, maxSpaceLevel, form, t]
+        [checkPermission, spaceLevels, maxSpaceLevel, t]
     );
 
     const handleEditSpace = useCallback(
@@ -534,15 +514,6 @@ const SpaceListPage = () => {
                 });
                 const lvlId = detailData.spaceLevel?.spaceLevelId ?? null;
                 setSelectedLevelId(lvlId);
-                form.setFieldsValue({
-                    spaceLevelId: lvlId,
-                    parentSpaceId: detailData.parentId,
-                    spaceCode: detailData.spaceCode,
-                    spaceName: detailData.spaceName,
-                    displayOrder: detailData.displayOrder,
-                    description: detailData.description,
-                    floorPlanImageUrl: detailData.floorPlanImageUrl,
-                });
 
                 setModalState({
                     open: true,
@@ -561,7 +532,7 @@ const SpaceListPage = () => {
                 setIsFormLoading(false);
             }
         },
-        [checkPermission, handleError, queryClient, form]
+        [checkPermission, handleError, queryClient]
     );
 
     const { mutateAsync: createSpace } = useMutation({
@@ -1096,7 +1067,7 @@ const SpaceListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         expandable={{
                             expandedRowKeys,

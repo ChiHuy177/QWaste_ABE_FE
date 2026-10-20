@@ -19,9 +19,7 @@ import {
 import { MachineOperatorHistoryService } from '@/services/MachineOperatorHistoryService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
-import AdvancedFilterPanel, {
-    FilterField,
-} from '@/components/shared/filters/AdvancedFilterPanel';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { FactoryPickingResponse } from '@/types/Factory';
 import { ZonePickingResponse } from '@/types/Zone';
 import { useAbility } from '@/contexts/AbilityContext';
@@ -434,7 +432,7 @@ const MachineStaffingPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 'max-content',

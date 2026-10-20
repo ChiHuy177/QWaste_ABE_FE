@@ -15,9 +15,7 @@ import {
 } from '@/features/dashboard/categories/step';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { SearchInput } from '@/components/shared/SearchInput';
-import AdvancedFilterPanel, {
-    FilterField,
-} from '@/components/shared/filters/AdvancedFilterPanel';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
@@ -440,7 +438,7 @@ const StepListPage = () => {
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.items')}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{
                             x: 'max-content',

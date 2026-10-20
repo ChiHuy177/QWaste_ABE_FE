@@ -6,7 +6,7 @@ import {
     DatePicker,
     Upload,
     UploadProps,
-    message,
+    theme,
     Image,
     Switch,
     Tooltip,
@@ -341,6 +341,7 @@ const ImageUploader = ({
     supportText?: string;
 }) => {
     const { t } = useTranslation();
+    const { token } = theme.useToken();
     const [fileList, setFileList] = React.useState<UploadFile[]>([]);
     const [previewVisible, setPreviewVisible] = React.useState(false);
     const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
@@ -545,7 +546,7 @@ const ImageUploader = ({
                 ) : (
                     <>
                         <p className="ant-upload-drag-icon">
-                            <CameraOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+                            <CameraOutlined style={{ fontSize: 48, color: token.colorPrimary }} />
                         </p>
                         <p className="ant-upload-text">{t('common.upload.image.dragAndDrop')}</p>
                         <p className="ant-upload-hint">
@@ -556,16 +557,18 @@ const ImageUploader = ({
             </Upload.Dragger>
 
             {/* Manual Preview Modal */}
-            <div style={{ display: 'none' }}>
-                <Image.PreviewGroup
-                    preview={{
-                        open: previewVisible,
-                        onOpenChange: (visible) => setPreviewVisible(visible),
-                    }}
-                >
-                    <Image src={previewUrl || fileList[0]?.url || ''} alt="Image preview" />
-                </Image.PreviewGroup>
-            </div>
+            {previewUrl || fileList[0]?.url ? (
+                <div style={{ display: 'none' }}>
+                    <Image.PreviewGroup
+                        preview={{
+                            open: previewVisible,
+                            onOpenChange: (visible) => setPreviewVisible(visible),
+                        }}
+                    >
+                        <Image src={previewUrl || fileList[0]?.url} alt="Image preview" />
+                    </Image.PreviewGroup>
+                </div>
+            ) : null}
 
             <style
                 dangerouslySetInnerHTML={{
@@ -667,7 +670,7 @@ const PdfUploader = ({
             }
             const isLt16M = file.size / 1024 / 1024 < 16;
             if (!isLt16M) {
-                message.error(
+                toast.error(
                     t('common.upload.pdf.fileSizeLimit', {
                         defaultValue: 'PDF must be smaller than 16MB',
                     })

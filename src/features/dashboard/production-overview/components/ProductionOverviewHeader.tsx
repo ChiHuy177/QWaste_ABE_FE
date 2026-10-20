@@ -109,7 +109,8 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                     {t('spaceMonitoring.timeFilter.refreshData', 'Làm mới dữ liệu')}
                 </Button>
 
-                <Tooltip
+                {/* Tạm ẩn nút Xuất Excel theo yêu cầu (không xóa code) */}
+                {/* <Tooltip
                     title={t('common.featureUnderDevelopment', 'Tính năng đang được phát triển')}
                 >
                     <div style={{ width: '100%' }}>
@@ -125,7 +126,7 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                             {t('common.exportExcel', 'Xuất Excel')}
                         </Button>
                     </div>
-                </Tooltip>
+                </Tooltip> */}
             </div>
         ) : (
             <div
@@ -180,7 +181,8 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                     />
                 </Tooltip>
 
-                <Tooltip
+                {/* Tạm ẩn nút Xuất Excel theo yêu cầu (không xóa code) */}
+                {/* <Tooltip
                     title={t('common.featureUnderDevelopment', 'Tính năng đang được phát triển')}
                 >
                     <span>
@@ -195,7 +197,7 @@ export const ProductionOverviewHeader: React.FC<ProductionOverviewHeaderProps> =
                             {t('common.exportExcel', 'Xuất Excel')}
                         </Button>
                     </span>
-                </Tooltip>
+                </Tooltip> */}
             </div>
         );
     }
