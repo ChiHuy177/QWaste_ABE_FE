@@ -10,11 +10,16 @@ export class WorkCalendarService {
     /**
      * Get month calendar data for specified year and month.
      */
-    static async getMonthCalendar(year: number, month: number): Promise<WorkCalendarMonthResponse> {
+    static async getMonthCalendar(
+        year: number,
+        month: number,
+        cancelToken?: string
+    ): Promise<WorkCalendarMonthResponse> {
         const response = await NetworkService.requestJson<WorkCalendarMonthResponse>({
             method: 'GET',
             url: ENDPOINTS.WORK_CALENDAR.BASE,
             data: { year, month },
+            cancelToken,
         });
         return response.result as WorkCalendarMonthResponse;
     }

@@ -405,7 +405,8 @@
             "overrideTooltip": "Ngày đã được chỉnh sửa khác quy tắc mặc định",
             "pastDayTooltip": "Không thể chỉnh sửa lịch của ngày trong quá khứ",
             "plannedHoursLabel": "{{hours}}h kế hoạch",
-            "plannedOffLabel": "0h (Nghỉ)"
+            "plannedOffLabel": "0h (Nghỉ)",
+            "monthPickerFormat": "[Tháng] MM, YYYY"
         },
         "dayType": {
             "working": "Làm việc",
@@ -428,6 +429,9 @@
             "shiftPatternLabel": "Mẫu ca",
             "selectPatternPlaceholder": "Chọn mẫu ca",
             "defaultPatternTag": "Mặc định",
+            "hoursPreviewLabel": "Giờ làm việc dự kiến:",
+            "hoursUnitPerDay": "{{hours}}h / ngày",
+            "hoursZeroOff": "0h (Nghỉ)",
             "btnApply": "Áp dụng"
         },
         "errors": {
@@ -444,8 +448,12 @@
             "eyebrow": "CẢNH BÁO HỆ THỐNG",
             "modalTitle": "Cảnh báo chốt lịch làm việc",
             "targetNotice": "Tháng {{month}}/{{year}} chưa chốt lịch",
+            "targetNoticeMultiple": "Có {{count}} tháng chưa chốt lịch làm việc",
             "targetSub": "Vui lòng kiểm tra & chốt lịch sớm nhất",
             "modalDesc": "Tháng {{month}} chưa được chốt lịch làm việc. Vui lòng rà soát và chốt lịch để hệ thống tính hiệu suất chính xác.",
+            "modalDescMultiple": "Lịch làm việc cho {{months}} chưa được chốt. Vui lòng rà soát và chốt lịch để hệ thống tính hiệu suất chính xác.",
+            "monthYearFormat": "Tháng {{month}}/{{year}}",
+            "btnGoToConfigure": "Cấu hình",
             "btnConfigureNow": "Cấu hình ngay",
             "btnCloseLater": "Để sau"
         },

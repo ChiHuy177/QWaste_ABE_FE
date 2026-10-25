@@ -51,8 +51,17 @@ const slice = createSlice({
     initialState,
     reducers: {
         setYearMonth: (state, action: PayloadAction<{ year: number; month: number }>) => {
+            if (
+                state.year === action.payload.year &&
+                state.month === action.payload.month &&
+                state.monthData !== null
+            ) {
+                return;
+            }
             state.year = action.payload.year;
             state.month = action.payload.month;
+            state.monthData = null;
+            state.draftDays = {};
             state.isEditMode = false;
             state.selectedDates = [];
         },
@@ -95,13 +104,53 @@ const slice = createSlice({
                 shiftPatternId?: number | null;
                 patternCode?: string | null;
                 patternName?: string | null;
+                plannedTime?: number;
             }>
         ) => {
-            const { dates, dayType, isWorkingDay, shiftPatternId, patternCode, patternName } =
-                action.payload;
+            const {
+                dates,
+                dayType,
+                isWorkingDay,
+                shiftPatternId,
+                patternCode,
+                patternName,
+                plannedTime: explicitPlannedTime,
+            } = action.payload;
+
+            // Pattern hours lookup from current monthData
+            const patternHoursMap = new Map<number, number>();
+            if (state.monthData?.days) {
+                state.monthData.days.forEach((d) => {
+                    if (
+                        d.shiftPatternId &&
+                        d.isWorkingDay &&
+                        d.plannedTime > 0 &&
+                        !patternHoursMap.has(d.shiftPatternId)
+                    ) {
+                        patternHoursMap.set(d.shiftPatternId, d.plannedTime);
+                    }
+                });
+            }
+
             dates.forEach((date) => {
                 const current = state.draftDays[date];
                 if (current) {
+                    let calculatedPlannedTime = 0;
+                    if (isWorkingDay) {
+                        if (explicitPlannedTime !== undefined) {
+                            calculatedPlannedTime = explicitPlannedTime;
+                        } else if (shiftPatternId && patternHoursMap.has(shiftPatternId)) {
+                            calculatedPlannedTime = patternHoursMap.get(shiftPatternId)!;
+                        } else if (
+                            current.shiftPatternId === shiftPatternId &&
+                            current.plannedTime > 0
+                        ) {
+                            calculatedPlannedTime = current.plannedTime;
+                        } else {
+                            calculatedPlannedTime = 8.0;
+                        }
+                    }
+
                     state.draftDays[date] = {
                         ...current,
                         dayType,
@@ -109,6 +158,7 @@ const slice = createSlice({
                         shiftPatternId: isWorkingDay ? shiftPatternId : null,
                         patternCode: isWorkingDay ? patternCode : null,
                         patternName: isWorkingDay ? patternName : null,
+                        plannedTime: calculatedPlannedTime,
                     };
                 }
             });
@@ -166,21 +216,37 @@ export const workCalendarActions = {
             month: number,
             fallbackErrorMessage = 'Không thể tải dữ liệu lịch làm việc.'
         ) =>
-        async (dispatch: AppDispatch) => {
+        async (dispatch: AppDispatch, getState: () => RootState) => {
             dispatch(slice.actions.setIsLoading(true));
             dispatch(slice.actions.setError(null));
 
             try {
-                const data = await WorkCalendarService.getMonthCalendar(year, month);
-                dispatch(slice.actions.setMonthData(data));
+                const data = await WorkCalendarService.getMonthCalendar(
+                    year,
+                    month,
+                    'fetch_work_calendar'
+                );
+                const currentState = getState().workCalendar;
+                if (currentState.year === year && currentState.month === month) {
+                    dispatch(slice.actions.setMonthData(data));
+                }
                 return { success: true, data };
             } catch (err: unknown) {
+                const isCanceled =
+                    (err as { name?: string; code?: string })?.name === 'CanceledError' ||
+                    (err as { code?: string })?.code === 'ERR_CANCELED';
+                if (isCanceled) {
+                    return { success: false, error: 'canceled' };
+                }
                 const message = getApiErrorMessage(err, fallbackErrorMessage);
                 dispatch(slice.actions.setError(message));
                 toast.error(message);
                 return { success: false, error: message };
             } finally {
-                dispatch(slice.actions.setIsLoading(false));
+                const currentState = getState().workCalendar;
+                if (currentState.year === year && currentState.month === month) {
+                    dispatch(slice.actions.setIsLoading(false));
+                }
             }
         },
 
@@ -250,12 +316,14 @@ export const workCalendarActions = {
 
             dispatch(slice.actions.setIsSaving(true));
             try {
-                const updated = await WorkCalendarService.batchUpdateCalendar(payload);
-                dispatch(slice.actions.setMonthData(updated));
+                await WorkCalendarService.batchUpdateCalendar(payload);
+                // Re-fetch fresh calendar data from backend after save to ensure full sync
+                const freshData = await WorkCalendarService.getMonthCalendar(year, month);
+                dispatch(slice.actions.setMonthData(freshData));
                 dispatch(slice.actions.setIsEditMode(false));
                 dispatch(slice.actions.setSelectedDates([]));
                 toast.success(messages?.success || 'Lưu thay đổi lịch làm việc thành công!');
-                return { success: true, data: updated };
+                return { success: true, data: freshData };
             } catch (err: unknown) {
                 const errorMsg = getApiErrorMessage(
                     err,
