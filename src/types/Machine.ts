@@ -131,6 +131,8 @@ export interface MachineWithStatusLogsSummary {
     machineDisplayOrder: number;
     topic: string;
     currentStatus: currentStatus;
+    /** Java `LocalDateTime` (no offset) marking when `currentStatus` began. */
+    currentStatusStartTime?: string | null;
     operatorCount: number;
     totalProductions: number;
     runtimeByStatus?: {

@@ -2225,6 +2225,7 @@
         "machine": {
             "online": "在线",
             "offline": "离线",
+            "lastUpdate": "更新时间",
             "operators": "操作员",
             "production": "产量"
         },

@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Flex, Typography, theme } from 'antd';
+import { Flex, Tooltip, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { formatVietnamDateTime, formatVietnamTimeCompact } from '@/utils/dateTimeUtils';
 const { Text } = Typography;
 
 /**
@@ -18,6 +19,8 @@ export interface MachineCardData {
     machineName: string;
     topic?: string;
     currentStatus: string;
+    /** Backend `LocalDateTime` for when `currentStatus` began; absent on the overview grid shape. */
+    currentStatusStartTime?: string | null;
     operatorCount?: number;
     totalProductions: number;
     runtimeByStatus?: Map<string, number> | Record<string, number | undefined>;
@@ -154,6 +157,9 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
     const offlineTime = formatTime(offlineSeconds);
 
     const operatorCount = machine.operatorCount || 0;
+
+    const lastUpdate = formatVietnamTimeCompact(machine.currentStatusStartTime);
+    const lastUpdateFull = formatVietnamDateTime(machine.currentStatusStartTime);
 
     return (
         <div
@@ -304,8 +310,41 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                     </Text>
                 </Flex>
 
+                {/* Last update - when the current status started (Vietnam time, GMT+7) */}
+                <Tooltip title={lastUpdateFull ? `${lastUpdateFull} (GMT+7)` : undefined}>
+                    <Flex
+                        align="center"
+                        justify="space-between"
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                            backdropFilter: 'blur(10px)',
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: statusStyle.color,
+                                fontWeight: 500,
+                            }}
+                        >
+                            {t('factoryOverview.machine.lastUpdate', 'Last update')}
+                        </Text>
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                color: statusStyle.color,
+                                fontWeight: 600,
+                            }}
+                        >
+                            {lastUpdate ?? '-'}
+                        </Text>
+                    </Flex>
+                </Tooltip>
+
                 {/* Operators */}
-                <Flex
+                {/* <Flex
                     align="center"
                     justify="space-between"
                     style={{
@@ -333,10 +372,10 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                     >
                         {operatorCount}
                     </Text>
-                </Flex>
+                </Flex> */}
 
                 {/* Production */}
-                <Flex
+                {/* <Flex
                     align="center"
                     justify="space-between"
                     style={{
@@ -364,7 +403,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                     >
                         {machine.totalProductions || 0}
                     </Text>
-                </Flex>
+                </Flex> */}
             </Flex>
         </div>
     );

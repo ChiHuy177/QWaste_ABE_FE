@@ -87,6 +87,18 @@ export const MOCK_FACTORY_SPACES: SpacePickingWithChildren[] = [
     },
 ];
 
+/**
+ * Mimics the backend's `LocalDateTime` (Vietnam time, no offset) so the mock
+ * cards exercise the same parsing path as the real `/overview` payload.
+ */
+let statusStartOffsetMinutes = 0;
+const mockCurrentStatusStartTime = (): string => {
+    statusStartOffsetMinutes = (statusStartOffsetMinutes + 23) % 400;
+    const vietnamMillis =
+        Date.now() - statusStartOffsetMinutes * 60_000 + 7 * 60 * 60_000;
+    return `${new Date(vietnamMillis).toISOString().slice(0, 19)}.000000`;
+};
+
 const machine = (
     machineId: string,
     machineCode: string,
@@ -102,6 +114,7 @@ const machine = (
     machineDisplayOrder: options.machineDisplayOrder ?? 1,
     topic: options.topic ?? machineCode.toLowerCase(),
     currentStatus,
+    currentStatusStartTime: options.currentStatusStartTime ?? mockCurrentStatusStartTime(),
     operatorCount: options.operatorCount ?? 1,
     totalProductions: options.totalProductions ?? 0,
     runtimeByStatus,

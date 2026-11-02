@@ -2884,6 +2884,7 @@
         "machine": {
             "online": "Trực Tuyến",
             "offline": "Ngoại Tuyến",
+            "lastUpdate": "Cập nhật",
             "operators": "Nhân viên",
             "production": "Sản lượng"
         },
