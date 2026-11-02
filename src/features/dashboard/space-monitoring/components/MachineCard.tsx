@@ -3,7 +3,7 @@
 import React from 'react';
 import { Flex, Tooltip, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { formatVietnamDateTime, formatVietnamTimeCompact } from '@/utils/dateTimeUtils';
+import { formatVietnamDateTime, formatVietnamDateTimeCompact } from '@/utils/dateTimeUtils';
 const { Text } = Typography;
 
 /**
@@ -158,7 +158,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
 
     const operatorCount = machine.operatorCount || 0;
 
-    const lastUpdate = formatVietnamTimeCompact(machine.currentStatusStartTime);
+    const lastUpdate = formatVietnamDateTimeCompact(machine.currentStatusStartTime);
     const lastUpdateFull = formatVietnamDateTime(machine.currentStatusStartTime);
 
     return (
@@ -327,15 +327,17 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                                 fontSize: 10,
                                 color: statusStyle.color,
                                 fontWeight: 500,
+                                whiteSpace: 'nowrap',
                             }}
                         >
                             {t('factoryOverview.machine.lastUpdate', 'Last update')}
                         </Text>
                         <Text
                             style={{
-                                fontSize: 11,
+                                fontSize: 10,
                                 color: statusStyle.color,
                                 fontWeight: 600,
+                                whiteSpace: 'nowrap',
                             }}
                         >
                             {lastUpdate ?? '-'}

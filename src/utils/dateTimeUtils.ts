@@ -42,15 +42,16 @@ export const toVietnamIsoString = (value?: string | null): string | null =>
     formatVietnamDateTime(value, 'YYYY-MM-DDTHH:mm:ssZ');
 
 /**
- * Compact label for tight UI: `HH:mm:ss` while the timestamp falls on today in
- * Vietnam, `DD/MM HH:mm` once it is older.
+ * Compact label for tight UI: always carries the date, as `DD/MM HH:mm:ss`.
+ * A timestamp from another year drops the seconds and shows the year instead,
+ * so the string stays roughly the same width.
  */
-export const formatVietnamTimeCompact = (value?: string | null): string | null => {
+export const formatVietnamDateTimeCompact = (value?: string | null): string | null => {
     const parsed = parseVietnamDateTime(value);
     if (!parsed) return null;
 
     const nowInVietnam = dayjs().tz(VIETNAM_TIMEZONE);
-    return parsed.isSame(nowInVietnam, 'day')
-        ? parsed.format('HH:mm:ss')
-        : parsed.format('DD/MM HH:mm');
+    return parsed.isSame(nowInVietnam, 'year')
+        ? parsed.format('DD/MM HH:mm:ss')
+        : parsed.format('DD/MM/YYYY HH:mm');
 };

@@ -1,6 +1,6 @@
 import {
     formatVietnamDateTime,
-    formatVietnamTimeCompact,
+    formatVietnamDateTimeCompact,
     parseVietnamDateTime,
     toVietnamIsoString,
 } from './dateTimeUtils';
@@ -30,14 +30,15 @@ describe('dateTimeUtils', () => {
         expect(parseVietnamDateTime(null)).toBeNull();
         expect(parseVietnamDateTime('')).toBeNull();
         expect(formatVietnamDateTime('not-a-date')).toBeNull();
-        expect(formatVietnamTimeCompact(undefined)).toBeNull();
+        expect(formatVietnamDateTimeCompact(undefined)).toBeNull();
     });
 
-    it('shows only the clock for today and adds the date for older values', () => {
+    it('always keeps the date in the compact label', () => {
         jest.useFakeTimers().setSystemTime(new Date('2026-10-29T10:00:00Z')); // 17:00 in Vietnam
 
-        expect(formatVietnamTimeCompact(LOCAL_DATE_TIME)).toBe('13:33:22');
-        expect(formatVietnamTimeCompact('2026-10-28T13:33:22.776468')).toBe('28/10 13:33');
+        expect(formatVietnamDateTimeCompact(LOCAL_DATE_TIME)).toBe('29/10 13:33:22');
+        expect(formatVietnamDateTimeCompact('2026-10-28T13:33:22.776468')).toBe('28/10 13:33:22');
+        expect(formatVietnamDateTimeCompact('2025-12-31T23:59:00')).toBe('31/12/2025 23:59');
 
         jest.useRealTimers();
     });
