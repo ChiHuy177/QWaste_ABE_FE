@@ -32,7 +32,7 @@ import { ExcelExportService } from '@/services/ExcelExportService';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
-import { MachineWithStatusLogsSummary } from '@/types/Machine';
+import { MachineStatusWsMessage, MachineWithStatusLogsSummary } from '@/types/Machine';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
@@ -105,7 +105,14 @@ const SpaceMonitoringPage: React.FC = () => {
     const spaceToMachinesMapRef = useRef<Map<number, MachineWithStatusLogsSummary[]>>(new Map());
     const activeSubscriptionsRef = useRef<Map<string, () => void>>(new Map());
     const pendingUpdates = useRef<
-        Map<string, { newStatus: string; runtimeUpdate?: { status: string; duration: number } }>
+        Map<
+            string,
+            {
+                newStatus: string;
+                statusStartTime?: string | null;
+                runtimeUpdate?: { status: string; duration: number };
+            }
+        >
     >(new Map());
     const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
     const firstUpdateTimeRef = useRef<number | null>(null);
@@ -213,6 +220,12 @@ const SpaceMonitoringPage: React.FC = () => {
                         currentStatus: update.newStatus as typeof machine.currentStatus,
                     };
 
+                    // Only overwrite when the frame carried a timestamp, so a
+                    // frame without one leaves the last known value in place.
+                    if (update.statusStartTime) {
+                        updatedMachine.currentStatusStartTime = update.statusStartTime;
+                    }
+
                     if (update.runtimeUpdate) {
                         const runtime = (machine.runtimeByStatus ?? {}) as Record<string, number>;
                         const currentRuntime = runtime[update.runtimeUpdate.status] || 0;
@@ -243,12 +256,13 @@ const SpaceMonitoringPage: React.FC = () => {
         (
             machineId: string,
             newStatus: string,
+            statusStartTime?: string | null,
             runtimeUpdate?: {
                 status: string;
                 duration: number;
             }
         ) => {
-            pendingUpdates.current.set(machineId, { newStatus, runtimeUpdate });
+            pendingUpdates.current.set(machineId, { newStatus, statusStartTime, runtimeUpdate });
 
             if (!firstUpdateTimeRef.current) {
                 firstUpdateTimeRef.current = Date.now();
@@ -346,77 +360,68 @@ const SpaceMonitoringPage: React.FC = () => {
 
             const statusTopic = `/topic/machines/status/${machineId}`;
 
-            const unsubscribe = wsService.subscribe<{
-                type: string;
-                payload: {
-                    machineId: string;
-                    data: {
-                        previousLog: {
-                            startTime: string;
-                            endTime: string;
-                            logStatus:
-                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
-                        };
-                        newStatus:
-                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
-                        productionCounter: number;
-                    };
-                };
-            }>(statusTopic, (message) => {
-                if (message.type !== 'DATA') {
-                    return;
+            const unsubscribe = wsService.subscribe<MachineStatusWsMessage>(
+                statusTopic,
+                (message) => {
+                    if (message.type !== 'DATA') {
+                        return;
+                    }
+
+                    const { machineId, data } = message.payload;
+                    const { newStatus, newStatusStartTime, previousLog } = data;
+
+                    if (!machineId || !newStatus) {
+                        return;
+                    }
+
+                    // The new status starts exactly where the previous log ended, so
+                    // that endTime is the fallback when the frame omits the field.
+                    const statusStartTime = newStatusStartTime ?? previousLog?.endTime ?? null;
+
+                    if (!previousLog) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    if (!previousLog.startTime || !previousLog.endTime || !previousLog.logStatus) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    const validStatuses = [
+                        'RUNTIME',
+                        'IDLE',
+                        'ERROR',
+                        'COMPLETE',
+                        'OFFLINE',
+                        'UNKNOWN',
+                    ];
+                    if (!validStatuses.includes(previousLog.logStatus)) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    const startTime = dayjs(previousLog.startTime);
+                    const endTime = dayjs(previousLog.endTime);
+
+                    if (!startTime.isValid() || !endTime.isValid()) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    const duration = endTime.diff(startTime, 'second');
+
+                    if (duration < 0 || duration > 86400 || duration === 0) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    scheduleMachineUpdate(machineId, newStatus, statusStartTime, {
+                        status: previousLog.logStatus,
+                        duration,
+                    });
                 }
-
-                const { machineId, data } = message.payload;
-                const { newStatus, previousLog } = data;
-
-                if (!machineId || !newStatus) {
-                    return;
-                }
-
-                if (!previousLog) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                if (!previousLog.startTime || !previousLog.endTime || !previousLog.logStatus) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                const validStatuses = [
-                    'RUNTIME',
-                    'IDLE',
-                    'ERROR',
-                    'COMPLETE',
-                    'OFFLINE',
-                    'UNKNOWN',
-                ];
-                if (!validStatuses.includes(previousLog.logStatus)) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                const startTime = dayjs(previousLog.startTime);
-                const endTime = dayjs(previousLog.endTime);
-
-                if (!startTime.isValid() || !endTime.isValid()) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                const duration = endTime.diff(startTime, 'second');
-
-                if (duration < 0 || duration > 86400 || duration === 0) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                scheduleMachineUpdate(machineId, newStatus, {
-                    status: previousLog.logStatus,
-                    duration,
-                });
-            });
+            );
 
             activeSubscriptionsRef.current.set(machineId, unsubscribe);
         });

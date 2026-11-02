@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { SearchOutlined, InboxOutlined } from '@ant-design/icons';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { MachineOverview } from '@/types/Machine';
+import { MachineOverview, MachineStatusWsMessage } from '@/types/Machine';
 
 interface ZoneEnergyWsFrame {
     payload?:
@@ -187,31 +187,18 @@ const MachinesPage: React.FC = () => {
 
         machines.forEach((machine: MachineOverview) => {
             const statusTopic = `/topic/machines/status/${machine.machineId}`;
-            const unsubscribe = wsService.subscribe<{
-                type: string;
-                payload: {
-                    machineId: string;
-                    data: {
-                        previousLog: {
-                            startTime: string;
-                            endTime: string;
-                            logStatus:
-                                'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
-                        };
-                        newStatus:
-                            'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
-                        productionCounter: number;
-                    };
-                };
-            }>(statusTopic, (message) => {
-                if (message.type !== 'DATA') return;
-                const { machineId, data } = message.payload;
-                const { newStatus, productionCounter } = data;
-                if (!machineId || !newStatus || newStatus === 'UNKNOWN') return;
-                dispatch(
-                    machineActions.updateMachineStatus(machineId, newStatus, productionCounter)
-                );
-            });
+            const unsubscribe = wsService.subscribe<MachineStatusWsMessage>(
+                statusTopic,
+                (message) => {
+                    if (message.type !== 'DATA') return;
+                    const { machineId, data } = message.payload;
+                    const { newStatus, productionCounter } = data;
+                    if (!machineId || !newStatus || newStatus === 'UNKNOWN') return;
+                    dispatch(
+                        machineActions.updateMachineStatus(machineId, newStatus, productionCounter)
+                    );
+                }
+            );
             unsubscribes.push(unsubscribe);
         });
 
