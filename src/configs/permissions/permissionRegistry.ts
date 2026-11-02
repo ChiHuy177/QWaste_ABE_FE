@@ -158,8 +158,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         i18nKey: 'sidebar.navigation.productionMonitoring',
     },
 
-    // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
-    // create/import chưa có bằng chứng BE đổi nên tạm giữ trên subject 'product' cũ.)
+    // Production Plan (BE dùng slug family production_plan:* — xem ProductionPlanConstants.Permissions.
+    // Slug cũ 'product:create'/'product:import' được map về đây ở permissionParser.)
     {
         slug: 'production_plan:view',
         subject: 'production_plan',
@@ -171,8 +171,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         group: 'production_plan',
     },
     {
-        slug: 'product:create',
-        subject: 'product',
+        slug: 'production_plan:create',
+        subject: 'production_plan',
         action: 'create',
         routes: [],
         description: 'Create production plan',
@@ -227,8 +227,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Complete production plans',
     },
     {
-        slug: 'product:import',
-        subject: 'product',
+        slug: 'production_plan:import',
+        subject: 'production_plan',
         action: 'import',
         routes: [],
         description: 'Import production plans from Excel',

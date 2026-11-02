@@ -71,9 +71,8 @@ export type Subject =
     | 'tasks'
     | 'production_monitoring'
     | 'production_monitor'
-    // Production plan — BE dùng slug production_plan:* (create/import vẫn tạm trên 'product')
+    // Production plan — BE dùng slug production_plan:*
     | 'production_plan'
-    | 'product'
     // Space
     | 'space_monitoring'
     | 'production_overview'

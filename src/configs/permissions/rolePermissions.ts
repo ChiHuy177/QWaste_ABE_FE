@@ -58,6 +58,7 @@ const PLANNER_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'production_monitoring' },
     { action: 'view', subject: 'production_plan' },
     { action: 'create', subject: 'production_plan' },
+    { action: 'import', subject: 'production_plan' },
     { action: 'update', subject: 'production_plan' },
     { action: 'delete', subject: 'production_plan' },
     { action: 'manage', subject: 'production_plan' },
