@@ -216,6 +216,7 @@ export const ENDPOINTS = {
     },
     OPERATION_TYPES: {
         BASE: BASE_PATHS.OPERATION_TYPES,
+        PICKING: `${BASE_PATHS.OPERATION_TYPES}/picking`,
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.OPERATION_TYPES, id),
     },
     PRODUCTION_PLANS: {

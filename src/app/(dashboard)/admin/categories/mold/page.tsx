@@ -50,7 +50,7 @@ const moldQueryKeys = {
 };
 
 const operationTypeQueryKeys = {
-    lists: ['operationTypes', 'list'] as const,
+    picking: ['operationTypes', 'list', 'picking'] as const,
 };
 
 const MoldListPage = () => {
@@ -187,8 +187,8 @@ const MoldListPage = () => {
     }, [moldsQuery.error, handleError]);
 
     const operationTypesQuery = useQuery({
-        queryKey: operationTypeQueryKeys.lists,
-        queryFn: () => OperationTypeService.getAllOperationTypes(),
+        queryKey: operationTypeQueryKeys.picking,
+        queryFn: () => OperationTypeService.getOperationTypesForPicking(),
     });
 
     const operationTypeOptions = useMemo(

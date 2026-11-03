@@ -8,6 +8,11 @@ export interface OperationType {
     auditMetaData?: AuditMetaData;
 }
 
+export type OperationTypePickingResponse = Pick<
+    OperationType,
+    'operationTypeId' | 'operationTypeCode' | 'operationTypeName'
+>;
+
 export interface OperationTypeFormData {
     operationTypeCode: string;
     operationTypeName: string;

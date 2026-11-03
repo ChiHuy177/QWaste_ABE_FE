@@ -2,6 +2,7 @@ import {
     OperationType,
     OperationTypeFormData,
     OperationTypePaginatedParams,
+    OperationTypePickingResponse,
     OperationTypeUpdateFormData,
 } from '@/types/OperationType';
 import { PaginatedResult } from '@/types/Common';
@@ -9,6 +10,15 @@ import { NetworkService } from './NetworkService';
 import { ENDPOINTS } from './endpoints';
 
 export class OperationTypeService {
+    /** Authenticated picking list; the full unpaged endpoint requires Super Admin. */
+    static async getOperationTypesForPicking(): Promise<OperationTypePickingResponse[]> {
+        const response = await NetworkService.requestJson<OperationTypePickingResponse[]>({
+            method: 'GET',
+            url: ENDPOINTS.OPERATION_TYPES.PICKING,
+        });
+        return response.result ?? [];
+    }
+
     /** GET /api/operationTypes/v1 — danh sách phân trang từ server */
     static async getOperationTypesPaginated(
         params: OperationTypePaginatedParams
