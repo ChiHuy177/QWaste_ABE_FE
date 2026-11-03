@@ -12,6 +12,8 @@ const DEFAULT_CONFIG: BrandingConfig = {
         auth: '/img/LogoIIC.svg',
         favicon: '/favicon.ico',
         poweredBy: '/img/auth/power_by.svg',
+        poweredByDark: '/img/auth/power_by_dark.svg',
+        logoEIU: '/img/LogoEIU.png',
     },
     colors: {
         primary: '#1890ff',

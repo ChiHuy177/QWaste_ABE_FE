@@ -11,11 +11,10 @@ import { getMenuItems } from '@/configs/navigation/menuItems';
 import { useError } from '@/contexts/ErrorContext';
 import { useAbility } from '@/contexts/AbilityContext';
 import { useBrandingConfig } from '@/configs/brandingConfig';
+import { AppFooter } from './AppFooter';
+import { SidebarUserMenu } from './SidebarUserMenu';
 
-const { Sider, Content, Footer } = Layout;
-
-/** Ảnh "powered by" ở footer — dùng khi branding config không khai báo footer.poweredBy. */
-const DEFAULT_FOOTER_LOGO = '/img/LogoEIU.png';
+const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
 
 export function AppLayoutWithHeader({ children }: { children: React.ReactNode }) {
@@ -144,6 +143,8 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                     }}
                 />
             </div>
+
+            <SidebarUserMenu collapsed={collapsed && !isMobile} />
         </div>
     );
 
@@ -294,24 +295,7 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                         children
                     )}
                 </Content>
-                <Footer
-                    style={{
-                        padding: '8px 24px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: token.colorBgContainer,
-                        borderTop: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
-                    }}
-                >
-                    <Image
-                        src={config.footer?.poweredBy ?? DEFAULT_FOOTER_LOGO}
-                        alt={`Powered by ${config.companyName}`}
-                        width={103}
-                        height={36}
-                        style={{ objectFit: 'contain' }}
-                    />
-                </Footer>
+                <AppFooter />
             </Layout>
         </Layout>
     );

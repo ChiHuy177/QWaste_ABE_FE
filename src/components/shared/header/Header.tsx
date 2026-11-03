@@ -1,36 +1,37 @@
 'use client';
 import { theme } from 'antd';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Layout, Button, Dropdown, Avatar, Space, Divider, Grid, Skeleton } from 'antd';
-import { MenuOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
+import { Layout, Button, Space, Divider, Grid, Skeleton } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
 import { useAuth } from '@/contexts/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from '../ThemeToggle';
 import { useTheme } from '@/hooks/useTheme';
-import { AuthStore } from '@/stores/AuthStore';
 import { useTranslation } from 'react-i18next';
 import { Clock } from './Clock';
 import { NotificationDropdown } from '../notification';
 import { useWebSocketNotification } from '@/hooks/useWebSocketNotification';
 import Image from 'next/image';
+import { useBrandingConfig } from '@/configs/brandingConfig';
 
 const { Header: AntHeader } = Layout;
 const { useBreakpoint } = Grid;
 
+// LogoEIU.png is 3750x1307 (~2.87:1); keep that ratio inside the 64px header.
+const EIU_LOGO_WIDTH = 115;
+const EIU_LOGO_HEIGHT = 40;
+
 export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
     useWebSocketNotification();
 
-    const user = AuthStore.getUsername();
-    const { logout, user: authUser, isLoading } = useAuth();
+    const { user: authUser, isLoading } = useAuth();
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [greeting, setGreeting] = useState('');
-    const router = useRouter();
     const screens = useBreakpoint();
     const { t } = useTranslation();
     const { token } = theme.useToken();
+    const { config } = useBrandingConfig();
 
     const isDark = resolvedTheme === 'dark';
 
@@ -45,54 +46,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         setGreeting(getGreeting());
     }, [t]);
 
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase();
-    };
-
-    const userMenuItems: MenuProps['items'] = [
-        {
-            key: 'user-info',
-            label: (
-                <div style={{ padding: '8px 0' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>
-                        {authUser?.fullname || 'User 1'}
-                    </div>
-                    <div
-                        style={{
-                            fontSize: 12,
-                            color: isDark ? 'rgba(255,255,255,0.45)' : '#666',
-                            marginTop: 4,
-                        }}
-                    >
-                        {authUser?.email || 'user@example.com'}
-                    </div>
-                </div>
-            ),
-            disabled: true,
-        },
-        { type: 'divider' },
-        {
-            key: 'settings',
-            label: 'Settings',
-            icon: <SettingOutlined />,
-            onClick: () => router.push('/admin/setting'),
-        },
-        { type: 'divider' },
-        {
-            key: 'logout',
-            label: 'Logout',
-            icon: <LogoutOutlined />,
-            onClick: logout,
-            danger: true,
-        },
-    ];
-
     const showGreeting = screens.md;
-    const showUserName = screens.sm;
 
     return (
         <AntHeader
@@ -216,115 +170,22 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 <ThemeToggle />
                 <LanguageSwitcher />
 
-                {isLoading ? (
-                    <div
-                        style={{
-                            height: 40,
-                            padding: showUserName ? '0 12px' : '0 8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: showUserName ? 8 : 0,
-                            border: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
-                            borderRadius: 6,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Skeleton.Avatar active size={32} />
-                        {showUserName && (
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 4,
-                                    minWidth: 0,
-                                }}
-                            >
-                                <Skeleton.Input
-                                    active
-                                    size="small"
-                                    style={{ width: screens.lg ? 120 : 80, height: 14 }}
-                                />
-                                <Skeleton.Input
-                                    active
-                                    size="small"
-                                    style={{ width: screens.lg ? 100 : 60, height: 12 }}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <Dropdown
-                        menu={{ items: userMenuItems }}
-                        placement="bottomRight"
-                        trigger={['click']}
-                    >
-                        <Button
-                            type="text"
+                {screens.md && config.logo.logoEIU && (
+                    <>
+                        <Divider orientation="vertical" style={{ height: 32, margin: '0 4px' }} />
+                        <Image
+                            src={config.logo.logoEIU}
+                            alt={config.companyName}
+                            width={EIU_LOGO_WIDTH}
+                            height={EIU_LOGO_HEIGHT}
+                            draggable={false}
                             style={{
-                                height: 40,
-                                padding: showUserName ? '0 12px' : '0 8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: showUserName ? 8 : 0,
-                                border: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
+                                objectFit: 'contain',
                                 flexShrink: 0,
+                                userSelect: 'none',
                             }}
-                        >
-                            {!authUser?.preferences?.avatarUrl ? (
-                                <Avatar
-                                    size={32}
-                                    style={{
-                                        backgroundColor: '#1677ff',
-                                        fontSize: 12,
-                                        fontWeight: 600,
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    {getInitials(user || 'User 1')}
-                                </Avatar>
-                            ) : (
-                                <Avatar size={32} src={authUser.preferences.avatarUrl} />
-                            )}
-
-                            {showUserName && (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'flex-start',
-                                        minWidth: 0,
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            fontSize: 14,
-                                            fontWeight: 500,
-                                            lineHeight: 1.2,
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                            maxWidth: screens.lg ? 120 : 80,
-                                        }}
-                                    >
-                                        {authUser?.fullname || 'User 1'}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: 12,
-                                            color: isDark ? 'rgba(255,255,255,0.65)' : '#666',
-                                            lineHeight: 1.2,
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                            maxWidth: screens.lg ? 120 : 80,
-                                        }}
-                                    >
-                                        {authUser?.email || 'user@example.com'}
-                                    </div>
-                                </div>
-                            )}
-                        </Button>
-                    </Dropdown>
+                        />
+                    </>
                 )}
             </Space>
         </AntHeader>

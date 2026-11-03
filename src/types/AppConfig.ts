@@ -6,6 +6,10 @@ export interface BrandingConfig {
         auth: string;
         favicon: string;
         poweredBy?: string;
+        // Optional cyan-on-dark variant of poweredBy; falls back to poweredBy when a
+        // deployment only ships one asset.
+        poweredByDark?: string;
+        logoEIU?: string;
     };
 
     colors: {
