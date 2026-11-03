@@ -12,7 +12,10 @@ import { useError } from '@/contexts/ErrorContext';
 import { useAbility } from '@/contexts/AbilityContext';
 import { useBrandingConfig } from '@/configs/brandingConfig';
 
-const { Sider, Content } = Layout;
+const { Sider, Content, Footer } = Layout;
+
+/** Ảnh "powered by" ở footer — dùng khi branding config không khai báo footer.poweredBy. */
+const DEFAULT_FOOTER_LOGO = '/img/LogoEIU.png';
 const { useBreakpoint } = Grid;
 
 export function AppLayoutWithHeader({ children }: { children: React.ReactNode }) {
@@ -291,6 +294,24 @@ export function AppLayoutWithHeader({ children }: { children: React.ReactNode })
                         children
                     )}
                 </Content>
+                <Footer
+                    style={{
+                        padding: '8px 24px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: token.colorBgContainer,
+                        borderTop: isDark ? '1px solid #424242' : '1px solid #f0f0f0',
+                    }}
+                >
+                    <Image
+                        src={config.footer?.poweredBy ?? DEFAULT_FOOTER_LOGO}
+                        alt={`Powered by ${config.companyName}`}
+                        width={103}
+                        height={36}
+                        style={{ objectFit: 'contain' }}
+                    />
+                </Footer>
             </Layout>
         </Layout>
     );

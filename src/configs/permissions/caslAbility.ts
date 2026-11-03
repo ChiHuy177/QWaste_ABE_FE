@@ -21,6 +21,7 @@ export const ACTIONS = [
     'incident',
     'move',
     'reset',
+    'complete',
 ] as const;
 
 export type Action = (typeof ACTIONS)[number];
@@ -68,13 +69,16 @@ export type Subject =
     | 'staff'
     // Tasks Management
     | 'tasks'
+    | 'production_monitoring'
     | 'production_monitor'
-    // Production plan — BE dùng slug production_plan:* (create/import vẫn tạm trên 'product')
+    // Production plan — BE dùng slug production_plan:*
     | 'production_plan'
-    | 'product'
     // Space
     | 'space_monitoring'
+    | 'production_overview'
     | 'floor_map'
+    // Error & Incident Management
+    | 'error_management'
     // Special
     | 'all';
 

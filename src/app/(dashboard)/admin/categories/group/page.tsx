@@ -214,7 +214,7 @@ const GroupListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{ x: 'max-content', y: tableScrollY }}
                         style={{ height: '100%' }}

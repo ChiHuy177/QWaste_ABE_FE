@@ -2225,6 +2225,7 @@
         "machine": {
             "online": "在线",
             "offline": "离线",
+            "lastUpdate": "更新时间",
             "operators": "操作员",
             "production": "产量"
         },
@@ -2246,10 +2247,12 @@
     },
     "sidebar": {
         "navigation": {
-            "productionMonitor": "生产监控"
+            "productionMonitor": "生产监控",
+            "productionMonitoring": "生产监控"
         }
     },
     "permissionSubjects": {
-        "production_monitor": "生产监控"
+        "production_monitor": "生产监控",
+        "production_monitoring": "生产监控"
     }
 }

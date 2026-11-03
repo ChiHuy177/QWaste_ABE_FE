@@ -30,7 +30,21 @@ export const useCompatibleMachines = (
         enabled: enabled && operationTypeId != null,
     });
 
-    const machines = query.data ?? [];
+    const machines = useMemo<Machine[]>(() => {
+        const data = query.data;
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (
+            data &&
+            typeof data === 'object' &&
+            'content' in data &&
+            Array.isArray((data as { content?: unknown[] }).content)
+        ) {
+            return (data as { content: Machine[] }).content;
+        }
+        return [];
+    }, [query.data]);
 
     const machineOptions = useMemo<SelectOptionVM[]>(
         () =>

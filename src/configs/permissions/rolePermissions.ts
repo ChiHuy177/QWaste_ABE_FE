@@ -11,9 +11,7 @@ const BASE_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'profile' },
     { action: 'update', subject: 'profile' },
     { action: 'view', subject: 'process' },
-    { action: 'view', subject: 'staff' },
     { action: 'view', subject: 'tasks' },
-    { action: 'view', subject: 'production_monitor' },
 ];
 
 const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
@@ -35,6 +33,11 @@ const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'work_calendar' },
     { action: 'view', subject: 'production_plan' },
     { action: 'view', subject: 'machine_overview' },
+    { action: 'view', subject: 'production_overview' },
+    { action: 'complete', subject: 'production_plan' },
+    { action: 'view', subject: 'error_management' },
+    { action: 'create', subject: 'error_management' },
+    { action: 'update', subject: 'error_management' },
 ];
 
 const PLANNER_PERMISSIONS: PermissionRule[] = [
@@ -52,9 +55,10 @@ const PLANNER_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'machine_operator_history' },
     { action: 'view', subject: 'space_monitoring' },
     { action: 'view', subject: 'machine_overview' },
-    { action: 'view', subject: 'production_monitor' },
+    { action: 'view', subject: 'production_monitoring' },
     { action: 'view', subject: 'production_plan' },
     { action: 'create', subject: 'production_plan' },
+    { action: 'import', subject: 'production_plan' },
     { action: 'update', subject: 'production_plan' },
     { action: 'delete', subject: 'production_plan' },
     { action: 'manage', subject: 'production_plan' },
@@ -63,6 +67,12 @@ const PLANNER_PERMISSIONS: PermissionRule[] = [
     { action: 'update', subject: 'work_calendar' },
     { action: 'delete', subject: 'work_calendar' },
     { action: 'manage', subject: 'work_calendar' },
+    { action: 'complete', subject: 'production_plan' },
+];
+
+const INVENTORY_MANAGER_PERMISSIONS: PermissionRule[] = [
+    { action: 'view', subject: 'production_monitoring' },
+    { action: 'complete', subject: 'production_plan' },
 ];
 
 const CLIENT_PERMISSIONS: PermissionRule[] = [{ action: 'view', subject: 'space_monitoring' }];
@@ -71,6 +81,7 @@ const ROLE_PERMISSIONS: Partial<Record<AccountRole, PermissionRule[]>> = {
     director: MANAGEMENT_PERMISSIONS,
     manager: MANAGEMENT_PERMISSIONS,
     planner: PLANNER_PERMISSIONS,
+    inventory_manager: INVENTORY_MANAGER_PERMISSIONS,
     client: CLIENT_PERMISSIONS,
 };
 

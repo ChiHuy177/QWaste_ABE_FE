@@ -53,9 +53,9 @@ export const useProductionPlanActions = ({
     const importModalOpen = useAppSelector((state) => state.productionPlan.importModalOpen);
     const isReorderDirty = dirtyMachineIds.length > 0;
 
-    const canCreate = checkPermissionSilent('create', 'product');
+    const canCreate = checkPermissionSilent('create', 'production_plan');
     const canReorder = checkPermissionSilent('reorder', 'production_plan');
-    const canImport = checkPermissionSilent('import', 'product');
+    const canImport = checkPermissionSilent('import', 'production_plan');
 
     const invalidatePlanQueries = () =>
         queryClient.invalidateQueries({ queryKey: productionPlanQueryKeys.all });
@@ -68,7 +68,7 @@ export const useProductionPlanActions = ({
 
     const openCreateModal = () => {
         if (blockIfReorderDirty()) return;
-        if (!checkPermission('create', 'product')) return;
+        if (!checkPermission('create', 'production_plan')) return;
         dispatch(productionPlanActions.openCreateModal());
     };
 

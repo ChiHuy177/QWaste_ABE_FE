@@ -6,7 +6,7 @@ import {
     DatePicker,
     Upload,
     UploadProps,
-    message,
+    theme,
     Image,
     Switch,
     Tooltip,
@@ -242,18 +242,24 @@ export const renderSelectField = (field: FormFieldConfig) => {
             disabled={(field.loading || field.disabled) as boolean}
             allowClear={field.allowClear}
             onChange={field.onChange}
+            showSearch={field.showSearch ?? true}
+            filterOption={
+                field.filterOption ??
+                ((input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()))
+            }
             mode={field.mode}
             maxTagCount={field.maxTagCount}
             maxTagPlaceholder={
                 showTooltipOnOverflow
                     ? (omittedValues) => {
-                        const titles = omittedValues.map((v) => v.label).join(', ');
-                        return (
-                            <Tooltip title={titles} overlayStyle={{ maxWidth: 400 }}>
-                                <span>+{omittedValues.length} ...</span>
-                            </Tooltip>
-                        );
-                    }
+                          const titles = omittedValues.map((v) => v.label).join(', ');
+                          return (
+                              <Tooltip title={titles} overlayStyle={{ maxWidth: 400 }}>
+                                  <span>+{omittedValues.length} ...</span>
+                              </Tooltip>
+                          );
+                      }
                     : undefined
             }
         />
@@ -308,6 +314,8 @@ export const renderSpaceTreeSelectField = (field: FormFieldConfig) => {
             disabled={field.disabled as boolean}
             allowClear={field.allowClear !== false}
             onChange={field.onChange}
+            treeData={field.treeData}
+            treeDefaultExpandAll={field.treeDefaultExpandAll ?? true}
         />
     );
 };
@@ -333,6 +341,7 @@ const ImageUploader = ({
     supportText?: string;
 }) => {
     const { t } = useTranslation();
+    const { token } = theme.useToken();
     const [fileList, setFileList] = React.useState<UploadFile[]>([]);
     const [previewVisible, setPreviewVisible] = React.useState(false);
     const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
@@ -385,9 +394,7 @@ const ImageUploader = ({
             const fileMaxSizeMB = isSvg ? (svgMaxFileSizeMB ?? maxFileSizeMB) : maxFileSizeMB;
             const isLtMaxSize = file.size / 1024 / 1024 < fileMaxSizeMB;
             if (!isLtMaxSize) {
-                toast.error(
-                    `${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`
-                );
+                toast.error(`${isSvg ? 'SVG' : 'Image'} must be smaller than ${fileMaxSizeMB}MB!`);
                 return Upload.LIST_IGNORE;
             }
             onChange?.(file);
@@ -539,7 +546,7 @@ const ImageUploader = ({
                 ) : (
                     <>
                         <p className="ant-upload-drag-icon">
-                            <CameraOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+                            <CameraOutlined style={{ fontSize: 48, color: token.colorPrimary }} />
                         </p>
                         <p className="ant-upload-text">{t('common.upload.image.dragAndDrop')}</p>
                         <p className="ant-upload-hint">
@@ -550,16 +557,18 @@ const ImageUploader = ({
             </Upload.Dragger>
 
             {/* Manual Preview Modal */}
-            <div style={{ display: 'none' }}>
-                <Image.PreviewGroup
-                    preview={{
-                        open: previewVisible,
-                        onOpenChange: (visible) => setPreviewVisible(visible),
-                    }}
-                >
-                    <Image src={previewUrl || fileList[0]?.url || ''} alt="Image preview" />
-                </Image.PreviewGroup>
-            </div>
+            {previewUrl || fileList[0]?.url ? (
+                <div style={{ display: 'none' }}>
+                    <Image.PreviewGroup
+                        preview={{
+                            open: previewVisible,
+                            onOpenChange: (visible) => setPreviewVisible(visible),
+                        }}
+                    >
+                        <Image src={previewUrl || fileList[0]?.url} alt="Image preview" />
+                    </Image.PreviewGroup>
+                </div>
+            ) : null}
 
             <style
                 dangerouslySetInnerHTML={{
@@ -661,7 +670,7 @@ const PdfUploader = ({
             }
             const isLt16M = file.size / 1024 / 1024 < 16;
             if (!isLt16M) {
-                message.error(
+                toast.error(
                     t('common.upload.pdf.fileSizeLimit', {
                         defaultValue: 'PDF must be smaller than 16MB',
                     })

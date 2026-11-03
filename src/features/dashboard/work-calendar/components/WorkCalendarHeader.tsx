@@ -175,27 +175,6 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
                 {/* Actions */}
                 {!isEditMode ? (
                     <>
-                        {canUpdate && (
-                            <Tooltip
-                                title={
-                                    isPastMonth
-                                        ? t('workCalendar.header.pastMonthEditDisabled')
-                                        : undefined
-                                }
-                            >
-                                <span style={{ display: 'inline-block' }}>
-                                    <Button
-                                        type="primary"
-                                        icon={<EditOutlined />}
-                                        onClick={onEnterEditMode}
-                                        disabled={isPastMonth}
-                                        style={{ height: 38, borderRadius: token.borderRadius }}
-                                    >
-                                        {t('workCalendar.header.btnEdit')}
-                                    </Button>
-                                </span>
-                            </Tooltip>
-                        )}
                         {canReset && (
                             <Tooltip
                                 title={
@@ -223,6 +202,27 @@ export const WorkCalendarHeader: React.FC<WorkCalendarHeaderProps> = React.memo(
                                             {t('workCalendar.header.btnReset')}
                                         </Button>
                                     </Popconfirm>
+                                </span>
+                            </Tooltip>
+                        )}
+                        {canUpdate && (
+                            <Tooltip
+                                title={
+                                    isPastMonth
+                                        ? t('workCalendar.header.pastMonthEditDisabled')
+                                        : undefined
+                                }
+                            >
+                                <span style={{ display: 'inline-block' }}>
+                                    <Button
+                                        type="primary"
+                                        icon={<EditOutlined />}
+                                        onClick={onEnterEditMode}
+                                        disabled={isPastMonth}
+                                        style={{ height: 38, borderRadius: token.borderRadius }}
+                                    >
+                                        {t('workCalendar.header.btnEdit')}
+                                    </Button>
                                 </span>
                             </Tooltip>
                         )}

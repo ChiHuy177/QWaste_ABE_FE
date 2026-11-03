@@ -5,19 +5,18 @@
 // Related: enhance/fe-space-monitoring branch
 
 import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
-import { Button, Grid, Select, Skeleton, Spin, Tooltip, Typography, message } from 'antd';
+import { Button, Grid, Select, Skeleton, Spin, Tooltip, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import {
-    FactoryStatsCards,
-    SpaceOverviewGrid,
-    TimeFilterPopover,
+import { FactoryStatsCards, SpaceOverviewGrid } from '@/features/dashboard/space-monitoring';
+import TimeFilterPopover, {
     type PeriodFilterMode,
     type TimeFilterApplyPayload,
-} from '@/features/dashboard/space-monitoring';
+} from '@/components/shared/filters/TimeFilterPopover';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { factoryOverviewActions } from '@/stores';
@@ -33,7 +32,7 @@ import { ExcelExportService } from '@/services/ExcelExportService';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
-import { MachineWithStatusLogsSummary } from '@/types/Machine';
+import { MachineStatusWsMessage, MachineWithStatusLogsSummary } from '@/types/Machine';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
@@ -106,7 +105,14 @@ const SpaceMonitoringPage: React.FC = () => {
     const spaceToMachinesMapRef = useRef<Map<number, MachineWithStatusLogsSummary[]>>(new Map());
     const activeSubscriptionsRef = useRef<Map<string, () => void>>(new Map());
     const pendingUpdates = useRef<
-        Map<string, { newStatus: string; runtimeUpdate?: { status: string; duration: number } }>
+        Map<
+            string,
+            {
+                newStatus: string;
+                statusStartTime?: string | null;
+                runtimeUpdate?: { status: string; duration: number };
+            }
+        >
     >(new Map());
     const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
     const firstUpdateTimeRef = useRef<number | null>(null);
@@ -172,22 +178,21 @@ const SpaceMonitoringPage: React.FC = () => {
         fetchIndustryFilters();
     }, [dispatch]);
 
-    // Auto-select active shift on mount — Ca làm việc uses SHIFT as primary when no period chosen
+    // Default filter on mount: TODAY and ALL shifts
     useEffect(() => {
         if (selectedTimePeriod || timeFilterMode !== 'PRESET' || industryFilters.length === 0)
             return;
 
-        const activeShift = industryFilters.find(
-            (filter) => filter.category === 'SHIFT' && isShiftActive(filter)
-        );
+        const todayPeriod =
+            industryFilters.find((f) => f.category === 'PERIOD' && f.periodCode === 'TODAY') ||
+            industryFilters.find((f) => f.category === 'PERIOD') ||
+            industryFilters[0];
 
-        if (activeShift) {
-            dispatch(factoryOverviewActions.setSelectedTimePeriod(activeShift.filterId));
-        } else {
-            dispatch(factoryOverviewActions.setSelectedTimePeriod(industryFilters[0].filterId));
+        if (todayPeriod) {
+            dispatch(factoryOverviewActions.setSelectedTimePeriod(todayPeriod.filterId));
         }
         dispatch(factoryOverviewActions.setSelectedShiftFilterId(null));
-    }, [industryFilters, selectedTimePeriod, timeFilterMode, isShiftActive, dispatch]);
+    }, [industryFilters, selectedTimePeriod, timeFilterMode, dispatch]);
 
     const isCustomRangeMode = timeFilterMode !== 'PRESET';
     const isDateRange = isCustomRangeMode;
@@ -214,6 +219,12 @@ const SpaceMonitoringPage: React.FC = () => {
                         ...machine,
                         currentStatus: update.newStatus as typeof machine.currentStatus,
                     };
+
+                    // Only overwrite when the frame carried a timestamp, so a
+                    // frame without one leaves the last known value in place.
+                    if (update.statusStartTime) {
+                        updatedMachine.currentStatusStartTime = update.statusStartTime;
+                    }
 
                     if (update.runtimeUpdate) {
                         const runtime = (machine.runtimeByStatus ?? {}) as Record<string, number>;
@@ -245,12 +256,13 @@ const SpaceMonitoringPage: React.FC = () => {
         (
             machineId: string,
             newStatus: string,
+            statusStartTime?: string | null,
             runtimeUpdate?: {
                 status: string;
                 duration: number;
             }
         ) => {
-            pendingUpdates.current.set(machineId, { newStatus, runtimeUpdate });
+            pendingUpdates.current.set(machineId, { newStatus, statusStartTime, runtimeUpdate });
 
             if (!firstUpdateTimeRef.current) {
                 firstUpdateTimeRef.current = Date.now();
@@ -348,87 +360,68 @@ const SpaceMonitoringPage: React.FC = () => {
 
             const statusTopic = `/topic/machines/status/${machineId}`;
 
-            const unsubscribe = wsService.subscribe<{
-                type: string;
-                payload: {
-                    machineId: string;
-                    data: {
-                        previousLog: {
-                            startTime: string;
-                            endTime: string;
-                            logStatus:
-                                | 'RUNTIME'
-                                | 'IDLE'
-                                | 'ERROR'
-                                | 'COMPLETE'
-                                | 'OFFLINE'
-                                | 'UNKNOWN';
-                        };
-                        newStatus:
-                            | 'RUNTIME'
-                            | 'IDLE'
-                            | 'ERROR'
-                            | 'COMPLETE'
-                            | 'OFFLINE'
-                            | 'UNKNOWN';
-                        productionCounter: number;
-                    };
-                };
-            }>(statusTopic, (message) => {
-                if (message.type !== 'DATA') {
-                    return;
+            const unsubscribe = wsService.subscribe<MachineStatusWsMessage>(
+                statusTopic,
+                (message) => {
+                    if (message.type !== 'DATA') {
+                        return;
+                    }
+
+                    const { machineId, data } = message.payload;
+                    const { newStatus, newStatusStartTime, previousLog } = data;
+
+                    if (!machineId || !newStatus) {
+                        return;
+                    }
+
+                    // The new status starts exactly where the previous log ended, so
+                    // that endTime is the fallback when the frame omits the field.
+                    const statusStartTime = newStatusStartTime ?? previousLog?.endTime ?? null;
+
+                    if (!previousLog) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    if (!previousLog.startTime || !previousLog.endTime || !previousLog.logStatus) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    const validStatuses = [
+                        'RUNTIME',
+                        'IDLE',
+                        'ERROR',
+                        'COMPLETE',
+                        'OFFLINE',
+                        'UNKNOWN',
+                    ];
+                    if (!validStatuses.includes(previousLog.logStatus)) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    const startTime = dayjs(previousLog.startTime);
+                    const endTime = dayjs(previousLog.endTime);
+
+                    if (!startTime.isValid() || !endTime.isValid()) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    const duration = endTime.diff(startTime, 'second');
+
+                    if (duration < 0 || duration > 86400 || duration === 0) {
+                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
+                        return;
+                    }
+
+                    scheduleMachineUpdate(machineId, newStatus, statusStartTime, {
+                        status: previousLog.logStatus,
+                        duration,
+                    });
                 }
-
-                const { machineId, data } = message.payload;
-                const { newStatus, previousLog } = data;
-
-                if (!machineId || !newStatus) {
-                    return;
-                }
-
-                if (!previousLog) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                if (!previousLog.startTime || !previousLog.endTime || !previousLog.logStatus) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                const validStatuses = [
-                    'RUNTIME',
-                    'IDLE',
-                    'ERROR',
-                    'COMPLETE',
-                    'OFFLINE',
-                    'UNKNOWN',
-                ];
-                if (!validStatuses.includes(previousLog.logStatus)) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                const startTime = dayjs(previousLog.startTime);
-                const endTime = dayjs(previousLog.endTime);
-
-                if (!startTime.isValid() || !endTime.isValid()) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                const duration = endTime.diff(startTime, 'second');
-
-                if (duration < 0 || duration > 86400 || duration === 0) {
-                    scheduleMachineUpdate(machineId, newStatus);
-                    return;
-                }
-
-                scheduleMachineUpdate(machineId, newStatus, {
-                    status: previousLog.logStatus,
-                    duration,
-                });
-            });
+            );
 
             activeSubscriptionsRef.current.set(machineId, unsubscribe);
         });
@@ -446,20 +439,26 @@ const SpaceMonitoringPage: React.FC = () => {
         label: string;
         value: number;
         category: IndustryFilter['category'];
+        sortOrder?: number;
         disabled?: boolean;
     }[] => {
         const currentLang = i18n.language;
 
-        return industryFilters.map((filter: IndustryFilter) => ({
-            label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
-            value: filter.filterId,
-            category: filter.category,
-        }));
+        return [...industryFilters]
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .map((filter: IndustryFilter) => ({
+                label: currentLang === 'vi' ? filter.displayNameVi : filter.displayNameEn,
+                value: filter.filterId,
+                category: filter.category,
+                sortOrder: filter.sortOrder,
+            }));
     }, [industryFilters, i18n.language]);
 
     const groupedTimePeriodOptions = useMemo(
         () => ({
-            SHIFT: timePeriodOptions.filter((option) => option.category === 'SHIFT'),
+            SHIFT: timePeriodOptions.filter(
+                (option) => option.category === 'SHIFT' || option.category === 'OT'
+            ),
             PERIOD: timePeriodOptions.filter((option) => option.category === 'PERIOD'),
         }),
         [timePeriodOptions]
@@ -496,7 +495,7 @@ const SpaceMonitoringPage: React.FC = () => {
             document.body.removeChild(a);
         } catch (error) {
             console.error('[Factory Overview] Excel export failed:', error);
-            message.error(t('errors.download'));
+            toast.error(t('errors.download'));
         } finally {
             setIsExporting(false);
         }
@@ -640,7 +639,9 @@ const SpaceMonitoringPage: React.FC = () => {
     const activeTimePeriodLabel = useMemo(() => {
         const currentLang = i18n.language;
         const shiftFilter =
-            currentShiftId != null ? industryFilters.find((f) => f.filterId === currentShiftId) : null;
+            currentShiftId != null
+                ? industryFilters.find((f) => f.filterId === currentShiftId)
+                : null;
         const shiftLabel = shiftFilter
             ? currentLang === 'vi'
                 ? shiftFilter.displayNameVi
@@ -756,7 +757,8 @@ const SpaceMonitoringPage: React.FC = () => {
                         {t('spaceMonitoring.timeFilter.refreshData')}
                     </Button>
 
-                    <Button
+                    {/* Tạm ẩn nút Xuất Excel theo yêu cầu (không xóa code) */}
+                    {/* <Button
                         block
                         type="primary"
                         icon={<FileExcelOutlined />}
@@ -768,7 +770,7 @@ const SpaceMonitoringPage: React.FC = () => {
                         style={{ borderRadius: 8 }}
                     >
                         {t('common.exportExcel')}
-                    </Button>
+                    </Button> */}
                 </div>
             ) : (
                 <div
@@ -827,7 +829,8 @@ const SpaceMonitoringPage: React.FC = () => {
                         />
                     </Tooltip>
 
-                    <Button
+                    {/* Tạm ẩn nút Xuất Excel theo yêu cầu (không xóa code) */}
+                    {/* <Button
                         type="primary"
                         icon={<FileExcelOutlined />}
                         onClick={handleExportExcel}
@@ -838,7 +841,7 @@ const SpaceMonitoringPage: React.FC = () => {
                         style={{ borderRadius: 8 }}
                     >
                         {t('common.exportExcel')}
-                    </Button>
+                    </Button> */}
                 </div>
             ),
         [

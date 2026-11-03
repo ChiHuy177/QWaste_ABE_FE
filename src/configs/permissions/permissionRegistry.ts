@@ -137,20 +137,29 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View space monitoring',
         i18nKey: 'permissionSubjects.space_monitoring',
     },
-    // Production Monitor
+    // Production Overview
     {
-        slug: 'production_monitor:view',
-        subject: 'production_monitor',
+        slug: 'production_overview:view',
+        subject: 'production_overview',
         action: 'view',
-        routes: ['/admin/production-plan/monitor'],
-        menuKey: 'production-plan-monitor',
-        description: 'View production plan monitor',
-        i18nKey: 'sidebar.navigation.productionMonitor',
-        group: 'production_plan',
+        routes: ['/admin/production-overview'],
+        menuKey: 'production-overview',
+        description: 'View production overview',
+        i18nKey: 'permissionSubjects.production_overview',
+    },
+    // Production Monitoring
+    {
+        slug: 'production_monitoring:view',
+        subject: 'production_monitoring',
+        action: 'view',
+        routes: ['/admin/production-monitoring'],
+        menuKey: 'production-monitoring',
+        description: 'View production monitoring',
+        i18nKey: 'sidebar.navigation.productionMonitoring',
     },
 
-    // Production Plan (BE đổi slug family sang production_plan:* — xem ProductionPlanConstants.Permissions.
-    // create/import chưa có bằng chứng BE đổi nên tạm giữ trên subject 'product' cũ.)
+    // Production Plan (BE dùng slug family production_plan:* — xem ProductionPlanConstants.Permissions.
+    // Slug cũ 'product:create'/'product:import' được map về đây ở permissionParser.)
     {
         slug: 'production_plan:view',
         subject: 'production_plan',
@@ -162,8 +171,8 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         group: 'production_plan',
     },
     {
-        slug: 'product:create',
-        subject: 'product',
+        slug: 'production_plan:create',
+        subject: 'production_plan',
         action: 'create',
         routes: [],
         description: 'Create production plan',
@@ -211,8 +220,15 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'Reorder production plans',
     },
     {
-        slug: 'product:import',
-        subject: 'product',
+        slug: 'production_plan:complete',
+        subject: 'production_plan',
+        action: 'complete',
+        routes: [],
+        description: 'Complete production plans',
+    },
+    {
+        slug: 'production_plan:import',
+        subject: 'production_plan',
         action: 'import',
         routes: [],
         description: 'Import production plans from Excel',
@@ -766,6 +782,37 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Reset work calendar to default',
     },
+    // Error & Incident Management
+    {
+        slug: 'error_management:view',
+        subject: 'error_management',
+        action: 'view',
+        routes: ['/admin/error-management'],
+        menuKey: 'error-management',
+        description: 'View error and incident management',
+        i18nKey: 'sidebar.navigation.errorManagement',
+    },
+    {
+        slug: 'error_management:create',
+        subject: 'error_management',
+        action: 'create',
+        routes: [],
+        description: 'Create error incident',
+    },
+    {
+        slug: 'error_management:update',
+        subject: 'error_management',
+        action: 'update',
+        routes: [],
+        description: 'Update error incident',
+    },
+    {
+        slug: 'error_management:delete',
+        subject: 'error_management',
+        action: 'delete',
+        routes: [],
+        description: 'Delete error incident',
+    },
 
     // Staff Management
     {
@@ -811,6 +858,7 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View machine overview',
         i18nKey: 'sidebar.navigation.machine',
         alternativeAction: 'update',
+        hideFromMenu: true,
     },
     {
         slug: 'machine_overview:update',

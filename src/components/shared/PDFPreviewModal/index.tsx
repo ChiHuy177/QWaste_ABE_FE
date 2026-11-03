@@ -17,7 +17,7 @@ export const PDFPreviewModal = ({ open, onClose, pdfUrl, title }: PDFPreviewModa
             width="90vw"
             style={{ top: 20 }}
             footer={null}
-            destroyOnClose
+            destroyOnHidden
         >
             <div style={{ height: '80vh', overflow: 'hidden' }}>
                 <iframe

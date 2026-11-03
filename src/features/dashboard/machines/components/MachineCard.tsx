@@ -11,6 +11,7 @@ const { Text } = Typography;
 interface MachineCardProps {
     machine: MachineOverview;
     onCardClick?: (machine: MachineOverview) => void;
+    isHighlighted?: boolean;
 }
 
 /** Deterministic bar heights from machineId so they look consistent across re-renders */
@@ -32,7 +33,11 @@ const fmtSec = (seconds: number): string => {
     return `${h}h ${m}m ${s}s`;
 };
 
-const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
+const MachineCard: React.FC<MachineCardProps> = ({
+    machine,
+    onCardClick,
+    isHighlighted = false,
+}) => {
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
@@ -70,10 +75,10 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
             default:
                 return {
                     label: t('machineManagement.statuses.offline'),
-                    badgeBg: token.colorFillSecondary,
+                    badgeBg: token.colorFillAlter,
                     badgeColor: token.colorTextDisabled,
                     barColor: token.colorTextDisabled,
-                    chartBarColor: token.colorFillSecondary,
+                    chartBarColor: `${token.colorTextDisabled}33`,
                 };
         }
     }, [currentStatus, token, t]);
@@ -91,8 +96,7 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
     const activeSec = runtimeSec + idleSec + errorSec;
     const totalSec = activeSec + offlineSec;
 
-    const pct = (sec: number) =>
-        totalSec > 0 ? Math.round((sec / totalSec) * 100) : 0;
+    const pct = (sec: number) => (totalSec > 0 ? Math.round((sec / totalSec) * 100) : 0);
 
     const runtimePct = pct(runtimeSec);
     const idlePct = pct(idleSec);
@@ -100,6 +104,7 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
 
     return (
         <div
+            id={machine.machineCode ? `machine-card-${machine.machineCode}` : undefined}
             onClick={() => onCardClick?.(machine)}
             style={{
                 background: token.colorBgContainer,
@@ -124,22 +129,39 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
         >
             <div style={{ padding: '16px 16px 0' }}>
                 {/* Header */}
-                <Flex justify="space-between" align="flex-start" gap={8} style={{ marginBottom: 4 }}>
-                    <Text
-                        strong
-                        style={{
-                            fontSize: 15,
-                            color: token.colorText,
-                            lineHeight: 1.3,
-                            flex: 1,
-                            minWidth: 0,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        {machine.machineName}
-                    </Text>
+                <Flex
+                    justify="space-between"
+                    align="flex-start"
+                    gap={8}
+                    style={{ marginBottom: 4 }}
+                >
+                    <Flex vertical gap={2} style={{ flex: 1, minWidth: 0 }}>
+                        <Text
+                            strong
+                            style={{
+                                fontSize: 15,
+                                color: token.colorText,
+                                lineHeight: 1.3,
+                                minWidth: 0,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {machine.machineName}
+                        </Text>
+                        {machine.machineCode && (
+                            <Text
+                                type="secondary"
+                                style={{
+                                    fontSize: 11,
+                                    fontFamily: 'monospace',
+                                }}
+                            >
+                                {machine.machineCode}
+                            </Text>
+                        )}
+                    </Flex>
                     <div
                         style={{
                             padding: '2px 10px',
@@ -257,9 +279,21 @@ const MachineCard: React.FC<MachineCardProps> = ({ machine, onCardClick }) => {
                 {/* Legend — Running / Idle / Error */}
                 <Flex gap={10} style={{ marginBottom: 8 }} wrap="wrap">
                     {[
-                        { color: token.colorSuccess, label: t('machineManagement.statuses.running'), value: runtimePct },
-                        { color: token.colorWarning, label: t('machineManagement.statuses.idle'), value: idlePct },
-                        { color: token.colorError, label: t('machineManagement.statuses.error'), value: errorPct },
+                        {
+                            color: token.colorSuccess,
+                            label: t('machineManagement.statuses.running'),
+                            value: runtimePct,
+                        },
+                        {
+                            color: token.colorWarning,
+                            label: t('machineManagement.statuses.idle'),
+                            value: idlePct,
+                        },
+                        {
+                            color: token.colorError,
+                            label: t('machineManagement.statuses.error'),
+                            value: errorPct,
+                        },
                     ].map((item) => (
                         <Flex key={item.label} align="center" gap={4}>
                             <div

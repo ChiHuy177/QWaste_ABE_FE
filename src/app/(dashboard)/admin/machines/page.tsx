@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { SearchOutlined, InboxOutlined } from '@ant-design/icons';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { MachineOverview } from '@/types/Machine';
+import { MachineOverview, MachineStatusWsMessage } from '@/types/Machine';
 
 interface ZoneEnergyWsFrame {
     payload?:
@@ -33,10 +33,7 @@ import {
 } from '@/components/shared/filters/SpaceTreeSelect';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
-import {
-    DemoFactoryOverviewService,
-    USE_MOCK_FACTORY_OVERVIEW,
-} from '@/mockData/admin/factory';
+import { DemoFactoryOverviewService, USE_MOCK_FACTORY_OVERVIEW } from '@/mockData/admin/factory';
 
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -89,10 +86,7 @@ const MachinesPage: React.FC = () => {
         return findSpacePathNodes(spacesTree, selectedSpaceId) || [];
     }, [spacesTree, selectedSpaceId]);
 
-    const spaceTreeSelectData = useMemo(
-        () => mapSpaceTreeToTreeSelect(spacesTree),
-        [spacesTree]
-    );
+    const spaceTreeSelectData = useMemo(() => mapSpaceTreeToTreeSelect(spacesTree), [spacesTree]);
 
     const timePeriodOptions = useMemo(() => {
         const currentLang = i18n.language;
@@ -156,7 +150,8 @@ const MachinesPage: React.FC = () => {
     const hasSelectedSpace = selectedSpaceId !== undefined;
 
     useEffect(() => {
-        if (!hasSelectedSpace || selectedSpaceId === undefined || selectedTimePeriod == null) return;
+        if (!hasSelectedSpace || selectedSpaceId === undefined || selectedTimePeriod == null)
+            return;
         if (isFirstLoad) {
             dispatch(machineActions.fetchMachines(selectedSpaceId, selectedTimePeriod));
             setIsFirstLoad(false);
@@ -187,53 +182,53 @@ const MachinesPage: React.FC = () => {
         if (!wsConnected || machines.length === 0) return;
         const unsubscribes: (() => void)[] = [];
 
-        if (isDev) console.log(`[Machine Page] Subscribing to ${machines.length} machine status topics`);
+        if (isDev)
+            console.log(`[Machine Page] Subscribing to ${machines.length} machine status topics`);
 
         machines.forEach((machine: MachineOverview) => {
             const statusTopic = `/topic/machines/status/${machine.machineId}`;
-            const unsubscribe = wsService.subscribe<{
-                type: string;
-                payload: {
-                    machineId: string;
-                    data: {
-                        previousLog: {
-                            startTime: string;
-                            endTime: string;
-                            logStatus: 'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
-                        };
-                        newStatus: 'RUNTIME' | 'IDLE' | 'ERROR' | 'COMPLETE' | 'OFFLINE' | 'UNKNOWN';
-                        productionCounter: number;
-                    };
-                };
-            }>(statusTopic, (message) => {
-                if (message.type !== 'DATA') return;
-                const { machineId, data } = message.payload;
-                const { newStatus, productionCounter } = data;
-                if (!machineId || !newStatus || newStatus === 'UNKNOWN') return;
-                dispatch(machineActions.updateMachineStatus(machineId, newStatus, productionCounter));
-            });
+            const unsubscribe = wsService.subscribe<MachineStatusWsMessage>(
+                statusTopic,
+                (message) => {
+                    if (message.type !== 'DATA') return;
+                    const { machineId, data } = message.payload;
+                    const { newStatus, productionCounter } = data;
+                    if (!machineId || !newStatus || newStatus === 'UNKNOWN') return;
+                    dispatch(
+                        machineActions.updateMachineStatus(machineId, newStatus, productionCounter)
+                    );
+                }
+            );
             unsubscribes.push(unsubscribe);
         });
 
-        return () => { unsubscribes.forEach((unsub) => unsub()); };
+        return () => {
+            unsubscribes.forEach((unsub) => unsub());
+        };
     }, [wsConnected, machines.length, dispatch, wsService]);
 
     const handleSearchChange = useCallback(
-        (value: string) => { dispatch(machineActions.setSearchText(value)); },
+        (value: string) => {
+            dispatch(machineActions.setSearchText(value));
+        },
         [dispatch]
     );
 
     const handleSpaceChange = useCallback(
         (spaceId: number | string | undefined | null) => {
-            dispatch(machineActions.setSelectedSpaceId(
-                spaceId !== undefined && spaceId !== null ? Number(spaceId) : undefined
-            ));
+            dispatch(
+                machineActions.setSelectedSpaceId(
+                    spaceId !== undefined && spaceId !== null ? Number(spaceId) : undefined
+                )
+            );
         },
         [dispatch]
     );
 
     const handleCardClick = useCallback(
-        (machine: MachineOverview) => { dispatch(machineActions.openMachineModal(machine)); },
+        (machine: MachineOverview) => {
+            dispatch(machineActions.openMachineModal(machine));
+        },
         [dispatch]
     );
 
@@ -256,16 +251,17 @@ const MachinesPage: React.FC = () => {
     }, [hasSelectedSpace, selectedSpaceId, selectedTimePeriod, dispatch, t]);
 
     const handleTimePeriodChange = useCallback(
-        (value: number) => { dispatch(machineActions.setSelectedTimePeriod(value)); },
+        (value: number) => {
+            dispatch(machineActions.setSelectedTimePeriod(value));
+        },
         [dispatch]
     );
 
     const filteredMachines = useMemo(() => {
         if (!searchText) return machines;
         const search = searchText.toString().toLowerCase();
-        return machines.filter(
-            (machine: MachineOverview) =>
-                machine.machineName?.toString().toLowerCase().includes(search)
+        return machines.filter((machine: MachineOverview) =>
+            machine.machineName?.toString().toLowerCase().includes(search)
         );
     }, [machines, searchText]);
 
@@ -281,15 +277,20 @@ const MachinesPage: React.FC = () => {
 
         if (cardStatusFilter !== 'ALL') {
             const allowed = statusGroups[cardStatusFilter] ?? [];
-            result = result.filter((m: MachineOverview) => allowed.includes(m.currentStatus ?? 'OFFLINE'));
+            result = result.filter((m: MachineOverview) =>
+                allowed.includes(m.currentStatus ?? 'OFFLINE')
+            );
         }
 
         if (cardSortBy === 'production_desc') {
-            result = [...result].sort((a, b) => (b.totalProductions ?? 0) - (a.totalProductions ?? 0));
+            result = [...result].sort(
+                (a, b) => (b.totalProductions ?? 0) - (a.totalProductions ?? 0)
+            );
         } else if (cardSortBy === 'online_desc') {
             const onlineSec = (m: MachineOverview) =>
                 Object.entries(m.runtimeByStatus ?? {}).reduce(
-                    (sum, [s, v]) => (s !== 'OFFLINE' ? sum + (v as number) : sum), 0
+                    (sum, [s, v]) => (s !== 'OFFLINE' ? sum + (v as number) : sum),
+                    0
                 );
             result = [...result].sort((a, b) => onlineSec(b) - onlineSec(a));
         } else if (cardSortBy === 'error_desc') {
@@ -340,10 +341,19 @@ const MachinesPage: React.FC = () => {
             </>
         ),
         [
-            t, searchText, selectedTimePeriod, selectedSpaceId, isLoading,
-            isLoadingFactories, isLoadingIndustryFilters, handleSearchChange,
-            handleTimePeriodChange, handleSpaceChange, handleSearch,
-            spaceTreeSelectData, timePeriodOptions,
+            t,
+            searchText,
+            selectedTimePeriod,
+            selectedSpaceId,
+            isLoading,
+            isLoadingFactories,
+            isLoadingIndustryFilters,
+            handleSearchChange,
+            handleTimePeriodChange,
+            handleSpaceChange,
+            handleSearch,
+            spaceTreeSelectData,
+            timePeriodOptions,
         ]
     );
 
@@ -380,7 +390,8 @@ const MachinesPage: React.FC = () => {
                             factoryName={selectedNodes[0]?.spaceName}
                             zoneCode={selectedNodes[1]?.spaceCode}
                             timePeriod={
-                                timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)?.label
+                                timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)
+                                    ?.label
                             }
                             isFiltered={searchText.length > 0}
                         />
@@ -421,7 +432,10 @@ const MachinesPage: React.FC = () => {
                                         style={{ width: 200 }}
                                         options={[
                                             { label: 'Sort: Default', value: 'default' },
-                                            { label: 'Production count ↓', value: 'production_desc' },
+                                            {
+                                                label: 'Production count ↓',
+                                                value: 'production_desc',
+                                            },
                                             { label: 'Online time ↓', value: 'online_desc' },
                                             { label: 'Error time ↓', value: 'error_desc' },
                                         ]}
@@ -442,7 +456,10 @@ const MachinesPage: React.FC = () => {
                                 <Row gutter={[16, 16]}>
                                     {displayedMachines.map((machine: MachineOverview) => (
                                         <Col key={machine.machineId} xs={24} sm={12} lg={8} xl={6}>
-                                            <MachineCard machine={machine} onCardClick={handleCardClick} />
+                                            <MachineCard
+                                                machine={machine}
+                                                onCardClick={handleCardClick}
+                                            />
                                         </Col>
                                     ))}
                                 </Row>
@@ -483,7 +500,8 @@ const MachinesPage: React.FC = () => {
                 filterInfo={{
                     factoryName: selectedNodes[0]?.spaceName,
                     zoneCode: selectedNodes[1]?.spaceCode,
-                    timePeriod: timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)?.label,
+                    timePeriod: timePeriodOptions.find((tp) => tp.value === selectedTimePeriod)
+                        ?.label,
                 }}
             />
         </>

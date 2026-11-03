@@ -43,6 +43,7 @@ interface TableRow {
 
 interface Props {
     machines: MachineOverview[];
+    highlightMachineCode?: string | null;
 }
 
 const fmtDuration = (seconds: number): string => {
@@ -52,7 +53,7 @@ const fmtDuration = (seconds: number): string => {
     return m === 0 ? `${h}h` : `${h}h ${m}m`;
 };
 
-const MachineDurationSummaryTable: React.FC<Props> = ({ machines }) => {
+const MachineDurationSummaryTable: React.FC<Props> = ({ machines, highlightMachineCode }) => {
     const { token } = theme.useToken();
     const [localSearch, setLocalSearch] = useState('');
 
@@ -67,9 +68,7 @@ const MachineDurationSummaryTable: React.FC<Props> = ({ machines }) => {
             const plan = MOCK_MACHINE_PLAN_NUMBER[m.machineId] ?? null;
             const actual = m.totalProductions ?? 0;
             const achieveRate =
-                plan !== null && plan > 0
-                    ? Math.min(Math.round((actual / plan) * 100), 100)
-                    : null;
+                plan !== null && plan > 0 ? Math.min(Math.round((actual / plan) * 100), 100) : null;
 
             return {
                 key: m.machineId,
@@ -156,8 +155,8 @@ const MachineDurationSummaryTable: React.FC<Props> = ({ machines }) => {
                                 row.achieveRate >= 80
                                     ? token.colorSuccess
                                     : row.achieveRate >= 50
-                                        ? token.colorWarning
-                                        : token.colorError
+                                      ? token.colorWarning
+                                      : token.colorError
                             }
                             style={{ marginBottom: 0 }}
                         />
@@ -267,6 +266,15 @@ const MachineDurationSummaryTable: React.FC<Props> = ({ machines }) => {
                 pagination={false}
                 scroll={{ x: 900 }}
                 size="small"
+                onRow={(record) => ({
+                    id: record.machineCode ? `machine-row-${record.machineCode}` : undefined,
+                })}
+                rowClassName={(record) =>
+                    highlightMachineCode &&
+                    record.machineCode?.toLowerCase() === highlightMachineCode.toLowerCase()
+                        ? 'highlighted-incident-row'
+                        : ''
+                }
                 style={{ borderRadius: 12, overflow: 'hidden' }}
             />
         </div>

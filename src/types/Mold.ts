@@ -12,7 +12,7 @@ export interface Mold {
     /** Công đoạn khuôn dùng — xác định khuôn tương thích với máy nào (machine.operationTypeId). */
     operationType: OperationType;
     auditMetaData?: AuditMetaData;
-    /** GET /api/molds/v1 trả cả mold đã soft-delete — dùng field này để lọc/hiển thị. */
+    isDeleted?: boolean;
     softDeleteMetaData?: SoftDeleteMetaData;
 }
 
@@ -28,8 +28,14 @@ export interface MoldUpdateFormData extends MoldFormData {
     moldId: string;
 }
 
-/** Mold khả dụng cho picker/kế hoạch: chưa bị soft-delete. */
-export const isMoldSchedulable = (mold: Mold): boolean => !mold.softDeleteMetaData?.isDeleted;
+/**
+ * DTO rút gọn từ GET /api/molds/v1/picking — chỉ gồm field cần cho select khuôn và tra
+ * operationType (lọc máy tương thích). BE đã loại khuôn soft-delete nên FE không lọc lại.
+ */
+export type MoldPickingResponse = Pick<
+    Mold,
+    'moldId' | 'moldCode' | 'moldName' | 'outputPerShot' | 'operationType'
+>;
 
 export interface MoldImportRowError {
     rowIndex: number;
@@ -40,4 +46,14 @@ export interface MoldImportRowError {
 export interface MoldImportResult {
     totalInserted: number;
     errors: MoldImportRowError[];
+}
+
+export interface MoldPaginatedParams {
+    page: number;
+    size: number;
+    sort?: string | string[];
+    search?: string;
+    moldCode?: string;
+    moldName?: string;
+    operationTypeId?: number;
 }

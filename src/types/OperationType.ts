@@ -17,3 +17,12 @@ export interface OperationTypeFormData {
 export interface OperationTypeUpdateFormData extends OperationTypeFormData {
     operationTypeId: number;
 }
+
+export interface OperationTypePaginatedParams {
+    page: number;
+    size: number;
+    sort?: string | string[];
+    search?: string;
+    operationTypeCode?: string;
+    operationTypeName?: string;
+}

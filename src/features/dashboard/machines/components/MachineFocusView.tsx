@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Flex, Typography, Tag, theme, Row, Col, Button } from 'antd';
 import {
     ThunderboltOutlined,
@@ -23,12 +23,26 @@ const fmtTime = (seconds: number): string => {
 interface Props {
     machines: MachineOverview[];
     onCardClick?: (machine: MachineOverview) => void;
+    highlightMachineCode?: string | null;
 }
 
-const MachineFocusView: React.FC<Props> = ({ machines, onCardClick }) => {
+const MachineFocusView: React.FC<Props> = ({ machines, onCardClick, highlightMachineCode }) => {
     const { token } = theme.useToken();
     const { t } = useTranslation();
     const [selectedId, setSelectedId] = useState<string>(machines[0]?.machineId ?? '');
+
+    useEffect(() => {
+        if (highlightMachineCode && machines.length > 0) {
+            const found = machines.find(
+                (m) =>
+                    m.machineCode?.toLowerCase() === highlightMachineCode.toLowerCase() ||
+                    m.machineId.toLowerCase() === highlightMachineCode.toLowerCase()
+            );
+            if (found) {
+                setSelectedId(found.machineId);
+            }
+        }
+    }, [highlightMachineCode, machines]);
 
     const selected = useMemo(
         () => machines.find((m) => m.machineId === selectedId) ?? machines[0] ?? null,
@@ -37,32 +51,54 @@ const MachineFocusView: React.FC<Props> = ({ machines, onCardClick }) => {
 
     const getStatusDotColor = (status: string) => {
         switch (status) {
-            case 'RUNTIME': case 'COMPLETE': return token.colorSuccess;
-            case 'IDLE': case 'TEMPORARY_STOP': return token.colorWarning;
-            case 'ERROR': case 'WARNING': return token.colorError;
-            default: return token.colorTextDisabled;
+            case 'RUNTIME':
+            case 'COMPLETE':
+                return token.colorSuccess;
+            case 'IDLE':
+            case 'TEMPORARY_STOP':
+                return token.colorWarning;
+            case 'ERROR':
+            case 'WARNING':
+                return token.colorError;
+            default:
+                return token.colorTextDisabled;
         }
     };
 
     const getStatusTagColor = (status: string) => {
         switch (status) {
-            case 'RUNTIME': case 'COMPLETE': return 'success';
-            case 'IDLE': case 'TEMPORARY_STOP': return 'warning';
-            case 'ERROR': case 'WARNING': return 'error';
-            default: return 'default';
+            case 'RUNTIME':
+            case 'COMPLETE':
+                return 'success';
+            case 'IDLE':
+            case 'TEMPORARY_STOP':
+                return 'warning';
+            case 'ERROR':
+            case 'WARNING':
+                return 'error';
+            default:
+                return 'default';
         }
     };
 
     const getStatusLabel = (status: string) => {
         switch (status) {
-            case 'RUNTIME': return t('machineManagement.statuses.running');
-            case 'IDLE': return t('machineManagement.statuses.idle');
-            case 'ERROR': return t('machineManagement.statuses.error');
-            case 'OFFLINE': return t('machineManagement.statuses.offline');
-            case 'COMPLETE': return t('machineManagement.statuses.complete');
-            case 'TEMPORARY_STOP': return t('machineManagement.statuses.temporaryStop');
-            case 'WARNING': return t('machineManagement.statuses.warning');
-            default: return t('machineManagement.statuses.offline');
+            case 'RUNTIME':
+                return t('machineManagement.statuses.running');
+            case 'IDLE':
+                return t('machineManagement.statuses.idle');
+            case 'ERROR':
+                return t('machineManagement.statuses.error');
+            case 'OFFLINE':
+                return t('machineManagement.statuses.offline');
+            case 'COMPLETE':
+                return t('machineManagement.statuses.complete');
+            case 'TEMPORARY_STOP':
+                return t('machineManagement.statuses.temporaryStop');
+            case 'WARNING':
+                return t('machineManagement.statuses.warning');
+            default:
+                return t('machineManagement.statuses.offline');
         }
     };
 
@@ -76,8 +112,7 @@ const MachineFocusView: React.FC<Props> = ({ machines, onCardClick }) => {
     const totalSec = runtimeSec + idleSec + errorSec + offlineSec;
     const activeSec = runtimeSec + idleSec + errorSec;
 
-    const pct = (sec: number) =>
-        totalSec > 0 ? Math.round((sec / totalSec) * 100) : 0;
+    const pct = (sec: number) => (totalSec > 0 ? Math.round((sec / totalSec) * 100) : 0);
 
     const runtimePct = pct(runtimeSec);
     const idlePct = pct(idleSec);
@@ -132,7 +167,8 @@ const MachineFocusView: React.FC<Props> = ({ machines, onCardClick }) => {
                             }}
                             onMouseLeave={(e) => {
                                 if (!isSelected)
-                                    (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+                                    (e.currentTarget as HTMLDivElement).style.background =
+                                        'transparent';
                             }}
                         >
                             <Flex gap={10} align="center" style={{ flex: 1, minWidth: 0 }}>
@@ -433,7 +469,10 @@ const MachineFocusView: React.FC<Props> = ({ machines, onCardClick }) => {
                             { color: token.colorSuccess, label: `Running ${fmtTime(runtimeSec)}` },
                             { color: token.colorWarning, label: `Idle ${fmtTime(idleSec)}` },
                             { color: token.colorError, label: `Error ${fmtTime(errorSec)}` },
-                            { color: token.colorTextDisabled, label: `Offline ${fmtTime(offlineSec)}` },
+                            {
+                                color: token.colorTextDisabled,
+                                label: `Offline ${fmtTime(offlineSec)}`,
+                            },
                         ].map((item, i) => (
                             <Flex key={i} gap={6} align="center">
                                 <div

@@ -16,9 +16,7 @@ import { MachineTypeService } from '@/services/MachineTypeService';
 import { EntityFormModal } from '@/components/shared/FormModal';
 import { MachineTypeFormData } from '@/types/MachineType';
 import { SearchInput } from '@/components/shared/SearchInput';
-import AdvancedFilterPanel, {
-    FilterField,
-} from '@/components/shared/filters/AdvancedFilterPanel';
+import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/AdvancedFilterPanel';
 import { Can, useAbility } from '@/contexts/AbilityContext';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
@@ -134,7 +132,8 @@ const MachineTypeListPage = () => {
 
             const matchesSearch = !lowerSearchTerm || machineTypeName.includes(lowerSearchTerm);
             const matchesName = !nameFilter || machineTypeName.includes(nameFilter);
-            const matchesDescription = !descriptionFilter || description.includes(descriptionFilter);
+            const matchesDescription =
+                !descriptionFilter || description.includes(descriptionFilter);
             return matchesSearch && matchesName && matchesDescription;
         });
     }, [machineTypeData, searchTerm, machineTypeNameFilter, machineTypeDescriptionFilter]);
@@ -414,7 +413,7 @@ const MachineTypeListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         scroll={{ x: 'max-content', y: tableScrollY }}
                         style={{ height: '100%' }}

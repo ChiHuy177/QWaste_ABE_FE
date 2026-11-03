@@ -1,9 +1,10 @@
 'use client';
-import { cloneElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { cloneElement, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import type { CSSProperties, ReactElement, MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceService } from '@/services/SpaceService';
 import { SpaceLevelService } from '@/services/SpaceLevelService';
+import { UtilsService } from '@/services/UtilsService';
 import type { SpaceLevelDTO } from '@/types/SpaceLevel';
 import { toast } from 'sonner';
 import {
@@ -18,6 +19,8 @@ import {
     Modal,
     Descriptions,
     Image,
+    Alert,
+    Form,
 } from 'antd';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { PlusOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
@@ -44,6 +47,7 @@ import { useAntdTableScroll } from '@/hooks/useAntdTableScroll';
 import dayjs from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUploadThing } from '@/utils/uploadthing';
+import { mapSpaceTreeToTreeSelect } from '@/components/shared/filters/SpaceTreeSelect';
 
 const { useBreakpoint } = Grid;
 
@@ -54,6 +58,7 @@ const spaceQueryKeys = {
 
 const spaceLevelQueryKeys = {
     lists: ['space-levels', 'list'] as const,
+    highest: ['space-levels', 'highest'] as const,
 };
 
 const sanitizeSpaceTree = (nodes: SpaceWithChildrenResponse[]): SpaceWithChildrenResponse[] => {
@@ -76,12 +81,66 @@ const isLocalFile = (value: unknown): value is File => {
     return typeof File !== 'undefined' && value instanceof File;
 };
 
+const getNumericLevel = (
+    item:
+        Partial<SpaceLevelDTO> | Partial<SpaceWithChildrenResponse['spaceLevel']> | null | undefined
+): number => {
+    if (!item) return 0;
+    const raw = item.spaceLevel ?? item.spaceLevelId;
+    const num = Number(raw);
+    return !Number.isNaN(num) ? num : 0;
+};
+
+const findSpaceInTree = (
+    nodes: SpaceWithChildrenResponse[],
+    spaceId: number
+): SpaceWithChildrenResponse | null => {
+    for (const node of nodes) {
+        if (node.spaceId === spaceId) return node;
+        if (node.children && node.children.length > 0) {
+            const found = findSpaceInTree(node.children, spaceId);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
+const getDescendantAndSelfIds = (node: SpaceWithChildrenResponse): number[] => {
+    const ids: number[] = [node.spaceId];
+    if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+            ids.push(...getDescendantAndSelfIds(child));
+        }
+    }
+    return ids;
+};
+
+const findAncestorsAndSelf = (
+    nodes: SpaceWithChildrenResponse[],
+    targetId: number,
+    path: number[] = []
+): number[] | null => {
+    for (const node of nodes) {
+        const currentPath = [...path, node.spaceId];
+        if (node.spaceId === targetId) {
+            return currentPath;
+        }
+        if (node.children && node.children.length > 0) {
+            const found = findAncestorsAndSelf(node.children, targetId, currentPath);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
 const SpaceListPage = () => {
     const [modalState, setModalState] = useState<{
         open: boolean;
         mode: 'create' | 'edit';
         data: SpaceModalData | null;
     }>({ open: false, mode: 'create', data: null });
+    const [form] = Form.useForm<SpaceFormData>();
+    const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
 
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -91,6 +150,8 @@ const SpaceListPage = () => {
     const { startUpload } = useUploadThing('imageUploader');
 
     const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>([]);
+    const manualExpandedKeysRef = useRef<readonly React.Key[]>([]);
+    const prevSearchTermRef = useRef('');
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormLoading, setIsFormLoading] = useState(false);
 
@@ -111,14 +172,23 @@ const SpaceListPage = () => {
     const spaceLevelsQuery = useQuery({
         queryKey: spaceLevelQueryKeys.lists,
         queryFn: async () => {
-            const response = await SpaceLevelService.getAllSpaceLevels();
-            const rawData = response as unknown as
-                | SpaceLevelDTO[]
-                | { content: SpaceLevelDTO[] }
-                | null
-                | undefined;
-            const levels = Array.isArray(rawData) ? rawData : (rawData?.content ?? []);
-            return [...levels].sort((a, b) => a.spaceLevel - b.spaceLevel);
+            try {
+                const paginated = await SpaceLevelService.getSpaceLevelsPaginated({
+                    page: 0,
+                    size: 100,
+                    sort: 'spaceLevel,ASC',
+                });
+                const content = paginated?.content;
+                if (Array.isArray(content) && content.length > 0) {
+                    return [...content].sort((a, b) => getNumericLevel(a) - getNumericLevel(b));
+                }
+            } catch {}
+
+            const response = (await SpaceLevelService.getAllSpaceLevels()) as unknown;
+            const levels = Array.isArray(response)
+                ? response
+                : ((response as { content?: SpaceLevelDTO[] })?.content ?? []);
+            return [...levels].sort((a, b) => getNumericLevel(a) - getNumericLevel(b));
         },
     });
 
@@ -130,13 +200,23 @@ const SpaceListPage = () => {
         },
     });
 
+    const highestSpaceLevelQuery = useQuery({
+        queryKey: spaceLevelQueryKeys.highest,
+        queryFn: async () => {
+            return await UtilsService.getHighestSpaceLevel();
+        },
+    });
+
     const spaceLevels = spaceLevelsQuery.data ?? [];
     const spaceData = spacesTreeQuery.data ?? [];
+
     const loading =
         spaceLevelsQuery.isLoading ||
         spaceLevelsQuery.isFetching ||
         spacesTreeQuery.isLoading ||
-        spacesTreeQuery.isFetching;
+        spacesTreeQuery.isFetching ||
+        highestSpaceLevelQuery.isLoading ||
+        highestSpaceLevelQuery.isFetching;
 
     useEffect(() => {
         if (spaceLevelsQuery.error) {
@@ -147,24 +227,216 @@ const SpaceListPage = () => {
     }, [spaceLevelsQuery.error, handleError]);
 
     useEffect(() => {
+        if (highestSpaceLevelQuery.error) {
+            handleError(highestSpaceLevelQuery.error, {
+                fallbackKey: 'spaceLevelManagement.fetchError',
+            });
+        }
+    }, [highestSpaceLevelQuery.error, handleError]);
+
+    useEffect(() => {
         if (spacesTreeQuery.error) {
             handleError(spacesTreeQuery.error, { fallbackKey: 'spaceManagement.fetchError' });
         }
     }, [spacesTreeQuery.error, handleError]);
 
     const maxSpaceLevel = useMemo(() => {
+        if (typeof highestSpaceLevelQuery.data === 'number' && highestSpaceLevelQuery.data > 0) {
+            return highestSpaceLevelQuery.data;
+        }
         if (!spaceLevels.length) return 0;
-        return spaceLevels[spaceLevels.length - 1].spaceLevel;
-    }, [spaceLevels]);
+        return Math.max(...spaceLevels.map(getNumericLevel));
+    }, [highestSpaceLevelQuery.data, spaceLevels]);
+
+    const selectedLevelConfig = useMemo(() => {
+        if (!selectedLevelId) return null;
+        return spaceLevels.find((l) => l.spaceLevelId === selectedLevelId) ?? null;
+    }, [selectedLevelId, spaceLevels]);
+
+    const selectedLevelNumber = useMemo(() => {
+        return getNumericLevel(selectedLevelConfig);
+    }, [selectedLevelConfig]);
+
+    const targetParentLevelNumber = useMemo(() => {
+        return selectedLevelNumber > 1 ? selectedLevelNumber - 1 : null;
+    }, [selectedLevelNumber]);
+
+    const editingSpaceNode = useMemo(() => {
+        if (modalState.mode === 'edit' && modalState.data?.spaceId) {
+            return findSpaceInTree(spaceData, modalState.data.spaceId);
+        }
+        return null;
+    }, [modalState.mode, modalState.data?.spaceId, spaceData]);
+
+    const spaceLevelOptions = useMemo(() => {
+        return spaceLevels.map((lvl) => {
+            const num = getNumericLevel(lvl);
+            return {
+                value: lvl.spaceLevelId,
+                label: t('spaceManagement.levelOption', {
+                    level: num,
+                    name: lvl.spaceLevelName,
+                    defaultValue: `Cấp ${num}: ${lvl.spaceLevelName}`,
+                }),
+            };
+        });
+    }, [spaceLevels, t]);
+
+    const isLevelDisabled = modalState.mode === 'edit';
+    const levelExtra =
+        modalState.mode === 'edit'
+            ? t('spaceManagement.form.help.levelEditDisabled', {
+                  defaultValue: 'Không thể thay đổi cấp khu vực khi cập nhật.',
+              })
+            : undefined;
+
+    const handleLevelChange = useCallback(
+        (newLevelId: number) => {
+            setSelectedLevelId(newLevelId);
+            form.setFieldValue('parentSpaceId', null);
+            const newLevelConfig = spaceLevels.find((l) => l.spaceLevelId === newLevelId);
+            setModalState((prev) => ({
+                ...prev,
+                data: {
+                    ...prev.data,
+                    spaceLevelId: newLevelId,
+                    spaceLevelName: newLevelConfig?.spaceLevelName ?? '',
+                    parentSpaceId: null,
+                    parentName: '',
+                },
+            }));
+        },
+        [form, spaceLevels]
+    );
+
+    const disabledSpaceIds = useMemo(() => {
+        const ids: number[] = [];
+        if (modalState.mode === 'edit' && editingSpaceNode) {
+            ids.push(...getDescendantAndSelfIds(editingSpaceNode));
+        }
+        return ids;
+    }, [modalState.mode, editingSpaceNode]);
+
+    const parentSpaceTreeData = useMemo(() => {
+        if (!targetParentLevelNumber || targetParentLevelNumber <= 0) {
+            return [];
+        }
+        return mapSpaceTreeToTreeSelect(spaceData, '', {
+            targetSelectableLevel: targetParentLevelNumber,
+            maxDepthLevel: targetParentLevelNumber,
+            disabledSpaceIds,
+            t,
+        });
+    }, [spaceData, targetParentLevelNumber, disabledSpaceIds, t]);
+
+    const isParentDisabled = !selectedLevelId || selectedLevelNumber <= 1;
+    const parentPlaceholder = useMemo(() => {
+        if (!selectedLevelId) {
+            return t('spaceManagement.form.placeholders.selectLevelFirst', {
+                defaultValue: 'Vui lòng chọn cấp khu vực trước...',
+            });
+        }
+        if (selectedLevelNumber === 1) {
+            return t('spaceManagement.form.placeholders.rootNoParent', {
+                defaultValue: 'Khu vực cấp 1 không có cấp cha (Khu vực gốc)',
+            });
+        }
+        return t('spaceManagement.form.placeholders.selectParentSpace', {
+            defaultValue: 'Chọn khu vực cha...',
+        });
+    }, [selectedLevelId, selectedLevelNumber, t]);
+
+    const handleParentSpaceChange = useCallback(
+        (newParentId: number | null) => {
+            const parentItem = newParentId ? findSpaceInTree(spaceData, newParentId) : null;
+            setModalState((prev) => ({
+                ...prev,
+                data: {
+                    ...prev.data,
+                    parentSpaceId: newParentId,
+                    parentName: parentItem ? parentItem.spaceName : '',
+                },
+            }));
+        },
+        [spaceData]
+    );
+
+    const validateParentSpace = useCallback(
+        (parentSpaceId: number | null) => {
+            if (!selectedLevelId) {
+                return t('spaceManagement.form.placeholders.selectLevelFirst', {
+                    defaultValue: 'Vui lòng chọn cấp khu vực trước...',
+                });
+            }
+
+            if (selectedLevelNumber === 1) {
+                return null;
+            }
+
+            if (selectedLevelNumber > 1 && !parentSpaceId) {
+                return t('spaceManagement.form.validation.parentRequiredForNonRoot', {
+                    level: selectedLevelNumber,
+                    parentLevel: selectedLevelNumber - 1,
+                    defaultValue: `Khu vực cấp ${selectedLevelNumber} bắt buộc phải chọn khu vực cha thuộc Cấp ${selectedLevelNumber - 1}.`,
+                });
+            }
+
+            if (parentSpaceId) {
+                const parentNode = findSpaceInTree(spaceData, parentSpaceId);
+                if (parentNode) {
+                    const pLevel = getNumericLevel(parentNode.spaceLevel);
+                    if (pLevel !== selectedLevelNumber - 1) {
+                        return t('spaceManagement.form.help.parentLevelHint', {
+                            level: selectedLevelNumber - 1,
+                            defaultValue: `Khu vực cha phải thuộc Cấp ${selectedLevelNumber - 1}.`,
+                        });
+                    }
+                }
+            }
+
+            if (modalState.mode === 'edit' && modalState.data?.spaceId) {
+                if (parentSpaceId === modalState.data.spaceId) {
+                    return t('spaceManagement.form.validation.cannotSelectSelfAsParent', {
+                        defaultValue: 'Không thể chọn chính khu vực này làm khu vực cha.',
+                    });
+                }
+                if (editingSpaceNode) {
+                    const descendants = getDescendantAndSelfIds(editingSpaceNode);
+                    if (parentSpaceId && descendants.includes(parentSpaceId)) {
+                        return t('spaceManagement.form.validation.cannotSelectDescendantAsParent', {
+                            defaultValue: 'Không thể chọn khu vực con cháu làm khu vực cha.',
+                        });
+                    }
+                }
+            }
+
+            return null;
+        },
+        [
+            selectedLevelId,
+            selectedLevelNumber,
+            spaceData,
+            modalState.mode,
+            modalState.data?.spaceId,
+            editingSpaceNode,
+            t,
+        ]
+    );
 
     const handleCreateRoot = () => {
         if (!spaceLevels.length) {
             toast.error(t('spaceManagement.errors.noLevelConfigured'));
             return;
         }
-        const rootLevel = spaceLevels.find((l) => l.spaceLevel === 1);
-        if (!rootLevel) return;
 
+        const rootLevel = spaceLevels.find((l) => getNumericLevel(l) === 1) || spaceLevels[0];
+
+        if (!rootLevel) {
+            toast.error(t('spaceManagement.errors.noLevelConfigured'));
+            return;
+        }
+
+        setSelectedLevelId(rootLevel.spaceLevelId);
         setModalState({
             open: true,
             mode: 'create',
@@ -173,6 +445,7 @@ const SpaceListPage = () => {
                 parentSpaceId: null,
                 parentName: '',
                 spaceLevelName: rootLevel.spaceLevelName,
+                displayOrder: 1,
             },
         });
     };
@@ -181,28 +454,46 @@ const SpaceListPage = () => {
         (parentSpace: SpaceWithChildrenResponse) => {
             if (!checkPermission('create', 'space')) return;
 
-            const currentLevelValue = parentSpace.spaceLevel.spaceLevel;
-            const targetLevelConfig = spaceLevels.find(
-                (l) => l.spaceLevel === currentLevelValue + 1
-            );
+            const parentLevel = getNumericLevel(parentSpace.spaceLevel);
+            const targetChildLevelNum = parentLevel + 1;
 
-            if (!targetLevelConfig) {
+            if (maxSpaceLevel > 0 && parentLevel >= maxSpaceLevel) {
+                toast.error(
+                    t('spaceManagement.form.validation.cannotAddChildToMaxLevel', {
+                        maxLevel: maxSpaceLevel,
+                        defaultValue: `Không thể tạo khu vực con vì khu vực này đã đạt cấp tối đa (Cấp ${maxSpaceLevel}).`,
+                    })
+                );
+                return;
+            }
+
+            const targetConfig = spaceLevels.find(
+                (l) => getNumericLevel(l) === targetChildLevelNum
+            );
+            if (!targetConfig) {
                 toast.error(t('spaceManagement.errors.noLevelConfigured'));
                 return;
             }
 
+            setExpandedRowKeys((prev) => Array.from(new Set([...prev, parentSpace.spaceId])));
+            manualExpandedKeysRef.current = Array.from(
+                new Set([...manualExpandedKeysRef.current, parentSpace.spaceId])
+            );
+
+            setSelectedLevelId(targetConfig.spaceLevelId);
             setModalState({
                 open: true,
                 mode: 'create',
                 data: {
-                    spaceLevelId: targetLevelConfig.spaceLevelId,
+                    spaceLevelId: targetConfig.spaceLevelId,
                     parentSpaceId: parentSpace.spaceId,
                     parentName: parentSpace.spaceName,
-                    spaceLevelName: targetLevelConfig.spaceLevelName,
+                    spaceLevelName: targetConfig.spaceLevelName,
+                    displayOrder: 1,
                 },
             });
         },
-        [checkPermission, spaceLevels]
+        [checkPermission, spaceLevels, maxSpaceLevel, t]
     );
 
     const handleEditSpace = useCallback(
@@ -221,10 +512,17 @@ const SpaceListPage = () => {
                     queryKey: spaceQueryKeys.detail(space.spaceId),
                     queryFn: () => SpaceService.getSpaceById(space.spaceId),
                 });
+                const lvlId = detailData.spaceLevel?.spaceLevelId ?? null;
+                setSelectedLevelId(lvlId);
+
                 setModalState({
                     open: true,
                     mode: 'edit',
-                    data: detailData,
+                    data: {
+                        ...detailData,
+                        parentSpaceId: detailData.parentId,
+                        spaceLevelId: lvlId,
+                    },
                 });
             } catch (error: unknown) {
                 console.error('Error fetching space details:', error);
@@ -362,7 +660,14 @@ const SpaceListPage = () => {
     }, [spaceData, searchTerm, filterSpaces]);
 
     useEffect(() => {
-        if (searchTerm.trim()) {
+        const trimmed = searchTerm.trim();
+        const prevTrimmed = prevSearchTermRef.current.trim();
+        prevSearchTermRef.current = searchTerm;
+
+        if (trimmed) {
+            if (!prevTrimmed) {
+                manualExpandedKeysRef.current = expandedRowKeys;
+            }
             const extractIds = (spaces: SpaceWithChildrenResponse[]): number[] => {
                 let ids: number[] = [];
                 spaces.forEach((s) => {
@@ -374,8 +679,8 @@ const SpaceListPage = () => {
                 return ids;
             };
             setExpandedRowKeys(extractIds(filteredData));
-        } else {
-            setExpandedRowKeys([]);
+        } else if (prevTrimmed && !trimmed) {
+            setExpandedRowKeys(manualExpandedKeysRef.current);
         }
     }, [searchTerm, filteredData]);
 
@@ -405,30 +710,73 @@ const SpaceListPage = () => {
         try {
             const floorPlanImageUrl = await uploadFloorPlanIfNeeded(data.floorPlanImageUrl);
 
+            const targetLevelId = Number(data.spaceLevelId || selectedLevelId);
+            if (!targetLevelId) {
+                toast.error(t('spaceManagement.errors.noLevelConfigured'));
+                return;
+            }
+
+            const targetLevelConfig = spaceLevels.find((l) => l.spaceLevelId === targetLevelId);
+            const levelNum = targetLevelConfig ? getNumericLevel(targetLevelConfig) : 0;
+
+            let targetParentId: number | null = null;
+            if (levelNum > 1) {
+                if (!data.parentSpaceId) {
+                    toast.error(
+                        t('spaceManagement.form.validation.parentRequiredForNonRoot', {
+                            level: levelNum,
+                            parentLevel: levelNum - 1,
+                            defaultValue: `Khu vực cấp ${levelNum} bắt buộc phải chọn khu vực cha thuộc Cấp ${levelNum - 1}.`,
+                        })
+                    );
+                    return;
+                }
+                targetParentId = Number(data.parentSpaceId);
+            }
+
             if (mode === 'create') {
                 const payload: SpaceCreationRequest = {
-                    spaceCode: data.spaceCode,
-                    spaceName: data.spaceName,
-                    floorPlanImageUrl,
-                    description: data.description ?? undefined,
-                    displayOrder: data.displayOrder,
-                    spaceLevelId: modalState.data?.spaceLevelId,
-                    parentSpaceId: modalState.data?.parentSpaceId,
+                    spaceCode: data.spaceCode.trim().toUpperCase(),
+                    spaceName: data.spaceName.trim(),
+                    floorPlanImageUrl: floorPlanImageUrl ?? null,
+                    description: data.description?.trim() || undefined,
+                    displayOrder: Number(data.displayOrder),
+                    spaceLevelId: targetLevelId,
+                    parentSpaceId: targetParentId,
                 };
                 await createSpace(payload);
+                if (targetParentId) {
+                    const ancestors = findAncestorsAndSelf(spaceData, targetParentId) ?? [
+                        targetParentId,
+                    ];
+                    setExpandedRowKeys((prev) => Array.from(new Set([...prev, ...ancestors])));
+                    manualExpandedKeysRef.current = Array.from(
+                        new Set([...manualExpandedKeysRef.current, ...ancestors])
+                    );
+                }
                 toast.success(t('spaceManagement.form.createSuccess'));
             } else {
                 if (modalState.data?.spaceId) {
                     const submitData: SpaceUpdationRequest = {
                         spaceId: modalState.data.spaceId,
-                        spaceCode: data.spaceCode,
-                        spaceName: data.spaceName,
-                        floorPlanImageUrl,
-                        description: data.description ?? undefined,
-                        displayOrder: data.displayOrder,
-                        parentSpaceId: modalState.data.parentId,
+                        spaceCode: data.spaceCode.trim().toUpperCase(),
+                        spaceName: data.spaceName.trim(),
+                        floorPlanImageUrl: floorPlanImageUrl ?? null,
+                        description: data.description?.trim() || undefined,
+                        displayOrder: Number(data.displayOrder),
+                        parentSpaceId: targetParentId,
+                        spaceLevelId: targetLevelId,
                     };
                     await updateSpace(submitData);
+                    if (targetParentId) {
+                        const ancestors = findAncestorsAndSelf(spaceData, targetParentId) ?? [
+                            targetParentId,
+                        ];
+                        setExpandedRowKeys((prev) => Array.from(new Set([...prev, ...ancestors])));
+                        manualExpandedKeysRef.current = Array.from(
+                            new Set([...manualExpandedKeysRef.current, ...ancestors])
+                        );
+                    }
                     toast.success(t('spaceManagement.form.updateSuccess'));
                 }
             }
@@ -444,7 +792,42 @@ const SpaceListPage = () => {
         }
     };
 
-    const formFields = useMemo(() => getSpaceFormFields(t, modalState.mode), [t, modalState.mode]);
+    const formFields = useMemo(
+        () =>
+            getSpaceFormFields(t, modalState.mode, {
+                spaceLevelOptions,
+                isLevelDisabled,
+                levelExtra,
+                onLevelChange: handleLevelChange,
+
+                spaceTreeData: parentSpaceTreeData,
+                isParentDisabled,
+                parentPlaceholder,
+                parentExtra:
+                    targetParentLevelNumber && targetParentLevelNumber > 0
+                        ? t('spaceManagement.form.help.parentLevelHint', {
+                              level: targetParentLevelNumber,
+                              defaultValue: `Khu vực cha phải thuộc Cấp ${targetParentLevelNumber}.`,
+                          })
+                        : undefined,
+                onParentChange: handleParentSpaceChange,
+                validateParentSpace,
+            }),
+        [
+            t,
+            modalState.mode,
+            spaceLevelOptions,
+            isLevelDisabled,
+            levelExtra,
+            handleLevelChange,
+            parentSpaceTreeData,
+            isParentDisabled,
+            parentPlaceholder,
+            targetParentLevelNumber,
+            handleParentSpaceChange,
+            validateParentSpace,
+        ]
+    );
     const { tableContainerRef, tableScrollY } = useAntdTableScroll();
 
     return (
@@ -480,6 +863,9 @@ const SpaceListPage = () => {
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 block={isMobile}
+                                loading={
+                                    spaceLevelsQuery.isLoading || highestSpaceLevelQuery.isLoading
+                                }
                                 onClick={handleCreateRoot}
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
@@ -681,11 +1067,16 @@ const SpaceListPage = () => {
                                     'common.items'
                                 )}`,
                             pageSizeOptions: ['10', '20', '50', '100'],
-                            position: ['bottomCenter'],
+                            placement: ['bottomCenter'],
                         }}
                         expandable={{
                             expandedRowKeys,
-                            onExpandedRowsChange: (keys) => setExpandedRowKeys(keys),
+                            onExpandedRowsChange: (keys) => {
+                                setExpandedRowKeys(keys);
+                                if (!searchTerm.trim()) {
+                                    manualExpandedKeysRef.current = keys;
+                                }
+                            },
                             rowExpandable: (record) =>
                                 !!record.children && record.children.length > 0,
                             expandRowByClick: true,
@@ -734,8 +1125,14 @@ const SpaceListPage = () => {
             </Card>
 
             <EntityFormModal<SpaceFormData>
+                form={form}
                 open={modalState.open}
-                onOpenChange={(open) => setModalState({ ...modalState, open })}
+                onOpenChange={(open) => {
+                    setModalState((prev) => ({ ...prev, open }));
+                    if (!open) {
+                        setSelectedLevelId(null);
+                    }
+                }}
                 onSubmit={handleSubmit}
                 mode={modalState.mode}
                 initialData={modalState.data}
@@ -745,16 +1142,28 @@ const SpaceListPage = () => {
                     edit: t('spaceManagement.form.editTitle'),
                 }}
                 description={{
-                    create: modalState.data?.parentSpaceId
-                        ? t('spaceManagement.form.createDescription', {
-                              parentName: modalState.data.parentName,
-                              spaceLevelName: modalState.data.spaceLevelName,
-                          })
-                        : t('spaceManagement.form.createRootDescription', {
-                              spaceLevelName: modalState.data?.spaceLevelName,
-                          }),
+                    create: undefined,
                     edit: t('spaceManagement.form.editDescription'),
                 }}
+                topContent={
+                    modalState.mode === 'create' ? (
+                        <Alert
+                            type="info"
+                            showIcon
+                            title={
+                                <span>
+                                    <strong>
+                                        {t('spaceManagement.form.help.noticePrefix', {
+                                            defaultValue: 'Lưu ý:',
+                                        })}
+                                    </strong>{' '}
+                                    {t('spaceManagement.form.help.parentSpaceHint')}
+                                </span>
+                            }
+                            style={{ borderRadius: 8 }}
+                        />
+                    ) : null
+                }
                 buttonLabels={{
                     cancel: t('spaceManagement.form.buttons.cancel'),
                     create: t('spaceManagement.form.buttons.create'),

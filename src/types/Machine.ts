@@ -118,10 +118,38 @@ export interface MachineStats {
     totalRun: number;
     totalIdle: number;
     totalError: number;
-    totalEmpty: number;
+    totalOffline: number;
 }
 
 export type ZoneFilter = 'all' | 'zone1' | 'zone2' | 'zone3';
+
+/** Status values the `/topic/machines/status/{machineId}` frames carry. */
+export type MachineStatusLogStatus =
+    | 'RUNTIME'
+    | 'IDLE'
+    | 'ERROR'
+    | 'COMPLETE'
+    | 'OFFLINE'
+    | 'UNKNOWN';
+
+/** Frame pushed on `/topic/machines/status/{machineId}` whenever a machine changes status. */
+export interface MachineStatusWsMessage {
+    type: string;
+    payload: {
+        machineId: string;
+        data: {
+            previousLog: {
+                startTime: string;
+                endTime: string;
+                logStatus: MachineStatusLogStatus;
+            };
+            newStatus: MachineStatusLogStatus;
+            /** Java `LocalDateTime` (no offset) marking when `newStatus` began. */
+            newStatusStartTime?: string | null;
+            productionCounter: number;
+        };
+    };
+}
 
 export interface MachineWithStatusLogsSummary {
     machineId: string;
@@ -131,6 +159,8 @@ export interface MachineWithStatusLogsSummary {
     machineDisplayOrder: number;
     topic: string;
     currentStatus: currentStatus;
+    /** Java `LocalDateTime` (no offset) marking when `currentStatus` began. */
+    currentStatusStartTime?: string | null;
     operatorCount: number;
     totalProductions: number;
     runtimeByStatus?: {

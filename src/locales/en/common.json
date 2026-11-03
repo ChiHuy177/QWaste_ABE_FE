@@ -49,6 +49,10 @@
         "total": "Total",
         "download": "Download",
         "exportExcel": "Export Excel",
+        "exportSuccess": "Excel exported successfully!",
+        "exportError": "Failed to export Excel file",
+        "noDataToExport": "No data available to export!",
+        "featureUnderDevelopment": "Feature under development",
         "view": "View",
         "details": "Details",
         "settings": "Settings",
@@ -321,6 +325,7 @@
             "overview": "Overview",
             "taskBoard": "Task Board",
             "machine": "Machine",
+            "errorManagement": "Error & Incident Management",
             "machineStatus": "Machine Status",
             "machineDashboard": "Machine Dashboard",
             "staff": "Staff",
@@ -329,7 +334,8 @@
             "tasks": "Tasks",
             "productionPlan": "Production Plan",
             "workCalendar": "Work Calendar",
-            "productionMonitor": "Production Monitor",
+            "productionMonitor": "Production Monitoring",
+            "productionMonitoring": "Production Monitoring",
             "history": "History",
             "reports": "Reports",
             "settings": "Settings",
@@ -409,7 +415,8 @@
             "overrideTooltip": "Date modified differently from default rule",
             "pastDayTooltip": "Cannot edit schedule for past dates",
             "plannedHoursLabel": "{{hours}}h planned",
-            "plannedOffLabel": "0h (Off)"
+            "plannedOffLabel": "0h (Off)",
+            "monthPickerFormat": "MMMM, YYYY"
         },
         "dayType": {
             "working": "Working",
@@ -429,7 +436,17 @@
             "dayTypeLabel": "Day Type",
             "statusWorking": "Working",
             "statusOff": "Off",
+            "shiftPatternLabel": "Shift Pattern",
+            "selectPatternPlaceholder": "Select shift pattern",
+            "defaultPatternTag": "Default",
+            "hoursPreviewLabel": "Expected Working Hours:",
+            "hoursUnitPerDay": "{{hours}}h / day",
+            "hoursZeroOff": "0h (Off)",
             "btnApply": "Apply"
+        },
+        "errors": {
+            "patternRequired": "Please select a shift pattern for working day",
+            "patternRequiredDate": "Please select a shift pattern for working day ({{date}})"
         },
         "drawer": {
             "bulkEditTitle": "Edit Selected Date(s)",
@@ -441,8 +458,12 @@
             "eyebrow": "SYSTEM WARNING",
             "modalTitle": "Work Calendar Alert",
             "targetNotice": "Month {{month}}/{{year}} unconfirmed",
+            "targetNoticeMultiple": "{{count}} month(s) work schedule unconfirmed",
             "targetSub": "Please review and lock schedule promptly",
             "modalDesc": "Month {{month}} work schedule has not been confirmed. Please review and confirm to ensure accurate performance calculations.",
+            "modalDescMultiple": "Work schedules for ({{months}}) have not been confirmed. Please review and confirm to ensure accurate performance calculations.",
+            "monthYearFormat": "Month {{month}}/{{year}}",
+            "btnGoToConfigure": "Configure",
             "btnConfigureNow": "Configure Now",
             "btnCloseLater": "Later"
         },
@@ -777,7 +798,7 @@
             }
         },
         "monitor": {
-            "title": "Production Monitor",
+            "title": "Production Monitoring",
             "partialTag": "Partially completed",
             "refresh": "Refresh",
             "statusCol": "Status",
@@ -1317,7 +1338,8 @@
     "machineManagement": {
         "header": {
             "title": "Machine Status",
-            "subtitle": "Monitor and manage your industrial machines"
+            "subtitle": "Monitor and manage your industrial machines",
+            "highlightedBadge": "Selected"
         },
         "fetchDetailsError": {
             "factory": "Failed to fetch factories"
@@ -1326,7 +1348,7 @@
             "totalRun": "Total Run",
             "totalIdle": "Total Idle",
             "totalError": "Total Error",
-            "totalEmpty": "Total Empty",
+            "totalOffline": "Total Offline",
             "powerConsumption": "Current Power Consumption",
             "machineTime": "Run Time",
             "production": "Production count"
@@ -1873,6 +1895,9 @@
                 "description": "Are you sure you want to delete this space?"
             }
         },
+        "maxLevelBadge": "Max",
+        "levelBadge": "Level {{level}}",
+        "levelOption": "Level {{level}}: {{name}}",
         "form": {
             "createTitle": "Create New Space",
             "createDescription": "Assign to parent: {{parentName}} ({{spaceLevelName}})",
@@ -1885,6 +1910,8 @@
             "updateSuccess": "Space updated successfully",
             "updateError": "Failed to update space",
             "fields": {
+                "level": "Space Level",
+                "parentSpace": "Parent Space",
                 "code": "Space Code",
                 "name": "Space Name",
                 "order": "Display Order",
@@ -1892,6 +1919,11 @@
                 "description": "Description"
             },
             "placeholders": {
+                "level": "Select space level...",
+                "rootNoParent": "Level 1 space has no parent (Root)",
+                "selectParentSpace": "Select parent space...",
+                "selectLevelFirst": "Please select a space level first...",
+                "parentSpace": "Select parent space (leave empty for root space)...",
                 "code": "Enter space code",
                 "name": "Enter space name",
                 "order": "Enter display order",
@@ -1899,6 +1931,11 @@
                 "description": "Enter detailed description of the space"
             },
             "help": {
+                "noticePrefix": "Note:",
+                "levelSelectionHint": "Select a space level first to load valid parent spaces.",
+                "parentLevelHint": "Parent space must belong to Level {{level}}.",
+                "parentSpaceHint": "Select space level first. Level 1 is root (no parent). Level > 1 requires a parent from the tier above.",
+                "levelEditDisabled": "Space level cannot be changed when updating.",
                 "floorPlanImageUrl": "Upload the floor plan image used by the Floor Map page."
             },
             "upload": {
@@ -1911,7 +1948,11 @@
                 "noWhitespaceOnly": "Cannot contain only whitespace characters",
                 "codePattern": "Format invalid (A-Z0-9_-)",
                 "url": "Invalid URL",
-                "minValue": "Minimum value is {{min}}"
+                "minValue": "Minimum value is {{min}}",
+                "cannotAddChildToMaxLevel": "Cannot create child space because this space is already at the maximum level (Level {{maxLevel}}).",
+                "cannotSelectSelfAsParent": "Cannot select this space as its own parent.",
+                "cannotSelectDescendantAsParent": "Cannot select a descendant space as parent.",
+                "parentRequiredForNonRoot": "Level {{level}} space must have a parent space at Level {{parentLevel}}."
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -2481,6 +2522,7 @@
         "updateError": "Failed to update mold. Please try again.",
         "table": {
             "headers": {
+                "index": "No.",
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
                 "outputPerShot": "Cavities",
@@ -2575,6 +2617,7 @@
         "updateError": "Failed to update operation type. Please try again.",
         "table": {
             "headers": {
+                "index": "No.",
                 "operationTypeCode": "Operation Type Code",
                 "operationTypeName": "Operation Type Name",
                 "description": "Description",
@@ -2655,6 +2698,7 @@
         },
         "table": {
             "headers": {
+                "index": "No.",
                 "machineImage": "Machine Image",
                 "machineName": "Machine Name",
                 "machineType": "Machine Type",
@@ -3181,7 +3225,11 @@
             "middleGroup": "Middle Group",
             "noMatch": "No factories match your filter",
             "searchPlaceholder": "Search factories...",
-            "selectPlaceholder": "Select factory"
+            "selectPlaceholder": "Select factory",
+            "highestError": "Highest Error",
+            "defaultOrder": "Default",
+            "startDate": "Start date",
+            "endDate": "End date"
         },
         "table": {
             "title": {
@@ -3202,7 +3250,8 @@
                 "duration": "Duration",
                 "machine": "Machine",
                 "errorName": "Error Name",
-                "status": "Status"
+                "status": "Status",
+                "errorReason": "Error Cause"
             },
             "noErrorData": "No error data available"
         },
@@ -3249,6 +3298,7 @@
         "machine": {
             "online": "Online",
             "offline": "Offline",
+            "lastUpdate": "Last update",
             "operators": "Operators",
             "production": "Production count"
         },
@@ -3263,14 +3313,35 @@
         "modal": {
             "title": "Time Analytics",
             "timeAnalytics": "Time Analytics",
-            "back": "Back"
+            "back": "Back",
+            "backToList": "Back to machine list",
+            "machineListTab": "Machine List ({{count}})",
+            "machineListTabTitle": "Machine List",
+            "incidentDetailTab": "Incident Details",
+            "incidentDetailTabTitle": "Incident Details",
+            "allPlant": "Entire Plant",
+            "allWorkshops": "All Workshops",
+            "machinesWithError": "{{count}} with error",
+            "totalMachines": "{{count}} machines",
+            "totalErrorTime": "Total error time: {{time}}",
+            "operatingNormally": "Operating normally (0h error)",
+            "errorBadge": "{{time}} error",
+            "errorHistoryTitle": "Incident & Error History",
+            "incidentCount": "{{count}} incidents",
+            "noIncidentsInRange": "No incidents in selected date range",
+            "noErrorData": "No error incidents occurred",
+            "stableOperationDesc": "Device operated stably during selected period",
+            "selectMachinePrompt": "Please select a machine to view details",
+            "unknownIncident": "Unknown machine stop incident",
+            "unrecordedReason": "Unrecorded"
         },
         "allFactories": "All factories",
         "emptyState": "No space monitoring data available. Please select filters and try again.",
         "factoryLabel": "Factory",
         "offlineTime": "Offline time",
         "onlineTime": "Online time",
-        "viewZones": "View zones in this factory"
+        "viewZones": "View zones in this factory",
+        "machines": "Machine List"
     },
     "taskBoard": {
         "title": "CNC Task Management",
@@ -4812,12 +4883,189 @@
         "process": "Process",
         "tasks": "Tasks",
         "space_monitoring": "Space Monitoring",
-        "production_monitor": "Production Monitor",
+        "production_monitor": "Production Monitoring",
+        "production_monitoring": "Production Monitoring",
         "floor_map": "Floor Map",
+        "error_management": "Error & Incident Management",
         "all": "All",
-        "other": "Other"
+        "other": "Other",
+        "production_overview": "Production Overview"
     },
     "stepTemplates": "Step templates",
+    "timeFilter": {
+        "title": "Time Filter",
+        "time": "Time",
+        "all": "All Time",
+        "shifts": "Shifts",
+        "allShifts": "All",
+        "active": "Active",
+        "periodType": "Period Selection Mode",
+        "quickSelect": "Quick Select",
+        "presetOptions": "Preset Options",
+        "week": "By Week",
+        "month": "By Month",
+        "quarter": "By Quarter",
+        "year": "By Year",
+        "customRange": "Date Range",
+        "selectWeek": "Select week",
+        "selectMonth": "Select month",
+        "selectQuarter": "Select quarter",
+        "selectYear": "Select year",
+        "selectDateRange": "Select date range",
+        "weekLabel": "Week {{week}}, {{year}}",
+        "monthLabel": "Month {{month}}/{{year}}",
+        "quarterLabel": "Q{{quarter}} {{year}}",
+        "yearLabel": "Year {{year}}",
+        "apply": "Apply",
+        "reset": "Reset"
+    },
+    "errorManagement": {
+        "title": "Error & Incident Management",
+        "subtitle": "Track equipment downtime, root cause analysis, and corrective action workflows",
+        "navigation": {
+            "fromMachineStatusBanner": "Viewing incident {{code}} for machine {{machine}} transferred from Machine Status",
+            "backToMachineStatus": "Back to Machine Status",
+            "targetBadge": "Selected",
+            "targetMachineBadge": "Target Machine"
+        },
+        "header": {
+            "btnReport": "Report New Incident",
+            "btnExport": "Export Excel",
+            "btnRefresh": "Refresh",
+            "activeIncidents": "active incidents"
+        },
+        "kpi": {
+            "totalIncidents": "Total Incidents",
+            "totalIncidentsDesc": "Recorded in period",
+            "totalDowntime": "Total Downtime",
+            "totalDowntimeDesc": "Production disruption time",
+            "ongoingIncidents": "Active Incidents",
+            "ongoingIncidentsDesc": "Immediate attention required",
+            "resolvedRate": "Resolution Rate",
+            "resolvedRateDesc": "Recovery efficiency",
+            "criticalCount": "Critical Incidents"
+        },
+        "filters": {
+            "searchPlaceholder": "Search by incident code, machine name or code...",
+            "incidentCode": "Incident Code",
+            "incidentCodePlaceholder": "e.g. 2026_0923_08...",
+            "resolution": "Resolution",
+            "resolutionPlaceholder": "Search by resolution...",
+            "category": "Category",
+            "severity": "Severity",
+            "status": "Status",
+            "allCategories": "All Categories",
+            "allSeverities": "All Severities",
+            "allStatuses": "All Statuses",
+            "dateRange": "Date Range",
+            "clearFilters": "Clear Filters"
+        },
+        "table": {
+            "columns": {
+                "incidentCode": "Incident Code",
+                "machine": "Affected Machine",
+                "location": "Location",
+                "severity": "Severity",
+                "status": "Status",
+                "startTime": "Start Time",
+                "endTime": "End Time",
+                "duration": "Downtime",
+                "cause": "Root Cause",
+                "resolution": "Resolution",
+                "actions": "Actions"
+            },
+            "ongoingBadge": "Ongoing",
+            "waitingUpdateBadge": "Awaiting Update",
+            "resolvedBadge": "Resolved",
+            "unresolved": "In Progress",
+            "noResolutionYet": "Resolution pending",
+            "noCauseYet": "Cause pending",
+            "viewDetail": "Incident Details",
+            "edit": "Update Root Cause & Resolution",
+            "cannotUpdateOngoing": "Cannot update while machine is actively in error",
+            "delete": "Delete",
+            "confirmDelete": "Are you sure you want to delete this incident record?",
+            "empty": "No incident records found matching current filters"
+        },
+        "modal": {
+            "createTitle": "Report New Incident",
+            "editTitle": "Update Root Cause & Resolution",
+            "editSubtitle": "Machine incident is recorded automatically. Please enter the root cause and resolution.",
+            "autoCaptured": "Auto-captured from machine",
+            "location": "Installation Location",
+            "incidentInfo": "Incident Information",
+            "updateSection": "Incident Handling Details",
+            "causeRequired": "Please enter the root cause of the incident (max 2000 characters)",
+            "machine": "Affected Machine",
+            "selectMachine": "Select equipment",
+            "startTime": "Incident Start Time",
+            "endTime": "Incident End Time",
+            "category": "Incident Category",
+            "severity": "Severity Level",
+            "status": "Incident Status",
+            "cause": "Root Cause Description",
+            "causePlaceholder": "Describe symptoms, triggers, and root cause...",
+            "resolution": "Resolution / Corrective Action",
+            "resolutionPlaceholder": "Detail technical steps taken or underway...",
+            "preventiveAction": "Preventive Action (Long-term)",
+            "preventiveActionPlaceholder": "Plan to prevent recurrence (maintenance, parameter calibration)...",
+            "notes": "Additional Notes",
+            "endTimeRequired": "Please select incident end time when marking as resolved",
+            "resolutionRequired": "Please provide corrective action details when resolving",
+            "durationCalculated": "Calculated Downtime",
+            "submit": "Save Incident",
+            "cancel": "Cancel"
+        },
+        "drawer": {
+            "title": "Incident Details",
+            "basicInfo": "Machine & Location Information",
+            "timeAndDuration": "Timing & Downtime Impact",
+            "analysisAndAction": "Root Cause & Resolution",
+            "auditInfo": "Audit Information",
+            "createdAt": "Created At",
+            "updatedAt": "Updated At",
+            "createdBy": "Created By",
+            "updatedBy": "Updated By",
+            "preventivePlan": "Preventive Action Plan",
+            "personnel": "Assigned Personnel",
+            "timeline": "Incident Timeline",
+            "mqttSignal": "MQTT signal from machine"
+        },
+        "categories": {
+            "mechanical": "Mechanical",
+            "electrical": "Electrical & Control",
+            "hydraulic": "Hydraulic & Pneumatic",
+            "mold": "Tooling & Mold",
+            "operational": "Operation Error",
+            "software": "Software & SCADA",
+            "material": "Material Defect",
+            "quality": "Quality Issue"
+        },
+        "severities": {
+            "critical": "Critical",
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low"
+        },
+        "statuses": {
+            "IN_PROGRESS": "Awaiting Update",
+            "RESOLVED": "Resolved",
+            "ongoing": "Ongoing",
+            "waitingUpdate": "Awaiting Update",
+            "resolved": "Resolved",
+            "open": "New / Open",
+            "in_progress": "In Progress",
+            "closed": "Closed"
+        },
+        "messages": {
+            "createSuccess": "Incident reported successfully",
+            "updateSuccess": "Incident updated successfully",
+            "resolveSuccess": "Resolution saved successfully",
+            "deleteSuccess": "Incident record deleted",
+            "fetchError": "Failed to load incidents",
+            "exportSuccess": "Incidents exported successfully"
+        }
+    },
     "spaceMonitoring": {
         "timeFilter": {
             "title": "Time Filter",
@@ -4844,6 +5092,203 @@
             "yearLabel": "Year {{year}}",
             "refreshData": "Refresh data",
             "apply": "Apply"
+        }
+    },
+    "timeFilter": {
+        "title": "Time",
+        "timeRange": "Time range",
+        "quick": "Quick",
+        "custom": "Custom",
+        "shifts": "Shifts",
+        "allShifts": "All",
+        "active": "Active",
+        "singleDayShiftOnlyTooltip": "Shift filtering is only supported when viewing a single day",
+        "dateRangeAllShiftsWarning": "(*) Date range: viewing all shifts by default (individual shift selection disabled).",
+        "noPresetsConfigured": "No presets configured yet.",
+        "year": "Year",
+        "week": "Week",
+        "quarter": "Quarter",
+        "selectWeek": "Select week",
+        "selectQuarter": "Select quarter",
+        "weekOption": "Week {{week}}",
+        "quarterOption": "Quarter {{quarter}}",
+        "weekRangeChip": "Week {{week}}/{{year}}: {{range}}",
+        "quarterRangeChip": "Quarter {{quarter}}/{{year}}: {{range}}",
+        "noRangeSelected": "No time range selected yet",
+        "optionalAutoFill": "(optional — auto-filled if skipped)",
+        "groupBy": "Group by",
+        "labelStyle": "Label style",
+        "labelStyleFor": "Label style for \"{{grain}}\"",
+        "selected": "Selected"
+    },
+    "productionOverview": {
+        "title": "Production Overview",
+        "header": {
+            "activeMachines": "machines active",
+            "updatedAt": "Updated at"
+        },
+        "filters": {
+            "selectFactory": "Select factory",
+            "time": "Time",
+            "selectShiftPeriod": "SELECT SHIFT / PERIOD",
+            "customDateRange": "Custom Date Range",
+            "dayShift": "Day shift"
+        },
+        "actions": {
+            "refreshData": "Refresh data",
+            "refreshSuccess": "Data refreshed successfully",
+            "exportReport": "Export Report",
+            "preparingReport": "Preparing overview report...",
+            "exportSuccess": "Report exported successfully!",
+            "exportError": "Failed to export report"
+        },
+        "kpi": {
+            "overallPlantOee": "PLANT OVERALL EFFICIENCY",
+            "operatingRate": "OPERATING RATE",
+            "maxCapacity": "MAX CAPACITY",
+            "actualCapacity": "ACTUAL CAPACITY",
+            "actualOperating": "ACTUAL OPERATING",
+            "downtimeDuration": "DOWNTIME DURATION",
+            "target": "Target",
+            "vsYesterday": "vs yesterday",
+            "totalDowntime": "DOWNTIME DURATION",
+            "runtimeDesc": "Cumulative machine runtime",
+            "minutes": "mins",
+            "minutesOverTarget": "mins over target",
+            "hours": "hours",
+            "hoursOverTarget": "hours over target",
+            "overTarget": "over target",
+            "yieldRate": "YIELD RATE",
+            "vsPlan": "vs planned target",
+            "actualProduction": "ACTUAL OUTPUT",
+            "planShort": "Plan",
+            "vsMaxCapacity": "vs max capacity",
+            "withinLimit": "Within allowable limit",
+            "designBenchmark": "100% design benchmark",
+            "viewErrorAnalytics": "Click to view detailed error analytics"
+        },
+        "charts": {
+            "oeeByMachine": "Machine Efficiency",
+            "planVsActualByMachine": "Plan vs Actual by Machine",
+            "outputPcs": "Production Output (pcs)",
+            "planned": "Planned",
+            "actual": "Actual",
+            "planVsActualBySku": "Plan vs Actual Output by SKU",
+            "planVsActualSkuDesc": "Plan vs Actual comparison by product SKU",
+            "planVsActualByMold": "Plan vs Actual Output by Mold",
+            "planVsActualMoldDesc": "Plan vs Actual comparison by mold",
+            "notAvailable": "N/A",
+            "noData": "No data available",
+            "machineName": "Machine Name",
+            "machineCode": "Machine Code",
+            "productName": "Product Name",
+            "productCode": "Product Code",
+            "efficiency": "Efficiency",
+            "quantity": "Quantity",
+            "pieces": "pcs",
+            "completionRate": "Completion Rate",
+            "deficit": "Deficit",
+            "surplus": "Exceeded",
+            "rank": "Rank",
+            "showingCount": "Showing {{count}}/{{total}} machines",
+            "filterOptions": {
+                "all": "All Machines",
+                "top10High": "Top 10 Highest Efficiency",
+                "top10Low": "Top 10 Lowest Efficiency",
+                "targetMet": "Target Met (≥85%)",
+                "needsImprove": "Needs Improvement (<70%)",
+                "top10Output": "Top 10 Highest Output",
+                "top10LowOutput": "Top 10 Lowest Output",
+                "top10Deficit": "Top 10 Largest Deficit",
+                "top10Rate": "Top 10 Completion Rate"
+            }
+        },
+        "machineDetail": {
+            "backToOverview": "Overview",
+            "selectMachine": "Select Machine",
+            "runningSku": "Running SKU",
+            "operator": "Operator",
+            "shift": "Shift",
+            "statusRunning": "Running",
+            "statusStopped": "Stopped",
+            "hourlyOutput": "Hourly Production Output",
+            "hourlyOutputDesc": "Actual output per hour during shift",
+            "dailyOutput": "Daily Production Output",
+            "dailyOutputDesc": "Plan vs Actual comparison by day",
+            "weeklyOutput": "Weekly Production Output",
+            "weeklyOutputDesc": "Plan vs Actual comparison by week",
+            "monthlyOutput": "Monthly Production Output",
+            "monthlyOutputDesc": "Plan vs Actual comparison by month",
+            "recent7DaysEfficiency": "7-Day Efficiency Trend",
+            "recent7DaysEfficiencyDesc": "Efficiency trend and target achievement rate",
+            "actualOutput": "Actual",
+            "plannedOutput": "Planned",
+            "efficiency": "Efficiency",
+            "pcsPerHour": "pcs/h",
+            "pcsPerDay": "pcs/day",
+            "pcsPerWeek": "pcs/week",
+            "pcsPerMonth": "pcs/month",
+            "maxCapacityHoursLabel": "Planned (h)",
+            "actualOperatingHoursLabel": "Actual runtime (h)",
+            "operatingRatioLabel": "Efficiency (%)",
+            "productionRatio": "Production Ratio",
+            "averageShort": "Avg",
+            "machineEfficiencyTitle": "Machine Operating Efficiency",
+            "actualOnlyNotice": "Actual output only",
+            "pcs": "pcs"
+        },
+        "performanceReport": {
+            "title": "Machine Performance Timeline Report",
+            "subtitle": "Compare planned working hours, actual runtime, and efficiency percentage per machine",
+            "viewChart": "Chart",
+            "viewMatrix": "Matrix",
+            "allMachines": "All Machines (Aggregated)",
+            "selectMachine": "Filter by Machine",
+            "plannedHours": "Planned",
+            "runtimeHours": "Actual",
+            "downtimeHours": "Downtime",
+            "efficiency": "Efficiency",
+            "notApplicable": "N/A",
+            "hoursUnit": "h",
+            "granularityHour": "Hourly",
+            "granularityDay": "Daily",
+            "granularityWeek": "Weekly",
+            "granularityMonth": "Monthly",
+            "targetMet": "Target Met (≥85%)",
+            "improveArea": "Improvement Area (70–84%)",
+            "needImprove": "Needs Improvement (<70%)",
+            "noSchedule": "N/A (Off-shift / No Plan)",
+            "noData": "No machine performance data available for this period"
+        },
+        "downtimeModal": {
+            "title": "Time Analytics",
+            "allWorkshops": "All Workshops",
+            "searchPlaceholder": "Search machines...",
+            "deviceList": "Device List",
+            "errorMachinesBadge": "{{count}} machines with error",
+            "totalMachinesBadge": "{{count}} machines",
+            "mostErrors": "Most Errors",
+            "defaultOrder": "Default",
+            "workshopTag": "Workshop",
+            "totalErrorTime": "Total downtime: {{time}}",
+            "incidentHistory": "Incident History & Alerts",
+            "incidentCount": "{{count}} incidents",
+            "startDate": "From Date",
+            "endDate": "To Date",
+            "colIncidentCode": "Incident Code",
+            "colStart": "Start Time",
+            "colErrorName": "Error Name",
+            "colRootCause": "Root Cause",
+            "colDuration": "Duration",
+            "totalDowntime": "Total downtime: {{time}}",
+            "ongoing": "Ongoing",
+            "unrecordedReason": "Unrecorded",
+            "noIncidents": "No incidents found in the selected period",
+            "noMachinesFound": "No matching machines found",
+            "selectMachinePrompt": "Please select a machine to view details",
+            "machinesCount": "{{count}} Machines",
+            "operatingNormally": "Operating normally (0h downtime)",
+            "backToList": "Back to machine list"
         }
     }
 }

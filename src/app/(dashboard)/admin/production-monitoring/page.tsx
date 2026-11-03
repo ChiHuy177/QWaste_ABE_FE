@@ -45,10 +45,10 @@ const { Search } = Input;
 
 const formatNumber = (v: number) => v.toLocaleString('vi-VN');
 
-export default function ProductionMonitorPage() {
+export default function ProductionMonitoringPage() {
     const { t } = useTranslation();
     const { token } = theme.useToken();
-    const { checkPermission } = usePermissionCheck();
+    const { checkPermission, can } = usePermissionCheck();
     const dispatch = useAppDispatch();
 
     usePageTitle(t('productionPlan.monitor.title'));
@@ -90,10 +90,23 @@ export default function ProductionMonitorPage() {
     // callback đổi reference mỗi lần page re-render (vd mỗi WS tick).
     const openIncidentModal = useCallback(
         (row: MonitorRowVM) => {
-            if (!checkPermission('incident', 'production_plan')) return;
+            const isReadyToComplete =
+                row.actualQuantity !== null && row.actualQuantity >= row.plannedQuantity;
+
+            if (isReadyToComplete) {
+                const hasCompletePerm =
+                    can('complete', 'production_plan') || can('complete', 'production_monitoring');
+                if (!hasCompletePerm) {
+                    checkPermission('complete', 'production_plan');
+                    return;
+                }
+            } else {
+                if (!checkPermission('incident', 'production_plan')) return;
+            }
+
             dispatch(productionPlanMonitorActions.openIncidentModal(row.productionPlanId));
         },
-        [checkPermission, dispatch]
+        [can, checkPermission, dispatch]
     );
 
     const selectRow = useCallback(
@@ -287,11 +300,6 @@ export default function ProductionMonitorPage() {
 
     const tabItems = [
         {
-            key: 'list',
-            label: t('productionPlan.monitor.tabs.list'),
-            children: listTabContent,
-        },
-        {
             key: 'kanban',
             label: t('productionPlan.monitor.tabs.kanban'),
             children: (
@@ -303,6 +311,11 @@ export default function ProductionMonitorPage() {
                     onSelectRow={selectRow}
                 />
             ),
+        },
+        {
+            key: 'list',
+            label: t('productionPlan.monitor.tabs.list'),
+            children: listTabContent,
         },
         {
             key: 'timeline',

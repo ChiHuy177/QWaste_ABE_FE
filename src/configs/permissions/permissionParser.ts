@@ -1,6 +1,16 @@
 import { ACTIONS, Action, Subject } from './caslAbility';
 import { PermissionRule } from '@/types/User';
 
+/**
+ * Slug cũ của BE -> slug canonical. BE từng cấp create/import của kế hoạch sản xuất
+ * trên subject 'product'; FE giờ chỉ dùng 'production_plan', nên map một chiều ở đây
+ * để cả slug cũ lẫn mới đều ra cùng một quyền.
+ */
+const LEGACY_SLUG_ALIASES: Record<string, string> = {
+    'product:create': 'production_plan:create',
+    'product:import': 'production_plan:import',
+};
+
 export function parsePermissionString(permission: string): PermissionRule | null {
     if (permission === 'sa:all') {
         return {
@@ -9,7 +19,9 @@ export function parsePermissionString(permission: string): PermissionRule | null
         };
     }
 
-    const parts = permission.split(':');
+    const normalized = LEGACY_SLUG_ALIASES[permission] ?? permission;
+
+    const parts = normalized.split(':');
     if (parts.length !== 2) return null;
 
     const [subject, action] = parts;

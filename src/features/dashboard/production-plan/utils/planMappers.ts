@@ -23,6 +23,9 @@ export type MachineInfoMap = Map<string, MachineInfo>;
 
 export function buildMachineInfoMap(machines: Machine[]): MachineInfoMap {
     const map: MachineInfoMap = new Map();
+    if (!Array.isArray(machines)) {
+        return map;
+    }
     machines.forEach((machine) => {
         map.set(String(machine.machineId), {
             machineName: machine.machineName ?? '',
