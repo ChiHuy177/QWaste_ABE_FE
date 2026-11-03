@@ -68,21 +68,6 @@ export class OperationTypeService {
         }
     }
 
-    /** GET /api/operationTypes/v1 — danh sách đầy đủ KHÔNG phân trang (cho dropdown/select) */
-    static async getAllOperationTypes(): Promise<OperationType[]> {
-        const response = await NetworkService.requestJson<
-            OperationType[] | PaginatedResult<OperationType>
-        >({
-            method: 'GET',
-            url: ENDPOINTS.OPERATION_TYPES.BASE,
-        });
-        const result = response.result;
-        if (Array.isArray(result)) {
-            return result;
-        }
-        return (result as PaginatedResult<OperationType>)?.content ?? [];
-    }
-
     static async getOperationTypeById(operationTypeId: number): Promise<OperationType> {
         const response = await NetworkService.requestJson<OperationType>({
             method: 'GET',

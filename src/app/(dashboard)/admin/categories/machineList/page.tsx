@@ -78,7 +78,7 @@ const spaceQueryKeys = {
 };
 
 const operationTypeQueryKeys = {
-    lists: ['operationTypes', 'list'] as const,
+    picking: ['operationTypes', 'list', 'picking'] as const,
 };
 
 const isLocalFile = (value: unknown): value is File => {
@@ -337,8 +337,8 @@ const MachineListPageContent = () => {
     const spaceTreeSelectData = useMemo(() => mapSpaceTreeToTreeSelect(spacesTree), [spacesTree]);
 
     const operationTypesQuery = useQuery({
-        queryKey: operationTypeQueryKeys.lists,
-        queryFn: () => OperationTypeService.getAllOperationTypes(),
+        queryKey: operationTypeQueryKeys.picking,
+        queryFn: () => OperationTypeService.getOperationTypesForPicking(),
     });
 
     const operationTypeOptions = useMemo(
