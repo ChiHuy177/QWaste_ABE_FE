@@ -3,6 +3,7 @@ import {
     MoldFormData,
     MoldImportResult,
     MoldPaginatedParams,
+    MoldPickingResponse,
     MoldUpdateFormData,
 } from '@/types/Mold';
 import { ApiResponse } from '@/types/ApiResponse';
@@ -52,17 +53,19 @@ export class MoldService {
         }
     }
 
-    /** GET /api/molds/v1 — danh sách đầy đủ KHÔNG phân trang, gồm cả mold đã soft-delete. */
-    static async getAllMolds(): Promise<Mold[]> {
-        const response = await NetworkService.requestJson<Mold[] | PaginatedResult<Mold>>({
+    /** GET /api/molds/v1/picking — danh sách rút gọn cho select khuôn (BE đã loại soft-delete). */
+    static async getMoldsForPicking(): Promise<MoldPickingResponse[]> {
+        const response = await NetworkService.requestJson<
+            MoldPickingResponse[] | PaginatedResult<MoldPickingResponse>
+        >({
             method: 'GET',
-            url: ENDPOINTS.MOLDS.BASE,
+            url: ENDPOINTS.MOLDS.PICKING,
         });
         const result = response.result;
         if (Array.isArray(result)) {
             return result;
         }
-        return (result as PaginatedResult<Mold>)?.content ?? [];
+        return (result as PaginatedResult<MoldPickingResponse>)?.content ?? [];
     }
 
     static async getMoldById(moldId: string): Promise<Mold> {

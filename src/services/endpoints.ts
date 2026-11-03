@@ -212,6 +212,7 @@ export const ENDPOINTS = {
         DETAIL: (id: PathParam) => WITH_PARAM(BASE_PATHS.MOLDS, id),
         RESTORE: (id: PathParam) => `${BASE_PATHS.MOLDS}/${id}/restoring`,
         IMPORT: `${BASE_PATHS.MOLDS}/import`,
+        PICKING: `${BASE_PATHS.MOLDS}/picking`,
     },
     OPERATION_TYPES: {
         BASE: BASE_PATHS.OPERATION_TYPES,

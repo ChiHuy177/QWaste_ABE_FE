@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { ProductionPlanService } from '@/services/ProductionPlanService';
 import type { IncidentReason } from '@/types/ProductionPlan';
-import type { Mold } from '@/types/Mold';
+import type { MoldPickingResponse } from '@/types/Mold';
 import { useCompatibleMachines } from '../hooks/useCompatibleMachines';
 import { useMachineOptions } from '../hooks/useMachineOptions';
 import { useWeeklyMachineGrid } from '../hooks/useWeeklyMachineGrid';
@@ -37,7 +37,7 @@ interface Props {
     open: boolean;
     row: MonitorRowVM | null;
     /** Danh sách khuôn đầy đủ — dùng tra operationType để lọc máy tương thích khi chọn khuôn. */
-    molds: Mold[];
+    molds: MoldPickingResponse[];
     moldOptions: SelectOptionVM[];
     /** moldId hiện tại của plan (resolve từ moldCode) — default cho defer. */
     currentMoldId?: string;

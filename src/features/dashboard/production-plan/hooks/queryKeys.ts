@@ -17,7 +17,9 @@ export const machineQueryKeys = {
     all: ['machines', 'list'] as const,
 };
 
-// Trùng khớp moldQueryKeys.lists của categories/mold/page.tsx — chia sẻ 1 cache entry.
+// Cache riêng cho picker khuôn (GET /molds/v1/picking) — DTO rút gọn nên không share cache
+// entry với danh sách phân trang của categories/mold/page.tsx, nhưng vẫn nằm dưới prefix
+// ['molds','list'] (moldQueryKeys.lists ở trang đó) để CRUD khuôn invalidate luôn picker này.
 export const moldQueryKeys = {
-    lists: ['molds', 'list'] as const,
+    picking: ['molds', 'list', 'picking'] as const,
 };

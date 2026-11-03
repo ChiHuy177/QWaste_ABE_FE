@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Form, Modal, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { Mold } from '@/types/Mold';
+import type { MoldPickingResponse } from '@/types/Mold';
 import type { PlanFormValues, SelectOptionVM } from './types';
 import ProductForm from './ProductForm';
 
@@ -15,7 +15,7 @@ interface PlanFormModalProps {
     /** Mã khuôn hiện tại của plan (edit) — hiển thị khi không đổi khuôn. */
     currentMoldCode?: string | null;
     /** Danh sách khuôn đầy đủ — ProductForm dùng tra operationType để lọc máy tương thích. */
-    molds: Mold[];
+    molds: MoldPickingResponse[];
     moldOptions: SelectOptionVM[];
     submitting?: boolean;
     onCancel: () => void;

@@ -3,7 +3,7 @@
 import { Col, DatePicker, Divider, Form, Input, InputNumber, Row, Select, theme } from 'antd';
 import type { FormInstance } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { Mold } from '@/types/Mold';
+import type { MoldPickingResponse } from '@/types/Mold';
 import type { SelectOptionVM } from './types';
 import { useCompatibleMachines } from '../hooks/useCompatibleMachines';
 
@@ -11,7 +11,7 @@ interface ProductFormProps {
     form: FormInstance;
     mode: 'create' | 'edit';
     /** Danh sách khuôn đầy đủ — dùng tra operationType để lọc máy tương thích khi chọn khuôn. */
-    molds: Mold[];
+    molds: MoldPickingResponse[];
     moldOptions: SelectOptionVM[];
     /** Mã khuôn hiện tại của plan (edit) — hiển thị placeholder khi không đổi khuôn. */
     currentMoldCode?: string | null;
