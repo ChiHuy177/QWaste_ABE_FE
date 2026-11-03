@@ -4774,6 +4774,14 @@
             "incident_pause": {
                 "title": "Plan paused due to incident",
                 "content": "A production plan has been paused due to a machine incident."
+            },
+            "idle_pause": {
+                "title": "Plan paused because machine is idle",
+                "content": "Production plan {1} has been paused because machine {0} is idle."
+            },
+            "offline_pause": {
+                "title": "Plan paused due to lost connection",
+                "content": "Production plan {1} has been paused because machine {0} is offline."
             }
         },
         "order": {
@@ -4813,6 +4821,9 @@
     },
     "notifications": {
         "title": "Notifications",
+        "error": "Unable to load notifications. Please try again.",
+        "retry": "Try again",
+        "markAll": "Read all",
         "empty": "No notifications",
         "markAllAsRead": "Mark as read",
         "noMore": "All notifications displayed"

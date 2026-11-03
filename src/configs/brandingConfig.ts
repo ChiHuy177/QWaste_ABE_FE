@@ -8,7 +8,7 @@ const DEFAULT_CONFIG: BrandingConfig = {
     appName: 'Qwaste',
     companyName: 'IIC 4.0',
     logo: {
-        main: '/img/LogoIIC.svg',
+        main: '/img/LogoABE.png',
         auth: '/img/LogoIIC.svg',
         favicon: '/favicon.ico',
         poweredBy: '/img/auth/power_by.svg',

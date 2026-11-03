@@ -2128,8 +2128,31 @@
             "incident_pause": {
                 "title": "因故障暂停计划",
                 "content": "一个生产计划因机器故障已转为暂停。"
+            },
+            "idle_pause": {
+                "title": "因机器空闲暂停计划",
+                "content": "生产计划 {1} 因机器 {0} 进入空闲状态已暂停。"
+            },
+            "offline_pause": {
+                "title": "因连接中断暂停计划",
+                "content": "生产计划 {1} 因机器 {0} 离线已暂停。"
+            }
+        },
+        "machine": {
+            "alarm_error": {
+                "title": "机器报警",
+                "content": "机器 {0} 已触发故障报警，请立即检查。"
             }
         }
+    },
+    "notifications": {
+        "title": "通知",
+        "error": "无法加载通知，请重试。",
+        "retry": "重试",
+        "empty": "暂无通知",
+        "markAll": "全部已读",
+        "markAllAsRead": "全部标记为已读",
+        "noMore": "已显示所有通知"
     },
     "stepManagement": {
         "title": "工序管理",

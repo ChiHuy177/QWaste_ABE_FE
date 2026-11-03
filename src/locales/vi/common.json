@@ -4457,6 +4457,14 @@
             "incident_pause": {
                 "title": "Kế hoạch tạm dừng do sự cố",
                 "content": "Một kế hoạch sản xuất vừa chuyển sang tạm dừng do sự cố máy."
+            },
+            "idle_pause": {
+                "title": "Kế hoạch tạm dừng do máy ngừng hoạt động",
+                "content": "Kế hoạch sản xuất {1} đã tạm dừng vì máy {0} chuyển sang trạng thái chờ."
+            },
+            "offline_pause": {
+                "title": "Kế hoạch tạm dừng do mất kết nối",
+                "content": "Kế hoạch sản xuất {1} đã tạm dừng vì máy {0} mất kết nối."
             }
         },
         "order": {
@@ -4496,6 +4504,9 @@
     },
     "notifications": {
         "title": "Thông báo",
+        "error": "Không thể tải thông báo. Vui lòng thử lại.",
+        "retry": "Thử lại",
+        "markAll": "Đọc hết",
         "empty": "Không có thông báo",
         "markAllAsRead": "Đánh dấu đã đọc",
         "noMore": "Đã hiển thị tất cả thông báo"
