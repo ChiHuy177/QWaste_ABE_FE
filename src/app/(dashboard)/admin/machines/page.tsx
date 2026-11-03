@@ -112,7 +112,7 @@ const MachinesPage: React.FC = () => {
             try {
                 const filters = USE_MOCK_FACTORY_OVERVIEW
                     ? await DemoFactoryOverviewService.getIndustryFilters()
-                    : await IndustryFilterService.getAllIndustryFilters();
+                    : await IndustryFilterService.getIndustryFiltersForPicking();
                 setIndustryFilters(filters);
                 if (filters.length > 0 && selectedTimePeriodRef.current == null) {
                     dispatch(machineActions.setSelectedTimePeriod(filters[0].filterId));

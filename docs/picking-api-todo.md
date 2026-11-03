@@ -4,13 +4,15 @@ Backend source: `D:/Github/ABE_BE` (checked 2026-11-03).
 
 - [x] #1: Use operation type picking API in the mold form; add picking DTO, service, endpoint and separate query cache.
 - [x] #2: Use operation type picking API in the machine form; remove the unused full-list dropdown method.
-- [ ] #3: Use industry filter picking API for the machine page time-period dropdown.
+- [x] #3: Use industry filter picking API for the machine page time-period dropdown.
 
 Keep the full machine lookup used by production plans: the operation-type picking endpoint cannot replace this lookup.
 
 For each item: typecheck, targeted tests, full Jest suite, review, and a separate commit. Record live-browser verification limitations explicitly.
 
 ## Validation
+
+- #3: Typecheck passed; both picking service suites 5/5 tests passed, including sort order, unchanged source list, empty options and error propagation. Full suite 5 passed / 4 failed, 36 tests passed / 1 failed (same baseline failures as #1). Machines route HTTP 200; interactive E2E unavailable. Review: no findings, 10/10 for scoped code; existing loading cleanup, option labels and initial period selection are preserved.
 
 - #2: Typecheck passed; shared picking service tests 2/2 passed; full suite 4 passed / 4 failed, 33 tests passed / 1 failed (same baseline failures as #1). Machine-list route HTTP 200; interactive E2E unavailable. Review: no findings, 10/10 for scoped code; verified no remaining consumers of the removed method and CRUD invalidation still includes the picking cache.
 
