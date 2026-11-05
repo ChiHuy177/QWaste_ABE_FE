@@ -32,6 +32,7 @@ export const computeStatsFromMachines = (
         energyKwh: 0,
         operatorCount: 0,
         totalProductions: 0,
+        lastUpdate: '--',
         machinesByStatus: {
             RUNTIME: 0,
             IDLE: 0,

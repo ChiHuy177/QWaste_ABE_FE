@@ -9,7 +9,6 @@ import {
     CloseCircleOutlined,
     DownOutlined,
     DoubleRightOutlined,
-    UserOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import MachineCard from './MachineCard';
@@ -60,7 +59,6 @@ const LineSection: React.FC<LineSectionProps> = ({
         let totalRuntime = 0;
         let totalIdle = 0;
         let totalError = 0;
-        let totalOperatorCount = 0;
 
         machines.forEach((machine) => {
             const machineRuntime = calculateRuntimeByStatus(machine.runtimeByStatus, 'RUNTIME');
@@ -78,7 +76,6 @@ const LineSection: React.FC<LineSectionProps> = ({
             totalRuntime += machineRuntime;
             totalIdle += machineIdle;
             totalError += machineError;
-            totalOperatorCount += machine.operatorCount || 0;
         });
 
         return {
@@ -87,7 +84,6 @@ const LineSection: React.FC<LineSectionProps> = ({
             runtime: formatTime(totalRuntime),
             idle: formatTime(totalIdle),
             error: formatTime(totalError),
-            operatorCount: totalOperatorCount,
         };
     };
 
@@ -404,48 +400,6 @@ const LineSection: React.FC<LineSectionProps> = ({
                                     }}
                                 >
                                     {lineStats.error}
-                                </div>
-                            </div>
-                        </Flex>
-
-                        {/* Operator Count */}
-                        <Flex align="center" gap={10}>
-                            <div
-                                style={{
-                                    padding: 8,
-                                    borderRadius: 8,
-                                    background: `${token.colorInfo}10`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <UserOutlined
-                                    style={{
-                                        fontSize: 16,
-                                        color: token.colorInfo,
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <div
-                                    style={{
-                                        fontSize: 11,
-                                        color: token.colorTextTertiary,
-                                        marginBottom: 2,
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    {t('machineManagement.timeline.operatorCount', 'Operators')}
-                                </div>
-                                <div
-                                    style={{
-                                        fontSize: 15,
-                                        fontWeight: 700,
-                                        color: token.colorInfo,
-                                    }}
-                                >
-                                    {lineStats.operatorCount}
                                 </div>
                             </div>
                         </Flex>

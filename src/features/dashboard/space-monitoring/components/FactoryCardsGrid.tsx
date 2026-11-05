@@ -88,7 +88,12 @@ const FactoryCardsGrid: React.FC<FactoryCardsGridProps> = ({
                 <Flex gap={8} align="center">
                     <Select
                         mode="multiple"
-                        showSearch={{ filterOption: (input, option) => ((option?.label as string) ?? '').toLowerCase().includes(input.toLowerCase()) }}
+                        showSearch={{
+                            filterOption: (input, option) =>
+                                ((option?.label as string) ?? '')
+                                    .toLowerCase()
+                                    .includes(input.toLowerCase()),
+                        }}
                         placeholder={t(
                             'factoryOverview.filter.selectPlaceholder',
                             'Filter by factory...'
@@ -377,42 +382,6 @@ const FactoryCardsGrid: React.FC<FactoryCardsGridProps> = ({
                                                 }}
                                             >
                                                 {formatSeconds(stats.offlineSeconds)}
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            style={{
-                                                width: 1,
-                                                background: token.colorBorderSecondary,
-                                                margin: '2px 12px',
-                                                flexShrink: 0,
-                                            }}
-                                        />
-
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <Text
-                                                style={{
-                                                    display: 'block',
-                                                    fontSize: 12,
-                                                    color: token.colorTextTertiary,
-                                                }}
-                                            >
-                                                {t(
-                                                    'machineManagement.timeline.operatorCount',
-                                                    'Operators'
-                                                )}
-                                            </Text>
-                                            <div
-                                                style={{
-                                                    fontSize: 22,
-                                                    fontWeight: 700,
-                                                    color: token.colorText,
-                                                    whiteSpace: 'nowrap',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                }}
-                                            >
-                                                {stats.operatorCount}
                                             </div>
                                         </div>
                                     </div>

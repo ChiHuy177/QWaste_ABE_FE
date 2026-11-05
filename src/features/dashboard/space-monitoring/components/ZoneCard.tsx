@@ -8,7 +8,6 @@ import {
     PauseCircleOutlined,
     CloseCircleOutlined,
     DownOutlined,
-    UserOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import LineSection from './LineSection';
@@ -48,7 +47,10 @@ const ZoneCard: React.FC<ZoneCardProps> = ({
         return lines.reduce((total, line) => total + line.machines.length, 0);
     };
 
-    const calculateZoneRuntimeByStatus = (lines: LineInFactoryOverview[], status: string): string => {
+    const calculateZoneRuntimeByStatus = (
+        lines: LineInFactoryOverview[],
+        status: string
+    ): string => {
         let totalSeconds = 0;
         lines.forEach((line) => {
             line.machines.forEach((machine) => {
@@ -64,7 +66,6 @@ const ZoneCard: React.FC<ZoneCardProps> = ({
     const calculateZoneStats = (lines: LineInFactoryOverview[]) => {
         let totalCalculatedEnergy = 0;
         let totalMeasuredEnergy = 0;
-        let totalOperatorCount = 0;
 
         lines.forEach((line) => {
             line.machines.forEach((machine) => {
@@ -80,14 +81,12 @@ const ZoneCard: React.FC<ZoneCardProps> = ({
 
                 totalCalculatedEnergy += machineEnergy;
                 totalMeasuredEnergy += machine.currentEnergyConsumption || 0;
-                totalOperatorCount += machine.operatorCount || 0;
             });
         });
 
         return {
             energy: totalCalculatedEnergy.toLocaleString('en-US', { maximumFractionDigits: 1 }),
             measuredEnergy: totalMeasuredEnergy,
-            operatorCount: totalOperatorCount,
         };
     };
 
@@ -294,30 +293,6 @@ const ZoneCard: React.FC<ZoneCardProps> = ({
                                 </div>
                                 <div style={{ fontSize: 16, fontWeight: 600 }}>
                                     {calculateZoneRuntimeByStatus(zone.lines, 'ERROR')}
-                                </div>
-                            </div>
-                        </Flex>
-
-                        {/* Operator Count */}
-                        <Flex align="center" gap={8}>
-                            <UserOutlined
-                                style={{
-                                    fontSize: 18,
-                                    color: token.colorBgBase,
-                                }}
-                            />
-                            <div>
-                                <div
-                                    style={{
-                                        fontSize: 12,
-                                        color: token.colorBgBase,
-                                        opacity: 0.75,
-                                    }}
-                                >
-                                    {t('machineManagement.timeline.operatorCount', 'Operators')}
-                                </div>
-                                <div style={{ fontSize: 16, fontWeight: 600 }}>
-                                    {zoneStats.operatorCount}
                                 </div>
                             </div>
                         </Flex>

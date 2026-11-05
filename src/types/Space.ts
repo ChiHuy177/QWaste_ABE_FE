@@ -142,6 +142,7 @@ export interface SpaceComputedStats {
     energyKwh: number;
     operatorCount: number;
     totalProductions: number;
+    lastUpdate?: string;
     machinesByStatus: {
         RUNTIME: number;
         IDLE: number;

@@ -7,7 +7,6 @@ import {
     ClockCircleOutlined,
     PauseCircleOutlined,
     CloseCircleOutlined,
-    UserOutlined,
     DesktopOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -70,7 +69,9 @@ const SpaceStatsBar: React.FC<SpaceStatsBarProps> = ({ stats, variant }) => {
                     <strong style={countValueStyle}>{stats.totalMachines}</strong>
                 </Tag>
                 <Tag style={tagStyle}>
-                    <UserOutlined /> <strong style={countValueStyle}>{stats.operatorCount}</strong>
+                    <ClockCircleOutlined />{' '}
+                    <span>{t('factoryOverview.machine.lastUpdate', 'Last update')}: </span>
+                    <strong style={timeValueStyle}>{stats.lastUpdate || '--'}</strong>
                 </Tag>
             </Flex>
         );
@@ -99,13 +100,13 @@ const SpaceStatsBar: React.FC<SpaceStatsBarProps> = ({ stats, variant }) => {
             value: formatSeconds(stats.errorSeconds),
         },
         {
-            icon: <UserOutlined style={{ fontSize: 18, color: token.colorBgBase }} />,
-            label: t('machineManagement.timeline.operatorCount', 'Operators'),
-            value: String(stats.operatorCount),
+            icon: <ClockCircleOutlined style={{ fontSize: 18, color: token.colorBgBase }} />,
+            label: t('factoryOverview.machine.lastUpdate', 'Last update'),
+            value: stats.lastUpdate || '--',
         },
     ];
 
-    // Fixed widths: Energy 130px, Run 110px, Stop 110px, Error 110px, Operators 130px
+    // Fixed widths: Energy 130px, Run 110px, Stop 110px, Error 110px, Last Update 130px
     const columnWidths = [130, 110, 110, 110, 130];
 
     return (

@@ -19,7 +19,8 @@ export interface MachineCardData {
     topic?: string;
     currentStatus: string;
     operatorCount?: number;
-    totalProductions: number;
+    totalProductions?: number;
+    lastUpdate?: string;
     runtimeByStatus?: Map<string, number> | Record<string, number | undefined>;
 }
 
@@ -28,7 +29,10 @@ interface MachineCardProps<T extends MachineCardData> {
     onClick: (machine: T, e: React.MouseEvent) => void;
 }
 
-function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: MachineCardProps<T>) {
+function MachineCardComponent<T extends MachineCardData>({
+    machine,
+    onClick,
+}: MachineCardProps<T>) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
@@ -119,9 +123,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
         return (runtimeByStatus as Record<string, number | undefined>)[status] || 0;
     };
 
-    const calculateOnlineTime = (
-        runtimeByStatus: MachineCardData['runtimeByStatus']
-    ): number => {
+    const calculateOnlineTime = (runtimeByStatus: MachineCardData['runtimeByStatus']): number => {
         if (!runtimeByStatus) return 0;
 
         let totalSeconds = 0;
@@ -153,8 +155,6 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
     const offlineSeconds = calculateRuntimeByStatus(machine.runtimeByStatus, 'OFFLINE');
     const offlineTime = formatTime(offlineSeconds);
 
-    const operatorCount = machine.operatorCount || 0;
-
     return (
         <div
             onClick={(e) => onClick(machine, e)}
@@ -175,7 +175,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 6,
-                minHeight: 165,
+                minHeight: 145,
                 cursor: 'pointer',
                 transition:
                     'background-color 0.15s' /* hover color feedback - replaces removed scale effect */,
@@ -227,7 +227,6 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                 >
                     {machine.machineName || 'Machine Name'}
                 </Text>
-
             </Flex>
 
             {/* Divider */}
@@ -304,7 +303,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                     </Text>
                 </Flex>
 
-                {/* Operators */}
+                {/* Last Update */}
                 <Flex
                     align="center"
                     justify="space-between"
@@ -322,7 +321,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                             fontWeight: 500,
                         }}
                     >
-                        {t('factoryOverview.machine.operators', 'Operators')}
+                        {t('factoryOverview.machine.lastUpdate', 'Last update')}
                     </Text>
                     <Text
                         style={{
@@ -331,44 +330,13 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                             fontWeight: 600,
                         }}
                     >
-                        {operatorCount}
-                    </Text>
-                </Flex>
-
-                {/* Production */}
-                <Flex
-                    align="center"
-                    justify="space-between"
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        padding: '3px 8px',
-                        borderRadius: 6,
-                        backdropFilter: 'blur(10px)',
-                    }}
-                >
-                    <Text
-                        style={{
-                            fontSize: 10,
-                            color: statusStyle.color,
-                            fontWeight: 500,
-                        }}
-                    >
-                        {t('factoryOverview.machine.production', 'Production')}
-                    </Text>
-                    <Text
-                        style={{
-                            fontSize: 11,
-                            color: statusStyle.color,
-                            fontWeight: 600,
-                        }}
-                    >
-                        {machine.totalProductions || 0}
+                        {machine.lastUpdate || '--'}
                     </Text>
                 </Flex>
             </Flex>
         </div>
     );
-};
+}
 
 const MachineCard = React.memo(MachineCardComponent) as typeof MachineCardComponent;
 
