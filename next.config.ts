@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
     output: 'standalone',
     outputFileTracingRoot: __dirname,
+    allowedDevOrigins: ['192.168.157.1'],
     images: {
         remotePatterns: [
             {

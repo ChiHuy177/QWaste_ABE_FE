@@ -137,10 +137,10 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         description: 'View space monitoring',
         i18nKey: 'permissionSubjects.space_monitoring',
     },
-    // Production Overview
+    // Production Overview (Backend API: dashboard)
     {
-        slug: 'production_overview:view',
-        subject: 'production_overview',
+        slug: 'dashboard:view',
+        subject: 'dashboard',
         action: 'view',
         routes: ['/admin/production-overview'],
         menuKey: 'production-overview',
@@ -782,33 +782,34 @@ export const PERMISSION_REGISTRY: PermissionConfig[] = [
         routes: [],
         description: 'Reset work calendar to default',
     },
-    // Error & Incident Management
+    // Error & Incident Management (Backend API: machine_incident)
     {
-        slug: 'error_management:view',
-        subject: 'error_management',
+        slug: 'machine_incident:view',
+        subject: 'machine_incident',
         action: 'view',
         routes: ['/admin/error-management'],
         menuKey: 'error-management',
         description: 'View error and incident management',
         i18nKey: 'sidebar.navigation.errorManagement',
+        alternativeAction: 'update',
     },
     {
-        slug: 'error_management:create',
-        subject: 'error_management',
+        slug: 'machine_incident:create',
+        subject: 'machine_incident',
         action: 'create',
         routes: [],
         description: 'Create error incident',
     },
     {
-        slug: 'error_management:update',
-        subject: 'error_management',
+        slug: 'machine_incident:update',
+        subject: 'machine_incident',
         action: 'update',
         routes: [],
         description: 'Update error incident',
     },
     {
-        slug: 'error_management:delete',
-        subject: 'error_management',
+        slug: 'machine_incident:delete',
+        subject: 'machine_incident',
         action: 'delete',
         routes: [],
         description: 'Delete error incident',
