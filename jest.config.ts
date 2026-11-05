@@ -11,6 +11,17 @@ const config: Config = {
                 },
             },
         ],
+        // antd / @ant-design / rc-* đã được whitelist ở transformIgnorePatterns nhưng ship
+        // file .js chứa cú pháp ESM — thiếu entry này thì mọi test import antd đều fail parse.
+        '^.+\\.(js|mjs|jsx)$': [
+            'ts-jest',
+            {
+                tsconfig: {
+                    jsx: 'react-jsx',
+                    allowJs: true,
+                },
+            },
+        ],
     },
 
     testEnvironment: 'jsdom',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Descriptions, Divider, Empty, Flex, Modal, Spin, Tag, Timeline, Typography, theme } from 'antd';
 import {
     CheckCircleOutlined,
@@ -23,6 +23,8 @@ import type { MonitorRowVM } from './types';
 const { Text } = Typography;
 
 const STATUS_FLOW: MonitorGroupKey[] = ['TODO', 'IN_PROGRESS', 'PAUSE', 'COMPLETE'];
+
+const LOGS_PAGE_SIZE = 20;
 
 const STATUS_ICON: Record<MonitorGroupKey, React.ComponentType<{ style?: React.CSSProperties }>> = {
     TODO: ClockCircleOutlined,
@@ -69,40 +71,37 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
     const [logs, setLogs] = useState<ProductionPlanStatusLog[]>([]);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [loadingLogs, setLoadingLogs] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
 
+    // Chỉ phụ thuộc id/status thay vì cả object `row` — `row` đổi reference mỗi tick WS của
+    // plan này (kể cả tick sản lượng MQTT, ~2 lần/giây), nên dùng nó làm dep sẽ bắn lại cả 2
+    // API liên tục, nháy Spin và xoá state phân trang của status log.
+    const planId = open ? (row?.productionPlanId ?? null) : null;
+    const planStatus = row?.status;
+
+    // ── Detail: các field từ API này là snapshot tĩnh theo plan (mã khuôn, ngày kế hoạch,
+    // loại công đoạn, ghi chú) → fetch 1 lần mỗi lần mở. Sản lượng/trạng thái realtime đọc
+    // trực tiếp từ `row`.
     useEffect(() => {
-        if (!open || !row) {
+        if (!planId) {
             setDetail(null);
-            setLogs([]);
-            setNextCursor(null);
-            setHasMore(false);
             return;
         }
         let cancelled = false;
 
         const fetchDetail = async () => {
             try {
-                setLoading(true);
-                const [detailResponse, logsResponse] = await Promise.all([
-                    ProductionPlanService.getProductionPlanById(row.productionPlanId),
-                    ProductionPlanService.getProductionPlanStatusLogs(row.productionPlanId, { limit: 20 }),
-                ]);
-                if (!cancelled) {
-                    setDetail(detailResponse);
-                    setLogs(logsResponse.items);
-                    setNextCursor(logsResponse.nextCursor);
-                    setHasMore(logsResponse.hasMore);
-                }
+                setLoadingDetail(true);
+                const response = await ProductionPlanService.getProductionPlanById(planId);
+                if (!cancelled) setDetail(response);
             } catch (error) {
                 if (!cancelled) {
                     handleError(error, { fallbackKey: 'productionPlan.fetchError' });
                 }
             } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
+                if (!cancelled) setLoadingDetail(false);
             }
         };
 
@@ -110,16 +109,66 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
         return () => {
             cancelled = true;
         };
-    }, [handleError, open, row]);
+    }, [handleError, planId]);
+
+    // ── Status logs: log mới chỉ sinh ra khi status đổi → refetch theo `planStatus`, không
+    // theo tick sản lượng.
+    const logsPlanIdRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!planId) {
+            logsPlanIdRef.current = null;
+            setLogs([]);
+            setNextCursor(null);
+            setHasMore(false);
+            return;
+        }
+
+        // Đổi plan → xoá log của plan cũ và hiện loading. Cùng plan nhưng đổi status →
+        // refetch im lặng, giữ list hiện tại để không nháy Empty giữa 2 lần fetch.
+        const isPlanSwitch = logsPlanIdRef.current !== planId;
+        logsPlanIdRef.current = planId;
+        if (isPlanSwitch) {
+            setLogs([]);
+            setNextCursor(null);
+            setHasMore(false);
+            setLoadingLogs(true);
+        }
+
+        let cancelled = false;
+
+        const fetchLogs = async () => {
+            try {
+                const response = await ProductionPlanService.getProductionPlanStatusLogs(planId, {
+                    limit: LOGS_PAGE_SIZE,
+                });
+                if (cancelled) return;
+                setLogs(response.items);
+                setNextCursor(response.nextCursor);
+                setHasMore(response.hasMore);
+            } catch (error) {
+                if (!cancelled) {
+                    handleError(error, { fallbackKey: 'productionPlan.fetchError' });
+                }
+            } finally {
+                if (!cancelled) setLoadingLogs(false);
+            }
+        };
+
+        fetchLogs();
+        return () => {
+            cancelled = true;
+        };
+    }, [handleError, planId, planStatus]);
 
     const loadMoreLogs = async () => {
-        if (!row || !nextCursor || loadingMore) return;
+        if (!planId || !nextCursor || loadingMore) return;
         try {
             setLoadingMore(true);
-            const response = await ProductionPlanService.getProductionPlanStatusLogs(
-                row.productionPlanId,
-                { limit: 20, cursor: nextCursor }
-            );
+            const response = await ProductionPlanService.getProductionPlanStatusLogs(planId, {
+                limit: LOGS_PAGE_SIZE,
+                cursor: nextCursor,
+            });
             setLogs((prev) => [...prev, ...response.items]);
             setNextCursor(response.nextCursor);
             setHasMore(response.hasMore);
@@ -191,7 +240,7 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                 </Flex>
             }
         >
-            <Spin spinning={loading}>
+            <Spin spinning={loadingDetail || loadingLogs}>
                 {/* ── Section 1: Status flow ── */}
                 <SectionLabel>{t('productionPlan.monitor.detail.statusTrack')}</SectionLabel>
 
@@ -335,9 +384,10 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                         {
                             key: 'actualQuantity',
                             label: t('productionPlan.monitor.detail.actualQuantity'),
+                            // Realtime từ WS — `detail.actualQuantity` chỉ là snapshot lúc mở modal.
                             children:
-                                detail?.actualQuantity != null
-                                    ? detail.actualQuantity.toLocaleString('vi-VN')
+                                row.actualQuantity != null
+                                    ? row.actualQuantity.toLocaleString('vi-VN')
                                     : '—',
                         },
                         ...(detail?.note
