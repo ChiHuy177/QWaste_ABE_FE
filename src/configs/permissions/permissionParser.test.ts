@@ -37,6 +37,24 @@ describe('parsePermissionToString', () => {
             action: 'import',
         });
     });
+
+    it('should map legacy "production_overview:view" onto dashboard', () => {
+        expect(parsePermissionString('production_overview:view')).toEqual({
+            subject: 'dashboard',
+            action: 'view',
+        });
+    });
+
+    it('should map legacy "error_management:*" slugs onto machine_incident', () => {
+        expect(parsePermissionString('error_management:view')).toEqual({
+            subject: 'machine_incident',
+            action: 'view',
+        });
+        expect(parsePermissionString('error_management:update')).toEqual({
+            subject: 'machine_incident',
+            action: 'update',
+        });
+    });
 });
 
 describe('convertApiPermissions', () => {

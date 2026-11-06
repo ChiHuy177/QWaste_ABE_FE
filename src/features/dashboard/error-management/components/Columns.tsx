@@ -36,7 +36,7 @@ export const getErrorTableColumns = ({
     pageSize = 10,
     ability,
 }: ErrorTableColumnProps): ColumnsType<MachineIncidentItem> => {
-    const canUpdate = ability ? ability.can('update', 'error_management') : true;
+    const canUpdate = ability ? ability.can('update', 'machine_incident') : true;
     const formatDuration = (minutes: number | null) => {
         if (minutes === null || minutes === undefined || minutes < 0) return '—';
         if (minutes === 0) return '0m';

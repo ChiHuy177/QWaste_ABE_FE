@@ -9,6 +9,11 @@ import { PermissionRule } from '@/types/User';
 const LEGACY_SLUG_ALIASES: Record<string, string> = {
     'product:create': 'production_plan:create',
     'product:import': 'production_plan:import',
+    'production_overview:view': 'dashboard:view',
+    'error_management:view': 'machine_incident:view',
+    'error_management:create': 'machine_incident:create',
+    'error_management:update': 'machine_incident:update',
+    'error_management:delete': 'machine_incident:delete',
 };
 
 export function parsePermissionString(permission: string): PermissionRule | null {

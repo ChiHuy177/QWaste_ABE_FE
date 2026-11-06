@@ -106,7 +106,7 @@ function ErrorManagementContent() {
 
     // Initial data fetch on mount: check view permission, then load industry filters & incidents via Redux thunks
     useEffect(() => {
-        if (!checkPermission('view', 'error_management')) {
+        if (!checkPermission('view', 'machine_incident')) {
             return;
         }
         dispatch(errorManagementActions.fetchIndustryFilters());
@@ -335,7 +335,7 @@ function ErrorManagementContent() {
                 if (
                     openEditParam === 'true' &&
                     target.endTime &&
-                    ability.can('update', 'error_management')
+                    ability.can('update', 'machine_incident')
                 ) {
                     setSelectedIncident(target);
                     setIsModalOpen(true);
@@ -388,7 +388,7 @@ function ErrorManagementContent() {
 
     // Actions
     const handleOpenEditModal = (record: MachineIncidentItem) => {
-        if (!checkPermission('update', 'error_management')) {
+        if (!checkPermission('update', 'machine_incident')) {
             return;
         }
         if (!record.endTime) {
@@ -406,7 +406,7 @@ function ErrorManagementContent() {
 
     const handleModalSubmit = async (values: MachineIncidentUpdateRequest) => {
         if (!selectedIncident) return;
-        if (!checkPermission('update', 'error_management')) return;
+        if (!checkPermission('update', 'machine_incident')) return;
         try {
             setModalSubmitting(true);
             await MachineIncidentService.updateIncident(selectedIncident.machineIncidentId, values);
