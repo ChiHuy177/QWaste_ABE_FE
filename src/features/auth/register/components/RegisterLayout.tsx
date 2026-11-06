@@ -12,8 +12,8 @@ const { useBreakpoint } = Grid;
 
 const IMAGE_CONFIG = Object.freeze({
     logo: {
-        src: '/img/LogoIIC.svg',
-        alt: 'IDEA Logo',
+        src: '/img/LogoABE.png',
+        alt: 'ABE Logo',
         priority: true,
     },
     poweredBy: {
@@ -138,151 +138,151 @@ const RegisterLayout = React.memo(() => {
 
     return (
         <ConfigProvider theme={{ ...lightTheme, algorithm: theme.defaultAlgorithm }}>
-        <Layout
-            style={{
-                minHeight: '100vh',
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundColor: '#fff',
-            }}
-        >
-            {/* SVG Background - Fixed position, full viewport */}
-            {isLargeScreen && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100vh',
-                        zIndex: 1,
-                        overflow: 'hidden',
-                    }}
-                >
-                    <Image
-                        src={IMAGE_CONFIG.background.src}
-                        alt={IMAGE_CONFIG.background.alt}
-                        fill
-                        sizes="75vw"
+            <Layout
+                style={{
+                    minHeight: '100vh',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    backgroundColor: '#fff',
+                }}
+            >
+                {/* SVG Background - Fixed position, full viewport */}
+                {isLargeScreen && (
+                    <div
                         style={{
-                            objectFit: 'cover',
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100vh',
+                            zIndex: 1,
+                            overflow: 'hidden',
                         }}
-                        priority
-                    />
+                    >
+                        <Image
+                            src={IMAGE_CONFIG.background.src}
+                            alt={IMAGE_CONFIG.background.alt}
+                            fill
+                            sizes="75vw"
+                            style={{
+                                objectFit: 'cover',
+                            }}
+                            priority
+                        />
 
-                    {/* Gradient fade - smooth transition to white */}
+                        {/* Gradient fade - smooth transition to white */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: 150,
+                                height: '100%',
+                                background: 'linear-gradient(to right, transparent 0%, #fff 100%)',
+                                zIndex: 2,
+                                pointerEvents: 'none',
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* Mobile: Simple gradient background */}
+                {!isLargeScreen && (
                     <div
                         style={{
                             position: 'absolute',
                             top: 0,
+                            left: 0,
                             right: 0,
-                            width: 150,
-                            height: '100%',
-                            background: 'linear-gradient(to right, transparent 0%, #fff 100%)',
-                            zIndex: 2,
-                            pointerEvents: 'none',
+                            height: 200,
+                            background:
+                                'linear-gradient(135deg, #0a1628 0%, #0d47a1 50%, #1565c0 100%)',
+                            zIndex: 1,
                         }}
-                    />
-                </div>
-            )}
+                    >
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: -40,
+                                left: 0,
+                                right: 0,
+                                height: 80,
+                                background: '#fff',
+                                borderRadius: '50% 50% 0 0',
+                            }}
+                        />
+                    </div>
+                )}
 
-            {/* Mobile: Simple gradient background */}
-            {!isLargeScreen && (
-                <div
+                {/* Right Panel - Register Form */}
+                <Content
                     style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: 200,
-                        background:
-                            'linear-gradient(135deg, #0a1628 0%, #0d47a1 50%, #1565c0 100%)',
-                        zIndex: 1,
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: isLargeScreen ? 'flex-end' : 'center',
+                        padding: containerPadding,
+                        minHeight: '100vh',
+                        zIndex: 3,
                     }}
                 >
+                    {/* Language Switcher */}
                     <div
                         style={{
                             position: 'absolute',
-                            bottom: -40,
-                            left: 0,
-                            right: 0,
-                            height: 80,
-                            background: '#fff',
-                            borderRadius: '50% 50% 0 0',
-                        }}
-                    />
-                </div>
-            )}
-
-            {/* Right Panel - Register Form */}
-            <Content
-                style={{
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: isLargeScreen ? 'flex-end' : 'center',
-                    padding: containerPadding,
-                    minHeight: '100vh',
-                    zIndex: 3,
-                }}
-            >
-                {/* Language Switcher */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: screens.sm ? 24 : 16,
-                        right: screens.sm ? 24 : 16,
-                        zIndex: 10,
-                    }}
-                >
-                    <LanguageSwitcher />
-                </div>
-
-                {/* Main Content Container */}
-                <div
-                    style={{
-                        width: '25%',
-                        minWidth: 320,
-                        maxWidth: 420,
-                        marginRight: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 28,
-                    }}
-                >
-                    {/* Logo */}
-                    <LogoSection isLargeScreen={isLargeScreen} />
-
-                    {/* Register Form Card */}
-                    <Card
-                        style={{
-                            borderRadius: 12,
-                            boxShadow: isLargeScreen
-                                ? '0 8px 32px rgba(0, 0, 0, 0.1)'
-                                : '0 4px 16px rgba(0, 0, 0, 0.08)',
-                            border: '1px solid #f0f0f0',
-                            backgroundColor: '#fff',
-                            maxHeight: 'calc(100vh - 360px)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                        }}
-                        styles={{
-                            body: {
-                                padding: screens.sm ? 28 : 20,
-                                overflow: 'auto',
-                                scrollbarWidth: 'thin',
-                                scrollbarColor: '#d9d9d9 transparent',
-                            },
+                            top: screens.sm ? 24 : 16,
+                            right: screens.sm ? 24 : 16,
+                            zIndex: 10,
                         }}
                     >
-                        <RegisterForm />
-                    </Card>
+                        <LanguageSwitcher />
+                    </div>
 
-                    {/* Powered By */}
-                    <PoweredBySection />
-                </div>
-            </Content>
-        </Layout>
+                    {/* Main Content Container */}
+                    <div
+                        style={{
+                            width: '25%',
+                            minWidth: 320,
+                            maxWidth: 420,
+                            marginRight: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 28,
+                        }}
+                    >
+                        {/* Logo */}
+                        <LogoSection isLargeScreen={isLargeScreen} />
+
+                        {/* Register Form Card */}
+                        <Card
+                            style={{
+                                borderRadius: 12,
+                                boxShadow: isLargeScreen
+                                    ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+                                    : '0 4px 16px rgba(0, 0, 0, 0.08)',
+                                border: '1px solid #f0f0f0',
+                                backgroundColor: '#fff',
+                                maxHeight: 'calc(100vh - 360px)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                            styles={{
+                                body: {
+                                    padding: screens.sm ? 28 : 20,
+                                    overflow: 'auto',
+                                    scrollbarWidth: 'thin',
+                                    scrollbarColor: '#d9d9d9 transparent',
+                                },
+                            }}
+                        >
+                            <RegisterForm />
+                        </Card>
+
+                        {/* Powered By */}
+                        <PoweredBySection />
+                    </div>
+                </Content>
+            </Layout>
         </ConfigProvider>
     );
 });
