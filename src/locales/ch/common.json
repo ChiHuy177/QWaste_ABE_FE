@@ -2276,6 +2276,8 @@
     },
     "permissionSubjects": {
         "production_monitor": "生产监控",
-        "production_monitoring": "生产监控"
+        "production_monitoring": "生产监控",
+        "dashboard": "仪表盘",
+        "machine_incident": "机器故障"
     }
 }

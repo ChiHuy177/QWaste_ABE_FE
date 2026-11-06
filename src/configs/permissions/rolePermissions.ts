@@ -33,11 +33,11 @@ const MANAGEMENT_PERMISSIONS: PermissionRule[] = [
     { action: 'view', subject: 'work_calendar' },
     { action: 'view', subject: 'production_plan' },
     { action: 'view', subject: 'machine_overview' },
-    { action: 'view', subject: 'production_overview' },
+    { action: 'view', subject: 'dashboard' },
     { action: 'complete', subject: 'production_plan' },
-    { action: 'view', subject: 'error_management' },
-    { action: 'create', subject: 'error_management' },
-    { action: 'update', subject: 'error_management' },
+    { action: 'view', subject: 'machine_incident' },
+    { action: 'create', subject: 'machine_incident' },
+    { action: 'update', subject: 'machine_incident' },
 ];
 
 const PLANNER_PERMISSIONS: PermissionRule[] = [

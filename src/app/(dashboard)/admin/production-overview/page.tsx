@@ -9,6 +9,7 @@ import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import { useTranslation } from 'react-i18next';
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useAppDispatch, useAppSelector } from '@/stores/hook';
 import { productionOverviewActions } from '@/stores';
 import { IndustryFilter } from '@/types/IndustryFilter';
@@ -40,6 +41,7 @@ const isShiftActiveHelper = (filter: IndustryFilter): boolean => {
 const ProductionOverviewPage: React.FC = () => {
     const { t, i18n } = useTranslation();
     const dispatch = useAppDispatch();
+    const { checkPermission } = usePermissionCheck();
     usePageTitle(t('permissionSubjects.production_overview'));
 
     // Redux State from ProductionOverviewStore
@@ -70,9 +72,12 @@ const ProductionOverviewPage: React.FC = () => {
 
     // Initial data fetch on mount: spaces & industry filters
     useEffect(() => {
+        if (!checkPermission('view', 'dashboard')) {
+            return;
+        }
         dispatch(productionOverviewActions.fetchSpaces());
         dispatch(productionOverviewActions.fetchIndustryFilters());
-    }, [dispatch]);
+    }, [dispatch, checkPermission]);
 
     const isCustomRangeMode = timeFilterMode !== 'PRESET';
 
