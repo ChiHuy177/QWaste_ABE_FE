@@ -9,7 +9,7 @@ const DEFAULT_CONFIG: BrandingConfig = {
     companyName: 'IIC 4.0',
     logo: {
         main: '/img/LogoABE.png',
-        auth: '/img/LogoIIC.svg',
+        auth: '/img/LogoABE.png',
         favicon: '/favicon.ico',
         poweredBy: '/img/auth/power_by.svg',
         poweredByDark: '/img/auth/power_by_dark.svg',
