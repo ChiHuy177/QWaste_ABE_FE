@@ -3284,6 +3284,7 @@
             "templateGuide": "Hướng dẫn cấu trúc file Excel:",
             "guideRow13": "Dòng 1 – 3: Tự do (tiêu đề, ghi chú...) — hệ thống bỏ qua.",
             "guideRow4": "Dòng 4: Header bắt buộc gồm: Mã khuôn, Tên khuôn, Loại khuôn (PRODUCTS_PER_SHOT / SHOTS_PER_PRODUCT), Hệ số, Loại.",
+            "guideMoldTypeNote": "Cột 'Loại khuôn' bắt buộc nhập đúng tên enum: PRODUCTS_PER_SHOT hoặc SHOTS_PER_PRODUCT (file mẫu có sẵn dropdown để chọn).",
             "guideRow5": "Dòng 5 trở đi: Dữ liệu liên tục, không để dòng trống ở giữa.",
             "guideAllOrNothing": "Cơ chế All-or-Nothing: Nếu có bất kỳ dòng nào lỗi, 0 khuôn nào được lưu. Cần sửa và tải lại toàn bộ file.",
             "selectOtherFile": "Chọn file khác",

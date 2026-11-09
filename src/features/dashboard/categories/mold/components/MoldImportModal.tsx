@@ -254,6 +254,7 @@ export const MoldImportModal = ({ open, onCancel, onSuccess }: MoldImportModalPr
                             <li>
                                 <strong>{t('moldManagement.import.guideRow4')}</strong>
                             </li>
+                            <li>{t('moldManagement.import.guideMoldTypeNote')}</li>
                             <li>{t('moldManagement.import.guideRow5')}</li>
                             <li>{t('moldManagement.import.guideAllOrNothing')}</li>
                         </ul>
