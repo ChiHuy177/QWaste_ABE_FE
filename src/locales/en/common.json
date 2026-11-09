@@ -2524,10 +2524,10 @@
         "updateSuccess": "Mold updated successfully",
         "updateError": "Failed to update mold. Please try again.",
         "moldTypes": {
-            "productsPerShot": "Products per Shot (PRODUCTS_PER_SHOT)",
-            "shotsPerProduct": "Shots per Product (SHOTS_PER_PRODUCT)",
-            "productsPerShotShort": "N prod / shot",
-            "shotsPerProductShort": "N shots / prod"
+            "productsPerShot": "Products / Shot",
+            "shotsPerProduct": "Shots / Product",
+            "productsPerShotShort": "Product / Shot",
+            "shotsPerProductShort": "Shot / Product"
         },
         "conversionFactorHelp": {
             "productsPerShot": "Produces {{count}} product(s) per machine shot",
@@ -2588,8 +2588,8 @@
                 "description": "Enter mold description (optional)"
             },
             "helpers": {
-                "conversionFactor_PRODUCTS_PER_SHOT": "1 machine shot produces N finished products (Cavity factor).",
-                "conversionFactor_SHOTS_PER_PRODUCT": "Requires N machine shots to complete 1 product."
+                "conversionFactor_PRODUCTS_PER_SHOT": "Number of finished products produced per machine shot.",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Number of machine shots required to produce one finished product."
             },
             "validation": {
                 "required": "This field is required",

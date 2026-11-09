@@ -215,18 +215,13 @@ export default function DailyTable({
             {
                 title: (
                     <div className={styles.dailySheetHeaderStack}>
-                        <span>{t('productionPlan.table.headers.date')} (date)</span>
+                        <span>{t('productionPlan.table.headers.date')}</span>
                         <span>{t('productionPlan.table.headers.line')}</span>
                     </div>
                 ),
                 children: [
                     {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.machine')}</span>
-                                <span>(Machine)</span>
-                            </div>
-                        ),
+                        title: t('productionPlan.table.headers.machine'),
                         key: 'machine',
                         width: 170,
                         fixed: isMobile ? undefined : 'left',
@@ -265,18 +260,15 @@ export default function DailyTable({
                             if (isReorderableStatus(record.status)) return <DragHandle />;
                             return (
                                 <Tooltip title={t('productionPlan.reorder.statusLockedDragHint')}>
-                                    <HolderOutlined style={{ color: 'var(--plan-color-text-tertiary)' }} />
+                                    <HolderOutlined
+                                        style={{ color: 'var(--plan-color-text-tertiary)' }}
+                                    />
                                 </Tooltip>
                             );
                         },
                     },
                     {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.codeVi')}</span>
-                                <span>Code</span>
-                            </div>
-                        ),
+                        title: t('productionPlan.table.headers.codeVi'),
                         key: 'code',
                         width: 140,
                         fixed: isMobile ? undefined : 'left',
@@ -317,30 +309,23 @@ export default function DailyTable({
                         render: (_, record) => (record.type === 'product' ? record.moldCode : null),
                     },
                     {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.units.pieces')}</span>
-                                <span>(piece)</span>
-                            </div>
-                        ),
+                        title: t('productionPlan.units.pieces'),
                         key: 'pieceQuantity',
                         width: 100,
                         align: 'right',
                         onCell: anchorCell,
                         render: (_, record) => {
                             if (record.type === 'total')
-                                return <strong>{record.totalPieces.toLocaleString('vi-VN')}</strong>;
+                                return (
+                                    <strong>{record.totalPieces.toLocaleString('vi-VN')}</strong>
+                                );
                             if (record.type === 'group-header') return null;
-                            return record.schedule[todayIndex];
+                            const qty = record.schedule[todayIndex];
+                            return qty != null ? qty.toLocaleString('vi-VN') : 0;
                         },
                     },
                     {
-                        title: (
-                            <div className={styles.dailySheetHeaderStack}>
-                                <span>{t('productionPlan.table.headers.actualPieces')}</span>
-                                <span>(actual)</span>
-                            </div>
-                        ),
+                        title: t('productionPlan.table.headers.actualPieces'),
                         key: 'actualPieceQuantity',
                         width: 100,
                         align: 'right',
@@ -348,7 +333,9 @@ export default function DailyTable({
                         render: (_, record) => {
                             if (record.type === 'total')
                                 return (
-                                    <strong>{record.totalActualPieces.toLocaleString('vi-VN')}</strong>
+                                    <strong>
+                                        {record.totalActualPieces.toLocaleString('vi-VN')}
+                                    </strong>
                                 );
                             if (record.type === 'group-header') return null;
                             return record.actualQuantity != null
@@ -405,7 +392,8 @@ export default function DailyTable({
                             // PENDING (/move) và PAUSE (/incident/defer) — status khác thì ẩn.
                             const isPending = record.status === 'PENDING';
                             const isPause = record.status === 'PAUSE';
-                            const isFinished = record.status === 'COMPLETE' || record.status === 'PARTIAL';
+                            const isFinished =
+                                record.status === 'COMPLETE' || record.status === 'PARTIAL';
                             const canEdit = !actionsLocked && isPending;
                             const canDelete = !actionsLocked && isPending;
                             const canTransfer = !actionsLocked && (isPending || isPause);

@@ -628,7 +628,7 @@
             "emptyFiltered": "Không có mã hàng phù hợp với bộ lọc",
             "headers": {
                 "date": "Ngày",
-                "line": "Khu vực (Space)",
+                "line": "Khu vực",
                 "machine": "Máy",
                 "codeVi": "Mã",
                 "productName": "Tên hàng",
@@ -888,8 +888,8 @@
                 "plannedDate": "Ngày sản xuất",
                 "operationType": "Công đoạn",
                 "moldType": "Loại khuôn",
-                "shotsPerProductSuffix": "shot / sản phẩm",
-                "productsPerShotSuffix": "sản phẩm / shot",
+                "shotsPerProductSuffix": "lần dập / sản phẩm",
+                "productsPerShotSuffix": "sản phẩm / lần dập",
                 "plannedQuantity": "Số lượng kế hoạch",
                 "actualQuantity": "Đã sản xuất",
                 "note": "Ghi chú",
@@ -3196,14 +3196,14 @@
         "updateSuccess": "Cập nhật khuôn thành công",
         "updateError": "Không thể cập nhật khuôn. Vui lòng thử lại.",
         "moldTypes": {
-            "productsPerShot": "1 shot ra N sản phẩm (PRODUCTS_PER_SHOT)",
-            "shotsPerProduct": "N shot ra 1 sản phẩm (SHOTS_PER_PRODUCT)",
-            "productsPerShotShort": "1 shot ra N sp",
-            "shotsPerProductShort": "N shot ra 1 sp"
+            "productsPerShot": "Số sản phẩm / lần dập",
+            "shotsPerProduct": "Số lần dập / sản phẩm",
+            "productsPerShotShort": "Sản phẩm / Lần dập",
+            "shotsPerProductShort": "Lần dập / Sản phẩm"
         },
         "conversionFactorHelp": {
-            "productsPerShot": "Tạo ra {{count}} sản phẩm cho mỗi lần dập (shot)",
-            "shotsPerProduct": "Cần {{count}} lần dập (shot) để tạo ra 1 sản phẩm"
+            "productsPerShot": "Tạo ra {{count}} sản phẩm cho mỗi lần dập",
+            "shotsPerProduct": "Cần {{count}} lần dập để tạo ra 1 sản phẩm"
         },
         "table": {
             "headers": {
@@ -3242,8 +3242,8 @@
                 "moldName": "Tên Khuôn",
                 "moldType": "Loại Khuôn",
                 "conversionFactor": "Hệ Số Quy Đổi",
-                "conversionFactor_PRODUCTS_PER_SHOT": "Số Sản Phẩm / Shot",
-                "conversionFactor_SHOTS_PER_PRODUCT": "Số Shot / Sản Phẩm",
+                "conversionFactor_PRODUCTS_PER_SHOT": "Số Sản Phẩm / Lần Dập",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Số Lần Dập / Sản Phẩm",
                 "outputPerShot": "Hệ Số Quy Đổi",
                 "operationType": "Công Đoạn",
                 "description": "Mô Tả"
@@ -3253,15 +3253,15 @@
                 "moldName": "Nhập tên khuôn",
                 "moldType": "Chọn loại khuôn",
                 "conversionFactor": "Nhập hệ số quy đổi",
-                "conversionFactor_PRODUCTS_PER_SHOT": "Nhập số sản phẩm cho mỗi shot (vd: 4)",
-                "conversionFactor_SHOTS_PER_PRODUCT": "Nhập số shot để ra 1 sản phẩm (vd: 3)",
+                "conversionFactor_PRODUCTS_PER_SHOT": "Nhập số sản phẩm cho mỗi lần dập (vd: 4)",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Nhập số lần dập để tạo ra 1 sản phẩm (vd: 3)",
                 "outputPerShot": "Nhập hệ số quy đổi",
                 "operationType": "Chọn công đoạn",
                 "description": "Nhập mô tả khuôn (tùy chọn)"
             },
             "helpers": {
-                "conversionFactor_PRODUCTS_PER_SHOT": "1 lần dập tạo ra N sản phẩm hoàn thiện (tương tự CAV).",
-                "conversionFactor_SHOTS_PER_PRODUCT": "Cần N lần dập để hoàn thành 1 sản phẩm."
+                "conversionFactor_PRODUCTS_PER_SHOT": "Số sản phẩm hoàn thiện tạo ra trong một lần dập.",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Số lần dập cần thiết để tạo ra một sản phẩm hoàn thiện."
             },
             "validation": {
                 "required": "Trường này là bắt buộc",

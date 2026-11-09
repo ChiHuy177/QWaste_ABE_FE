@@ -6,11 +6,7 @@ import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icon
 import { useTranslation } from 'react-i18next';
 import { MONITOR_GROUP_ORDER, type MonitorGroupKey } from '../../utils/planMappers';
 import type { MonitorRowVM } from '../../components/types';
-import {
-    getElapsedMinutes,
-    isIncidentConfirmed,
-    isReadyToComplete,
-} from '../utils/incidentStatus';
+import { getElapsedMinutes, isIncidentConfirmed, isReadyToComplete } from '../utils/incidentStatus';
 import type { MonitorStatConfig } from '../hooks/useMonitorGroups';
 import styles from '../../components/ProductionPlanTable.module.css';
 
@@ -138,7 +134,9 @@ const MonitorCard = memo(function MonitorCard({
                     }}
                 >
                     {t('productionPlan.monitor.kanban.producedQty')}:{' '}
-                    {row.actualQuantity ?? notAvailable}
+                    {row.actualQuantity != null
+                        ? row.actualQuantity.toLocaleString('vi-VN')
+                        : notAvailable}
                 </Text>
             )}
             {row.status === 'PARTIAL' && (

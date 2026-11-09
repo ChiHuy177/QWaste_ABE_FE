@@ -104,12 +104,7 @@ export default function WeeklyTable({
     const columns = useMemo<ColumnsType<FlatRow>>(
         () => [
             {
-                title: (
-                    <div className={styles.dailySheetHeaderStack}>
-                        <span>{t('productionPlan.table.headers.machine')}</span>
-                        <span>(Machine)</span>
-                    </div>
-                ),
+                title: t('productionPlan.table.headers.machine'),
                 key: 'machine',
                 width: 170,
                 fixed: isMobile ? undefined : 'left',
@@ -134,12 +129,7 @@ export default function WeeklyTable({
                 },
             },
             {
-                title: (
-                    <div className={styles.dailySheetHeaderStack}>
-                        <span>{t('productionPlan.table.headers.codeVi')}</span>
-                        <span>Code</span>
-                    </div>
-                ),
+                title: t('productionPlan.table.headers.codeVi'),
                 key: 'code',
                 width: 140,
                 fixed: isMobile ? undefined : 'left',
@@ -201,9 +191,11 @@ export default function WeeklyTable({
                     };
                 },
                 render: (_: unknown, record: FlatRow) => {
-                    if (record.type === 'total') return record.totalPerDay[index];
+                    if (record.type === 'total')
+                        return record.totalPerDay[index].toLocaleString('vi-VN');
                     if (record.type === 'group-header') return null;
-                    return record.schedule[index];
+                    const qty = record.schedule[index];
+                    return qty != null ? qty.toLocaleString('vi-VN') : 0;
                 },
             })),
             {
@@ -222,7 +214,7 @@ export default function WeeklyTable({
                         return <strong>{record.grandTotal.toLocaleString('vi-VN')}</strong>;
                     }
                     if (record.type === 'group-header') return null;
-                    return record.schedule.reduce((sum, q) => sum + q, 0);
+                    return record.schedule.reduce((sum, q) => sum + q, 0).toLocaleString('vi-VN');
                 },
             },
         ],
