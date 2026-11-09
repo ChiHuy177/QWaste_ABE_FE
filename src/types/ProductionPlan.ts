@@ -1,4 +1,5 @@
 import { AuditMetaData, SoftDeleteMetaData } from './Metadata';
+import { MoldType } from './Mold';
 
 export type ProductionPlanStatus = 'PENDING' | 'RUNNING' | 'PAUSE' | 'PARTIAL' | 'COMPLETE';
 
@@ -14,12 +15,7 @@ export type IncidentReason =
     | 'OTHER';
 
 export type ProductionPlanStatusTrigger =
-    | 'MQTT_RUN'
-    | 'MQTT_ERROR'
-    | 'MQTT_OFFLINE'
-    | 'MQTT_IDLE'
-    | 'AUTO_ADVANCE'
-    | 'MANUAL';
+    'MQTT_RUN' | 'MQTT_ERROR' | 'MQTT_OFFLINE' | 'MQTT_IDLE' | 'AUTO_ADVANCE' | 'MANUAL';
 
 export type ImportOption = 'CANCEL' | 'OVERWRITE_ALL' | 'OVERWRITE_RETAIN';
 
@@ -61,6 +57,9 @@ export interface ProductionPlanDetail {
     productionPlanParentName: string | null;
     snapshotMoldCode: string | null;
     snapshotMoldName: string | null;
+    /** Loại khuôn snapshot: PRODUCTS_PER_SHOT (1 shot N sp) hoặc SHOTS_PER_PRODUCT (N shot 1 sp). Null -> PRODUCTS_PER_SHOT. */
+    snapshotMoldType?: MoldType | null;
+    /** Hệ số quy đổi snapshot (nghĩa phụ thuộc snapshotMoldType: sản phẩm/shot hoặc shot/sản phẩm). */
     snapshotMoldQuantity: number | null;
     snapshotOperationTypeCode: string | null;
     snapshotOperationTypeName: string | null;
@@ -224,8 +223,7 @@ export interface ProductionPlanProductionChangedPayload {
 }
 
 export type ProductionPlanWsPayload =
-    | ProductionPlanStatusChangedPayload
-    | ProductionPlanProductionChangedPayload;
+    ProductionPlanStatusChangedPayload | ProductionPlanProductionChangedPayload;
 
 // ─── Import ──────────────────────────────────────────────────────────────────
 
