@@ -14,7 +14,7 @@ export type MoldTableColumnProps = {
     onDelete?: (mold: Mold) => void;
     onRestore?: (mold: Mold) => void;
     isMobile?: boolean;
-    t: (key: string) => string;
+    t: (key: string, options?: any) => string;
     ability?: AppAbility;
     page?: number;
     pageSize?: number;
@@ -25,7 +25,7 @@ const isDeleted = (mold: Mold) =>
 
 // Cấu hình các cột cho bảng danh sách khuôn (Mold).
 export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<Mold> => {
-    const t = props?.t || ((key: string) => key);
+    const t = props?.t || ((key: string, _options?: any) => key);
     const ability = props?.ability;
     const canView = true;
     const canUpdate = ability?.can('update', 'mold') ?? false;
@@ -80,13 +80,51 @@ export const getMoldTableColumns = (props?: MoldTableColumnProps): ColumnsType<M
             ),
         },
         {
-            title: () => t('moldManagement.table.headers.outputPerShot'),
-            dataIndex: 'outputPerShot',
-            key: 'outputPerShot',
-            sorter: (a, b) => a.outputPerShot - b.outputPerShot,
-            width: 110,
+            title: () => t('moldManagement.table.headers.moldType'),
+            dataIndex: 'moldType',
+            key: 'moldType',
+            sorter: (a, b) => (a.moldType || '').localeCompare(b.moldType || ''),
+            width: 170,
+            render: (type: Mold['moldType'], record) => {
+                const isShotsPerProduct = type === 'SHOTS_PER_PRODUCT';
+                const tagColor = isShotsPerProduct ? 'purple' : 'cyan';
+                const label = isShotsPerProduct
+                    ? t('moldManagement.moldTypes.shotsPerProductShort')
+                    : t('moldManagement.moldTypes.productsPerShotShort');
+                const fullLabel = isShotsPerProduct
+                    ? t('moldManagement.moldTypes.shotsPerProduct')
+                    : t('moldManagement.moldTypes.productsPerShot');
+
+                return (
+                    <Tooltip title={fullLabel}>
+                        <Tag color={tagColor} style={{ margin: 0 }}>
+                            {label}
+                        </Tag>
+                    </Tooltip>
+                );
+            },
+        },
+        {
+            title: () => t('moldManagement.table.headers.conversionFactor'),
+            dataIndex: 'conversionFactor',
+            key: 'conversionFactor',
+            sorter: (a, b) => a.conversionFactor - b.conversionFactor,
+            width: 140,
             align: 'center',
-            render: (val: number) => <Text>{val}</Text>,
+            render: (val: number, record) => {
+                const isShotsPerProduct = record.moldType === 'SHOTS_PER_PRODUCT';
+                const tooltipText = isShotsPerProduct
+                    ? t('moldManagement.conversionFactorHelp.shotsPerProduct', { count: val })
+                    : t('moldManagement.conversionFactorHelp.productsPerShot', { count: val });
+
+                return (
+                    <Tooltip title={tooltipText}>
+                        <Text strong delete={isDeleted(record)}>
+                            {val}
+                        </Text>
+                    </Tooltip>
+                );
+            },
         },
         {
             title: () => t('moldManagement.table.headers.operationType'),

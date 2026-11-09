@@ -3192,12 +3192,24 @@
         "deleteError": "Không thể xóa khuôn. Vui lòng thử lại.",
         "updateSuccess": "Cập nhật khuôn thành công",
         "updateError": "Không thể cập nhật khuôn. Vui lòng thử lại.",
+        "moldTypes": {
+            "productsPerShot": "1 shot ra N sản phẩm (PRODUCTS_PER_SHOT)",
+            "shotsPerProduct": "N shot ra 1 sản phẩm (SHOTS_PER_PRODUCT)",
+            "productsPerShotShort": "1 shot ra N sp",
+            "shotsPerProductShort": "N shot ra 1 sp"
+        },
+        "conversionFactorHelp": {
+            "productsPerShot": "Tạo ra {{count}} sản phẩm cho mỗi lần dập (shot)",
+            "shotsPerProduct": "Cần {{count}} lần dập (shot) để tạo ra 1 sản phẩm"
+        },
         "table": {
             "headers": {
                 "index": "STT",
                 "moldCode": "Mã Khuôn",
                 "moldName": "Tên Khuôn",
-                "outputPerShot": "Số Lỗ",
+                "moldType": "Loại Khuôn",
+                "conversionFactor": "Hệ Số Quy Đổi",
+                "outputPerShot": "Hệ Số Quy Đổi",
                 "operationType": "Công Đoạn",
                 "description": "Mô Tả",
                 "createdAt": "Ngày Tạo",
@@ -3225,21 +3237,34 @@
             "fields": {
                 "moldCode": "Mã Khuôn",
                 "moldName": "Tên Khuôn",
-                "outputPerShot": "Số Lỗ Khuôn",
+                "moldType": "Loại Khuôn",
+                "conversionFactor": "Hệ Số Quy Đổi",
+                "conversionFactor_PRODUCTS_PER_SHOT": "Số Sản Phẩm / Shot",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Số Shot / Sản Phẩm",
+                "outputPerShot": "Hệ Số Quy Đổi",
                 "operationType": "Công Đoạn",
                 "description": "Mô Tả"
             },
             "placeholders": {
                 "moldCode": "Nhập mã khuôn (vd: KM001)",
                 "moldName": "Nhập tên khuôn",
-                "outputPerShot": "Nhập số lỗ khuôn",
+                "moldType": "Chọn loại khuôn",
+                "conversionFactor": "Nhập hệ số quy đổi",
+                "conversionFactor_PRODUCTS_PER_SHOT": "Nhập số sản phẩm cho mỗi shot (vd: 4)",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Nhập số shot để ra 1 sản phẩm (vd: 3)",
+                "outputPerShot": "Nhập hệ số quy đổi",
                 "operationType": "Chọn công đoạn",
                 "description": "Nhập mô tả khuôn (tùy chọn)"
+            },
+            "helpers": {
+                "conversionFactor_PRODUCTS_PER_SHOT": "1 lần dập tạo ra N sản phẩm hoàn thiện (tương tự CAV).",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Cần N lần dập để hoàn thành 1 sản phẩm."
             },
             "validation": {
                 "required": "Trường này là bắt buộc",
                 "maxLength": "Độ dài tối đa là {{max}} ký tự",
-                "minOutputPerShot": "Số lỗ khuôn phải lớn hơn hoặc bằng {{min}}"
+                "minOutputPerShot": "Hệ số quy đổi phải lớn hơn hoặc bằng {{min}}",
+                "minConversionFactor": "Hệ số quy đổi phải là số nguyên lớn hơn hoặc bằng {{min}}"
             },
             "buttons": {
                 "cancel": "Hủy",
@@ -3258,7 +3283,7 @@
             "downloadTemplate": "Tải file mẫu Excel",
             "templateGuide": "Hướng dẫn cấu trúc file Excel:",
             "guideRow13": "Dòng 1 – 3: Tự do (tiêu đề, ghi chú...) — hệ thống bỏ qua.",
-            "guideRow4": "Dòng 4: Header bắt buộc gồm: Mã khuôn, Tên khuôn, CAV, Loại.",
+            "guideRow4": "Dòng 4: Header bắt buộc gồm: Mã khuôn, Tên khuôn, Loại khuôn (PRODUCTS_PER_SHOT / SHOTS_PER_PRODUCT), Hệ số, Loại.",
             "guideRow5": "Dòng 5 trở đi: Dữ liệu liên tục, không để dòng trống ở giữa.",
             "guideAllOrNothing": "Cơ chế All-or-Nothing: Nếu có bất kỳ dòng nào lỗi, 0 khuôn nào được lưu. Cần sửa và tải lại toàn bộ file.",
             "selectOtherFile": "Chọn file khác",

@@ -21,7 +21,7 @@ import AdvancedFilterPanel, { FilterField } from '@/components/shared/filters/Ad
 import ResponsivePageHeader from '@/components/shared/header/ResponsivePageHeader';
 import { MoldService } from '@/services/MoldService';
 import { OperationTypeService } from '@/services/OperationTypeService';
-import { Mold, MoldFormData } from '@/types/Mold';
+import { Mold, MoldFormData, MoldType } from '@/types/Mold';
 import {
     getMoldTableColumns,
     type MoldTableColumnProps,
@@ -69,6 +69,8 @@ const MoldListPage = () => {
         mode: 'create' | 'edit';
         data: Mold | null;
     }>({ open: false, mode: 'create', data: null });
+
+    const [formMoldType, setFormMoldType] = useState<MoldType>('PRODUCTS_PER_SHOT');
 
     const [importModalOpen, setImportModalOpen] = useState(false);
 
@@ -239,6 +241,7 @@ const MoldListPage = () => {
     const handleEditMold = useCallback(
         (mold: Mold) => {
             if (!checkPermission('update', 'mold')) return;
+            setFormMoldType(mold.moldType || 'PRODUCTS_PER_SHOT');
             setModalState({ open: true, mode: 'edit', data: mold });
         },
         [checkPermission]
@@ -339,17 +342,33 @@ const MoldListPage = () => {
                 t,
                 modalState.mode,
                 operationTypeOptions,
-                operationTypesQuery.isLoading
+                operationTypesQuery.isLoading,
+                formMoldType,
+                setFormMoldType
             ),
-        [t, modalState.mode, operationTypeOptions, operationTypesQuery.isLoading]
+        [
+            t,
+            modalState.mode,
+            operationTypeOptions,
+            operationTypesQuery.isLoading,
+            formMoldType,
+            setFormMoldType,
+        ]
     );
 
     // Form field tên 'operationTypeId' (phẳng) nhưng Mold trả 'operationType' (nested) —
     // map lại để EntityFormModal.setFieldsValue điền đúng Select khi edit.
     const moldFormInitialData = useMemo(() => {
-        if (!modalState.data) return null;
+        if (!modalState.data) {
+            return {
+                moldType: 'PRODUCTS_PER_SHOT' as MoldType,
+                conversionFactor: 1,
+            };
+        }
         return {
             ...modalState.data,
+            moldType: modalState.data.moldType || 'PRODUCTS_PER_SHOT',
+            conversionFactor: modalState.data.conversionFactor,
             operationTypeId: modalState.data.operationType.operationTypeId,
         };
     }, [modalState.data]);
@@ -424,9 +443,10 @@ const MoldListPage = () => {
                                 type="primary"
                                 icon={<PlusOutlined />}
                                 block={isMobile}
-                                onClick={() =>
-                                    setModalState({ open: true, mode: 'create', data: null })
-                                }
+                                onClick={() => {
+                                    setFormMoldType('PRODUCTS_PER_SHOT');
+                                    setModalState({ open: true, mode: 'create', data: null });
+                                }}
                                 style={{ transition: 'box-shadow 0.2s, background-color 0.2s' }}
                             >
                                 {t('moldManagement.addMold')}
@@ -498,10 +518,31 @@ const MoldListPage = () => {
                             <Descriptions.Item label={t('moldManagement.table.headers.moldName')}>
                                 {viewModalState.data.moldName}
                             </Descriptions.Item>
+                            <Descriptions.Item label={t('moldManagement.table.headers.moldType')}>
+                                <Tag
+                                    color={
+                                        viewModalState.data.moldType === 'SHOTS_PER_PRODUCT'
+                                            ? 'purple'
+                                            : 'cyan'
+                                    }
+                                >
+                                    {viewModalState.data.moldType === 'SHOTS_PER_PRODUCT'
+                                        ? t('moldManagement.moldTypes.shotsPerProduct')
+                                        : t('moldManagement.moldTypes.productsPerShot')}
+                                </Tag>
+                            </Descriptions.Item>
                             <Descriptions.Item
-                                label={t('moldManagement.table.headers.outputPerShot')}
+                                label={
+                                    viewModalState.data.moldType === 'SHOTS_PER_PRODUCT'
+                                        ? t(
+                                              'moldManagement.form.fields.conversionFactor_SHOTS_PER_PRODUCT'
+                                          )
+                                        : t(
+                                              'moldManagement.form.fields.conversionFactor_PRODUCTS_PER_SHOT'
+                                          )
+                                }
                             >
-                                {viewModalState.data.outputPerShot}
+                                <Text strong>{viewModalState.data.conversionFactor}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item
                                 label={t('moldManagement.table.headers.operationType')}

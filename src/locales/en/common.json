@@ -2520,12 +2520,24 @@
         "deleteError": "Failed to delete mold. Please try again.",
         "updateSuccess": "Mold updated successfully",
         "updateError": "Failed to update mold. Please try again.",
+        "moldTypes": {
+            "productsPerShot": "Products per Shot (PRODUCTS_PER_SHOT)",
+            "shotsPerProduct": "Shots per Product (SHOTS_PER_PRODUCT)",
+            "productsPerShotShort": "N prod / shot",
+            "shotsPerProductShort": "N shots / prod"
+        },
+        "conversionFactorHelp": {
+            "productsPerShot": "Produces {{count}} product(s) per machine shot",
+            "shotsPerProduct": "Requires {{count}} machine shot(s) to produce 1 product"
+        },
         "table": {
             "headers": {
                 "index": "No.",
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
-                "outputPerShot": "Cavities",
+                "moldType": "Mold Type",
+                "conversionFactor": "Conversion Factor",
+                "outputPerShot": "Conversion Factor",
                 "operationType": "Operation",
                 "description": "Description",
                 "createdAt": "Created At",
@@ -2553,21 +2565,34 @@
             "fields": {
                 "moldCode": "Mold Code",
                 "moldName": "Mold Name",
-                "outputPerShot": "Number of Cavities",
+                "moldType": "Mold Type",
+                "conversionFactor": "Conversion Factor",
+                "conversionFactor_PRODUCTS_PER_SHOT": "Products / Shot",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Shots / Product",
+                "outputPerShot": "Conversion Factor",
                 "operationType": "Operation",
                 "description": "Description"
             },
             "placeholders": {
                 "moldCode": "Enter mold code (e.g. KM001)",
                 "moldName": "Enter mold name",
-                "outputPerShot": "Enter number of cavities",
+                "moldType": "Select mold type",
+                "conversionFactor": "Enter conversion factor",
+                "conversionFactor_PRODUCTS_PER_SHOT": "Enter products per shot (e.g. 4)",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Enter shots required per product (e.g. 3)",
+                "outputPerShot": "Enter conversion factor",
                 "operationType": "Select operation",
                 "description": "Enter mold description (optional)"
+            },
+            "helpers": {
+                "conversionFactor_PRODUCTS_PER_SHOT": "1 machine shot produces N finished products (Cavity factor).",
+                "conversionFactor_SHOTS_PER_PRODUCT": "Requires N machine shots to complete 1 product."
             },
             "validation": {
                 "required": "This field is required",
                 "maxLength": "Maximum length is {{max}} characters",
-                "minOutputPerShot": "Number of cavities must be at least {{min}}"
+                "minOutputPerShot": "Conversion factor must be at least {{min}}",
+                "minConversionFactor": "Conversion factor must be a whole number of at least {{min}}"
             },
             "buttons": {
                 "cancel": "Cancel",
@@ -2586,7 +2611,7 @@
             "downloadTemplate": "Download Template",
             "templateGuide": "Excel file format guidelines:",
             "guideRow13": "Rows 1 – 3: Freeform notes/title — ignored by the system.",
-            "guideRow4": "Row 4: Required headers: Mã khuôn, Tên khuôn, CAV, Loại.",
+            "guideRow4": "Row 4: Required headers: Mã khuôn, Tên khuôn, Loại khuôn (PRODUCTS_PER_SHOT / SHOTS_PER_PRODUCT), Hệ số, Loại.",
             "guideRow5": "Rows 5+: Consecutive data rows, do not leave empty rows in between.",
             "guideAllOrNothing": "All-or-Nothing policy: If any row fails validation, 0 molds are saved. Please fix all errors and re-upload.",
             "selectOtherFile": "Choose another file",
