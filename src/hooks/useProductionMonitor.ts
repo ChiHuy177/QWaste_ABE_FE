@@ -75,6 +75,15 @@ export function useProductionMonitor({
             const next = new Map(prev);
             pending.forEach((payload, planId) => {
                 const existing = next.get(planId);
+                // Bỏ qua payload có actualQuantity nhỏ hơn giá trị hiện tại để tránh nhận ngược thứ tự WS
+                if (
+                    payload.type === 'ProductionPlan_Production' &&
+                    existing?.actualQuantity != null &&
+                    payload.actualQuantity < existing.actualQuantity
+                ) {
+                    return;
+                }
+
                 next.set(planId, {
                     ...existing,
                     updatedAt: new Date(),
@@ -103,6 +112,17 @@ export function useProductionMonitor({
             )
                 return;
             if (payload.plannedDate !== dateIsoRef.current) return;
+
+            // Bỏ qua payload đến sau nhưng có sản lượng nhỏ hơn payload đang chờ flush
+            if (payload.type === 'ProductionPlan_Production') {
+                const pending = pendingRef.current.get(payload.productionPlanId);
+                if (
+                    pending?.type === 'ProductionPlan_Production' &&
+                    payload.actualQuantity < pending.actualQuantity
+                ) {
+                    return;
+                }
+            }
 
             // Tick mới nhất của cùng 1 plan đè tick cũ trong cửa sổ chưa flush.
             pendingRef.current.set(payload.productionPlanId, payload);

@@ -189,4 +189,42 @@ describe('ProductDetailModal — fetch khi có dữ liệu WS', () => {
         await waitFor(() => expect(screen.getByText('480')).toBeInTheDocument());
         expect(screen.queryByText('100')).not.toBeInTheDocument();
     });
+
+    it('hiển thị snapshotMoldType và snapshotMoldQuantity khi có loại khuôn', async () => {
+        getDetail().mockResolvedValue(
+            makeDetail({
+                snapshotMoldType: 'SHOTS_PER_PRODUCT',
+                snapshotMoldQuantity: 3,
+            })
+        );
+        renderModal(makeRow());
+
+        await waitFor(() => {
+            expect(
+                screen.getByText('moldManagement.moldTypes.shotsPerProductShort')
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText('(3 productionPlan.monitor.detail.shotsPerProductSuffix)')
+            ).toBeInTheDocument();
+        });
+    });
+
+    it('fallback snapshotMoldType về PRODUCTS_PER_SHOT khi snapshotMoldType là null', async () => {
+        getDetail().mockResolvedValue(
+            makeDetail({
+                snapshotMoldType: null,
+                snapshotMoldQuantity: 4,
+            })
+        );
+        renderModal(makeRow());
+
+        await waitFor(() => {
+            expect(
+                screen.getByText('moldManagement.moldTypes.productsPerShotShort')
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText('(4 productionPlan.monitor.detail.productsPerShotSuffix)')
+            ).toBeInTheDocument();
+        });
+    });
 });

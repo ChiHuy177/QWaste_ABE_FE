@@ -99,12 +99,7 @@ export default function MachineMatrixTable({
     const columns = useMemo<ColumnsType<FlatRow>>(() => {
         return [
             {
-                title: (
-                    <div className={styles.dailySheetHeaderStack}>
-                        <span>{t('productionPlan.table.headers.machine')}</span>
-                        <span>(Machine)</span>
-                    </div>
-                ),
+                title: t('productionPlan.table.headers.machine'),
                 key: 'machine',
                 width: 170,
                 fixed: isMobile ? undefined : 'left',
@@ -139,7 +134,9 @@ export default function MachineMatrixTable({
                         width: 80,
                         align: 'right' as const,
                         render: (_: unknown, record: FlatRow) =>
-                            record.dayItems[d] ? record.dayItems[d].qty.toLocaleString('vi-VN') : '',
+                            record.dayItems[d]
+                                ? record.dayItems[d].qty.toLocaleString('vi-VN')
+                                : '',
                     },
                 ],
             })),

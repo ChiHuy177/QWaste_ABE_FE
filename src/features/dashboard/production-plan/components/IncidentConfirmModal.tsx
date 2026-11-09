@@ -148,7 +148,8 @@ export default function IncidentConfirmModal({
     // Đã sản xuất đủ/thừa số lượng kế hoạch — không còn là "sự cố" nữa, cho đóng thẳng plan
     // thay vì bắt chọn 1 trong 3 phương án + điền incidentReason/note (BE chưa có endpoint
     // complete riêng, xem ProductionPlanService.completeProductionPlan).
-    const isFullyProduced = !!row && actualQuantity !== null && actualQuantity >= row.plannedQuantity;
+    const isFullyProduced =
+        !!row && actualQuantity !== null && actualQuantity >= row.plannedQuantity;
     const noteRequired = isIncidentNoteRequired(incidentReason);
 
     const canConfirm =
@@ -220,9 +221,7 @@ export default function IncidentConfirmModal({
         try {
             setSubmitting(true);
             await ProductionPlanService.completeProductionPlan(row.productionPlanId);
-            toast.success(
-                t('productionPlan.monitor.incident.successComplete', { code: row.code })
-            );
+            toast.success(t('productionPlan.monitor.incident.successComplete', { code: row.code }));
             onDone();
             onClose();
         } catch (error) {
@@ -300,19 +299,23 @@ export default function IncidentConfirmModal({
                 <Flex gap={16} wrap="wrap" align="center">
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         {t('productionPlan.monitor.incident.planQty')}:{' '}
-                        <Text strong>{row.plannedQuantity}</Text>
+                        <Text strong>{row.plannedQuantity.toLocaleString('vi-VN')}</Text>
                     </Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         {t('productionPlan.monitor.incident.produced')}:{' '}
-                        <Text strong>{actualQuantity ?? '—'}</Text>
+                        <Text strong>
+                            {actualQuantity != null ? actualQuantity.toLocaleString('vi-VN') : '—'}
+                        </Text>
                     </Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>
                         {t('productionPlan.monitor.incident.remainingQty')}:{' '}
                         <Text
                             strong
-                            style={{ color: isFullyProduced ? token.colorSuccess : token.colorWarning }}
+                            style={{
+                                color: isFullyProduced ? token.colorSuccess : token.colorWarning,
+                            }}
                         >
-                            {remaining}
+                            {remaining.toLocaleString('vi-VN')}
                         </Text>
                     </Text>
                     {isFullyProduced && (
@@ -331,153 +334,175 @@ export default function IncidentConfirmModal({
                     />
                 ) : (
                     <>
-                {/* Option cards */}
-                {optionConfigs.map(({ option, icon: Icon, color, bg, title, useCase, description }) => {
-                    const isActive = selected === option;
-                    return (
-                        <div
-                            key={option}
-                            onClick={() => setSelected(option)}
-                            style={{
-                                borderRadius: 10,
-                                border: `2px solid ${isActive ? color : token.colorBorderSecondary}`,
-                                padding: '12px 14px',
-                                cursor: 'pointer',
-                                background: isActive ? bg : token.colorBgContainer,
-                                transition: 'border-color 0.15s, background 0.15s',
-                                userSelect: 'none',
-                            }}
-                        >
-                            <Flex align="center" gap={10}>
-                                <Icon style={{ fontSize: 18, color }} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <Text strong style={{ display: 'block' }}>
-                                        {title}
-                                    </Text>
-                                    <Text type="secondary" style={{ fontSize: 12 }}>
-                                        {useCase}
-                                    </Text>
-                                </div>
-                            </Flex>
-                            {isActive && (
-                                <>
-                                    <Divider style={{ margin: '10px 0' }} />
-                                    <Text type="secondary" style={{ fontSize: 12 }}>
-                                        {description}
-                                    </Text>
-                                    {option === 1 && (
-                                        <Alert
-                                            type="error"
-                                            showIcon
-                                            style={{ marginTop: 8 }}
-                                            message={t(
-                                                'productionPlan.monitor.incident.option1Warning',
-                                                { remaining }
-                                            )}
-                                        />
-                                    )}
-                                    {option === 2 && (
-                                        <div
-                                            onClick={(e) => e.stopPropagation()}
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: 10,
-                                                marginTop: 10,
-                                            }}
-                                        >
-                                            <div>
-                                                <Text
-                                                    style={{
-                                                        fontSize: 12,
-                                                        display: 'block',
-                                                        marginBottom: 4,
-                                                    }}
-                                                >
-                                                    {t('productionPlan.monitor.incident.newMold')}
+                        {/* Option cards */}
+                        {optionConfigs.map(
+                            ({ option, icon: Icon, color, bg, title, useCase, description }) => {
+                                const isActive = selected === option;
+                                return (
+                                    <div
+                                        key={option}
+                                        onClick={() => setSelected(option)}
+                                        style={{
+                                            borderRadius: 10,
+                                            border: `2px solid ${isActive ? color : token.colorBorderSecondary}`,
+                                            padding: '12px 14px',
+                                            cursor: 'pointer',
+                                            background: isActive ? bg : token.colorBgContainer,
+                                            transition: 'border-color 0.15s, background 0.15s',
+                                            userSelect: 'none',
+                                        }}
+                                    >
+                                        <Flex align="center" gap={10}>
+                                            <Icon style={{ fontSize: 18, color }} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <Text strong style={{ display: 'block' }}>
+                                                    {title}
                                                 </Text>
-                                                <Select
-                                                    style={{ width: '100%' }}
-                                                    showSearch
-                                                    placeholder={t(
-                                                        'productionPlan.monitor.incident.moldPlaceholder'
-                                                    )}
-                                                    value={deferMoldId}
-                                                    onChange={setDeferMoldId}
-                                                    options={moldOptions}
-                                                    filterOption={(input, option) =>
-                                                        (option?.label ?? '')
-                                                            .toLowerCase()
-                                                            .includes(input.toLowerCase())
-                                                    }
-                                                />
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {useCase}
+                                                </Text>
                                             </div>
+                                        </Flex>
+                                        {isActive && (
+                                            <>
+                                                <Divider style={{ margin: '10px 0' }} />
+                                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                                    {description}
+                                                </Text>
+                                                {option === 1 && (
+                                                    <Alert
+                                                        type="error"
+                                                        showIcon
+                                                        style={{ marginTop: 8 }}
+                                                        message={t(
+                                                            'productionPlan.monitor.incident.option1Warning',
+                                                            { remaining }
+                                                        )}
+                                                    />
+                                                )}
+                                                {option === 2 && (
+                                                    <div
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        style={{
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: 10,
+                                                            marginTop: 10,
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <Text
+                                                                style={{
+                                                                    fontSize: 12,
+                                                                    display: 'block',
+                                                                    marginBottom: 4,
+                                                                }}
+                                                            >
+                                                                {t(
+                                                                    'productionPlan.monitor.incident.newMold'
+                                                                )}
+                                                            </Text>
+                                                            <Select
+                                                                style={{ width: '100%' }}
+                                                                showSearch
+                                                                placeholder={t(
+                                                                    'productionPlan.monitor.incident.moldPlaceholder'
+                                                                )}
+                                                                value={deferMoldId}
+                                                                onChange={setDeferMoldId}
+                                                                options={moldOptions}
+                                                                filterOption={(input, option) =>
+                                                                    (option?.label ?? '')
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            input.toLowerCase()
+                                                                        )
+                                                                }
+                                                            />
+                                                        </div>
 
-                                            {deferMoldId && (
-                                                <MachineDayGridPicker
-                                                    gridWeekStart={gridWeekStart}
-                                                    gridWeekOffset={gridWeekOffset}
-                                                    todayIndex={todayIndex}
-                                                    onShiftWeek={shiftGridWeek}
-                                                    weeklyGroups={deferWeeklyGroups}
-                                                    gridLoading={
-                                                        compatibleMachinesLoading || deferGridDataLoading
-                                                    }
-                                                    selectedDayIndex={gridSelectedDayIndex}
-                                                    selectedMachineId={gridSelectedMachineId}
-                                                    onSelectCell={(dayIndex, machineId) => {
-                                                        setGridSelectedDayIndex(dayIndex);
-                                                        setGridSelectedMachineId(machineId);
-                                                    }}
-                                                    sourceMachineId={row.machineId}
-                                                    currentCode={row.code}
-                                                    currentMoldCode={row.moldCode}
-                                                    currentQty={remaining}
-                                                />
-                                            )}
-                                        </div>
+                                                        {deferMoldId && (
+                                                            <MachineDayGridPicker
+                                                                gridWeekStart={gridWeekStart}
+                                                                gridWeekOffset={gridWeekOffset}
+                                                                todayIndex={todayIndex}
+                                                                onShiftWeek={shiftGridWeek}
+                                                                weeklyGroups={deferWeeklyGroups}
+                                                                gridLoading={
+                                                                    compatibleMachinesLoading ||
+                                                                    deferGridDataLoading
+                                                                }
+                                                                selectedDayIndex={
+                                                                    gridSelectedDayIndex
+                                                                }
+                                                                selectedMachineId={
+                                                                    gridSelectedMachineId
+                                                                }
+                                                                onSelectCell={(
+                                                                    dayIndex,
+                                                                    machineId
+                                                                ) => {
+                                                                    setGridSelectedDayIndex(
+                                                                        dayIndex
+                                                                    );
+                                                                    setGridSelectedMachineId(
+                                                                        machineId
+                                                                    );
+                                                                }}
+                                                                sourceMachineId={row.machineId}
+                                                                currentCode={row.code}
+                                                                currentMoldCode={row.moldCode}
+                                                                currentQty={remaining}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            }
+                        )}
+
+                        {/* Shared incident reason + note */}
+                        {selected !== null && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <div>
+                                    <Text
+                                        style={{ fontSize: 12, display: 'block', marginBottom: 4 }}
+                                    >
+                                        {t('productionPlan.incident.reasonLabel')}
+                                    </Text>
+                                    <Select
+                                        style={{ width: '100%' }}
+                                        placeholder={t('productionPlan.incident.reasonPlaceholder')}
+                                        value={incidentReason}
+                                        onChange={setIncidentReason}
+                                        options={getIncidentReasonOptions(t)}
+                                    />
+                                </div>
+                                <div>
+                                    <Text
+                                        style={{ fontSize: 12, display: 'block', marginBottom: 4 }}
+                                    >
+                                        {t('productionPlan.incident.noteLabel')}
+                                        {noteRequired && <Text type="danger"> *</Text>}
+                                    </Text>
+                                    <TextArea
+                                        rows={2}
+                                        maxLength={2000}
+                                        value={note}
+                                        onChange={(event) => setNote(event.target.value)}
+                                        placeholder={t('productionPlan.incident.notePlaceholder')}
+                                    />
+                                    {noteRequired && !note.trim() && (
+                                        <Text type="danger" style={{ fontSize: 12 }}>
+                                            {t('productionPlan.incident.noteRequiredForOther')}
+                                        </Text>
                                     )}
-                                </>
-                            )}
-                        </div>
-                    );
-                })}
-
-                {/* Shared incident reason + note */}
-                {selected !== null && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <div>
-                            <Text style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                                {t('productionPlan.incident.reasonLabel')}
-                            </Text>
-                            <Select
-                                style={{ width: '100%' }}
-                                placeholder={t('productionPlan.incident.reasonPlaceholder')}
-                                value={incidentReason}
-                                onChange={setIncidentReason}
-                                options={getIncidentReasonOptions(t)}
-                            />
-                        </div>
-                        <div>
-                            <Text style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-                                {t('productionPlan.incident.noteLabel')}
-                                {noteRequired && <Text type="danger"> *</Text>}
-                            </Text>
-                            <TextArea
-                                rows={2}
-                                maxLength={2000}
-                                value={note}
-                                onChange={(event) => setNote(event.target.value)}
-                                placeholder={t('productionPlan.incident.notePlaceholder')}
-                            />
-                            {noteRequired && !note.trim() && (
-                                <Text type="danger" style={{ fontSize: 12 }}>
-                                    {t('productionPlan.incident.noteRequiredForOther')}
-                                </Text>
-                            )}
-                        </div>
-                    </div>
-                )}
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
             </div>

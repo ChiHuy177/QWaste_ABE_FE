@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Button, Descriptions, Divider, Empty, Flex, Modal, Spin, Tag, Timeline, Typography, theme } from 'antd';
+import {
+    Button,
+    Descriptions,
+    Divider,
+    Empty,
+    Flex,
+    Modal,
+    Spin,
+    Tag,
+    Timeline,
+    Typography,
+    theme,
+} from 'antd';
 import {
     CheckCircleOutlined,
     ClockCircleOutlined,
@@ -359,20 +371,62 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                             key: 'mold',
                             label: t('productionPlan.monitor.detail.mold'),
                             children: (
-                                <Text code style={{ fontSize: 12 }}>
-                                    {detail?.snapshotMoldCode ?? row.moldCode ?? '—'}
-                                </Text>
+                                <Flex align="center" gap={6} wrap="wrap">
+                                    <Text code style={{ fontSize: 12 }}>
+                                        {detail?.snapshotMoldCode ?? row.moldCode ?? '—'}
+                                    </Text>
+                                    {detail?.snapshotMoldName && (
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            ({detail.snapshotMoldName})
+                                        </Text>
+                                    )}
+                                </Flex>
                             ),
                         },
                         {
-                            key: 'plannedDate',
-                            label: t('productionPlan.monitor.detail.plannedDate'),
-                            children: detail?.plannedDate ?? '—',
+                            key: 'moldType',
+                            label: t('productionPlan.monitor.detail.moldType'),
+                            children: (() => {
+                                const moldType = detail?.snapshotMoldType ?? 'PRODUCTS_PER_SHOT';
+                                const isShotsPerProduct = moldType === 'SHOTS_PER_PRODUCT';
+                                const factor = detail?.snapshotMoldQuantity;
+                                const factorText =
+                                    factor != null
+                                        ? isShotsPerProduct
+                                            ? `${factor} ${t('productionPlan.monitor.detail.shotsPerProductSuffix')}`
+                                            : `${factor} ${t('productionPlan.monitor.detail.productsPerShotSuffix')}`
+                                        : null;
+
+                                return (
+                                    <Flex align="center" gap={6} wrap="wrap">
+                                        <Tag
+                                            color={isShotsPerProduct ? 'purple' : 'cyan'}
+                                            style={{ margin: 0 }}
+                                        >
+                                            {isShotsPerProduct
+                                                ? t('moldManagement.moldTypes.shotsPerProductShort')
+                                                : t(
+                                                      'moldManagement.moldTypes.productsPerShotShort'
+                                                  )}
+                                        </Tag>
+                                        {factorText && (
+                                            <Text strong style={{ fontSize: 12 }}>
+                                                ({factorText})
+                                            </Text>
+                                        )}
+                                    </Flex>
+                                );
+                            })(),
                         },
                         {
                             key: 'operationType',
                             label: t('productionPlan.monitor.detail.operationType'),
                             children: detail?.snapshotOperationTypeName ?? '—',
+                        },
+                        {
+                            key: 'plannedDate',
+                            label: t('productionPlan.monitor.detail.plannedDate'),
+                            children: detail?.plannedDate ?? '—',
                         },
                         {
                             key: 'plannedQuantity',
@@ -441,7 +495,9 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                                                                 border: 'none',
                                                                 color: '#fff',
                                                                 fontWeight: 600,
-                                                                background: statusLogColor(log.fromStatus),
+                                                                background: statusLogColor(
+                                                                    log.fromStatus
+                                                                ),
                                                             }}
                                                         >
                                                             {t(
@@ -473,7 +529,11 @@ export default function ProductDetailModal({ row, open, onClose }: Props) {
                                             </Flex>
                                             <Text
                                                 type="secondary"
-                                                style={{ fontSize: 12, display: 'block', marginTop: 2 }}
+                                                style={{
+                                                    fontSize: 12,
+                                                    display: 'block',
+                                                    marginTop: 2,
+                                                }}
                                             >
                                                 {new Date(log.timestamp).toLocaleString('vi-VN')}
                                                 {log.changedBy && ` · ${log.changedBy}`}
