@@ -1050,7 +1050,8 @@
             "positionsSaved": "Floor map changes saved",
             "positionSaveFailed": "Failed to save machine position",
             "positionRemoved": "Machine removed from floor map",
-            "positionRemoveFailed": "Failed to remove machine from floor map"
+            "positionRemoveFailed": "Failed to remove machine from floor map",
+            "liveStatusLoadFailed": "Failed to load machine status on the floor map"
         }
     },
     "adminPage": {
@@ -5305,5 +5306,9 @@
             "operatingNormally": "Operating normally (0h downtime)",
             "backToList": "Back to machine list"
         }
+    },
+    "pressMode": {
+        "single": "Single",
+        "automatic": "Automatic"
     }
 }

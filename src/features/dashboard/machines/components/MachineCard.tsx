@@ -5,6 +5,7 @@ import { Flex, Typography, theme } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { MachineOverview } from '@/types/Machine';
+import { getVisiblePressModeLabelKey } from '@/utils/pressModeUtils';
 
 const { Text } = Typography;
 
@@ -42,6 +43,7 @@ const MachineCard: React.FC<MachineCardProps> = ({
     const { t } = useTranslation();
 
     const currentStatus = machine.currentStatus ?? 'OFFLINE';
+    const pressModeLabelKey = getVisiblePressModeLabelKey(machine.mode, currentStatus);
 
     const statusStyle = useMemo(() => {
         switch (currentStatus) {
@@ -162,24 +164,45 @@ const MachineCard: React.FC<MachineCardProps> = ({
                             </Text>
                         )}
                     </Flex>
-                    <div
-                        style={{
-                            padding: '2px 10px',
-                            borderRadius: 20,
-                            background: statusStyle.badgeBg,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Text
+                    <Flex align="center" gap={6} style={{ flexShrink: 0 }}>
+                        {pressModeLabelKey && (
+                            <div
+                                style={{
+                                    padding: '2px 8px',
+                                    borderRadius: 20,
+                                    background: token.colorFillSecondary,
+                                    border: `1px solid ${token.colorBorderSecondary}`,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 11,
+                                        fontWeight: 500,
+                                        color: token.colorTextSecondary,
+                                    }}
+                                >
+                                    {t(pressModeLabelKey)}
+                                </Text>
+                            </div>
+                        )}
+                        <div
                             style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: statusStyle.badgeColor,
+                                padding: '2px 10px',
+                                borderRadius: 20,
+                                background: statusStyle.badgeBg,
                             }}
                         >
-                            {statusStyle.label}
-                        </Text>
-                    </div>
+                            <Text
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: statusStyle.badgeColor,
+                                }}
+                            >
+                                {statusStyle.label}
+                            </Text>
+                        </div>
+                    </Flex>
                 </Flex>
 
                 {/* Subtitle */}

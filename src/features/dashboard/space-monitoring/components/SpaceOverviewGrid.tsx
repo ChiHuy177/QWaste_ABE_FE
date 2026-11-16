@@ -10,6 +10,7 @@ import { MachineTimelineModal } from '@/features/dashboard/machines';
 import { SpaceOverview } from '@/types/Space';
 import { MachineWithStatusLogsSummary } from '@/types/Machine';
 import { MachineOverview } from '@/types/Machine';
+import { collectAllMachines } from '@/utils/spaceStatsUtils';
 
 const { Text } = Typography;
 
@@ -57,7 +58,12 @@ const SpaceOverviewGrid: React.FC<SpaceOverviewGridProps> = ({
                     .filter(([, time]) => time > 0)
                     .map(([status, time]) => ({
                         logStatus: status as
-                            'RUNTIME' | 'IDLE' | 'ERROR' | 'OFFLINE' | 'COMPLETE' | 'UNKNOWN',
+                            | 'RUNTIME'
+                            | 'IDLE'
+                            | 'ERROR'
+                            | 'OFFLINE'
+                            | 'COMPLETE'
+                            | 'UNKNOWN',
                         totalLogStateTime: time,
                     }));
             };
@@ -75,6 +81,7 @@ const SpaceOverviewGrid: React.FC<SpaceOverviewGridProps> = ({
                 logs: convertRuntimeToLogs(machine.runtimeByStatus),
                 operatorCount: machine.operatorCount || 0,
                 runtimeByStatus: machine.runtimeByStatus,
+                mode: machine.mode,
             };
 
             setSelectedMachine(machineOverview);
@@ -87,6 +94,19 @@ const SpaceOverviewGrid: React.FC<SpaceOverviewGridProps> = ({
         setIsModalOpen(false);
         setSelectedMachine(null);
     }, []);
+
+    const activeMachine = useMemo(() => {
+        if (!selectedMachine || !spaceData) return selectedMachine;
+        const all = collectAllMachines(spaceData);
+        const liveMachine = all.find((m) => m.machineId === selectedMachine.machineId);
+        if (!liveMachine) return selectedMachine;
+        return {
+            ...selectedMachine,
+            currentStatus: liveMachine.currentStatus,
+            mode: liveMachine.mode,
+            totalProductions: liveMachine.totalProductions,
+        };
+    }, [selectedMachine, spaceData]);
 
     const children = useMemo(() => spaceData?.children ?? [], [spaceData]);
     const standaloneMachines = useMemo(() => spaceData?.machineChildren ?? [], [spaceData]);
@@ -163,7 +183,7 @@ const SpaceOverviewGrid: React.FC<SpaceOverviewGridProps> = ({
             <MachineTimelineModal
                 open={isModalOpen}
                 onClose={handleModalClose}
-                machine={selectedMachine}
+                machine={activeMachine}
                 filterInfo={filterInfo}
             />
         </>

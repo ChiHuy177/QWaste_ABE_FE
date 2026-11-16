@@ -1041,7 +1041,8 @@
             "positionsSaved": "Đã lưu thay đổi sơ đồ mặt bằng",
             "positionSaveFailed": "Không thể lưu vị trí máy",
             "positionRemoved": "Đã gỡ máy khỏi sơ đồ",
-            "positionRemoveFailed": "Không thể gỡ máy khỏi sơ đồ"
+            "positionRemoveFailed": "Không thể gỡ máy khỏi sơ đồ",
+            "liveStatusLoadFailed": "Không thể tải trạng thái máy trên sơ đồ"
         }
     },
     "adminPage": {
@@ -5349,5 +5350,9 @@
             "operatingNormally": "Hoạt động ổn định (0h lỗi)",
             "backToList": "Quay lại danh sách máy"
         }
+    },
+    "pressMode": {
+        "single": "Dập đơn",
+        "automatic": "Dập tự động"
     }
 }

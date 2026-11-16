@@ -17,6 +17,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { theme } from 'antd';
 import { MachineOverview } from '@/types/Machine';
+import { getVisiblePressModeLabelKey } from '@/utils/pressModeUtils';
 const { Title, Text } = Typography;
 
 interface MachineTimelineModalProps {
@@ -361,19 +362,19 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
                                         {Math.round(
                                             (statsData.totalActive / statsData.total) * 100
                                         ) > 12 && (
-                                                <Text
-                                                    style={{
-                                                        color: '#fff',
-                                                        fontSize: 12,
-                                                        fontWeight: 500,
-                                                    }}
-                                                >
-                                                    {Math.round(
-                                                        (statsData.totalActive / statsData.total) * 100
-                                                    )}
-                                                    %
-                                                </Text>
-                                            )}
+                                            <Text
+                                                style={{
+                                                    color: '#fff',
+                                                    fontSize: 12,
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                {Math.round(
+                                                    (statsData.totalActive / statsData.total) * 100
+                                                )}
+                                                %
+                                            </Text>
+                                        )}
                                     </div>
                                 )}
                                 {/* Offline portion */}
@@ -396,19 +397,19 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
                                     >
                                         {Math.round((statsData.offline / statsData.total) * 100) >
                                             12 && (
-                                                <Text
-                                                    style={{
-                                                        color: '#fff',
-                                                        fontSize: 12,
-                                                        fontWeight: 500,
-                                                    }}
-                                                >
-                                                    {Math.round(
-                                                        (statsData.offline / statsData.total) * 100
-                                                    )}
-                                                    %
-                                                </Text>
-                                            )}
+                                            <Text
+                                                style={{
+                                                    color: '#fff',
+                                                    fontSize: 12,
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                {Math.round(
+                                                    (statsData.offline / statsData.total) * 100
+                                                )}
+                                                %
+                                            </Text>
+                                        )}
                                     </div>
                                 )}
                             </>
@@ -748,6 +749,7 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
         );
     };
 
+    const pressModeLabelKey = getVisiblePressModeLabelKey(machine?.mode, machine?.currentStatus);
     const currentStatusConfig = machine?.currentStatus
         ? getStatusConfig(machine.currentStatus)
         : null;
@@ -777,6 +779,16 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
                                 }}
                             >
                                 {currentStatusConfig.text}
+                            </Tag>
+                        )}
+                        {pressModeLabelKey && (
+                            <Tag
+                                style={{
+                                    fontWeight: 500,
+                                    fontSize: 12,
+                                }}
+                            >
+                                {t(pressModeLabelKey)}
                             </Tag>
                         )}
                     </Flex>
@@ -903,8 +915,8 @@ const MachineTimelineModal: React.FC<MachineTimelineModalProps> = ({
                                         const energy = power * hours;
                                         return energy > 0
                                             ? `${energy.toLocaleString('en-US', {
-                                                maximumFractionDigits: 1,
-                                            })} kWh`
+                                                  maximumFractionDigits: 1,
+                                              })} kWh`
                                             : t('common.notAvailable');
                                     })()}
                                 </Text>

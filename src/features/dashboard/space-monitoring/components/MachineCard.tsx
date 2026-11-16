@@ -4,6 +4,8 @@ import React from 'react';
 import { Flex, Tooltip, Typography, theme } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { formatVietnamDateTime, formatVietnamDateTimeCompact } from '@/utils/dateTimeUtils';
+import { PressMode } from '@/types/Machine';
+import { getVisiblePressModeLabelKey } from '@/utils/pressModeUtils';
 const { Text } = Typography;
 
 /**
@@ -24,6 +26,7 @@ export interface MachineCardData {
     operatorCount?: number;
     totalProductions: number;
     runtimeByStatus?: Map<string, number> | Record<string, number | undefined>;
+    mode?: PressMode | null;
 }
 
 interface MachineCardProps<T extends MachineCardData> {
@@ -31,7 +34,10 @@ interface MachineCardProps<T extends MachineCardData> {
     onClick: (machine: T, e: React.MouseEvent) => void;
 }
 
-function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: MachineCardProps<T>) {
+function MachineCardComponent<T extends MachineCardData>({
+    machine,
+    onClick,
+}: MachineCardProps<T>) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
@@ -122,9 +128,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
         return (runtimeByStatus as Record<string, number | undefined>)[status] || 0;
     };
 
-    const calculateOnlineTime = (
-        runtimeByStatus: MachineCardData['runtimeByStatus']
-    ): number => {
+    const calculateOnlineTime = (runtimeByStatus: MachineCardData['runtimeByStatus']): number => {
         if (!runtimeByStatus) return 0;
 
         let totalSeconds = 0;
@@ -149,6 +153,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
     };
 
     const statusStyle = getStatusColor(machine.currentStatus);
+    const pressModeLabelKey = getVisiblePressModeLabelKey(machine.mode, machine.currentStatus);
 
     const onlineSeconds = calculateOnlineTime(machine.runtimeByStatus);
     const onlineTime = formatTime(onlineSeconds);
@@ -234,6 +239,24 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                     {machine.machineName || 'Machine Name'}
                 </Text>
 
+                {pressModeLabelKey && (
+                    <div
+                        style={{
+                            marginTop: 2,
+                            padding: '1px 8px',
+                            borderRadius: 10,
+                            background: token.colorFillSecondary,
+                            border: `1px solid ${statusStyle.color}`,
+                            color: statusStyle.color,
+                            fontSize: 10,
+                            fontWeight: 600,
+                            letterSpacing: '0.3px',
+                            userSelect: 'none',
+                        }}
+                    >
+                        {t(pressModeLabelKey)}
+                    </div>
+                )}
             </Flex>
 
             {/* Divider */}
@@ -409,7 +432,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
             </Flex>
         </div>
     );
-};
+}
 
 const MachineCard = React.memo(MachineCardComponent) as typeof MachineCardComponent;
 
