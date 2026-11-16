@@ -22,15 +22,13 @@ import { useAbility } from '@/contexts/AbilityContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { FloorMapService } from '@/services/FloorMapService';
 import { SpaceService } from '@/services/SpaceService';
-import {
-    FloorMapMachineResponse,
-    MachineFloorPositionRequest,
-} from '@/types/FloorMap';
+import { FloorMapMachineResponse, MachineFloorPositionRequest } from '@/types/FloorMap';
 import {
     FloorMapCanvasShell,
     MachineListPanel,
     getDefaultMachinePosition,
     isMachinePlaced,
+    useFloorMapLiveStatus,
 } from '@/features/dashboard/floor-map';
 
 type DraftPositions = Record<string, MachineFloorPositionRequest>;
@@ -113,14 +111,24 @@ const FloorMapPage = () => {
     const floorMap = floorMapQuery.data;
     const spaceTree = spaceTreeQuery.data ?? [];
     const spaceTreeSelectData = useMemo(() => mapSpaceTreeToTreeSelect(spaceTree), [spaceTree]);
+    const canViewLiveStatus = ability.can('view', 'space_monitoring');
+    const machineIds = useMemo(
+        () => floorMap?.machines.map((machine) => machine.machineId) ?? [],
+        [floorMap?.machines]
+    );
+    const liveStatusByMachineId = useFloorMapLiveStatus(
+        selectedSpaceId,
+        machineIds,
+        canViewLiveStatus
+    );
     const displayedMachines = useMemo(
         () =>
-            floorMap?.machines.map((machine) => {
-                const draftPosition = draftPositions[machine.machineId];
-
-                return draftPosition ? { ...machine, ...draftPosition } : machine;
-            }) ?? [],
-        [draftPositions, floorMap?.machines]
+            floorMap?.machines.map((machine) => ({
+                ...machine,
+                ...liveStatusByMachineId[machine.machineId],
+                ...draftPositions[machine.machineId],
+            })) ?? [],
+        [draftPositions, floorMap?.machines, liveStatusByMachineId]
     );
     const displayedFloorMap = useMemo(
         () => (floorMap ? { ...floorMap, machines: displayedMachines } : undefined),
@@ -288,7 +296,7 @@ const FloorMapPage = () => {
     );
 
     const removingMachineId = deletePositionMutation.isPending
-        ? deletePositionMutation.variables ?? null
+        ? (deletePositionMutation.variables ?? null)
         : null;
 
     return (
@@ -300,7 +308,10 @@ const FloorMapPage = () => {
             />
 
             {selectedSpaceId === undefined ? (
-                <Empty description={t('floorMap.empty.selectSpace')} style={{ padding: '80px 0' }} />
+                <Empty
+                    description={t('floorMap.empty.selectSpace')}
+                    style={{ padding: '80px 0' }}
+                />
             ) : floorMapQuery.isLoading ? (
                 <div style={{ padding: '80px 0', textAlign: 'center' }}>
                     <Spin size="large" />
