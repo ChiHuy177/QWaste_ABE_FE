@@ -69,7 +69,7 @@ export const getMachineListFormFields = (
                     }),
                 },
             ],
-            span: { xs: 24, md: 8 },
+            span: { xs: 24, md: 12 },
         },
         {
             name: 'power',
@@ -91,7 +91,7 @@ export const getMachineListFormFields = (
                     message: t('machineListManagement.form.validation.minValue', { min: 0.1 }),
                 },
             ],
-            span: { xs: 24, md: 8 },
+            span: { xs: 24, md: 12 },
         },
         {
             name: 'topic',
@@ -113,7 +113,7 @@ export const getMachineListFormFields = (
                     }),
                 },
             ],
-            span: { xs: 24, md: 8 },
+            span: { xs: 24, md: 12 },
         },
 
         {
