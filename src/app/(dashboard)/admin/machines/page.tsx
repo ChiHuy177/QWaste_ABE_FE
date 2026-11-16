@@ -87,6 +87,8 @@ const MachinesPage: React.FC = () => {
     }, [spacesTree, selectedSpaceId]);
 
     const spaceTreeSelectData = useMemo(() => mapSpaceTreeToTreeSelect(spacesTree), [spacesTree]);
+    const wasWsConnectedRef = useRef(false);
+    const hasWsConnectedRef = useRef(false);
 
     const timePeriodOptions = useMemo(() => {
         const currentLang = i18n.language;
@@ -192,10 +194,16 @@ const MachinesPage: React.FC = () => {
                 (message) => {
                     if (message.type !== 'DATA') return;
                     const { machineId, data } = message.payload;
-                    const { newStatus, productionCounter } = data;
-                    if (!machineId || !newStatus || newStatus === 'UNKNOWN') return;
+                    if (!machineId || !data) return;
+                    const { newStatus, productionCounter, mode } = data;
+                    if (newStatus == null && mode == null && productionCounter == null) return;
                     dispatch(
-                        machineActions.updateMachineStatus(machineId, newStatus, productionCounter)
+                        machineActions.updateMachineStatus(
+                            machineId,
+                            newStatus === 'UNKNOWN' ? null : newStatus,
+                            productionCounter,
+                            mode
+                        )
                     );
                 }
             );
@@ -206,6 +214,19 @@ const MachinesPage: React.FC = () => {
             unsubscribes.forEach((unsub) => unsub());
         };
     }, [wsConnected, machines.length, dispatch, wsService]);
+
+    useEffect(() => {
+        if (!wsConnected) {
+            wasWsConnectedRef.current = false;
+            return;
+        }
+        const isReconnect = hasWsConnectedRef.current && !wasWsConnectedRef.current;
+        wasWsConnectedRef.current = true;
+        hasWsConnectedRef.current = true;
+        if (isReconnect && selectedSpaceId !== undefined && selectedTimePeriod != null) {
+            dispatch(machineActions.fetchMachines(selectedSpaceId, selectedTimePeriod));
+        }
+    }, [wsConnected, selectedSpaceId, selectedTimePeriod, dispatch]);
 
     const handleSearchChange = useCallback(
         (value: string) => {

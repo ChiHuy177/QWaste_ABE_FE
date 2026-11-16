@@ -32,7 +32,7 @@ import { ExcelExportService } from '@/services/ExcelExportService';
 import { IndustryFilterService } from '@/services/IndustryFilterService';
 import { IndustryFilter } from '@/types/IndustryFilter';
 import { SpaceOverview } from '@/types/Space';
-import { MachineStatusWsMessage, MachineWithStatusLogsSummary } from '@/types/Machine';
+import { MachineStatusWsMessage, MachineWithStatusLogsSummary, PressMode } from '@/types/Machine';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 
@@ -104,16 +104,15 @@ const SpaceMonitoringPage: React.FC = () => {
     const machinePathMapRef = useRef<Map<string, MachinePathEntry>>(new Map());
     const spaceToMachinesMapRef = useRef<Map<number, MachineWithStatusLogsSummary[]>>(new Map());
     const activeSubscriptionsRef = useRef<Map<string, () => void>>(new Map());
-    const pendingUpdates = useRef<
-        Map<
-            string,
-            {
-                newStatus: string;
-                statusStartTime?: string | null;
-                runtimeUpdate?: { status: string; duration: number };
-            }
-        >
-    >(new Map());
+    type PendingMachineUpdate = {
+        newStatus?: string;
+        statusStartTime?: string | null;
+        runtimeUpdate?: { status: string; duration: number };
+        mode?: PressMode;
+    };
+    const pendingUpdates = useRef<Map<string, PendingMachineUpdate>>(new Map());
+    const wasWsConnectedRef = useRef(false);
+    const hasWsConnectedRef = useRef(false);
     const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
     const firstUpdateTimeRef = useRef<number | null>(null);
     const MAX_BATCH_DELAY = 200;
@@ -217,8 +216,12 @@ const SpaceMonitoringPage: React.FC = () => {
                 currentData = updateMachineInTree(currentData!, path, machineIndex, (machine) => {
                     const updatedMachine = {
                         ...machine,
-                        currentStatus: update.newStatus as typeof machine.currentStatus,
                     };
+
+                    if (update.newStatus) {
+                        updatedMachine.currentStatus =
+                            update.newStatus as typeof machine.currentStatus;
+                    }
 
                     // Only overwrite when the frame carried a timestamp, so a
                     // frame without one leaves the last known value in place.
@@ -235,6 +238,10 @@ const SpaceMonitoringPage: React.FC = () => {
                             ...runtime,
                             [update.runtimeUpdate.status]: newRuntime,
                         } as typeof machine.runtimeByStatus;
+                    }
+
+                    if (update.mode) {
+                        updatedMachine.mode = update.mode;
                     }
 
                     return updatedMachine;
@@ -255,14 +262,22 @@ const SpaceMonitoringPage: React.FC = () => {
     const scheduleMachineUpdate = useCallback(
         (
             machineId: string,
-            newStatus: string,
+            newStatus?: string | null,
             statusStartTime?: string | null,
             runtimeUpdate?: {
                 status: string;
                 duration: number;
-            }
+            },
+            mode?: PressMode | null
         ) => {
-            pendingUpdates.current.set(machineId, { newStatus, statusStartTime, runtimeUpdate });
+            const prev = pendingUpdates.current.get(machineId) ?? {};
+            pendingUpdates.current.set(machineId, {
+                ...prev,
+                ...(newStatus != null && { newStatus }),
+                ...(statusStartTime != null && { statusStartTime }),
+                ...(runtimeUpdate && { runtimeUpdate }),
+                ...(mode != null && { mode }),
+            });
 
             if (!firstUpdateTimeRef.current) {
                 firstUpdateTimeRef.current = Date.now();
@@ -368,64 +383,105 @@ const SpaceMonitoringPage: React.FC = () => {
                     }
 
                     const { machineId, data } = message.payload;
-                    const { newStatus, newStatusStartTime, previousLog } = data;
+                    if (!machineId || !data) {
+                        return;
+                    }
 
-                    if (!machineId || !newStatus) {
+                    const { newStatus, newStatusStartTime, previousLog, mode } = data;
+
+                    if (newStatus == null && mode == null) {
                         return;
                     }
 
                     // The new status starts exactly where the previous log ended, so
                     // that endTime is the fallback when the frame omits the field.
-                    const statusStartTime = newStatusStartTime ?? previousLog?.endTime ?? null;
+                    const statusStartTime =
+                        newStatus != null
+                            ? (newStatusStartTime ?? previousLog?.endTime ?? null)
+                            : undefined;
 
-                    if (!previousLog) {
-                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
-                        return;
+                    let runtimeUpdate: { status: string; duration: number } | undefined;
+                    if (
+                        newStatus &&
+                        previousLog &&
+                        previousLog.startTime &&
+                        previousLog.endTime &&
+                        previousLog.logStatus
+                    ) {
+                        const validStatuses = [
+                            'RUNTIME',
+                            'IDLE',
+                            'ERROR',
+                            'COMPLETE',
+                            'OFFLINE',
+                            'UNKNOWN',
+                        ];
+                        if (validStatuses.includes(previousLog.logStatus)) {
+                            const startTime = dayjs(previousLog.startTime);
+                            const endTime = dayjs(previousLog.endTime);
+                            if (startTime.isValid() && endTime.isValid()) {
+                                const duration = endTime.diff(startTime, 'second');
+                                if (duration > 0 && duration <= 86400) {
+                                    runtimeUpdate = {
+                                        status: previousLog.logStatus,
+                                        duration,
+                                    };
+                                }
+                            }
+                        }
                     }
 
-                    if (!previousLog.startTime || !previousLog.endTime || !previousLog.logStatus) {
-                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
-                        return;
-                    }
-
-                    const validStatuses = [
-                        'RUNTIME',
-                        'IDLE',
-                        'ERROR',
-                        'COMPLETE',
-                        'OFFLINE',
-                        'UNKNOWN',
-                    ];
-                    if (!validStatuses.includes(previousLog.logStatus)) {
-                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
-                        return;
-                    }
-
-                    const startTime = dayjs(previousLog.startTime);
-                    const endTime = dayjs(previousLog.endTime);
-
-                    if (!startTime.isValid() || !endTime.isValid()) {
-                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
-                        return;
-                    }
-
-                    const duration = endTime.diff(startTime, 'second');
-
-                    if (duration < 0 || duration > 86400 || duration === 0) {
-                        scheduleMachineUpdate(machineId, newStatus, statusStartTime);
-                        return;
-                    }
-
-                    scheduleMachineUpdate(machineId, newStatus, statusStartTime, {
-                        status: previousLog.logStatus,
-                        duration,
-                    });
+                    scheduleMachineUpdate(
+                        machineId,
+                        newStatus,
+                        statusStartTime,
+                        runtimeUpdate,
+                        mode
+                    );
                 }
             );
 
             activeSubscriptionsRef.current.set(machineId, unsubscribe);
         });
     }, [wsConnected, spaceData, expandedSpaces, scheduleMachineUpdate, wsService]);
+
+    useEffect(() => {
+        if (!wsConnected) {
+            wasWsConnectedRef.current = false;
+            return;
+        }
+        const isReconnect = hasWsConnectedRef.current && !wasWsConnectedRef.current;
+        wasWsConnectedRef.current = true;
+        hasWsConnectedRef.current = true;
+        if (!isReconnect || !activeFactoryId) return;
+        if (!isDateRange && selectedTimePeriod) {
+            dispatch(
+                factoryOverviewActions.fetchSpaceOverview(
+                    activeFactoryId,
+                    selectedTimePeriod,
+                    selectedShiftFilterId ?? undefined
+                )
+            );
+        } else if (isDateRange && selectedStartDate && selectedEndDate) {
+            dispatch(
+                factoryOverviewActions.fetchSpaceOverviewByDateRange(
+                    activeFactoryId,
+                    selectedStartDate,
+                    selectedEndDate,
+                    selectedTimePeriod ?? undefined
+                )
+            );
+        }
+    }, [
+        wsConnected,
+        activeFactoryId,
+        isDateRange,
+        selectedTimePeriod,
+        selectedShiftFilterId,
+        selectedStartDate,
+        selectedEndDate,
+        dispatch,
+    ]);
 
     // Cleanup all subscriptions on unmount
     useEffect(() => {

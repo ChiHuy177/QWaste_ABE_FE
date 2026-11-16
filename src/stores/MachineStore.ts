@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction, Dispatch } from '@reduxjs/toolkit';
-import { MachineOverview, MachineStats, MachineWithStatusLogsSummary } from '@/types/Machine';
+import {
+    MachineOverview,
+    MachineStats,
+    MachineWithStatusLogsSummary,
+    PressMode,
+} from '@/types/Machine';
 import { SpaceOverview, SpacePickingWithChildren, SpaceWithChildrenResponse } from '@/types/Space';
 import { MachineService } from '@services/MachineService';
 import { calculateMachineStats } from '@/utils/machineUtils';
@@ -46,6 +51,7 @@ const adaptMachine = (m: MachineWithStatusLogsSummary): MachineOverview => ({
     operatorCount: m.operatorCount,
     totalProductions: m.totalProductions,
     runtimeByStatus: m.runtimeByStatus,
+    mode: m.mode,
 });
 
 export interface IMachineStoreState {
@@ -257,18 +263,33 @@ export const machineActions = {
     updateMachineStatus:
         (
             machineId: string,
-            logStatus: MachineOverview['currentStatus'],
-            productionCounter: number
+            logStatus?: MachineOverview['currentStatus'] | null,
+            productionCounter?: number | null,
+            mode?: PressMode | null
         ) =>
         (dispatch: Dispatch) => {
-            dispatch(
-                slice.actions.updateMachine({
-                    machineId,
-                    currentStatus: logStatus,
-                    productionCounter,
-                    lastStatusUpdate: new Date().toISOString(),
-                })
-            );
+            const updatePayload: Partial<MachineOverview> & { machineId: string } = {
+                machineId,
+                lastStatusUpdate: new Date().toISOString(),
+            };
+            if (logStatus) {
+                updatePayload.currentStatus = logStatus;
+                updatePayload.status =
+                    logStatus === 'RUNTIME'
+                        ? 'running'
+                        : logStatus === 'IDLE' || logStatus === 'TEMPORARY_STOP'
+                          ? 'idle'
+                          : logStatus === 'ERROR' || logStatus === 'WARNING'
+                            ? 'error'
+                            : 'empty';
+            }
+            if (productionCounter != null) {
+                updatePayload.productionCounter = productionCounter;
+            }
+            if (mode != null) {
+                updatePayload.mode = mode;
+            }
+            dispatch(slice.actions.updateMachine(updatePayload));
         },
 
     updateMachinesPower: (powerData: Record<string, number>) => (dispatch: Dispatch) => {

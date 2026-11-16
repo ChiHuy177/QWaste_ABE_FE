@@ -1,5 +1,6 @@
 import { AuditMetaData } from '@/types/Metadata';
 import { LineInFactoryOverview, LinePickingResponse } from './Line';
+import { PressMode } from './Machine';
 
 export interface Zone {
     zoneId: number;
@@ -42,6 +43,7 @@ export interface MachineInFactoryOverview {
     operatorCount?: number;
     totalProductions: number;
     runtimeByStatus: Map<string, number>;
+    mode?: PressMode | null;
 }
 
 export interface ZoneInFactoryOverview {
