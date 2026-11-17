@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Flex, Tooltip, Typography, theme } from 'antd';
+import { SyncOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { formatVietnamDateTime, formatVietnamDateTimeCompact } from '@/utils/dateTimeUtils';
 import { PressMode } from '@/types/Machine';
@@ -242,18 +243,29 @@ function MachineCardComponent<T extends MachineCardData>({
                 {pressModeLabelKey && (
                     <div
                         style={{
-                            marginTop: 2,
-                            padding: '1px 8px',
-                            borderRadius: 10,
-                            background: token.colorFillSecondary,
-                            border: `1px solid ${statusStyle.color}`,
-                            color: statusStyle.color,
-                            fontSize: 10,
-                            fontWeight: 600,
-                            letterSpacing: '0.3px',
+                            marginTop: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            padding: '3px 10px 3px 8px',
+                            borderRadius: 999,
+                            background: token.colorBgContainer,
+                            color: token.colorText,
+                            boxShadow: token.boxShadowTertiary,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            lineHeight: '16px',
                             userSelect: 'none',
+                            whiteSpace: 'nowrap',
                         }}
                     >
+                        {machine.mode === 'AUTOMATIC' ? (
+                            <SyncOutlined style={{ color: statusStyle.background, fontSize: 12 }} />
+                        ) : (
+                            <VerticalAlignBottomOutlined
+                                style={{ color: statusStyle.background, fontSize: 12 }}
+                            />
+                        )}
                         {t(pressModeLabelKey)}
                     </div>
                 )}
