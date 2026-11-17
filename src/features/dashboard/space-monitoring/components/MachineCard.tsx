@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { Flex, Tooltip, Typography, theme } from 'antd';
+import { SyncOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { formatVietnamDateTime, formatVietnamDateTimeCompact } from '@/utils/dateTimeUtils';
+import { PressMode } from '@/types/Machine';
+import { getVisiblePressModeLabelKey } from '@/utils/pressModeUtils';
 const { Text } = Typography;
 
 /**
@@ -24,6 +27,7 @@ export interface MachineCardData {
     operatorCount?: number;
     totalProductions: number;
     runtimeByStatus?: Map<string, number> | Record<string, number | undefined>;
+    mode?: PressMode | null;
 }
 
 interface MachineCardProps<T extends MachineCardData> {
@@ -31,7 +35,10 @@ interface MachineCardProps<T extends MachineCardData> {
     onClick: (machine: T, e: React.MouseEvent) => void;
 }
 
-function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: MachineCardProps<T>) {
+function MachineCardComponent<T extends MachineCardData>({
+    machine,
+    onClick,
+}: MachineCardProps<T>) {
     const { token } = theme.useToken();
     const { t } = useTranslation();
 
@@ -122,9 +129,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
         return (runtimeByStatus as Record<string, number | undefined>)[status] || 0;
     };
 
-    const calculateOnlineTime = (
-        runtimeByStatus: MachineCardData['runtimeByStatus']
-    ): number => {
+    const calculateOnlineTime = (runtimeByStatus: MachineCardData['runtimeByStatus']): number => {
         if (!runtimeByStatus) return 0;
 
         let totalSeconds = 0;
@@ -149,6 +154,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
     };
 
     const statusStyle = getStatusColor(machine.currentStatus);
+    const pressModeLabelKey = getVisiblePressModeLabelKey(machine.mode, machine.currentStatus);
 
     const onlineSeconds = calculateOnlineTime(machine.runtimeByStatus);
     const onlineTime = formatTime(onlineSeconds);
@@ -234,6 +240,35 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
                     {machine.machineName || 'Machine Name'}
                 </Text>
 
+                {pressModeLabelKey && (
+                    <div
+                        style={{
+                            marginTop: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            padding: '3px 10px 3px 8px',
+                            borderRadius: 999,
+                            background: token.colorBgContainer,
+                            color: token.colorText,
+                            boxShadow: token.boxShadowTertiary,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            lineHeight: '16px',
+                            userSelect: 'none',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {machine.mode === 'AUTOMATIC' ? (
+                            <SyncOutlined style={{ color: statusStyle.background, fontSize: 12 }} />
+                        ) : (
+                            <VerticalAlignBottomOutlined
+                                style={{ color: statusStyle.background, fontSize: 12 }}
+                            />
+                        )}
+                        {t(pressModeLabelKey)}
+                    </div>
+                )}
             </Flex>
 
             {/* Divider */}
@@ -409,7 +444,7 @@ function MachineCardComponent<T extends MachineCardData>({ machine, onClick }: M
             </Flex>
         </div>
     );
-};
+}
 
 const MachineCard = React.memo(MachineCardComponent) as typeof MachineCardComponent;
 

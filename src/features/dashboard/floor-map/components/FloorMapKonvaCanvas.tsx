@@ -37,6 +37,7 @@ import {
     pixelRectToRatio,
     ratioToPixelRect,
 } from '../utils/floorMapRatio';
+import { getVisiblePressModeLabelKey } from '@/utils/pressModeUtils';
 
 interface FloorMapKonvaCanvasProps {
     floorMap: FloorMapDisplayResponse;
@@ -171,8 +172,14 @@ const MACHINE_LABEL_MAX_FONT_SIZE = 13;
 const MACHINE_LABEL_MIN_FONT_SIZE = 1;
 const MACHINE_LABEL_PADDING = 4;
 const MACHINE_LABEL_FONT_STEP = 0.5;
+const MODE_LABEL_MIN_NODE_HEIGHT = 38;
 
-function fitMachineLabelFontSize(measurer: Konva.Text, text: string, width: number, height: number) {
+function fitMachineLabelFontSize(
+    measurer: Konva.Text,
+    text: string,
+    width: number,
+    height: number
+) {
     const availableWidth = Math.max(width - MACHINE_LABEL_PADDING * 2, 1);
     const ceiling = Math.min(
         MACHINE_LABEL_MAX_FONT_SIZE,
@@ -204,6 +211,8 @@ function createMachineNode({
     readOnly,
     selectedStroke,
     savingFill,
+    modeLabel,
+    modeLabelFill,
     onSelect,
     onUpdate,
     onHoverChange,
@@ -216,6 +225,8 @@ function createMachineNode({
     readOnly: boolean;
     selectedStroke: string;
     savingFill: string;
+    modeLabel: string | null;
+    modeLabelFill: string;
     onSelect: () => void;
     onUpdate?: (position: MachineFloorPositionRequest) => void;
     onHoverChange: (info: MachineHoverInfo | null) => void;
@@ -244,10 +255,13 @@ function createMachineNode({
         shadowOpacity: selected ? 0.5 : 0.3,
     });
 
+    const showMode = Boolean(modeLabel) && rect.height >= MODE_LABEL_MIN_NODE_HEIGHT;
+    const labelHeight = showMode ? rect.height * 0.6 : rect.height;
+
     const label = new Konva.Text({
         text: machine.machineCode,
         width: rect.width,
-        height: rect.height,
+        height: labelHeight,
         align: 'center',
         verticalAlign: 'middle',
         fill: '#fff',
@@ -256,10 +270,28 @@ function createMachineNode({
         listening: false,
         wrap: 'none',
     });
-    label.fontSize(fitMachineLabelFontSize(label, machine.machineCode, rect.width, rect.height));
+    label.fontSize(fitMachineLabelFontSize(label, machine.machineCode, rect.width, labelHeight));
 
     group.add(body);
     group.add(label);
+
+    if (showMode && modeLabel) {
+        const modeText = new Konva.Text({
+            y: rect.height * 0.58,
+            text: modeLabel,
+            width: rect.width,
+            height: rect.height * 0.38,
+            align: 'center',
+            verticalAlign: 'top',
+            fill: modeLabelFill,
+            fontStyle: 'bold',
+            fontSize: Math.max(8, Math.min(10, rect.width / 6)),
+            listening: false,
+            wrap: 'none',
+            ellipsis: true,
+        });
+        group.add(modeText);
+    }
 
     group.on('click tap', (event) => {
         event.cancelBubble = true;
@@ -350,6 +382,12 @@ export default function FloorMapKonvaCanvas({
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [hoveredMachine, setHoveredMachine] = useState<MachineHoverInfo | null>(null);
+    const hoveredModeLabelKey = hoveredMachine
+        ? getVisiblePressModeLabelKey(
+              hoveredMachine.machine.mode,
+              hoveredMachine.machine.currentStatus
+          )
+        : null;
     const { image, status } = useFloorPlanImage(floorMap.floorPlanImageUrl);
 
     const imageRect = useMemo<PixelRect | null>(() => {
@@ -413,9 +451,7 @@ export default function FloorMapKonvaCanvas({
 
     useEffect(() => {
         const container = containerRef.current;
-        const canFullscreen = Boolean(
-            document.fullscreenEnabled && container?.requestFullscreen
-        );
+        const canFullscreen = Boolean(document.fullscreenEnabled && container?.requestFullscreen);
 
         setFullscreenSupported(canFullscreen);
 
@@ -472,7 +508,8 @@ export default function FloorMapKonvaCanvas({
                 height: imageRect.height,
                 name: 'floor-plan-image',
                 sceneFunc(ctx, shape) {
-                    const native = (ctx as unknown as { _context: CanvasRenderingContext2D })._context;
+                    const native = (ctx as unknown as { _context: CanvasRenderingContext2D })
+                        ._context;
                     const prev = native.imageSmoothingEnabled;
                     native.imageSmoothingEnabled = false;
                     native.drawImage(image, 0, 0, shape.width(), shape.height());
@@ -517,6 +554,10 @@ export default function FloorMapKonvaCanvas({
                 const rect = ratioToPixelRect(machine, imageRect);
                 if (!rect) return;
 
+                const modeLabelKey = getVisiblePressModeLabelKey(
+                    machine.mode,
+                    machine.currentStatus
+                );
                 const node = createMachineNode({
                     machine,
                     rect,
@@ -526,6 +567,8 @@ export default function FloorMapKonvaCanvas({
                     readOnly,
                     selectedStroke: token.colorPrimary,
                     savingFill: token.colorWarning,
+                    modeLabel: modeLabelKey ? t(modeLabelKey) : null,
+                    modeLabelFill: token.colorTextLightSolid,
                     onSelect: () => onSelectMachine(machine.machineId),
                     onUpdate: onUpdateMachine
                         ? (position) => onUpdateMachine(machine.machineId, position)
@@ -555,10 +598,7 @@ export default function FloorMapKonvaCanvas({
                             'bottom-center',
                         ],
                         boundBoxFunc: (oldBox, newBox) => {
-                            if (
-                                newBox.width < MIN_NODE_WIDTH ||
-                                newBox.height < MIN_NODE_HEIGHT
-                            ) {
+                            if (newBox.width < MIN_NODE_WIDTH || newBox.height < MIN_NODE_HEIGHT) {
                                 return oldBox;
                             }
                             return newBox;
@@ -598,8 +638,10 @@ export default function FloorMapKonvaCanvas({
         size,
         size.height,
         size.width,
+        t,
         token.colorBgContainer,
         token.colorPrimary,
+        token.colorTextLightSolid,
         token.colorWarning,
     ]);
 
@@ -854,7 +896,9 @@ export default function FloorMapKonvaCanvas({
                     >
                         <Button
                             size="small"
-                            icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                            icon={
+                                isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
+                            }
                             onClick={handleToggleFullscreen}
                         />
                     </Tooltip>
@@ -897,6 +941,22 @@ export default function FloorMapKonvaCanvas({
                             defaultValue: hoveredMachine.machine.currentStatus ?? '',
                         })}
                     </span>
+                    {hoveredModeLabelKey && (
+                        <span
+                            style={{
+                                marginLeft: 4,
+                                padding: '1px 6px',
+                                borderRadius: 10,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                background: token.colorFillSecondary,
+                                color: token.colorTextSecondary,
+                                border: `1px solid ${token.colorBorderSecondary}`,
+                            }}
+                        >
+                            {t(hoveredModeLabelKey)}
+                        </span>
+                    )}
                 </div>
             )}
 

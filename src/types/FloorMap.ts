@@ -1,4 +1,4 @@
-import { currentStatus } from './Machine';
+import { currentStatus, PressMode } from './Machine';
 
 export interface FloorMapResponse {
     spaceId: number;
@@ -21,6 +21,7 @@ export interface FloorMapMachineResponse {
 
 export type FloorMapMachineDisplayResponse = FloorMapMachineResponse & {
     currentStatus?: currentStatus;
+    mode?: PressMode | null;
 };
 
 export interface FloorMapDisplayResponse {

@@ -86,6 +86,7 @@ export interface MachineOverview {
     productionCounter?: number;
     totalProductions?: number;
     lastStatusUpdate?: Date | string;
+    mode?: PressMode | null;
     // Zone/line overview endpoints send a Map; other overview endpoints send a plain object.
     runtimeByStatus?:
         | {
@@ -123,6 +124,8 @@ export interface MachineStats {
 
 export type ZoneFilter = 'all' | 'zone1' | 'zone2' | 'zone3';
 
+export type PressMode = 'SINGLE' | 'AUTOMATIC';
+
 /** Status values the `/topic/machines/status/{machineId}` frames carry. */
 export type MachineStatusLogStatus =
     | 'RUNTIME'
@@ -136,19 +139,22 @@ export type MachineStatusLogStatus =
 export interface MachineStatusWsMessage {
     type: string;
     payload: {
+        type?: string;
         machineId: string;
         data: {
-            previousLog: {
+            previousLog?: {
                 startTime: string;
                 endTime: string;
                 logStatus: MachineStatusLogStatus;
-            };
-            newStatus: MachineStatusLogStatus;
+            } | null;
+            newStatus?: MachineStatusLogStatus | null;
             /** Java `LocalDateTime` (no offset) marking when `newStatus` began. */
             newStatusStartTime?: string | null;
-            productionCounter: number;
+            productionCounter?: number | null;
+            mode?: PressMode | null;
         };
     };
+    timestamp?: string;
 }
 
 export interface MachineWithStatusLogsSummary {
@@ -161,6 +167,7 @@ export interface MachineWithStatusLogsSummary {
     currentStatus: currentStatus;
     /** Java `LocalDateTime` (no offset) marking when `currentStatus` began. */
     currentStatusStartTime?: string | null;
+    mode?: PressMode | null;
     operatorCount: number;
     totalProductions: number;
     runtimeByStatus?: {
