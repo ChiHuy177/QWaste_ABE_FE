@@ -139,6 +139,10 @@ const ShiftSection = React.memo<ShiftSectionProps>(
             return [...groupedShifts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         }, [groupedShifts]);
 
+        const onlyShiftValue =
+            isSingleDay && sortedShifts.length === 1 ? sortedShifts[0].value : null;
+        const radioValue = shiftId ?? onlyShiftValue ?? ALL_SHIFTS_RADIO_VALUE;
+
         return (
             <div>
                 <Typography.Text
@@ -173,7 +177,7 @@ const ShiftSection = React.memo<ShiftSectionProps>(
                     </div>
                 ) : (
                     <Radio.Group
-                        value={shiftId ?? ALL_SHIFTS_RADIO_VALUE}
+                        value={radioValue}
                         onChange={(e) => {
                             const val = e.target.value;
                             onChange(val === ALL_SHIFTS_RADIO_VALUE ? null : (val as number));
@@ -182,7 +186,9 @@ const ShiftSection = React.memo<ShiftSectionProps>(
                         style={{ width: '100%' }}
                     >
                         <Space orientation="vertical" size={6} style={{ width: '100%' }}>
-                            <Radio value={ALL_SHIFTS_RADIO_VALUE}>{allShiftsLabel}</Radio>
+                            {onlyShiftValue === null && (
+                                <Radio value={ALL_SHIFTS_RADIO_VALUE}>{allShiftsLabel}</Radio>
+                            )}
                             {isSingleDay && sortedShifts.length === 0 && (
                                 <Typography.Text
                                     type="secondary"
