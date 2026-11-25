@@ -35,7 +35,7 @@ export const WorkCalendarAlarmModal: React.FC = () => {
 
     const [open, setOpen] = useState<boolean>(false);
     const [unconfirmedMonths, setUnconfirmedMonths] = useState<UnconfirmedMonthItem[]>([]);
-    const hasCheckedRef = useRef<boolean>(false);
+    const lastCheckedUserIdRef = useRef<number | string | null>(null);
 
     const isWorkCalendarPage = Boolean(pathname?.startsWith('/admin/work-calendar'));
     const isPlanner = Boolean(user?.roles?.some((r) => r.toLowerCase() === 'planner'));
@@ -56,11 +56,12 @@ export const WorkCalendarAlarmModal: React.FC = () => {
         });
     }
 
-    const sessionKey = `has_seen_calendar_popup_${candidateMonths.map((m) => `${m.year}-${m.month}`).join('_')}`;
+    const sessionKey = `has_seen_calendar_popup_${user?.userId ?? ''}_${candidateMonths.map((m) => `${m.year}-${m.month}`).join('_')}`;
 
     useEffect(() => {
-        if (!isPlanner || isWorkCalendarPage || hasCheckedRef.current) return;
-        hasCheckedRef.current = true;
+        if (!isPlanner || isWorkCalendarPage) return;
+        if (lastCheckedUserIdRef.current === (user?.userId ?? null)) return;
+        lastCheckedUserIdRef.current = user?.userId ?? null;
 
         if (sessionStorage.getItem(sessionKey) === 'true') {
             return;
@@ -92,7 +93,7 @@ export const WorkCalendarAlarmModal: React.FC = () => {
         };
 
         runCheck();
-    }, [isPlanner, isWorkCalendarPage, sessionKey]);
+    }, [isPlanner, isWorkCalendarPage, sessionKey, user?.userId]);
 
     if (!isPlanner || isWorkCalendarPage || !open || unconfirmedMonths.length === 0) {
         return null;

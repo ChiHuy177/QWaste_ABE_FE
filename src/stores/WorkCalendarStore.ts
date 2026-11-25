@@ -10,6 +10,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch, RootState } from './configureStore';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/utils/apiError';
+import { AuthStore } from './AuthStore';
 import dayjs from 'dayjs';
 
 export interface IWorkCalendarStoreState {
@@ -375,7 +376,7 @@ export const workCalendarActions = {
 
             try {
                 await WorkCalendarService.confirmMonth(year, month);
-                // Refresh calendar after confirmation
+                AuthStore.clearCalendarAlarmState();
                 const updated = await WorkCalendarService.getMonthCalendar(year, month);
                 dispatch(slice.actions.setMonthData(updated));
                 toast.success(

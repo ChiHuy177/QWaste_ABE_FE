@@ -4,6 +4,7 @@ class AuthStoreClass {
     setUser(username: string) {
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('username', username);
+            this.clearCalendarAlarmState();
         }
     }
 
@@ -20,11 +21,22 @@ class AuthStoreClass {
         return null;
     }
 
+    clearCalendarAlarmState() {
+        if (typeof window !== 'undefined') {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith('has_seen_calendar_popup')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+        }
+    }
+
     clear() {
         this.removeUser();
-        if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('has_seen_calendar_popup');
-        }
+        this.clearCalendarAlarmState();
     }
 }
 
